@@ -144,12 +144,29 @@ export function getAllNames(characters: Character[]): string[] {
 }
 
 /**
- * 搜索匹配的角色（中英文模糊匹配）
+ * 搜索匹配的角色（中英文模糊匹配，精确匹配优先）
  */
 export function searchCharacters(characters: Character[], query: string): Character[] {
   if (!query.trim()) return [];
   const q = query.trim().toLowerCase();
-  return characters.filter(
-    c => c.name.toLowerCase().includes(q) || c.nameEn.toLowerCase().includes(q)
-  ).slice(0, 8); // 最多返回 8 个结果
+
+  // 分三档排序：精确匹配 > 开头匹配 > 包含匹配
+  const exact: Character[] = [];
+  const starts: Character[] = [];
+  const contains: Character[] = [];
+
+  for (const c of characters) {
+    const nameLow = c.name.toLowerCase();
+    const nameEnLow = c.nameEn.toLowerCase();
+
+    if (nameLow === q || nameEnLow === q) {
+      exact.push(c);
+    } else if (nameLow.startsWith(q) || nameEnLow.startsWith(q)) {
+      starts.push(c);
+    } else if (nameLow.includes(q) || nameEnLow.includes(q)) {
+      contains.push(c);
+    }
+  }
+
+  return [...exact, ...starts, ...contains].slice(0, 8);
 }

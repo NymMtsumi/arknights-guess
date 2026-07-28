@@ -56,25 +56,43 @@ function compareSubclass(
 }
 
 /**
- * 对比阵营：相同=correct，同阵营大组=close，不同=wrong
+ * 对比阵营：拆分复合阵营（主阵营,子阵营），任一主阵营匹配=correct
+ * 例：乌萨斯 vs 乌萨斯,乌萨斯学生自治团 → correct
  */
 function compareFaction(targetFaction: string, guessFaction: string): GuessStatus {
   if (targetFaction === guessFaction) return 'correct';
-  // 罗德岛系：罗德岛、巴别塔
-  const rhodesGroup = ['罗德岛', '巴别塔'];
-  // 龙门系
-  const lungmenGroup = ['龙门'];
-  // 深海系
-  const abyssalGroup = ['深海猎人', '阿戈尔'];
-  // 乌萨斯系
-  const ursusGroup = ['乌萨斯'];
-  // 维多利亚系
-  const victoriaGroup = ['维多利亚'];
 
-  const groups = [rhodesGroup, lungmenGroup, abyssalGroup, ursusGroup, victoriaGroup];
-  for (const group of groups) {
-    if (group.includes(targetFaction) && group.includes(guessFaction)) return 'close';
+  // 拆分复合阵营（支持中英文逗号）
+  const targetParts = targetFaction.split(/[,，]/).map(s => s.trim());
+  const guessParts = guessFaction.split(/[,，]/).map(s => s.trim());
+
+  // 有任意部分匹配 → correct
+  for (const tp of targetParts) {
+    for (const gp of guessParts) {
+      if (tp === gp) return 'correct';
+    }
   }
+
+  // 阵营大组归类：同大组的 → close
+  const factionGroups: string[][] = [
+    ['罗德岛', '巴别塔'],
+    ['龙门', '炎-龙门'],
+    ['炎', '炎-龙门', '炎-岁'],
+    ['深海猎人', '阿戈尔'],
+    ['乌萨斯'],
+    ['维多利亚', '塔拉'],
+    ['哥伦比亚', '汐斯塔', '莱茵生命', '黑钢国际'],
+    ['叙拉古'],
+    ['卡西米尔'],
+    ['谢拉格', '喀兰贸易'],
+  ];
+
+  for (const group of factionGroups) {
+    const targetIn = targetParts.some(p => group.includes(p));
+    const guessIn = guessParts.some(p => group.includes(p));
+    if (targetIn && guessIn) return 'close';
+  }
+
   return 'wrong';
 }
 

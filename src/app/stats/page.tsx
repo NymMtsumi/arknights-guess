@@ -13,15 +13,22 @@ const DIFF_LABEL: Record<string, string> = { easy: '简单', medium: '普通', h
 export default function StatsPage() {
   const { t } = useI18n();
   const router = useRouter();
+  // 直接读取localStorage，每次渲染都是最新数据
+  const [mounted, setMounted] = useState(false);
   const [stats, setStats] = useState<StatsData>({ totalGames: 0, wins: 0, losses: 0, totalGuesses: 0, bestScore: 0 });
   const [history, setHistory] = useState<GameRecord[]>([]);
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setStats(loadStats());
     setHistory(loadHistory());
     setMounted(true);
   }, []);
+
+  // 手动刷新函数
+  const refresh = () => {
+    setStats(loadStats());
+    setHistory(loadHistory());
+  };
 
   const winRate = stats.totalGames > 0 ? Math.round((stats.wins / stats.totalGames) * 100) : 0;
   const avgGuesses = stats.wins > 0 ? (stats.totalGuesses / stats.wins).toFixed(1) : '-';
@@ -46,6 +53,15 @@ export default function StatsPage() {
         >
           {t('stats.title')}
         </h1>
+
+        {/* 手动刷新 */}
+        <button onClick={refresh} style={{
+          marginBottom: '20px', padding: '4px 14px', background: 'transparent',
+          color: 'var(--text-light)', border: '1px solid var(--border)',
+          borderRadius: 'var(--radius)', cursor: 'pointer', fontSize: '0.8rem',
+        }}>
+          🔄 刷新数据
+        </button>
 
         {!mounted ? (
           <div style={{ color: 'var(--text-light)' }}>...</div>
@@ -110,8 +126,8 @@ export default function StatsPage() {
           </div>
         )}
 
-        {/* 最近战绩 */}
-        {history.length > 0 && (
+        {/* 最近战绩 - 始终显示 */}
+        {mounted && (
           <div style={{ maxWidth: '600px', width: '100%', marginTop: '32px' }}>
             <h2 style={{
               fontFamily: 'var(--font-display)',
@@ -124,6 +140,9 @@ export default function StatsPage() {
             }}>
               📋 最近 20 局
             </h2>
+            {history.length === 0 ? (
+              <p style={{ color: 'var(--text-light)', fontSize: '0.9rem' }}>暂无记录，完成一局游戏后自动记录</p>
+            ) : (
             <div style={{ overflowX: 'auto' }}>
               <table className="game-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                 <thead>
@@ -157,6 +176,7 @@ export default function StatsPage() {
                 </tbody>
               </table>
             </div>
+            )}
           </div>
         )}
 

@@ -52,6 +52,7 @@ export function saveGameStats(won: boolean, guessCount: number, difficulty: stri
 
   // 保存历史
   const history = loadHistory();
+  console.log('[Stats] Saving game:', { won, guessCount, difficulty, targetName, historyBefore: history.length });
   history.unshift({
     timestamp: Date.now(),
     targetName,

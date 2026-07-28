@@ -1,0 +1,601 @@
+@import "tailwindcss";
+
+/* ============================================
+   主题：浅色（Light）
+   复刻自 shnlfriberg.online 浅色主题
+   ============================================ */
+:root {
+  --bg: #f3f0ea;
+  --card: #ffffff;
+  --card-soft: #f8f5f0;
+  --border: rgba(32, 17, 24, .14);
+  --border-strong: rgba(32, 17, 24, .3);
+  --text: #201118;
+  --text-sec: #5f5058;
+  --text-light: #90838b;
+  --input-bg: #ffffff;
+  --primary: #c9ea16;
+  --primary-hover: #b7d800;
+  --primary-soft: rgba(201, 234, 22, .2);
+  --primary-strong: #566800;
+  --success: #0e7a4b;
+  --warning: #ad5f00;
+  --danger: #cb3649;
+  --accent: #6a48d7;
+  --correct: #199a60;
+  --close: #cd7d0e;
+  --wrong: #a89ba3;
+  --shadow-sm: 0 3px 10px rgba(32, 17, 24, .07);
+  --shadow: 0 12px 30px rgba(32, 17, 24, .08);
+  --shadow-lg: 0 28px 70px rgba(32, 17, 24, .2);
+  --radius: 4px;
+  --radius-sm: 3px;
+  --content-max: 73.75rem;
+  --page-inline: clamp(1rem, 4vw, 3.25rem);
+  --fs-3xs: clamp(.66rem, .56rem + .45vw, .8rem);
+  --fs-2xs: clamp(.72rem, .62rem + .45vw, .86rem);
+  --fs-xs: clamp(.78rem, .7rem + .4vw, .92rem);
+  --language-accent: var(--primary);
+
+  color-scheme: light;
+}
+
+/* ============================================
+   主题：Blast（暗黑，默认）
+   复刻自 shnlfriberg.online blast 主题
+   ============================================ */
+html[data-theme="blast"] {
+  --bg: #160a13;
+  --card: #281520;
+  --card-soft: #20101a;
+  --border: rgba(255, 255, 255, 0.12);
+  --border-strong: rgba(218, 255, 61, 0.42);
+  --text: #f8f5f7;
+  --text-sec: #c9bac5;
+  --text-light: #95818f;
+  --input-bg: #170b13;
+  --primary: #d9ff3f;
+  --primary-hover: #c5eb2e;
+  --primary-soft: rgba(217, 255, 63, 0.11);
+  --primary-strong: #a8cc00;
+  --success: #51d795;
+  --warning: #ffad49;
+  --danger: #ff6578;
+  --accent: #a281ff;
+  --correct: #38bd78;
+  --close: #d59632;
+  --wrong: #675563;
+  --shadow-sm: 0 3px 10px rgba(0, 0, 0, .15);
+  --shadow: 0 18px 42px rgba(0, 0, 0, 0.28);
+  --shadow-lg: 0 28px 80px rgba(0, 0, 0, 0.48);
+  --radius: 4px;
+  --radius-sm: 3px;
+  --content-max: 73.75rem;
+  --page-inline: clamp(1rem, 4vw, 3.25rem);
+  --fs-3xs: clamp(.66rem, .56rem + .45vw, .8rem);
+  --fs-2xs: clamp(.72rem, .62rem + .45vw, .86rem);
+  --fs-xs: clamp(.78rem, .7rem + .4vw, .92rem);
+  --language-accent: var(--primary);
+
+  color-scheme: dark;
+}
+
+/* ============================================
+   Tailwind v4 Theme 映射
+   ============================================ */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-card: var(--card);
+  --color-card-soft: var(--card-soft);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-text: var(--text);
+  --color-text-sec: var(--text-sec);
+  --color-text-light: var(--text-light);
+  --color-input-bg: var(--input-bg);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-strong: var(--primary-strong);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-accent: var(--accent);
+  --color-correct: var(--correct);
+  --color-close: var(--close);
+  --color-wrong: var(--wrong);
+  --color-shadow: rgba(32, 17, 24, 0.08);
+  --color-shadow-lg: rgba(32, 17, 24, 0.2);
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  --font-display: Impact, Bahnschrift, "Arial Narrow", "Microsoft YaHei", sans-serif;
+}
+
+/* ============================================
+   全局基础样式
+   ============================================ */
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body, #root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-x: clip;
+}
+
+html {
+  font-size: clamp(100%, .833333vw, 400%);
+  background: var(--bg);
+}
+
+html[data-theme="blast"] {
+  background-color: #160a13;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100dvh;
+  font-family: var(--font-sans);
+  color: var(--text);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* 浅色主题的 body 背景 */
+html:not([data-theme="blast"]) body {
+  background:
+    radial-gradient(circle at 10% -6%, rgba(201, 234, 22, .13), transparent 30rem),
+    radial-gradient(circle at 94% 4%, rgba(106, 72, 215, .07), transparent 26rem),
+    repeating-linear-gradient(118deg, transparent 0 92px, rgba(32, 17, 24, .016) 92px 93px),
+    var(--bg);
+}
+
+/* Blast 主题的 body 背景 */
+html[data-theme="blast"] body {
+  position: relative;
+  background:
+    radial-gradient(circle at 82% -12%, rgba(118, 47, 91, 0.3), transparent 34rem),
+    radial-gradient(circle at 4% 88%, rgba(83, 31, 65, 0.24), transparent 28rem),
+    repeating-linear-gradient(118deg, transparent 0 92px, rgba(255, 255, 255, 0.018) 92px 93px),
+    var(--bg);
+}
+
+/* Blast 主题的 body::before 浮动光效 */
+html[data-theme="blast"] body::before {
+  position: fixed;
+  inset: -25vmax;
+  z-index: 0;
+  content: '';
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 28% 34%, rgba(217, 255, 63, 0.055), transparent 18%),
+    radial-gradient(circle at 72% 62%, rgba(162, 129, 255, 0.09), transparent 22%);
+  filter: blur(18px);
+  animation: ambient-drift 18s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+button, input, select, textarea {
+  font: inherit;
+}
+
+button, a {
+  touch-action: manipulation;
+}
+
+::selection {
+  background: rgba(201, 234, 22, 0.45);
+}
+
+html[data-theme="blast"] ::selection {
+  background: rgba(217, 255, 63, 0.25);
+}
+
+/* ============================================
+   页面布局
+   ============================================ */
+.page {
+  display: flex;
+  flex-direction: column;
+  height: var(--visual-viewport-height, 100dvh);
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.page-scroll {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding: clamp(20px, 3vw, 34px) var(--page-inline);
+  padding-bottom: calc(clamp(20px, 3vw, 34px) + env(safe-area-inset-bottom, 0px));
+}
+
+/* Blast 主题页面覆盖 */
+html[data-theme="blast"] .page {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(44, 19, 36, 0.2), transparent 42%),
+    transparent;
+}
+
+html[data-theme="blast"] .page-scroll {
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px) 0 0 / 72px 72px,
+    linear-gradient(rgba(255, 255, 255, 0.014) 1px, transparent 1px) 0 0 / 72px 72px;
+}
+
+/* ============================================
+   滚动条样式
+   ============================================ */
+* {
+  scrollbar-color: rgba(217, 255, 63, 0.42) rgba(255, 255, 255, 0.04);
+  scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+html:not([data-theme="blast"]) *::-webkit-scrollbar-track {
+  background: rgba(32, 17, 24, 0.04);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(217, 255, 63, 0.38);
+  border-radius: 0;
+}
+
+html:not([data-theme="blast"]) *::-webkit-scrollbar-thumb {
+  background: rgba(201, 234, 22, 0.38);
+}
+
+/* ============================================
+   关键帧动画
+   ============================================ */
+@keyframes ambient-drift {
+  0% { transform: translate3d(-2%, -1%, 0) rotate(-2deg) scale(1); }
+  100% { transform: translate3d(3%, 2%, 0) rotate(3deg) scale(1.08); }
+}
+
+@keyframes surface-enter {
+  from { opacity: 0; transform: translate3d(0, 16px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes neon-pulse {
+  0%, 100% { opacity: 0.65; filter: brightness(0.9); }
+  50% { opacity: 1; filter: brightness(1.18); }
+}
+
+@keyframes urgent-pulse {
+  0%, 100% { opacity: 1; text-shadow: 0 0 0 rgba(255, 101, 120, 0); }
+  50% { opacity: 0.72; text-shadow: 0 0 18px rgba(255, 101, 120, 0.7); }
+}
+
+/* ============================================
+   工具类
+   ============================================ */
+.animate-surface {
+  animation: surface-enter 0.45s cubic-bezier(0.2, 0.72, 0.25, 1) both;
+}
+
+/* ============================================
+   Header 组件
+   ============================================ */
+.header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--page-inline);
+  height: clamp(48px, 6vw, 64px);
+  flex-shrink: 0;
+  position: relative;
+  border-bottom: 1px solid var(--border);
+  background: var(--card);
+  z-index: 10;
+}
+
+html[data-theme="blast"] .header-bar::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: var(--page-inline);
+  width: clamp(50px, 6vw, 80px);
+  height: 2px;
+  background: var(--primary);
+  box-shadow: 0 0 12px var(--primary);
+}
+
+/* ============================================
+   HeroSection 组件
+   ============================================ */
+.home-hero {
+  min-height: clamp(320px, 47vh, 470px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-bottom: clamp(24px, 4vw, 44px);
+  padding: clamp(20px, 4vw, 44px);
+  overflow: hidden;
+  border-radius: var(--radius);
+}
+
+html[data-theme="blast"] .home-hero {
+  background:
+    linear-gradient(90deg, rgba(24, 9, 19, 0.2), rgba(24, 9, 19, 0.82)),
+    radial-gradient(circle at 74% 46%, rgba(126, 49, 96, 0.38), transparent 28rem),
+    repeating-linear-gradient(125deg, transparent 0 46px, rgba(255, 255, 255, 0.025) 46px 47px),
+    #25111f;
+  box-shadow: 0 26px 70px rgba(0, 0, 0, 0.36);
+  clip-path: polygon(0 0, calc(100% - 34px) 0, 100% 34px, 100% 100%, 34px 100%, 0 calc(100% - 34px));
+}
+
+html:not([data-theme="blast"]) .home-hero {
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.9)),
+    radial-gradient(circle at 74% 46%, rgba(201, 234, 22, 0.2), transparent 28rem),
+    var(--card);
+  box-shadow: 0 12px 30px rgba(32, 17, 24, 0.08);
+  clip-path: none;
+}
+
+html[data-theme="blast"] .home-hero::before {
+  content: '';
+  position: absolute;
+  top: -150px;
+  right: -90px;
+  width: 310px;
+  height: 310px;
+  border: 1px solid rgba(217, 255, 63, 0.18);
+  border-radius: 0;
+  transform: rotate(45deg);
+  animation: hero-orbit 16s linear infinite;
+  pointer-events: none;
+}
+
+html[data-theme="blast"] .home-hero::after {
+  content: '';
+  position: absolute;
+  right: -30px;
+  bottom: 32px;
+  width: 180px;
+  height: 8px;
+  background: var(--primary);
+  box-shadow: 0 0 26px rgba(217, 255, 63, 0.42);
+  transform: skewX(-28deg);
+  animation: hero-beam 4.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.hero-subtitle {
+  position: relative;
+  font-weight: 650;
+  letter-spacing: 0.035em;
+  font-size: var(--fs-xs);
+  margin-bottom: 8px;
+}
+
+html[data-theme="blast"] .hero-subtitle { color: #fff; }
+html:not([data-theme="blast"]) .hero-subtitle { color: var(--text-sec); }
+
+.muted {
+  position: relative;
+  max-width: 560px;
+  text-align: center;
+  font-size: var(--fs-2xs);
+  line-height: 1.6;
+}
+
+html[data-theme="blast"] .muted { color: #aa95a5; }
+html:not([data-theme="blast"]) .muted { color: var(--text-light); }
+
+.home-hero h1 {
+  position: relative;
+  margin: 0 0 12px;
+  background: none;
+  font-family: Impact, Bahnschrift, 'Arial Narrow', 'Microsoft YaHei', sans-serif;
+  font-size: clamp(3.7rem, 8vw, 6.4rem);
+  font-style: italic;
+  font-weight: 900;
+  line-height: 0.92;
+  letter-spacing: 0.06em;
+  animation: title-enter 0.62s 0.12s cubic-bezier(0.18, 0.8, 0.24, 1) both;
+}
+
+html[data-theme="blast"] .home-hero h1 {
+  color: #fff;
+  text-shadow: 5px 5px 0 rgba(217, 255, 63, 0.2), 10px 10px 34px rgba(0, 0, 0, 0.42);
+  transform: skewX(-4deg);
+}
+
+html:not([data-theme="blast"]) .home-hero h1 {
+  color: var(--text);
+  text-shadow: 2px 2px 0 rgba(201, 234, 22, 0.15);
+  transform: skewX(-2deg);
+}
+
+@keyframes hero-orbit {
+  to { transform: rotate(405deg); }
+}
+
+@keyframes hero-beam {
+  0%, 100% { opacity: 0.48; translate: 12% 0; }
+  50% { opacity: 1; translate: -26% 0; }
+}
+
+@keyframes kicker-enter {
+  from { opacity: 0; transform: translateX(-18px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes title-enter {
+  from { opacity: 0; transform: translate3d(0, 20px, 0) skewX(-8deg); letter-spacing: 0.14em; }
+  to { opacity: 1; transform: translate3d(0, 0, 0) skewX(-4deg); letter-spacing: 0.06em; }
+}
+
+/* ============================================
+   MenuCard 组件
+   ============================================ */
+.menu-card {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: clamp(12px, 2vw, 18px);
+  min-height: 205px;
+  padding: clamp(18px, 3vw, 28px);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  text-decoration: none;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  color: var(--text);
+}
+
+html[data-theme="blast"] .menu-card {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: linear-gradient(145deg, rgba(49, 25, 41, 0.98), rgba(31, 14, 26, 0.98));
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.25);
+  clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px));
+  color: #fff;
+}
+
+html:not([data-theme="blast"]) .menu-card {
+  background: var(--card);
+  box-shadow: var(--shadow);
+}
+
+html[data-theme="blast"] .menu-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: var(--menu-color, var(--primary));
+  box-shadow: 0 0 20px color-mix(in srgb, var(--menu-color, var(--primary)) 35%, transparent);
+}
+
+html[data-theme="blast"] .menu-card::after {
+  content: '';
+  position: absolute;
+  inset: -60% auto -60% -65%;
+  width: 34%;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--menu-color, var(--primary)) 22%, transparent), transparent);
+  transform: skewX(-18deg);
+  transition: left 0.62s cubic-bezier(0.2, 0.72, 0.25, 1);
+  pointer-events: none;
+}
+
+html[data-theme="blast"] .menu-card:hover {
+  border-color: color-mix(in srgb, var(--menu-color, var(--primary)) 60%, transparent);
+  background: linear-gradient(145deg, rgba(62, 32, 52, 0.98), rgba(36, 16, 30, 0.98));
+  box-shadow: 0 22px 48px rgba(0, 0, 0, 0.34);
+  transform: translateY(-4px);
+}
+
+html:not([data-theme="blast"]) .menu-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+html[data-theme="blast"] .menu-card:hover .menu-icon {
+  background: color-mix(in srgb, var(--menu-color, var(--primary)) 28%, transparent);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--menu-color, var(--primary)) 22%, transparent);
+  transform: translateY(-3px) skewX(-4deg) rotate(-2deg);
+}
+
+.menu-card:hover .menu-arrow {
+  transform: translate3d(3px, -3px, 0);
+}
+
+.menu-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(43px, 6vw, 56px);
+  height: clamp(43px, 6vw, 56px);
+  flex: 0 0 auto;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  border-radius: var(--radius);
+  transition: transform 0.3s ease;
+}
+
+html[data-theme="blast"] .menu-icon {
+  background: color-mix(in srgb, var(--menu-color, var(--primary)) 18%, transparent);
+}
+
+html:not([data-theme="blast"]) .menu-icon {
+  background: var(--primary-soft);
+}
+
+.menu-label {
+  font-size: clamp(1.02rem, 1.6vw, 1.2rem);
+  font-weight: 700;
+  letter-spacing: 0.025em;
+  line-height: 1.2;
+}
+
+.menu-description {
+  font-size: var(--fs-xs);
+  line-height: 1.5;
+}
+
+html[data-theme="blast"] .menu-description { color: #aa95a5; }
+html:not([data-theme="blast"]) .menu-description { color: var(--text-sec); }
+
+html[data-theme="blast"] .menu-arrow { color: var(--primary); }
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 14px;
+  max-width: var(--content-max);
+  margin: 0 auto;
+}
+
+@media (max-width: 640px) {
+  .home-hero { min-height: 275px; }
+  html[data-theme="blast"] .home-hero {
+    clip-path: polygon(0 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 22px 100%, 0 calc(100% - 22px));
+  }
+  .home-hero h1 { font-size: clamp(3.2rem, 18vw, 4.6rem); }
+  html[data-theme="blast"] .home-hero h1 { text-shadow: 3px 3px 0 rgba(217, 255, 63, 0.2); }
+  .hero-subtitle { font-size: 0.94rem; }
+  .menu-grid { gap: 10px; }
+  .menu-card { min-height: 158px; padding: 18px 13px; }
+  html[data-theme="blast"] .menu-card {
+    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+  }
+  .menu-icon { width: 43px; height: 43px; }
+  .menu-label { font-size: 1.02rem; }
+  .menu-description { font-size: var(--fs-2xs); }
+  .menu-arrow { right: 12px; bottom: 11px; width: 15px; height: 15px; }
+}
+
+@media (max-width: 520px) {
+  .home-hero { min-height: 250px; padding-inline: 16px; }
+  .home-hero h1 { font-size: clamp(2.8rem, 17vw, 4rem); }
+  .menu-card { min-height: 112px; padding: 16px 18px; gap: 14px; }
+  .menu-icon { flex: 0 0 auto; }
+  .menu-description { display: block; font-size: var(--fs-xs); }
+  .menu-arrow { right: 14px; bottom: 14px; }
+}
+
+/* ============================================
+   RulesDialog 组件
+   ============================================ */
+html[data-theme="blast"] .rules-title { color: var(--primary); }

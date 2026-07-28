@@ -1,0 +1,130 @@
+'use client';
+
+import type { GuessResult, GuessStatus } from '@/types/character';
+import { useI18n } from '@/lib/i18n';
+
+interface GuessTableProps {
+  guesses: GuessResult[];
+}
+
+function StatusCell({ status, children }: { status: GuessStatus; children: React.ReactNode }) {
+  const bgColor = `var(--${status})`;
+  return (
+    <td
+      style={{
+        background: bgColor,
+        color: status === 'wrong' ? 'var(--text-light)' : '#fff',
+        fontWeight: status !== 'wrong' ? 700 : 400,
+        padding: '10px 12px',
+        textAlign: 'center',
+        fontSize: '0.9rem',
+        whiteSpace: 'nowrap',
+        transition: 'background 0.25s',
+      }}
+    >
+      {children}
+    </td>
+  );
+}
+
+export function GuessTable({ guesses }: GuessTableProps) {
+  const { t } = useI18n();
+
+  if (guesses.length === 0) return null;
+
+  const columns = [
+    { key: 'name', label: t('table.name'), render: (g: GuessResult) => g.character.name },
+    { key: 'class', label: t('table.class'), render: (g: GuessResult) => g.character.class, statusKey: 'class' as const },
+    { key: 'subclass', label: t('table.subclass'), render: (g: GuessResult) => g.character.subclass, statusKey: 'subclass' as const },
+    { key: 'faction', label: t('table.faction'), render: (g: GuessResult) => g.character.faction, statusKey: 'faction' as const },
+    { key: 'rarity', label: t('table.rarity'), render: (g: GuessResult) => '★'.repeat(g.character.rarity), statusKey: 'rarity' as const },
+    { key: 'race', label: t('table.race'), render: (g: GuessResult) => g.character.race, statusKey: 'race' as const },
+    { key: 'gender', label: t('table.gender'), render: (g: GuessResult) => g.character.gender, statusKey: 'gender' as const },
+  ];
+
+  return (
+    <div style={{ overflowX: 'auto', marginBottom: '24px' }}>
+      <table className="game-table" style={{
+        width: '100%',
+        borderCollapse: 'collapse',
+        fontSize: '0.9rem',
+      }}>
+        <thead>
+          <tr>
+            {columns.map(col => (
+              <th key={col.key} style={{
+                padding: '10px 12px',
+                textAlign: 'center',
+                fontWeight: 700,
+                fontSize: '0.82rem',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                color: 'var(--text-light)',
+                borderBottom: '2px solid var(--border)',
+                whiteSpace: 'nowrap',
+              }}>
+                {col.label}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {[...guesses].reverse().map((guess, i) => (
+            <tr
+              key={guess.timestamp}
+              style={{
+                animation: `surface-enter 0.4s ${i * 0.05}s cubic-bezier(0.2, 0.72, 0.25, 1) both`,
+              }}
+            >
+              {columns.map(col => {
+                if (col.statusKey) {
+                  const status = guess.comparisons[col.statusKey];
+                  return (
+                    <StatusCell key={col.key} status={status}>
+                      {col.render(guess)}
+                    </StatusCell>
+                  );
+                }
+                return (
+                  <td key={col.key} style={{
+                    padding: '10px 12px',
+                    textAlign: 'center',
+                    fontWeight: 700,
+                    color: 'var(--text)',
+                    fontSize: '0.9rem',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {col.render(guess)}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <style>{`
+        html[data-theme="blast"] .game-table tr {
+          border-color: rgba(255, 255, 255, 0.1);
+          background: #190c15;
+        }
+        html[data-theme="blast"] .game-table td:first-child {
+          background: #2a1723;
+        }
+        html:not([data-theme="blast"]) .game-table tr {
+          background: var(--card);
+          border-bottom: 1px solid var(--border);
+        }
+        .game-table td {
+          border: 1px solid var(--border);
+        }
+        @media (max-width: 640px) {
+          .game-table td, .game-table th {
+            padding: 8px 6px;
+            font-size: 0.78rem;
+          }
+        }
+      `}</style>
+    </div>
+  );
+}

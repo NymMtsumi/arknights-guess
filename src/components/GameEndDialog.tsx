@@ -7,10 +7,11 @@ interface GameEndDialogProps {
   status: GameStatus;
   target: Character | null;
   guessCount: number;
+  onClose: () => void;
   onNewGame: () => void;
 }
 
-export function GameEndDialog({ status, target, guessCount, onNewGame }: GameEndDialogProps) {
+export function GameEndDialog({ status, target, guessCount, onClose, onNewGame }: GameEndDialogProps) {
   const { t } = useI18n();
 
   if (status !== 'won' && status !== 'lost') return null;
@@ -103,25 +104,39 @@ export function GameEndDialog({ status, target, guessCount, onNewGame }: GameEnd
           </span>
         </div>
 
-        {/* 再来一局 */}
-        <button
-          onClick={onNewGame}
-          style={{
-            padding: '12px 32px',
-            background: 'var(--primary)',
-            color: 'var(--bg)',
-            border: 'none',
-            borderRadius: 'var(--radius)',
-            fontSize: '1rem',
-            fontWeight: 700,
-            cursor: 'pointer',
-            transition: 'background 0.2s, transform 0.2s',
-          }}
-          onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-2px)')}
-          onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}
-        >
-          {t('game.newGame')}
-        </button>
+        {/* 两个按钮 */}
+        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <button
+            onClick={onClose}
+            style={{
+              padding: '12px 24px',
+              background: 'transparent',
+              color: 'var(--text)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius)',
+              fontSize: '0.95rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            {t('game.viewResult')}
+          </button>
+          <button
+            onClick={onNewGame}
+            style={{
+              padding: '12px 28px',
+              background: 'var(--primary)',
+              color: 'var(--bg)',
+              border: 'none',
+              borderRadius: 'var(--radius)',
+              fontSize: '1rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+            }}
+          >
+            {t('game.newGame')}
+          </button>
+        </div>
       </div>
     </div>
   );

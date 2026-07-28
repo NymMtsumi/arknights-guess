@@ -34,6 +34,7 @@
   "game.lost": "Sorry, you ran out of guesses",
   "game.lostDesc": "The answer was {{name}}",
   "game.newGame": "Play Again",
+  "game.viewResult": "View Result",
   "game.noMatch": "No matching operator found",
 
   "table.name": "Name",

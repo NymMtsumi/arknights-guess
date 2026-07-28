@@ -5,22 +5,29 @@ import { useRouter } from 'next/navigation';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { useI18n } from '@/lib/i18n';
-import type { StatsData } from '@/lib/stats';
-import { loadStats } from '@/lib/stats';
+import type { StatsData, GameRecord } from '@/lib/stats';
+import { loadStats, loadHistory } from '@/lib/stats';
+
+const DIFF_LABEL: Record<string, string> = { easy: '简单', medium: '普通', hard: '困难' };
 
 export default function StatsPage() {
   const { t } = useI18n();
   const router = useRouter();
   const [stats, setStats] = useState<StatsData>({ totalGames: 0, wins: 0, losses: 0, totalGuesses: 0, bestScore: 0 });
+  const [history, setHistory] = useState<GameRecord[]>([]);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setStats(loadStats());
+    setHistory(loadHistory());
     setMounted(true);
   }, []);
 
   const winRate = stats.totalGames > 0 ? Math.round((stats.wins / stats.totalGames) * 100) : 0;
   const avgGuesses = stats.wins > 0 ? (stats.totalGuesses / stats.wins).toFixed(1) : '-';
+
+  const thStyle: React.CSSProperties = { padding: '8px 10px', textAlign: 'center', fontWeight: 700, fontSize: '0.8rem', color: 'var(--text-light)', borderBottom: '2px solid var(--border)', whiteSpace: 'nowrap' };
+  const tdStyle: React.CSSProperties = { padding: '8px 10px', textAlign: 'center', whiteSpace: 'nowrap' };
 
   return (
     <div className="page">
@@ -100,6 +107,56 @@ export default function StatsPage() {
                 <span style={{ fontSize: '0.85rem', color: 'var(--text-light)' }}>{item.label}</span>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* 最近战绩 */}
+        {history.length > 0 && (
+          <div style={{ maxWidth: '600px', width: '100%', marginTop: '32px' }}>
+            <h2 style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 'clamp(1.2rem, 2vw, 1.5rem)',
+              fontStyle: 'italic',
+              fontWeight: 800,
+              letterSpacing: '0.04em',
+              marginBottom: '14px',
+              color: 'var(--text)',
+            }}>
+              📋 最近 20 局
+            </h2>
+            <div style={{ overflowX: 'auto' }}>
+              <table className="game-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                <thead>
+                  <tr>
+                    <th style={thStyle}>#</th>
+                    <th style={thStyle}>目标</th>
+                    <th style={thStyle}>结果</th>
+                    <th style={thStyle}>次数</th>
+                    <th style={thStyle}>难度</th>
+                    <th style={thStyle}>时间</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {history.map((rec, i) => (
+                    <tr key={rec.timestamp} style={{
+                      background: rec.won ? 'var(--primary-soft)' : 'transparent',
+                      borderBottom: '1px solid var(--border)',
+                    }}>
+                      <td style={tdStyle}>{i + 1}</td>
+                      <td style={{ ...tdStyle, fontWeight: 600 }}>{rec.targetName}</td>
+                      <td style={{ ...tdStyle, color: rec.won ? 'var(--correct)' : 'var(--danger)', fontWeight: 700 }}>
+                        {rec.won ? '✅' : '❌'}
+                      </td>
+                      <td style={tdStyle}>{rec.guessCount}</td>
+                      <td style={tdStyle}>{DIFF_LABEL[rec.difficulty] || rec.difficulty}</td>
+                      <td style={{ ...tdStyle, color: 'var(--text-light)', fontSize: '0.78rem' }}>
+                        {new Date(rec.timestamp).toLocaleDateString('zh-CN')}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 

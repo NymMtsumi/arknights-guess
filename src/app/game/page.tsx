@@ -19,6 +19,7 @@ export default function GamePage() {
   const router = useRouter();
   const store = useGameStore();
   const [rulesOpen, setRulesOpen] = useState(false);
+  const [dialogClosed, setDialogClosed] = useState(false);
 
   const { status, target, guesses, remainingGuesses, difficulty, startGame, submitGuess, giveUp, resetGame } = store;
 
@@ -28,7 +29,7 @@ export default function GamePage() {
   const prevStatus = useRef(status);
   useEffect(() => {
     if (prevStatus.current === 'playing' && (status === 'won' || status === 'lost')) {
-      saveGameStats(status === 'won', guesses.length);
+      saveGameStats(status === 'won', guesses.length, difficulty, target?.name || '');
     }
     prevStatus.current = status;
   }, [status, guesses.length]);
@@ -41,8 +42,13 @@ export default function GamePage() {
     submitGuess(char.name);
   };
 
+  const handleClose = () => {
+    setDialogClosed(true);
+  };
+
   const handleNewGame = () => {
-    resetGame();
+    setDialogClosed(false);
+    startGame(difficulty);
   };
 
   const handleBackToHome = () => {
@@ -241,12 +247,15 @@ export default function GamePage() {
       </div>
 
       {/* 胜利/失败弹窗 */}
-      <GameEndDialog
-        status={status}
-        target={target}
-        guessCount={guesses.length}
-        onNewGame={handleNewGame}
-      />
+      {!dialogClosed && (
+        <GameEndDialog
+          status={status}
+          target={target}
+          guessCount={guesses.length}
+          onClose={handleClose}
+          onNewGame={handleNewGame}
+        />
+      )}
       <Footer />
     </div>
   );

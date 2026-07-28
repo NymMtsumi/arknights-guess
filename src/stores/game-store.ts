@@ -3,7 +3,7 @@ import type { Character, Difficulty, GameStatus, GuessResult } from '@/types/cha
 import { makeGuess, pickTarget, findCharacterByName, isWin } from '@/lib/game-engine';
 import charactersData from '@/data/characters.json';
 
-const MAX_GUESSES = 10;
+const MAX_GUESSES = 8;
 const characters: Character[] = charactersData as Character[];
 
 interface GameState {

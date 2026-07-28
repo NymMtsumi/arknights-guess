@@ -33,7 +33,8 @@
   "game.wonDesc": "你用了 {{count}} 次猜测找到了 {{name}}",
   "game.lost": "很遗憾，猜测次数用完了",
   "game.lostDesc": "正确答案是 {{name}}",
-  "game.newGame": "再来一局",
+  "game.newGame": "再来一把",
+  "game.viewResult": "查看战绩",
   "game.noMatch": "未找到匹配的干员",
 
   "table.name": "姓名",

@@ -13,7 +13,8 @@
     "race": "机械",
     "raceEn": "Robot",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_286_cast3",
@@ -29,7 +30,8 @@
     "race": "机械",
     "raceEn": "Robot",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2019
   },
   {
     "id": "char_376_therex",
@@ -45,7 +47,8 @@
     "race": "机械",
     "raceEn": "Robot",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2020
   },
   {
     "id": "char_4000_jnight",
@@ -61,7 +64,8 @@
     "race": "机械",
     "raceEn": "Robot",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2021
   },
   {
     "id": "char_4077_palico",
@@ -77,7 +81,8 @@
     "race": "未公开",
     "raceEn": "Undisclosed",
     "gender": "未知",
-    "genderEn": "Unknown"
+    "genderEn": "Unknown",
+    "releaseYear": 2023
   },
   {
     "id": "char_4091_ulika",
@@ -93,7 +98,8 @@
     "race": "机械",
     "raceEn": "Robot",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2023
   },
   {
     "id": "char_4093_frston",
@@ -109,7 +115,8 @@
     "race": "机械",
     "raceEn": "Robot",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2023
   },
   {
     "id": "char_4136_phonor",
@@ -125,7 +132,8 @@
     "race": "机械",
     "raceEn": "Robot",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2024
   },
   {
     "id": "char_4188_confes",
@@ -141,7 +149,8 @@
     "race": "机械",
     "raceEn": "Robot",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2025
   },
   {
     "id": "char_4227_gallus",
@@ -157,7 +166,8 @@
     "race": "机械",
     "raceEn": "Robot",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2026
   },
   {
     "id": "char_4215_buddy",
@@ -173,7 +183,8 @@
     "race": "未公开",
     "raceEn": "Undisclosed",
     "gender": "未知",
-    "genderEn": "Unknown"
+    "genderEn": "Unknown",
+    "releaseYear": 2026
   },
   {
     "id": "char_502_nblade",
@@ -189,7 +200,8 @@
     "race": "鬼",
     "raceEn": "鬼",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_500_noirc",
@@ -205,7 +217,8 @@
     "race": "鬼",
     "raceEn": "鬼",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2019
   },
   {
     "id": "char_503_rang",
@@ -221,7 +234,8 @@
     "race": "萨弗拉",
     "raceEn": "萨弗拉",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2019
   },
   {
     "id": "char_501_durin",
@@ -237,7 +251,8 @@
     "race": "杜林",
     "raceEn": "杜林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_009_12fce",
@@ -253,7 +268,8 @@
     "race": "萨弗拉",
     "raceEn": "萨弗拉",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2019
   },
   {
     "id": "char_123_fang",
@@ -269,7 +285,8 @@
     "race": "库兰塔",
     "raceEn": "Kuranta",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_240_wyvern",
@@ -285,23 +302,8 @@
     "race": "瓦伊凡",
     "raceEn": "瓦伊凡",
     "gender": "女",
-    "genderEn": "Female"
-  },
-  {
-    "id": "char_504_rguard",
-    "name": "预备干员-近战",
-    "nameEn": "Reserve (Melee)",
-    "class": "先锋",
-    "classEn": "Vanguard",
-    "subclass": "尖兵",
-    "subclassEn": "Pioneer",
-    "faction": "未知",
-    "factionEn": "Unknown",
-    "rarity": 3,
-    "race": "未知",
-    "raceEn": "Unknown",
-    "gender": "未知",
-    "genderEn": "Unknown"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_192_falco",
@@ -317,7 +319,8 @@
     "race": "黎博利",
     "raceEn": "Liberi",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_208_melan",
@@ -333,7 +336,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_281_popka",
@@ -349,7 +353,8 @@
     "race": "卡特斯",
     "raceEn": "卡特斯",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_209_ardign",
@@ -365,7 +370,8 @@
     "race": "佩洛",
     "raceEn": "佩洛",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_122_beagle",
@@ -381,23 +387,8 @@
     "race": "佩洛",
     "raceEn": "Perro",
     "gender": "女",
-    "genderEn": "Female"
-  },
-  {
-    "id": "char_514_rdfend",
-    "name": "预备干员-重装",
-    "nameEn": "Reserve (Defender)",
-    "class": "重装",
-    "classEn": "Defender",
-    "subclass": "铁卫",
-    "subclassEn": "Protector",
-    "faction": "未知",
-    "factionEn": "Unknown",
-    "rarity": 3,
-    "race": "未知",
-    "raceEn": "Unknown",
-    "gender": "未知",
-    "genderEn": "Unknown"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_284_spot",
@@ -413,7 +404,8 @@
     "race": "瑞柏巴",
     "raceEn": "瑞柏巴",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2019
   },
   {
     "id": "char_124_kroos",
@@ -429,7 +421,8 @@
     "race": "卡特斯",
     "raceEn": "Cautus",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_211_adnach",
@@ -445,23 +438,8 @@
     "race": "萨科塔",
     "raceEn": "Sankta",
     "gender": "男",
-    "genderEn": "Male"
-  },
-  {
-    "id": "char_507_rsnipe",
-    "name": "预备干员-狙击",
-    "nameEn": "Reserve (Sniper)",
-    "class": "狙击",
-    "classEn": "Sniper",
-    "subclass": "速射手",
-    "subclassEn": "Marksman",
-    "faction": "未知",
-    "factionEn": "Unknown",
-    "rarity": 3,
-    "race": "未知",
-    "raceEn": "Unknown",
-    "gender": "未知",
-    "genderEn": "Unknown"
+    "genderEn": "Male",
+    "releaseYear": 2019
   },
   {
     "id": "char_121_lava",
@@ -477,7 +455,8 @@
     "race": "萨卡兹",
     "raceEn": "Sarkaz",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_120_hibisc",
@@ -493,7 +472,8 @@
     "race": "萨卡兹",
     "raceEn": "Sarkaz",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_212_ansel",
@@ -509,23 +489,8 @@
     "race": "卡特斯",
     "raceEn": "卡特斯",
     "gender": "男",
-    "genderEn": "Male"
-  },
-  {
-    "id": "char_506_rmedic",
-    "name": "预备干员-后勤",
-    "nameEn": "Reserve (Logistic)",
-    "class": "医疗",
-    "classEn": "Medic",
-    "subclass": "医师",
-    "subclassEn": "Medic",
-    "faction": "未知",
-    "factionEn": "Unknown",
-    "rarity": 3,
-    "race": "未知",
-    "raceEn": "Unknown",
-    "gender": "未知",
-    "genderEn": "Unknown"
+    "genderEn": "Male",
+    "releaseYear": 2019
   },
   {
     "id": "char_210_stward",
@@ -541,23 +506,8 @@
     "race": "沃尔珀",
     "raceEn": "Vulpo",
     "gender": "男",
-    "genderEn": "Male"
-  },
-  {
-    "id": "char_505_rcast",
-    "name": "预备干员-术师",
-    "nameEn": "Reserve (Caster)",
-    "class": "术师",
-    "classEn": "Caster",
-    "subclass": "中坚术师",
-    "subclassEn": "Core Caster",
-    "faction": "未知",
-    "factionEn": "Unknown",
-    "rarity": 3,
-    "race": "未知",
-    "raceEn": "Unknown",
-    "gender": "未知",
-    "genderEn": "Unknown"
+    "genderEn": "Male",
+    "releaseYear": 2019
   },
   {
     "id": "char_278_orchid",
@@ -573,7 +523,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_141_nights",
@@ -589,7 +540,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_109_fmout",
@@ -605,7 +557,8 @@
     "race": "萨弗拉",
     "raceEn": "Savra",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_253_greyy",
@@ -621,7 +574,8 @@
     "race": "佩洛",
     "raceEn": "佩洛",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2019
   },
   {
     "id": "char_4051_akkord",
@@ -637,7 +591,8 @@
     "race": "卡普里尼",
     "raceEn": "卡普里尼",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2025
   },
   {
     "id": "char_328_cammou",
@@ -653,7 +608,8 @@
     "race": "札拉克",
     "raceEn": "札拉克",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_469_indigo",
@@ -669,7 +625,8 @@
     "race": "斐迪亚",
     "raceEn": "斐迪亚",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2021
   },
   {
     "id": "char_4004_pudd",
@@ -685,7 +642,8 @@
     "race": "阿戈尔",
     "raceEn": "阿戈尔",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2021
   },
   {
     "id": "char_235_jesica",
@@ -701,7 +659,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_126_shotst",
@@ -717,7 +676,8 @@
     "race": "库兰塔",
     "raceEn": "库兰塔",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_190_clour",
@@ -733,7 +693,8 @@
     "race": "沃尔珀",
     "raceEn": "沃尔珀",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_133_mm",
@@ -749,7 +710,8 @@
     "race": "黎博利",
     "raceEn": "Liberi",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_118_yuki",
@@ -765,7 +727,8 @@
     "race": "阿纳缇",
     "raceEn": "Anaty",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_440_pinecn",
@@ -781,7 +744,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_302_glaze",
@@ -797,7 +761,8 @@
     "race": "萨科塔",
     "raceEn": "萨科塔",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_366_acdrop",
@@ -813,7 +778,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_4062_totter",
@@ -829,7 +795,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2022
   },
   {
     "id": "char_4100_caper",
@@ -845,7 +812,8 @@
     "race": "卡特斯",
     "raceEn": "卡特斯",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2023
   },
   {
     "id": "char_198_blackd",
@@ -861,7 +829,8 @@
     "race": "依特拉",
     "raceEn": "依特拉",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2019
   },
   {
     "id": "char_149_scave",
@@ -877,23 +846,8 @@
     "race": "札拉克",
     "raceEn": "Zalak",
     "gender": "女",
-    "genderEn": "Female"
-  },
-  {
-    "id": "char_600_cpione",
-    "name": "预备干员-先锋",
-    "nameEn": "Reserve Operator - Vanguard",
-    "class": "先锋",
-    "classEn": "Vanguard",
-    "subclass": "尖兵",
-    "subclassEn": "Pioneer",
-    "faction": "未知",
-    "factionEn": "Unknown",
-    "rarity": 4,
-    "race": "未知",
-    "raceEn": "Unknown",
-    "gender": "未知",
-    "genderEn": "Unknown"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_290_vigna",
@@ -909,7 +863,8 @@
     "race": "萨卡兹",
     "raceEn": "萨卡兹",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_151_myrtle",
@@ -925,7 +880,8 @@
     "race": "阿纳缇",
     "raceEn": "Anaty",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_452_bstalk",
@@ -941,7 +897,8 @@
     "race": "瑞柏巴",
     "raceEn": "瑞柏巴",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2021
   },
   {
     "id": "char_4208_wintim",
@@ -957,7 +914,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2025
   },
   {
     "id": "char_130_doberm",
@@ -973,7 +931,8 @@
     "race": "佩洛",
     "raceEn": "佩洛",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_289_gyuki",
@@ -989,7 +948,8 @@
     "race": "鬼",
     "raceEn": "鬼",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_159_peacok",
@@ -1005,23 +965,8 @@
     "race": "未知（疑似黎博利）",
     "raceEn": "未知（疑似黎博利）",
     "gender": "断罪",
-    "genderEn": "断罪"
-  },
-  {
-    "id": "char_601_cguard",
-    "name": "预备干员-近卫",
-    "nameEn": "Reserve Operator - Guard",
-    "class": "近卫",
-    "classEn": "Guard",
-    "subclass": "无畏者",
-    "subclassEn": "Dreadnought",
-    "faction": "未知",
-    "factionEn": "Unknown",
-    "rarity": 4,
-    "race": "未知",
-    "raceEn": "Unknown",
-    "gender": "未知",
-    "genderEn": "Unknown"
+    "genderEn": "断罪",
+    "releaseYear": 2020
   },
   {
     "id": "char_193_frostl",
@@ -1037,7 +982,8 @@
     "race": "沃尔珀",
     "raceEn": "沃尔珀",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_127_estell",
@@ -1053,7 +999,8 @@
     "race": "阿达克利斯",
     "raceEn": "阿达克利斯",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_185_frncat",
@@ -1069,7 +1016,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_301_cutter",
@@ -1085,7 +1033,8 @@
     "race": "沃尔珀",
     "raceEn": "沃尔珀",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_337_utage",
@@ -1101,7 +1050,8 @@
     "race": "不明",
     "raceEn": "不明",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_271_spikes",
@@ -1117,7 +1067,8 @@
     "race": "萨科塔",
     "raceEn": "萨科塔",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2020
   },
   {
     "id": "char_4067_lolxh",
@@ -1133,7 +1084,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2022
   },
   {
     "id": "char_4063_quartz",
@@ -1149,7 +1101,8 @@
     "race": "鲁珀",
     "raceEn": "鲁珀",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2022
   },
   {
     "id": "char_491_humus",
@@ -1165,7 +1118,8 @@
     "race": "丰蹄",
     "raceEn": "丰蹄",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2023
   },
   {
     "id": "char_445_wscoot",
@@ -1181,7 +1135,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2025
   },
   {
     "id": "char_237_gravel",
@@ -1197,23 +1152,8 @@
     "race": "札拉克",
     "raceEn": "札拉克",
     "gender": "女",
-    "genderEn": "Female"
-  },
-  {
-    "id": "char_607_cspec",
-    "name": "预备干员-特种",
-    "nameEn": "Reserve Operator - Specialist",
-    "class": "特种",
-    "classEn": "Specialist",
-    "subclass": "处决者",
-    "subclassEn": "Executor",
-    "faction": "未知",
-    "factionEn": "Unknown",
-    "rarity": 4,
-    "race": "未知",
-    "raceEn": "Unknown",
-    "gender": "未知",
-    "genderEn": "Unknown"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_272_strong",
@@ -1229,7 +1169,8 @@
     "race": "乌萨斯",
     "raceEn": "乌萨斯",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2020
   },
   {
     "id": "char_236_rope",
@@ -1245,7 +1186,8 @@
     "race": "卡特斯",
     "raceEn": "卡特斯",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_117_myrrh",
@@ -1261,7 +1203,8 @@
     "race": "沃尔珀",
     "raceEn": "Vulpo",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_187_ccheal",
@@ -1277,7 +1220,8 @@
     "race": "阿达克利斯",
     "raceEn": "阿达克利斯",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_298_susuro",
@@ -1293,23 +1237,8 @@
     "race": "沃尔珀",
     "raceEn": "沃尔珀",
     "gender": "女",
-    "genderEn": "Female"
-  },
-  {
-    "id": "char_605_cmedic",
-    "name": "预备干员-医疗",
-    "nameEn": "Reserve Operator - Medic",
-    "class": "医疗",
-    "classEn": "Medic",
-    "subclass": "医师",
-    "subclassEn": "Medic",
-    "faction": "未知",
-    "factionEn": "Unknown",
-    "rarity": 4,
-    "race": "未知",
-    "raceEn": "Unknown",
-    "gender": "未知",
-    "genderEn": "Unknown"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_181_flower",
@@ -1325,7 +1254,8 @@
     "race": "沃尔珀",
     "raceEn": "沃尔珀",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_385_finlpp",
@@ -1341,7 +1271,8 @@
     "race": "阿戈尔",
     "raceEn": "阿戈尔",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_4041_chnut",
@@ -1357,7 +1288,8 @@
     "race": "杜林",
     "raceEn": "杜林",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2022
   },
   {
     "id": "char_199_yak",
@@ -1373,7 +1305,8 @@
     "race": "丰蹄",
     "raceEn": "丰蹄",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2019
   },
   {
     "id": "char_150_snakek",
@@ -1389,7 +1322,8 @@
     "race": "匹特拉姆",
     "raceEn": "Petram",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_381_bubble",
@@ -1405,7 +1339,8 @@
     "race": "塞拉托",
     "raceEn": "塞拉托",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_4130_luton",
@@ -1421,7 +1356,8 @@
     "race": "札拉克",
     "raceEn": "札拉克",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2024
   },
   {
     "id": "char_196_sunbr",
@@ -1437,7 +1373,8 @@
     "race": "乌萨斯",
     "raceEn": "乌萨斯",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_260_durnar",
@@ -1453,7 +1390,8 @@
     "race": "沃尔珀",
     "raceEn": "沃尔珀",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_110_deepcl",
@@ -1469,7 +1407,8 @@
     "race": "阿戈尔",
     "raceEn": "Aegir",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_183_skgoat",
@@ -1485,7 +1424,8 @@
     "race": "卡普里尼",
     "raceEn": "卡普里尼",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_258_podego",
@@ -1501,23 +1441,8 @@
     "race": "佩洛",
     "raceEn": "佩洛",
     "gender": "女",
-    "genderEn": "Female"
-  },
-  {
-    "id": "char_606_csuppo",
-    "name": "预备干员-辅助",
-    "nameEn": "Reserve Operator - Supporter",
-    "class": "辅助",
-    "classEn": "Supporter",
-    "subclass": "凝滞师",
-    "subclassEn": "Decel Binder",
-    "faction": "未知",
-    "factionEn": "Unknown",
-    "rarity": 4,
-    "race": "未知",
-    "raceEn": "Unknown",
-    "gender": "未知",
-    "genderEn": "Unknown"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_484_robrta",
@@ -1533,7 +1458,8 @@
     "race": "阿纳缇",
     "raceEn": "阿纳缇",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2021
   },
   {
     "id": "char_616_pithst",
@@ -1549,7 +1475,8 @@
     "race": "未知",
     "raceEn": "Unknown",
     "gender": "未知",
-    "genderEn": "Unknown"
+    "genderEn": "Unknown",
+    "releaseYear": 2025
   },
   {
     "id": "char_355_ethan",
@@ -1565,7 +1492,8 @@
     "race": "萨弗拉",
     "raceEn": "萨弗拉",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2019
   },
   {
     "id": "char_277_sqrrel",
@@ -1581,7 +1509,8 @@
     "race": "札拉克",
     "raceEn": "札拉克",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_4107_vrdant",
@@ -1597,7 +1526,8 @@
     "race": "斐迪亚",
     "raceEn": "斐迪亚",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2023
   },
   {
     "id": "char_4165_ctrail",
@@ -1613,7 +1543,8 @@
     "race": "札拉克",
     "raceEn": "札拉克",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2024
   },
   {
     "id": "char_128_plosis",
@@ -1629,7 +1560,8 @@
     "race": "黎博利",
     "raceEn": "Liberi",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_275_breeze",
@@ -1645,7 +1577,8 @@
     "race": "沃尔珀",
     "raceEn": "沃尔珀",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_4163_rosesa",
@@ -1661,7 +1594,8 @@
     "race": "斐迪亚",
     "raceEn": "斐迪亚",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2024
   },
   {
     "id": "char_115_headbr",
@@ -1677,7 +1611,8 @@
     "race": "乌萨斯",
     "raceEn": "Ursus",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_102_texas",
@@ -1693,7 +1628,8 @@
     "race": "鲁珀",
     "raceEn": "Lupo",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_349_chiave",
@@ -1709,7 +1645,8 @@
     "race": "沃尔珀",
     "raceEn": "沃尔珀",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2020
   },
   {
     "id": "char_488_buildr",
@@ -1725,7 +1662,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2023
   },
   {
     "id": "char_513_apionr",
@@ -1741,7 +1679,8 @@
     "race": "斐迪亚",
     "raceEn": "斐迪亚",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2022
   },
   {
     "id": "char_4023_rfalcn",
@@ -1757,7 +1696,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2024
   },
   {
     "id": "char_4199_makiri",
@@ -1773,7 +1713,8 @@
     "race": "鲁珀",
     "raceEn": "鲁珀",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2025
   },
   {
     "id": "char_261_sddrag",
@@ -1789,7 +1730,8 @@
     "race": "德拉克",
     "raceEn": "德拉克",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_496_wildmn",
@@ -1805,7 +1747,8 @@
     "race": "库兰塔",
     "raceEn": "库兰塔",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2021
   },
   {
     "id": "char_1036_fang2",
@@ -1821,7 +1764,8 @@
     "race": "库兰塔",
     "raceEn": "库兰塔",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2024
   },
   {
     "id": "char_401_elysm",
@@ -1837,7 +1781,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2020
   },
   {
     "id": "char_4119_wanqin",
@@ -1853,7 +1798,8 @@
     "race": "丰蹄",
     "raceEn": "丰蹄",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2024
   },
   {
     "id": "char_476_blkngt",
@@ -1869,7 +1815,8 @@
     "race": "萨弗拉",
     "raceEn": "萨弗拉",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2022
   },
   {
     "id": "char_4147_mitm",
@@ -1885,7 +1832,8 @@
     "race": "萨卡兹",
     "raceEn": "萨卡兹",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2024
   },
   {
     "id": "char_497_ctable",
@@ -1901,7 +1849,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2022
   },
   {
     "id": "char_4017_puzzle",
@@ -1917,7 +1866,8 @@
     "race": "瓦伊凡",
     "raceEn": "瓦伊凡",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2022
   },
   {
     "id": "char_4144_chilc",
@@ -1933,7 +1883,8 @@
     "race": "半身人（自称）",
     "raceEn": "半身人（自称）",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2024
   },
   {
     "id": "char_4052_surfer",
@@ -1949,7 +1900,8 @@
     "race": "札拉克",
     "raceEn": "札拉克",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2025
   },
   {
     "id": "char_308_swire",
@@ -1965,7 +1917,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_265_sophia",
@@ -1981,7 +1934,8 @@
     "race": "库兰塔",
     "raceEn": "库兰塔",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_4106_bryota",
@@ -1997,7 +1951,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2023
   },
   {
     "id": "char_4125_rdoc",
@@ -2013,7 +1968,8 @@
     "race": "人类",
     "raceEn": "Human",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2024
   },
   {
     "id": "char_106_franka",
@@ -2029,7 +1985,8 @@
     "race": "沃尔珀",
     "raceEn": "Vulpo",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_131_flameb",
@@ -2045,7 +2002,8 @@
     "race": "萨卡兹",
     "raceEn": "萨卡兹",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2019
   },
   {
     "id": "char_154_morgan",
@@ -2061,7 +2019,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2023
   },
   {
     "id": "char_508_aguard",
@@ -2077,7 +2036,8 @@
     "race": "斐迪亚",
     "raceEn": "斐迪亚",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2020
   },
   {
     "id": "char_4142_laios",
@@ -2093,7 +2053,8 @@
     "race": "长身人（自称）",
     "raceEn": "长身人（自称）",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2024
   },
   {
     "id": "char_155_tiger",
@@ -2109,7 +2070,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_415_flint",
@@ -2125,7 +2087,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_157_dagda",
@@ -2141,7 +2104,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2022
   },
   {
     "id": "char_140_whitew",
@@ -2157,7 +2121,8 @@
     "race": "鲁珀",
     "raceEn": "Lupo",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_294_ayer",
@@ -2173,7 +2138,8 @@
     "race": "卡特斯",
     "raceEn": "卡特斯",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2020
   },
   {
     "id": "char_194_leto",
@@ -2189,7 +2155,8 @@
     "race": "乌萨斯",
     "raceEn": "乌萨斯",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2023
   },
   {
     "id": "char_4083_chimes",
@@ -2205,7 +2172,8 @@
     "race": "丰蹄",
     "raceEn": "丰蹄",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2023
   },
   {
     "id": "char_252_bibeak",
@@ -2221,7 +2189,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_459_tachak",
@@ -2237,7 +2206,8 @@
     "race": "人类",
     "raceEn": "Human",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2021
   },
   {
     "id": "char_143_ghost",
@@ -2253,7 +2223,8 @@
     "race": "阿戈尔",
     "raceEn": "Aegir",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_356_broca",
@@ -2269,7 +2240,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2019
   },
   {
     "id": "char_4126_fuze",
@@ -2285,7 +2257,8 @@
     "race": "人类",
     "raceEn": "Human",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2024
   },
   {
     "id": "char_4166_varkis",
@@ -2301,7 +2274,8 @@
     "race": "丰蹄",
     "raceEn": "丰蹄",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2026
   },
   {
     "id": "char_274_astesi",
@@ -2317,7 +2291,8 @@
     "race": "黎博利",
     "raceEn": "Liberi",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_333_sidero",
@@ -2333,7 +2308,8 @@
     "race": "丰蹄",
     "raceEn": "丰蹄",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_475_akafyu",
@@ -2349,7 +2325,8 @@
     "race": "阿戈尔",
     "raceEn": "阿戈尔",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2021
   },
   {
     "id": "char_1030_noirc2",
@@ -2365,7 +2342,8 @@
     "race": "鬼",
     "raceEn": "鬼",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2023
   },
   {
     "id": "char_421_crow",
@@ -2381,7 +2359,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2021
   },
   {
     "id": "char_4066_highmo",
@@ -2397,7 +2376,8 @@
     "race": "阿戈尔",
     "raceEn": "阿戈尔",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2022
   },
   {
     "id": "char_486_takila",
@@ -2413,7 +2393,8 @@
     "race": "佩洛",
     "raceEn": "佩洛",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2021
   },
   {
     "id": "char_4131_odda",
@@ -2429,7 +2410,8 @@
     "race": "萨卡兹",
     "raceEn": "萨卡兹",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2024
   },
   {
     "id": "char_4187_graceb",
@@ -2445,7 +2427,8 @@
     "race": "未公开",
     "raceEn": "未公开",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2025
   },
   {
     "id": "char_4185_amoris",
@@ -2461,7 +2444,8 @@
     "race": "人类",
     "raceEn": "Human",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2025
   },
   {
     "id": "char_394_hadiya",
@@ -2477,7 +2461,8 @@
     "race": "卡普里尼",
     "raceEn": "卡普里尼",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2025
   },
   {
     "id": "char_1049_catap2",
@@ -2493,7 +2478,8 @@
     "race": "库兰塔",
     "raceEn": "库兰塔",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2026
   },
   {
     "id": "char_129_bluep",
@@ -2509,7 +2495,8 @@
     "race": "安努拉",
     "raceEn": "Anura",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_204_platnm",
@@ -2525,7 +2512,8 @@
     "race": "库兰塔",
     "raceEn": "库兰塔",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_367_swllow",
@@ -2541,7 +2529,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_511_asnipe",
@@ -2557,7 +2546,8 @@
     "race": "萨卡兹",
     "raceEn": "萨卡兹",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2020
   },
   {
     "id": "char_365_aprl",
@@ -2573,7 +2563,8 @@
     "race": "卡特斯",
     "raceEn": "卡特斯",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_1021_kroos2",
@@ -2589,7 +2580,8 @@
     "race": "卡特斯",
     "raceEn": "卡特斯",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2022
   },
   {
     "id": "char_498_inside",
@@ -2605,7 +2597,8 @@
     "race": "萨科塔",
     "raceEn": "萨科塔",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2023
   },
   {
     "id": "char_219_meteo",
@@ -2621,7 +2614,8 @@
     "race": "库兰塔",
     "raceEn": "Kuranta",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_379_sesa",
@@ -2637,7 +2631,8 @@
     "race": "瓦伊凡",
     "raceEn": "瓦伊凡",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2020
   },
   {
     "id": "char_4078_bdhkgt",
@@ -2653,7 +2648,8 @@
     "race": "阿纳萨",
     "raceEn": "阿纳萨",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2023
   },
   {
     "id": "char_279_excu",
@@ -2669,7 +2665,8 @@
     "race": "萨科塔",
     "raceEn": "Sankta",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2019
   },
   {
     "id": "char_346_aosta",
@@ -2685,7 +2682,8 @@
     "race": "鲁珀",
     "raceEn": "鲁珀",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2020
   },
   {
     "id": "char_4203_kichi",
@@ -2701,7 +2699,8 @@
     "race": "佩洛",
     "raceEn": "佩洛",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2025
   },
   {
     "id": "char_4213_skybx",
@@ -2717,7 +2716,8 @@
     "race": "萨弗拉",
     "raceEn": "萨弗拉",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2025
   },
   {
     "id": "char_002_amiya",
@@ -2733,7 +2733,8 @@
     "race": "卡特斯/奇美拉",
     "raceEn": "Cautus/Chimera",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_405_absin",
@@ -2749,7 +2750,8 @@
     "race": "乌萨斯",
     "raceEn": "乌萨斯",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_411_tomimi",
@@ -2765,7 +2767,8 @@
     "race": "阿达克利斯",
     "raceEn": "阿达克利斯",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_466_qanik",
@@ -2781,7 +2784,8 @@
     "race": "沃尔珀",
     "raceEn": "沃尔珀",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2022
   },
   {
     "id": "char_166_skfire",
@@ -2797,7 +2801,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_509_acast",
@@ -2813,7 +2818,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_306_leizi",
@@ -2829,7 +2835,8 @@
     "race": "麒麟",
     "raceEn": "麒麟",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_135_halo",
@@ -2845,7 +2852,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2022
   },
   {
     "id": "char_344_beewax",
@@ -2861,7 +2869,8 @@
     "race": "卡普里尼",
     "raceEn": "卡普里尼",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_373_lionhd",
@@ -2877,7 +2886,8 @@
     "race": "卡特斯",
     "raceEn": "卡特斯",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2020
   },
   {
     "id": "char_341_sntlla",
@@ -2893,7 +2903,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2023
   },
   {
     "id": "char_4031_liesel",
@@ -2909,7 +2920,8 @@
     "race": "卡普里尼",
     "raceEn": "卡普里尼",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2026
   },
   {
     "id": "char_388_mint",
@@ -2925,7 +2937,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_338_iris",
@@ -2941,7 +2954,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2021
   },
   {
     "id": "char_297_hamoni",
@@ -2957,7 +2971,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2022
   },
   {
     "id": "char_4110_delphn",
@@ -2973,7 +2988,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2023
   },
   {
     "id": "char_1011_lava2",
@@ -2989,7 +3005,8 @@
     "race": "萨卡兹",
     "raceEn": "萨卡兹",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2021
   },
   {
     "id": "char_489_serum",
@@ -3005,7 +3022,8 @@
     "race": "斐迪亚",
     "raceEn": "斐迪亚",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2021
   },
   {
     "id": "char_446_aroma",
@@ -3021,7 +3039,8 @@
     "race": "鲁珀",
     "raceEn": "鲁珀",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2024
   },
   {
     "id": "char_4013_kjera",
@@ -3037,7 +3056,8 @@
     "race": "未公开",
     "raceEn": "未公开",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2021
   },
   {
     "id": "char_4040_rockr",
@@ -3053,7 +3073,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2022
   },
   {
     "id": "char_4054_malist",
@@ -3069,7 +3090,8 @@
     "race": "杜林",
     "raceEn": "杜林",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2022
   },
   {
     "id": "char_499_kaitou",
@@ -3085,7 +3107,8 @@
     "race": "卡普里尼",
     "raceEn": "卡普里尼",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2023
   },
   {
     "id": "char_4081_warmy",
@@ -3101,7 +3124,8 @@
     "race": "卡特斯",
     "raceEn": "卡特斯",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2024
   },
   {
     "id": "char_4198_christ",
@@ -3117,7 +3141,8 @@
     "race": "未公开",
     "raceEn": "未公开",
     "gender": "女士",
-    "genderEn": "女士"
+    "genderEn": "女士",
+    "releaseYear": 2025
   },
   {
     "id": "char_4164_tecno",
@@ -3133,7 +3158,8 @@
     "race": "杜林",
     "raceEn": "杜林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2024
   },
   {
     "id": "char_242_otter",
@@ -3149,7 +3175,8 @@
     "race": "阿纳缇",
     "raceEn": "阿纳缇",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_336_folivo",
@@ -3165,7 +3192,8 @@
     "race": "皮洛萨",
     "raceEn": "皮洛萨",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_4140_lasher",
@@ -3181,7 +3209,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2024
   },
   {
     "id": "char_108_silent",
@@ -3197,7 +3226,8 @@
     "race": "黎博利",
     "raceEn": "Liberi",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_171_bldsk",
@@ -3213,7 +3243,8 @@
     "race": "萨卡兹",
     "raceEn": "Sarkaz",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_345_folnic",
@@ -3229,7 +3260,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_510_amedic",
@@ -3245,7 +3277,8 @@
     "race": "卡普里尼",
     "raceEn": "卡普里尼",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_4196_reckpr",
@@ -3261,7 +3294,8 @@
     "race": "佩洛",
     "raceEn": "佩洛",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2025
   },
   {
     "id": "char_348_ceylon",
@@ -3277,7 +3311,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_436_whispr",
@@ -3293,7 +3328,8 @@
     "race": "阿戈尔",
     "raceEn": "阿戈尔",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_4173_nowell",
@@ -3309,7 +3345,8 @@
     "race": "沃尔珀",
     "raceEn": "沃尔珀",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2025
   },
   {
     "id": "char_402_tuye",
@@ -3325,7 +3362,8 @@
     "race": "丰蹄",
     "raceEn": "丰蹄",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2021
   },
   {
     "id": "char_473_mberry",
@@ -3341,7 +3379,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2021
   },
   {
     "id": "char_449_glider",
@@ -3357,7 +3396,8 @@
     "race": "札拉克",
     "raceEn": "札拉克",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2021
   },
   {
     "id": "char_4114_harold",
@@ -3373,7 +3413,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2023
   },
   {
     "id": "char_1024_hbisc2",
@@ -3389,7 +3430,8 @@
     "race": "萨卡兹",
     "raceEn": "萨卡兹",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2022
   },
   {
     "id": "char_494_vendla",
@@ -3405,7 +3447,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2023
   },
   {
     "id": "char_4071_peper",
@@ -3421,7 +3464,8 @@
     "race": "萨卡兹",
     "raceEn": "萨卡兹",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2022
   },
   {
     "id": "char_4139_papyrs",
@@ -3437,7 +3481,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2024
   },
   {
     "id": "char_4224_turdus",
@@ -3453,7 +3498,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2026
   },
   {
     "id": "char_4222_taraxa",
@@ -3469,7 +3515,8 @@
     "race": "库兰塔",
     "raceEn": "库兰塔",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2026
   },
   {
     "id": "char_148_nearl",
@@ -3485,7 +3532,8 @@
     "race": "库兰塔",
     "raceEn": "Kuranta",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_226_hmau",
@@ -3501,7 +3549,8 @@
     "race": "佩洛",
     "raceEn": "佩洛",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2020
   },
   {
     "id": "char_4109_baslin",
@@ -3517,7 +3566,8 @@
     "race": "鲁珀",
     "raceEn": "鲁珀",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2023
   },
   {
     "id": "char_4143_sensi",
@@ -3533,7 +3583,8 @@
     "race": "矮人（自称）",
     "raceEn": "矮人（自称）",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2024
   },
   {
     "id": "char_144_red",
@@ -3549,7 +3600,8 @@
     "race": "鲁珀",
     "raceEn": "Lupo",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_243_waaifu",
@@ -3565,7 +3617,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_214_kafka",
@@ -3581,7 +3634,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_455_nothin",
@@ -3597,7 +3651,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2021
   },
   {
     "id": "char_4155_talr",
@@ -3613,7 +3668,8 @@
     "race": "鲁珀",
     "raceEn": "鲁珀",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2024
   },
   {
     "id": "char_107_liskam",
@@ -3629,7 +3685,8 @@
     "race": "瓦伊凡",
     "raceEn": "Vouivre",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_4137_udflow",
@@ -3645,7 +3702,8 @@
     "race": "阿戈尔",
     "raceEn": "阿戈尔",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2024
   },
   {
     "id": "char_201_moeshd",
@@ -3661,7 +3719,8 @@
     "race": "丰蹄",
     "raceEn": "丰蹄",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_325_bison",
@@ -3677,7 +3736,8 @@
     "race": "丰蹄",
     "raceEn": "丰蹄",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2019
   },
   {
     "id": "char_163_hpsts",
@@ -3693,7 +3753,8 @@
     "race": "丰蹄",
     "raceEn": "丰蹄",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_4207_branch",
@@ -3709,7 +3770,8 @@
     "race": "乌萨斯",
     "raceEn": "乌萨斯",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2025
   },
   {
     "id": "char_378_asbest",
@@ -3725,7 +3787,8 @@
     "race": "萨弗拉",
     "raceEn": "萨弗拉",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_512_aprot",
@@ -3741,7 +3804,8 @@
     "race": "斐迪亚",
     "raceEn": "斐迪亚",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2022
   },
   {
     "id": "char_4047_pianst",
@@ -3757,7 +3821,8 @@
     "race": "埃拉菲亚",
     "raceEn": "埃拉菲亚",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2022
   },
   {
     "id": "char_457_blitz",
@@ -3773,7 +3838,8 @@
     "race": "人类",
     "raceEn": "Human",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2021
   },
   {
     "id": "char_304_zebra",
@@ -3789,7 +3855,8 @@
     "race": "库兰塔",
     "raceEn": "库兰塔",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2021
   },
   {
     "id": "char_431_ashlok",
@@ -3805,7 +3872,8 @@
     "race": "札拉克",
     "raceEn": "札拉克",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2021
   },
   {
     "id": "char_493_firwhl",
@@ -3821,7 +3889,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2023
   },
   {
     "id": "char_422_aurora",
@@ -3837,7 +3906,8 @@
     "race": "乌萨斯",
     "raceEn": "乌萨斯",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2021
   },
   {
     "id": "char_464_cement",
@@ -3853,7 +3923,8 @@
     "race": "札拉克",
     "raceEn": "札拉克",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2023
   },
   {
     "id": "char_4148_philae",
@@ -3869,7 +3940,8 @@
     "race": "萨卡兹",
     "raceEn": "萨卡兹",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2024
   },
   {
     "id": "char_4225_tanya",
@@ -3885,7 +3957,8 @@
     "race": "乌萨斯",
     "raceEn": "乌萨斯",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2026
   },
   {
     "id": "char_145_prove",
@@ -3901,7 +3974,8 @@
     "race": "鲁珀",
     "raceEn": "Lupo",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_4006_melnte",
@@ -3917,7 +3991,8 @@
     "race": "斐迪亚",
     "raceEn": "斐迪亚",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2023
   },
   {
     "id": "char_158_milu",
@@ -3933,7 +4008,8 @@
     "race": "埃拉菲亚",
     "raceEn": "Elafia",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_218_cuttle",
@@ -3949,7 +4025,8 @@
     "race": "阿戈尔",
     "raceEn": "阿戈尔",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_4014_lunacu",
@@ -3965,7 +4042,8 @@
     "race": "鲁珀",
     "raceEn": "鲁珀",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2022
   },
   {
     "id": "char_363_toddi",
@@ -3981,7 +4059,8 @@
     "race": "瓦伊凡",
     "raceEn": "瓦伊凡",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2021
   },
   {
     "id": "char_4043_erato",
@@ -3997,7 +4076,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2022
   },
   {
     "id": "char_4221_ju",
@@ -4013,7 +4093,8 @@
     "race": "未公开",
     "raceEn": "未公开",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2026
   },
   {
     "id": "char_1027_greyy2",
@@ -4029,7 +4110,8 @@
     "race": "佩洛",
     "raceEn": "佩洛",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2022
   },
   {
     "id": "char_4104_coldst",
@@ -4045,7 +4127,8 @@
     "race": "埃拉菲亚",
     "raceEn": "埃拉菲亚",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2023
   },
   {
     "id": "char_4211_snhunt",
@@ -4061,7 +4144,8 @@
     "race": "乌萨斯",
     "raceEn": "乌萨斯",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2025
   },
   {
     "id": "char_4177_brigid",
@@ -4077,7 +4161,8 @@
     "race": "佩洛",
     "raceEn": "佩洛",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2025
   },
   {
     "id": "char_4015_spuria",
@@ -4093,7 +4178,8 @@
     "race": "萨科塔",
     "raceEn": "萨科塔",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2023
   },
   {
     "id": "char_173_slchan",
@@ -4109,7 +4195,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_383_snsant",
@@ -4125,7 +4212,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_4105_almond",
@@ -4141,7 +4229,8 @@
     "race": "佩洛",
     "raceEn": "佩洛",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2023
   },
   {
     "id": "char_174_slbell",
@@ -4157,7 +4246,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_254_vodfox",
@@ -4173,7 +4263,8 @@
     "race": "沃尔珀",
     "raceEn": "沃尔珀",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_4079_haini",
@@ -4189,7 +4280,8 @@
     "race": "阿戈尔",
     "raceEn": "阿戈尔",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2024
   },
   {
     "id": "char_195_glassb",
@@ -4205,7 +4297,8 @@
     "race": "乌萨斯",
     "raceEn": "乌萨斯",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_326_glacus",
@@ -4221,7 +4314,8 @@
     "race": "未公开",
     "raceEn": "未公开",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_4032_provs",
@@ -4237,7 +4331,8 @@
     "race": "库兰塔",
     "raceEn": "库兰塔",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2022
   },
   {
     "id": "char_4122_grabds",
@@ -4253,7 +4348,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2024
   },
   {
     "id": "char_433_windft",
@@ -4269,7 +4365,8 @@
     "race": "佩洛",
     "raceEn": "佩洛",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2022
   },
   {
     "id": "char_4162_cathy",
@@ -4285,7 +4382,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2024
   },
   {
     "id": "char_4178_alanna",
@@ -4301,7 +4399,8 @@
     "race": "萨弗拉",
     "raceEn": "萨弗拉",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2025
   },
   {
     "id": "char_101_sora",
@@ -4317,7 +4416,8 @@
     "race": "鲁珀",
     "raceEn": "Lupo",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_4045_heidi",
@@ -4333,7 +4433,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2022
   },
   {
     "id": "char_4184_dolris",
@@ -4349,7 +4450,8 @@
     "race": "人类",
     "raceEn": "Human",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2025
   },
   {
     "id": "char_343_tknogi",
@@ -4365,7 +4467,8 @@
     "race": "埃拉菲亚",
     "raceEn": "埃拉菲亚",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_4019_ncdeer",
@@ -4381,7 +4484,8 @@
     "race": "埃拉菲亚",
     "raceEn": "埃拉菲亚",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2022
   },
   {
     "id": "char_492_quercu",
@@ -4397,7 +4501,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2022
   },
   {
     "id": "char_4172_xingzh",
@@ -4413,7 +4518,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2025
   },
   {
     "id": "char_1022_flwr2",
@@ -4429,7 +4535,8 @@
     "race": "沃尔珀",
     "raceEn": "沃尔珀",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2026
   },
   {
     "id": "char_4102_threye",
@@ -4445,7 +4552,8 @@
     "race": "萨卡兹",
     "raceEn": "萨卡兹",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2023
   },
   {
     "id": "char_487_bobb",
@@ -4461,7 +4569,8 @@
     "race": "佩洛",
     "raceEn": "佩洛",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2024
   },
   {
     "id": "char_4223_botany",
@@ -4477,7 +4586,8 @@
     "race": "埃拉菲亚",
     "raceEn": "埃拉菲亚",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2026
   },
   {
     "id": "char_4234_pedro",
@@ -4493,7 +4603,8 @@
     "race": "佩洛",
     "raceEn": "佩洛",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2026
   },
   {
     "id": "char_215_mantic",
@@ -4509,7 +4620,8 @@
     "race": "曼提柯",
     "raceEn": "曼提柯",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_478_kirara",
@@ -4525,7 +4637,8 @@
     "race": "阿戈尔",
     "raceEn": "阿戈尔",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2021
   },
   {
     "id": "char_4186_tmoris",
@@ -4541,7 +4654,8 @@
     "race": "人类",
     "raceEn": "Human",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2025
   },
   {
     "id": "char_241_panda",
@@ -4557,7 +4671,8 @@
     "race": "乌萨斯",
     "raceEn": "乌萨斯",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_4036_forcer",
@@ -4573,7 +4688,8 @@
     "race": "萨科塔",
     "raceEn": "萨科塔",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2022
   },
   {
     "id": "char_451_robin",
@@ -4589,7 +4705,8 @@
     "race": "阿纳缇",
     "raceEn": "阿纳缇",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_458_rfrost",
@@ -4605,7 +4722,8 @@
     "race": "人类",
     "raceEn": "Human",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2021
   },
   {
     "id": "char_4171_wulfen",
@@ -4621,7 +4739,8 @@
     "race": "斐迪亚",
     "raceEn": "斐迪亚",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2025
   },
   {
     "id": "char_369_bena",
@@ -4637,7 +4756,8 @@
     "race": "卡普里尼",
     "raceEn": "卡普里尼",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2021
   },
   {
     "id": "char_4016_kazema",
@@ -4653,7 +4773,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2022
   },
   {
     "id": "char_4124_iana",
@@ -4669,7 +4790,8 @@
     "race": "人类",
     "raceEn": "Human",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2024
   },
   {
     "id": "char_4183_mortis",
@@ -4685,7 +4807,8 @@
     "race": "人类",
     "raceEn": "Human",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2025
   },
   {
     "id": "char_4151_tinman",
@@ -4701,7 +4824,8 @@
     "race": "未公开",
     "raceEn": "未公开",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2024
   },
   {
     "id": "char_4191_tippi",
@@ -4717,7 +4841,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2025
   },
   {
     "id": "char_103_angel",
@@ -4733,7 +4858,8 @@
     "race": "萨科塔",
     "raceEn": "Sankta",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_332_archet",
@@ -4749,7 +4875,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2021
   },
   {
     "id": "char_456_ash",
@@ -4765,7 +4892,8 @@
     "race": "人类",
     "raceEn": "Human",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2021
   },
   {
     "id": "char_340_shwaz",
@@ -4781,7 +4909,8 @@
     "race": "菲林",
     "raceEn": "Feline",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_4055_bgsnow",
@@ -4797,7 +4926,8 @@
     "race": "鲁珀",
     "raceEn": "鲁珀",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2022
   },
   {
     "id": "char_1048_orchd2",
@@ -4813,7 +4943,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2026
   },
   {
     "id": "char_430_fartth",
@@ -4829,7 +4960,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2021
   },
   {
     "id": "char_4193_lemuen",
@@ -4845,7 +4977,8 @@
     "race": "萨科塔",
     "raceEn": "萨科塔",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2025
   },
   {
     "id": "char_113_cqbw",
@@ -4861,7 +4994,8 @@
     "race": "萨卡兹",
     "raceEn": "Sarkaz",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_300_phenxi",
@@ -4877,7 +5011,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2022
   },
   {
     "id": "char_197_poca",
@@ -4893,7 +5028,8 @@
     "race": "乌萨斯",
     "raceEn": "乌萨斯",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_2012_typhon",
@@ -4909,7 +5045,8 @@
     "race": "萨卡兹",
     "raceEn": "萨卡兹",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2023
   },
   {
     "id": "char_391_rosmon",
@@ -4925,7 +5062,8 @@
     "race": "菲林",
     "raceEn": "Feline",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_1035_wisdel",
@@ -4941,7 +5079,8 @@
     "race": "萨卡兹",
     "raceEn": "萨卡兹",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2024
   },
   {
     "id": "char_1013_chen2",
@@ -4957,7 +5096,8 @@
     "race": "龙",
     "raceEn": "龙",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2021
   },
   {
     "id": "char_4117_ray",
@@ -4973,7 +5113,8 @@
     "race": "卡特斯",
     "raceEn": "卡特斯",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2024
   },
   {
     "id": "char_4138_narant",
@@ -4989,7 +5130,8 @@
     "race": "库兰塔",
     "raceEn": "库兰塔",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2024
   },
   {
     "id": "char_112_siege",
@@ -5005,7 +5147,8 @@
     "race": "阿斯兰",
     "raceEn": "Aslan",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_222_bpipe",
@@ -5021,7 +5164,8 @@
     "race": "瓦伊凡",
     "raceEn": "瓦伊凡",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_362_saga",
@@ -5037,7 +5181,8 @@
     "race": "佩洛",
     "raceEn": "佩洛",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2021
   },
   {
     "id": "char_4026_vulpis",
@@ -5053,7 +5198,8 @@
     "race": "沃尔珀",
     "raceEn": "沃尔珀",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2024
   },
   {
     "id": "char_479_sleach",
@@ -5069,7 +5215,8 @@
     "race": "瓦伊凡",
     "raceEn": "瓦伊凡",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2021
   },
   {
     "id": "char_420_flamtl",
@@ -5085,7 +5232,8 @@
     "race": "札拉克",
     "raceEn": "札拉克",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2021
   },
   {
     "id": "char_427_vigil",
@@ -5101,7 +5249,8 @@
     "race": "鲁珀",
     "raceEn": "鲁珀",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2022
   },
   {
     "id": "char_249_mlyss",
@@ -5117,7 +5266,8 @@
     "race": "精灵",
     "raceEn": "精灵",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2023
   },
   {
     "id": "char_4228_closur",
@@ -5133,7 +5283,8 @@
     "race": "萨卡兹",
     "raceEn": "萨卡兹",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2026
   },
   {
     "id": "char_1045_svash2",
@@ -5149,7 +5300,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2025
   },
   {
     "id": "char_4087_ines",
@@ -5165,7 +5317,8 @@
     "race": "未公开",
     "raceEn": "未公开",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2023
   },
   {
     "id": "char_134_ifrit",
@@ -5181,7 +5334,8 @@
     "race": "萨卡兹",
     "raceEn": "Sarkaz",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_4229_aphris",
@@ -5197,7 +5351,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2026
   },
   {
     "id": "char_213_mostma",
@@ -5213,7 +5368,8 @@
     "race": "未公开",
     "raceEn": "未公开",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_180_amgoat",
@@ -5229,7 +5385,8 @@
     "race": "卡普里尼",
     "raceEn": "Caprinae",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_2013_cerber",
@@ -5245,7 +5402,8 @@
     "race": "佩洛",
     "raceEn": "佩洛",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_4027_heyak",
@@ -5261,7 +5419,8 @@
     "race": "未公开",
     "raceEn": "未公开",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2023
   },
   {
     "id": "char_4133_logos",
@@ -5277,7 +5436,8 @@
     "race": "萨卡兹",
     "raceEn": "萨卡兹",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2024
   },
   {
     "id": "char_2015_dusk",
@@ -5293,7 +5453,8 @@
     "race": "未公开",
     "raceEn": "未公开",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2021
   },
   {
     "id": "char_4141_marcil",
@@ -5309,7 +5470,8 @@
     "race": "精灵",
     "raceEn": "精灵",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2024
   },
   {
     "id": "char_472_pasngr",
@@ -5325,7 +5487,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2021
   },
   {
     "id": "char_426_billro",
@@ -5341,7 +5504,8 @@
     "race": "卡普里尼",
     "raceEn": "卡普里尼",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2021
   },
   {
     "id": "char_4080_lin",
@@ -5357,7 +5521,8 @@
     "race": "札拉克",
     "raceEn": "札拉克",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2023
   },
   {
     "id": "char_1046_sbell2",
@@ -5373,7 +5538,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2025
   },
   {
     "id": "char_377_gdglow",
@@ -5389,7 +5555,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2022
   },
   {
     "id": "char_1038_whitw2",
@@ -5405,7 +5572,8 @@
     "race": "鲁珀",
     "raceEn": "鲁珀",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2024
   },
   {
     "id": "char_4046_ebnhlz",
@@ -5421,7 +5589,8 @@
     "race": "卡普里尼",
     "raceEn": "卡普里尼",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2022
   },
   {
     "id": "char_4226_veen",
@@ -5437,7 +5606,8 @@
     "race": "库兰塔",
     "raceEn": "库兰塔",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2026
   },
   {
     "id": "char_4146_nymph",
@@ -5453,7 +5623,8 @@
     "race": "萨卡兹",
     "raceEn": "萨卡兹",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2024
   },
   {
     "id": "char_1040_blaze2",
@@ -5469,7 +5640,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2025
   },
   {
     "id": "char_4204_mantra",
@@ -5485,7 +5657,8 @@
     "race": "斐迪亚",
     "raceEn": "斐迪亚",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2025
   },
   {
     "id": "char_450_necras",
@@ -5501,7 +5674,8 @@
     "race": "德拉克",
     "raceEn": "德拉克",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2025
   },
   {
     "id": "char_206_gnosis",
@@ -5517,7 +5691,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2021
   },
   {
     "id": "char_291_aglina",
@@ -5533,7 +5708,8 @@
     "race": "沃尔珀",
     "raceEn": "Vulpo",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_358_lisa",
@@ -5549,7 +5725,8 @@
     "race": "沃尔珀",
     "raceEn": "Vulpo",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_614_acsupo",
@@ -5565,7 +5742,8 @@
     "race": "黎博利",
     "raceEn": "Liberi",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 0
   },
   {
     "id": "char_1047_halo2",
@@ -5581,7 +5759,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2025
   },
   {
     "id": "char_248_mgllan",
@@ -5597,7 +5776,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_4195_radian",
@@ -5613,7 +5793,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2025
   },
   {
     "id": "char_1012_skadi2",
@@ -5629,7 +5810,8 @@
     "race": "未公开",
     "raceEn": "未公开",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2021
   },
   {
     "id": "char_4134_cetsyr",
@@ -5645,7 +5827,8 @@
     "race": "未公开",
     "raceEn": "未公开",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2024
   },
   {
     "id": "char_1031_slent2",
@@ -5661,7 +5844,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2023
   },
   {
     "id": "char_4202_haruka",
@@ -5677,7 +5861,8 @@
     "race": "阿戈尔",
     "raceEn": "阿戈尔",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2025
   },
   {
     "id": "char_2023_ling",
@@ -5693,7 +5878,8 @@
     "race": "未公开",
     "raceEn": "未公开",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2022
   },
   {
     "id": "char_4072_ironmn",
@@ -5709,7 +5895,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2022
   },
   {
     "id": "char_4212_nasti",
@@ -5725,7 +5912,8 @@
     "race": "萨卡兹",
     "raceEn": "萨卡兹",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2025
   },
   {
     "id": "char_245_cello",
@@ -5741,7 +5929,8 @@
     "race": "萨科塔",
     "raceEn": "萨科塔",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2023
   },
   {
     "id": "char_1042_phatm2",
@@ -5757,7 +5946,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2025
   },
   {
     "id": "char_250_phatom",
@@ -5773,7 +5963,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2020
   },
   {
     "id": "char_1028_texas2",
@@ -5789,7 +5980,8 @@
     "race": "鲁珀",
     "raceEn": "鲁珀",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2022
   },
   {
     "id": "char_1029_yato2",
@@ -5805,7 +5997,8 @@
     "race": "鬼",
     "raceEn": "鬼",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2023
   },
   {
     "id": "char_1502_crosly",
@@ -5821,7 +6014,8 @@
     "race": "瑞柏巴",
     "raceEn": "瑞柏巴",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2024
   },
   {
     "id": "char_615_acspec",
@@ -5837,7 +6031,8 @@
     "race": "萨卡兹",
     "raceEn": "Sarkaz",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 0
   },
   {
     "id": "char_322_lmlee",
@@ -5853,7 +6048,8 @@
     "race": "龙",
     "raceEn": "龙",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2022
   },
   {
     "id": "char_1033_swire2",
@@ -5869,7 +6065,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2023
   },
   {
     "id": "char_400_weedy",
@@ -5885,7 +6082,8 @@
     "race": "阿戈尔",
     "raceEn": "阿戈尔",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_225_haak",
@@ -5901,7 +6099,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2020
   },
   {
     "id": "char_1041_angel2",
@@ -5917,7 +6116,8 @@
     "race": "萨科塔",
     "raceEn": "萨科塔",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2025
   },
   {
     "id": "char_474_glady",
@@ -5933,7 +6133,8 @@
     "race": "未公开",
     "raceEn": "未公开",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2021
   },
   {
     "id": "char_437_mizuki",
@@ -5949,7 +6150,8 @@
     "race": "阿戈尔",
     "raceEn": "阿戈尔",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2021
   },
   {
     "id": "char_4132_ascln",
@@ -5965,7 +6167,8 @@
     "race": "萨卡兹",
     "raceEn": "萨卡兹",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2024
   },
   {
     "id": "char_1023_ghost2",
@@ -5981,7 +6184,8 @@
     "race": "阿戈尔",
     "raceEn": "阿戈尔",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2022
   },
   {
     "id": "char_4048_doroth",
@@ -5997,7 +6201,8 @@
     "race": "札拉克",
     "raceEn": "札拉克",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2022
   },
   {
     "id": "char_4123_ela",
@@ -6013,7 +6218,8 @@
     "race": "人类",
     "raceEn": "Human",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2024
   },
   {
     "id": "char_2027_wang",
@@ -6029,7 +6235,8 @@
     "race": "未公开",
     "raceEn": "未公开",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2026
   },
   {
     "id": "char_1039_thorn2",
@@ -6045,7 +6252,8 @@
     "race": "阿戈尔",
     "raceEn": "阿戈尔",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2024
   },
   {
     "id": "char_147_shining",
@@ -6061,7 +6269,8 @@
     "race": "萨卡兹",
     "raceEn": "Sarkaz",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_179_cgbird",
@@ -6077,7 +6286,8 @@
     "race": "萨卡兹",
     "raceEn": "Sarkaz",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_003_kalts",
@@ -6093,7 +6303,8 @@
     "race": "菲林",
     "raceEn": "Feline",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2021
   },
   {
     "id": "char_4042_lumen",
@@ -6109,7 +6320,8 @@
     "race": "阿戈尔",
     "raceEn": "阿戈尔",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2022
   },
   {
     "id": "char_1016_agoat2",
@@ -6125,7 +6337,8 @@
     "race": "卡普里尼",
     "raceEn": "卡普里尼",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2023
   },
   {
     "id": "char_1020_reed2",
@@ -6141,7 +6354,8 @@
     "race": "德拉克",
     "raceEn": "德拉克",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2022
   },
   {
     "id": "char_4056_titi",
@@ -6157,7 +6371,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2026
   },
   {
     "id": "char_4179_monstr",
@@ -6173,7 +6388,8 @@
     "race": "未公开",
     "raceEn": "未公开",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2025
   },
   {
     "id": "char_1052_kalts2",
@@ -6189,7 +6405,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2026
   },
   {
     "id": "char_136_hsguma",
@@ -6205,7 +6422,8 @@
     "race": "鬼",
     "raceEn": "Oni",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_610_acfend",
@@ -6221,7 +6439,8 @@
     "race": "黎博利",
     "raceEn": "Liberi",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 0
   },
   {
     "id": "char_202_demkni",
@@ -6237,7 +6456,8 @@
     "race": "瓦伊凡",
     "raceEn": "Vouivre",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_423_blemsh",
@@ -6253,7 +6473,8 @@
     "race": "库兰塔",
     "raceEn": "库兰塔",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_2025_shu",
@@ -6269,7 +6490,8 @@
     "race": "未公开",
     "raceEn": "未公开",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2024
   },
   {
     "id": "char_2014_nian",
@@ -6285,7 +6507,8 @@
     "race": "未公开",
     "raceEn": "未公开",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_311_mudrok",
@@ -6301,7 +6524,8 @@
     "race": "萨卡兹",
     "raceEn": "Sarkaz",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_4065_judge",
@@ -6317,7 +6541,8 @@
     "race": "鲁珀",
     "raceEn": "鲁珀",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2022
   },
   {
     "id": "char_416_zumama",
@@ -6333,7 +6558,8 @@
     "race": "斐迪亚",
     "raceEn": "斐迪亚",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_4039_horn",
@@ -6349,7 +6575,8 @@
     "race": "鲁珀",
     "raceEn": "鲁珀",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2022
   },
   {
     "id": "char_1034_jesca2",
@@ -6365,7 +6592,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2023
   },
   {
     "id": "char_4194_rmixer",
@@ -6381,7 +6609,8 @@
     "race": "萨科塔",
     "raceEn": "萨科塔",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2025
   },
   {
     "id": "char_4230_mcnist",
@@ -6397,7 +6626,8 @@
     "race": "埃拉菲亚",
     "raceEn": "埃拉菲亚",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2026
   },
   {
     "id": "char_2026_yu",
@@ -6413,7 +6643,8 @@
     "race": "未公开",
     "raceEn": "未公开",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2025
   },
   {
     "id": "char_1044_hsgma2",
@@ -6429,7 +6660,8 @@
     "race": "鬼",
     "raceEn": "鬼",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2025
   },
   {
     "id": "char_264_f12yin",
@@ -6445,7 +6677,8 @@
     "race": "菲林",
     "raceEn": "Feline",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2020
   },
   {
     "id": "char_2024_chyue",
@@ -6461,7 +6694,8 @@
     "race": "未公开",
     "raceEn": "未公开",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2023
   },
   {
     "id": "char_4037_demetr",
@@ -6477,7 +6711,8 @@
     "race": "鲁珀",
     "raceEn": "鲁珀",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2026
   },
   {
     "id": "char_172_svrash",
@@ -6493,7 +6728,8 @@
     "race": "菲林",
     "raceEn": "Feline",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2019
   },
   {
     "id": "char_293_thorns",
@@ -6509,7 +6745,8 @@
     "race": "阿戈尔",
     "raceEn": "Aegir",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2020
   },
   {
     "id": "char_4082_qiubai",
@@ -6525,7 +6762,8 @@
     "race": "埃拉菲亚",
     "raceEn": "埃拉菲亚",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2023
   },
   {
     "id": "char_4182_oblvns",
@@ -6541,7 +6779,8 @@
     "race": "人类",
     "raceEn": "Human",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2025
   },
   {
     "id": "char_617_sharp2",
@@ -6557,7 +6796,8 @@
     "race": "黎博利",
     "raceEn": "Liberi",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2025
   },
   {
     "id": "char_4088_hodrer",
@@ -6573,7 +6813,8 @@
     "race": "萨卡兹",
     "raceEn": "萨卡兹",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2023
   },
   {
     "id": "char_4145_ulpia",
@@ -6589,7 +6830,8 @@
     "race": "阿戈尔",
     "raceEn": "阿戈尔",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2024
   },
   {
     "id": "char_4058_pepe",
@@ -6605,7 +6847,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2024
   },
   {
     "id": "char_1051_headb2",
@@ -6621,7 +6864,8 @@
     "race": "乌萨斯",
     "raceEn": "乌萨斯",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2026
   },
   {
     "id": "char_010_chen",
@@ -6637,7 +6881,8 @@
     "race": "龙",
     "raceEn": "Lung",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_4009_irene",
@@ -6653,7 +6898,8 @@
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2022
   },
   {
     "id": "char_4116_blkkgt",
@@ -6669,7 +6915,8 @@
     "race": "卡普里尼",
     "raceEn": "卡普里尼",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2023
   },
   {
     "id": "char_017_huang",
@@ -6685,7 +6932,8 @@
     "race": "菲林",
     "raceEn": "Feline",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_1026_gvial2",
@@ -6701,7 +6949,8 @@
     "race": "阿达克利斯",
     "raceEn": "阿达克利斯",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2022
   },
   {
     "id": "char_350_surtr",
@@ -6717,7 +6966,8 @@
     "race": "萨卡兹",
     "raceEn": "萨卡兹",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_4098_vvana",
@@ -6733,7 +6983,8 @@
     "race": "埃拉菲亚",
     "raceEn": "埃拉菲亚",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2023
   },
   {
     "id": "char_1019_siege2",
@@ -6749,7 +7000,8 @@
     "race": "阿斯兰",
     "raceEn": "阿斯兰",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2024
   },
   {
     "id": "char_1050_chen3",
@@ -6765,7 +7017,8 @@
     "race": "龙",
     "raceEn": "龙",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2026
   },
   {
     "id": "char_188_helage",
@@ -6781,7 +7034,8 @@
     "race": "黎博利",
     "raceEn": "Liberi",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2019
   },
   {
     "id": "char_4121_zuole",
@@ -6797,7 +7051,8 @@
     "race": "斐迪亚",
     "raceEn": "斐迪亚",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2024
   },
   {
     "id": "char_485_pallas",
@@ -6813,7 +7068,8 @@
     "race": "丰蹄",
     "raceEn": "丰蹄",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2021
   },
   {
     "id": "char_1014_nearl2",
@@ -6829,7 +7085,8 @@
     "race": "库兰塔",
     "raceEn": "库兰塔",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2021
   },
   {
     "id": "char_4011_lessng",
@@ -6845,7 +7102,8 @@
     "race": "卡普里尼",
     "raceEn": "卡普里尼",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2023
   },
   {
     "id": "char_1032_excu2",
@@ -6861,7 +7119,8 @@
     "race": "萨科塔",
     "raceEn": "萨科塔",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2023
   },
   {
     "id": "char_4010_etlchi",
@@ -6877,7 +7136,8 @@
     "race": "萨卡兹",
     "raceEn": "萨卡兹",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2025
   },
   {
     "id": "char_4064_mlynar",
@@ -6893,7 +7153,8 @@
     "race": "库兰塔",
     "raceEn": "库兰塔",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2022
   },
   {
     "id": "char_1043_leizi2",
@@ -6909,7 +7170,8 @@
     "race": "麒麟",
     "raceEn": "麒麟",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2025
   },
   {
     "id": "char_4214_cairn",
@@ -6925,7 +7187,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2025
   },
   {
     "id": "char_230_savage",
@@ -6941,7 +7204,8 @@
     "race": "卡特斯",
     "raceEn": "Cautus",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_282_catap",
@@ -6957,7 +7221,8 @@
     "race": "库兰塔",
     "raceEn": "库兰塔",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_283_midn",
@@ -6973,7 +7238,8 @@
     "race": "萨卡兹",
     "raceEn": "萨卡兹",
     "gender": "男",
-    "genderEn": "Male"
+    "genderEn": "Male",
+    "releaseYear": 2019
   },
   {
     "id": "char_137_brownb",
@@ -6989,7 +7255,8 @@
     "race": "乌萨斯",
     "raceEn": "乌萨斯",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_347_jaksel",
@@ -7005,7 +7272,8 @@
     "race": "佩洛",
     "raceEn": "佩洛",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2020
   },
   {
     "id": "char_164_nightm",
@@ -7021,7 +7289,8 @@
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_220_grani",
@@ -7037,7 +7306,8 @@
     "race": "库兰塔",
     "raceEn": "库兰塔",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   },
   {
     "id": "char_263_skadi",
@@ -7053,6 +7323,7 @@
     "race": "阿戈尔",
     "raceEn": "Aegir",
     "gender": "女",
-    "genderEn": "Female"
+    "genderEn": "Female",
+    "releaseYear": 2019
   }
 ]

@@ -14,6 +14,7 @@ export interface Character {
   raceEn: string;         // 种族（英）
   gender: string;         // 性别（中）
   genderEn: string;       // 性别（英）
+  releaseYear: number;    // 上线年份
 }
 
 /** 猜测状态：正确 / 接近 / 错误 */
@@ -27,6 +28,7 @@ export interface GuessComparisons {
   rarity: GuessStatus;
   race: GuessStatus;
   gender: GuessStatus;
+  releaseYear: GuessStatus;
 }
 
 /** 一次猜测的完整结果 */

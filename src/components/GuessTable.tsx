@@ -40,6 +40,7 @@ export function GuessTable({ guesses }: GuessTableProps) {
     { key: 'rarity', label: t('table.rarity'), render: (g: GuessResult) => '★'.repeat(g.character.rarity), statusKey: 'rarity' as const },
     { key: 'race', label: t('table.race'), render: (g: GuessResult) => g.character.race, statusKey: 'race' as const },
     { key: 'gender', label: t('table.gender'), render: (g: GuessResult) => g.character.gender, statusKey: 'gender' as const },
+    { key: 'releaseYear', label: t('table.year'), render: (g: GuessResult) => g.character.releaseYear ? String(g.character.releaseYear) : '?', statusKey: 'releaseYear' as const },
   ];
 
   return (

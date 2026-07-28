@@ -43,6 +43,7 @@
   "table.rarity": "星级",
   "table.race": "种族",
   "table.gender": "性别",
+  "table.year": "上线年份",
 
   "rules.title": "游戏规则",
   "rules.intro": "系统会随机选择一位明日方舟干员。你的任务是猜出这位干员是谁！",

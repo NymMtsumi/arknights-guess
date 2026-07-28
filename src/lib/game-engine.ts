@@ -99,7 +99,15 @@ export function compareGuess(target: Character, guess: Character): GuessComparis
     rarity: compareRarity(target.rarity, guess.rarity),
     race: compareAttribute(target.race, guess.race),
     gender: compareAttribute(target.gender, guess.gender),
+    releaseYear: compareYear(target.releaseYear || 0, guess.releaseYear || 0),
   };
+}
+
+function compareYear(targetYear: number, guessYear: number): GuessStatus {
+  if (targetYear === 0 || guessYear === 0) return 'wrong';
+  if (targetYear === guessYear) return 'correct';
+  if (Math.abs(targetYear - guessYear) === 1) return 'close';
+  return 'wrong';
 }
 
 /**

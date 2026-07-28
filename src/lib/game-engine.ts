@@ -100,7 +100,16 @@ export function compareGuess(target: Character, guess: Character): GuessComparis
     race: compareAttribute(target.race, guess.race),
     gender: compareAttribute(target.gender, guess.gender),
     releaseYear: compareYear(target.releaseYear || 0, guess.releaseYear || 0),
+    tags: compareTags(target.tags || [], guess.tags || []),
   };
+}
+
+function compareTags(targetTags: string[], guessTags: string[]): GuessStatus {
+  if (!targetTags.length || !guessTags.length) return 'wrong';
+  const common = targetTags.filter(t => guessTags.includes(t));
+  if (common.length === targetTags.length && common.length === guessTags.length) return 'correct';
+  if (common.length > 0) return 'close';
+  return 'wrong';
 }
 
 function compareYear(targetYear: number, guessYear: number): GuessStatus {
@@ -115,6 +124,28 @@ function compareYear(targetYear: number, guessYear: number): GuessStatus {
  */
 export function isWin(target: Character, guess: Character): boolean {
   return target.id === guess.id;
+}
+
+/**
+ * 检查是否为异格关系（同一个人不同代号）
+ */
+export function isAlterRelation(target: Character, guess: Character): boolean {
+  // 猜的是目标的异格形态
+  if (guess.alterBase && guess.alterBase === target.name) return true;
+  // 目标是猜的异格形态
+  if (target.alterBase && target.alterBase === guess.name) return true;
+  // 同一个人在不同形态下的 alterBase 相同
+  if (guess.alterBase && target.alterBase && guess.alterBase === target.alterBase) return true;
+  // 反向: 目标的 _alters 包含猜测
+  if (target._alters) {
+    const alters = target._alters.split(',').filter(Boolean);
+    if (alters.includes(guess.name)) return true;
+  }
+  if (guess._alters) {
+    const alters = guess._alters.split(',').filter(Boolean);
+    if (alters.includes(target.name)) return true;
+  }
+  return false;
 }
 
 /**

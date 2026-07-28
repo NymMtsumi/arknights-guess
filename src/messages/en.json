@@ -44,6 +44,7 @@
   "table.race": "Race",
   "table.gender": "Gender",
   "table.year": "Release",
+  "table.tags": "Tags",
 
   "rules.title": "Game Rules",
   "rules.intro": "The system randomly selects an Arknights operator. Your task is to guess who it is!",

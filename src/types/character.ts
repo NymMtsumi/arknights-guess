@@ -15,6 +15,9 @@ export interface Character {
   gender: string;         // 性别（中）
   genderEn: string;       // 性别（英）
   releaseYear: number;    // 上线年份
+  tags: string[];          // 标签/词缀
+  alterBase: string;       // 异格原型（空=非异格）
+  _alters?: string;        // 该原型的异格形态列表(逗号分隔)
 }
 
 /** 猜测状态：正确 / 接近 / 错误 */
@@ -29,6 +32,7 @@ export interface GuessComparisons {
   race: GuessStatus;
   gender: GuessStatus;
   releaseYear: GuessStatus;
+  tags: GuessStatus;
 }
 
 /** 一次猜测的完整结果 */

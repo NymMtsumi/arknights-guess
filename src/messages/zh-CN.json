@@ -2,10 +2,12 @@
   "app.title": "明日方舟 — 干员猜测游戏",
   "app.description": "猜明日方舟干员！根据职业、阵营、星级等属性线索猜出答案。",
   "game.name": "罗德岛猜干员",
-  "game.nameShort": "猜干员",
+  "game.nameShort": "理一把",
 
   "hero.kicker": "罗德岛人事部",
-  "hero.title": "猜 干 员",
+  "hero.title": "理 一 把",
+  "footer.credit": "制作人：若叶家若麦",
+  "footer.bilibili": "B站主页",
   "hero.subtitle": "基于 blast.tv/counter-strikle 灵感 — 明日方舟版角色猜测游戏",
   "hero.description": "系统随机选择一位干员，通过输入干员名字进行猜测。每次猜测后，你会看到姓名、职业、子职业、阵营、星级、种族、性别的对比结果。绿色代表完全匹配，黄色代表部分接近，灰色代表不匹配。",
 

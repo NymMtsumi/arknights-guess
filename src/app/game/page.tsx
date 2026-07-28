@@ -7,6 +7,7 @@ import { GameSearch } from '@/components/GameSearch';
 import { GuessTable } from '@/components/GuessTable';
 import { GameEndDialog } from '@/components/GameEndDialog';
 import { RulesDialog } from '@/components/RulesDialog';
+import { Footer } from '@/components/Footer';
 import { useGameStore } from '@/stores/game-store';
 import { useI18n } from '@/lib/i18n';
 import { saveGameStats } from '@/lib/stats';
@@ -140,6 +141,7 @@ export default function GamePage() {
           </div>
         </div>
         <RulesDialog open={rulesOpen} onClose={() => setRulesOpen(false)} />
+        <Footer />
       </div>
     );
   }
@@ -245,6 +247,7 @@ export default function GamePage() {
         guessCount={guesses.length}
         onNewGame={handleNewGame}
       />
+      <Footer />
     </div>
   );
 }

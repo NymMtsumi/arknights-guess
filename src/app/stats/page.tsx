@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/Header';
+import { Footer } from '@/components/Footer';
 import { useI18n } from '@/lib/i18n';
 import type { StatsData } from '@/lib/stats';
 import { loadStats } from '@/lib/stats';
@@ -116,6 +117,7 @@ export default function StatsPage() {
         >
           {t('game.back')}
         </button>
+        <Footer />
       </div>
     </div>
   );

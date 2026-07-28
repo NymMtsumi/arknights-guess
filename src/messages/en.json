@@ -2,10 +2,12 @@
   "app.title": "Arknights — Operator Guessing Game",
   "app.description": "Guess the Arknights operator! Use class, faction, rarity, and other attribute clues to find the answer.",
   "game.name": "Rhodes Island Operator Guessing",
-  "game.nameShort": "Guess Op",
+  "game.nameShort": "LiYiBa",
 
   "hero.kicker": "RHODES ISLAND HR DEPT",
-  "hero.title": "GUESS OP",
+  "hero.title": "LI  YI  BA",
+  "footer.credit": "Producer: 若叶家若麦",
+  "footer.bilibili": "Bilibili",
   "hero.subtitle": "Inspired by blast.tv/counter-strikle — An Arknights character guessing game",
   "hero.description": "The system randomly selects an operator. Guess by entering operator names. After each guess, you'll see comparison results for name, class, subclass, faction, rarity, race, and gender. Green means exact match, yellow means partially close, gray means no match.",
 

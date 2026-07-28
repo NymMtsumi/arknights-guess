@@ -5,6 +5,7 @@ import { Header } from '@/components/Header';
 import { HeroSection } from '@/components/HeroSection';
 import { MenuCard } from '@/components/MenuCard';
 import { RulesDialog } from '@/components/RulesDialog';
+import { Footer } from '@/components/Footer';
 import { useI18n } from '@/lib/i18n';
 
 export default function HomePage() {
@@ -60,6 +61,8 @@ export default function HomePage() {
           />
         </div>
       </div>
+
+<Footer />
 
       {/* 规则弹窗 */}
       <RulesDialog open={rulesOpen} onClose={() => setRulesOpen(false)} />

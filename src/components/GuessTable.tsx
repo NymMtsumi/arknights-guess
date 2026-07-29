@@ -42,6 +42,7 @@ export function GuessTable({ guesses, target }: GuessTableProps) {
     { key: 'race', label: t('table.race'), render: (g: GuessResult) => g.character.race, statusKey: 'race' as const },
     { key: 'gender', label: t('table.gender'), render: (g: GuessResult) => g.character.gender, statusKey: 'gender' as const },
     { key: 'releaseYear', label: t('table.year'), render: (g: GuessResult) => g.character.releaseYear ? String(g.character.releaseYear) : '?', statusKey: 'releaseYear' as const },
+    { key: 'position', label: t('table.position'), render: (g: GuessResult) => g.character.position || '?', statusKey: 'position' as const },
     { key: 'tags', label: t('table.tags'), render: (g: GuessResult) => (g.character.tags || []).join(' ') || '-', statusKey: 'tags' as const },
   ];
 

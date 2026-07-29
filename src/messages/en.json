@@ -45,6 +45,7 @@
   "table.race": "Race",
   "table.gender": "Gender",
   "table.year": "Release",
+  "table.position": "Pos",
   "table.tags": "Tags",
 
   "rules.title": "Game Rules",

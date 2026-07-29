@@ -18,6 +18,8 @@ export interface Character {
   tags: string[];          // 标签/词缀
   alterBase: string;       // 异格原型（空=非异格）
   _alters?: string;        // 该原型的异格形态列表(逗号分隔)
+  position: string;        // 部署位：高台/地面/皆可
+  positionEn: string;      // Ranged/Melee/Both
 }
 
 /** 猜测状态：正确 / 接近 / 错误 */
@@ -33,6 +35,7 @@ export interface GuessComparisons {
   gender: GuessStatus;
   releaseYear: GuessStatus;
   tags: GuessStatus;
+  position: GuessStatus;
 }
 
 /** 一次猜测的完整结果 */

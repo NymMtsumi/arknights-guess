@@ -119,7 +119,16 @@ export function compareGuess(target: Character, guess: Character): GuessComparis
     gender: compareAttribute(target.gender, guess.gender),
     releaseYear: compareYear(target.releaseYear || 0, guess.releaseYear || 0),
     tags: compareTags(target.tags || [], guess.tags || []),
+    position: comparePosition(target.position, guess.position),
   };
+}
+
+function comparePosition(tPos: string, gPos: string): GuessStatus {
+  if (!tPos || !gPos) return 'wrong';
+  if (tPos === gPos) return 'correct';
+  // 有一方是"皆可"→ close
+  if (tPos === '皆可' || gPos === '皆可') return 'close';
+  return 'wrong';
 }
 
 function compareTags(targetTags: string[], guessTags: string[]): GuessStatus {

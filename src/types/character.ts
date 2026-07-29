@@ -20,6 +20,7 @@ export interface Character {
   _alters?: string;        // 该原型的异格形态列表(逗号分隔)
   position: string;        // 部署位：高台/地面/皆可
   positionEn: string;      // Ranged/Melee/Both
+  popularity?: string;     // 热度：hot/normal/cold
 }
 
 /** 猜测状态：正确 / 接近 / 错误 */

@@ -19,9 +19,9 @@
   "menu.statsDesc": "查看你的游戏历史和胜率记录",
 
   "difficulty.easy": "简单",
-  "difficulty.easyDesc": "候选池缩小至精选热门干员",
+  "difficulty.easyDesc": "仅 NGA 人气投票热门干员（~86 个）",
   "difficulty.medium": "普通",
-  "difficulty.mediumDesc": "包含大部分常见干员",
+  "difficulty.mediumDesc": "热门 + 普通干员（~388 个）",
   "difficulty.hard": "困难",
   "difficulty.hardDesc": "包含所有干员，挑战你的知识极限",
 

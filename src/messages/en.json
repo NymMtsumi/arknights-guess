@@ -19,9 +19,9 @@
   "menu.statsDesc": "View your game history and win rate",
 
   "difficulty.easy": "Easy",
-  "difficulty.easyDesc": "Curated pool of popular operators",
+  "difficulty.easyDesc": "NGA popularity poll hot operators (~86)",
   "difficulty.medium": "Normal",
-  "difficulty.mediumDesc": "Includes most common operators",
+  "difficulty.mediumDesc": "Hot + normal operators (~388)",
   "difficulty.hard": "Hard",
   "difficulty.hardDesc": "All operators included — test your knowledge",
 

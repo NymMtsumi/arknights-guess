@@ -7,11 +7,11 @@ import { pickRandom } from './utils';
 export function getPoolByDifficulty(characters: Character[], difficulty: Difficulty): Character[] {
   switch (difficulty) {
     case 'easy':
-      // 简单：仅 5-6 星角色（更知名）
-      return characters.filter(c => c.rarity >= 5);
+      // 简单：仅热门干员 (NGA人气榜 + 知名6星)
+      return characters.filter(c => c.popularity === 'hot');
     case 'medium':
-      // 普通：3-6 星
-      return characters.filter(c => c.rarity >= 3);
+      // 普通：热门 + 普通干员
+      return characters.filter(c => c.popularity === 'hot' || c.popularity === 'normal');
     case 'hard':
     default:
       // 困难：全部

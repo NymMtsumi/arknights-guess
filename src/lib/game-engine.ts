@@ -71,14 +71,12 @@ function compareFaction(targetFaction: string, guessFaction: string): GuessStatu
   const targetIsSimple = targetParts.length === 1;
   const guessIsSimple = guessParts.length === 1;
 
-  // 一方是简单阵营，匹配另一方的主阵营 → correct
-  if (targetIsSimple && guessParts.includes(targetFaction)) return 'correct';
-  if (guessIsSimple && targetParts.includes(guessFaction)) return 'correct';
+  // 一方是简单阵营，匹配另一方的主阵营 → close (同主阵营但一方无子阵营)
+  if (targetIsSimple && guessParts.includes(targetFaction)) return 'close';
+  if (guessIsSimple && targetParts.includes(guessFaction)) return 'close';
 
-  // 双方都是复合阵营，主阵营匹配但子阵营不同 → close
-  if (!targetIsSimple && !guessIsSimple) {
-    if (targetParts[0] === guessParts[0]) return 'close';
-  }
+  // 同主阵营 → close (无论另一方是简单还是复合)
+  if (targetParts[0] === guessParts[0]) return 'close';
 
   // 阵营大组归类 → close
   const factionGroups: string[][] = [

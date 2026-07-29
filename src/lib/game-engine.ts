@@ -56,24 +56,31 @@ function compareSubclass(
 }
 
 /**
- * 对比阵营：拆分复合阵营（主阵营,子阵营），任一主阵营匹配=correct
- * 例：乌萨斯 vs 乌萨斯,乌萨斯学生自治团 → correct
+ * 对比阵营：
+ * - 完全一致 → green
+ * - 一方是纯主阵营(无逗号)且匹配另一方的任一部分 → green (乌萨斯 vs 乌萨斯,学生自治团)
+ * - 双方都是复合阵营，主阵营同但子阵营不同 → close (罗德岛,A1 vs 罗德岛,A4)
+ * - 同阵营大组 → close
  */
 function compareFaction(targetFaction: string, guessFaction: string): GuessStatus {
   if (targetFaction === guessFaction) return 'correct';
 
-  // 拆分复合阵营（支持中英文逗号）
   const targetParts = targetFaction.split(/[,，]/).map(s => s.trim());
   const guessParts = guessFaction.split(/[,，]/).map(s => s.trim());
 
-  // 有任意部分匹配 → correct
-  for (const tp of targetParts) {
-    for (const gp of guessParts) {
-      if (tp === gp) return 'correct';
-    }
+  const targetIsSimple = targetParts.length === 1;
+  const guessIsSimple = guessParts.length === 1;
+
+  // 一方是简单阵营，匹配另一方的主阵营 → correct
+  if (targetIsSimple && guessParts.includes(targetFaction)) return 'correct';
+  if (guessIsSimple && targetParts.includes(guessFaction)) return 'correct';
+
+  // 双方都是复合阵营，主阵营匹配但子阵营不同 → close
+  if (!targetIsSimple && !guessIsSimple) {
+    if (targetParts[0] === guessParts[0]) return 'close';
   }
 
-  // 阵营大组归类：同大组的 → close
+  // 阵营大组归类 → close
   const factionGroups: string[][] = [
     ['罗德岛', '巴别塔'],
     ['龙门', '炎-龙门'],

@@ -1,442 +1,422 @@
-﻿id,name,nameEn,class,classEn,subclass,subclassEn,faction,factionEn,rarity,race,raceEn,gender,genderEn
-char_285_medic2,Lancet-2,Lancet-2,医疗,Medic,医师,Medic,罗德岛,Rhodes Island,1,机械,Robot,女,Female
-char_286_cast3,Castle-3,Castle-3,近卫,Guard,无畏者,Dreadnought,罗德岛,Rhodes Island,1,机械,Robot,男,Male
-char_376_therex,THRM-EX,Thermal-EX,特种,Specialist,处决者,Executor,罗德岛,Rhodes Island,1,机械,Robot,男,Male
-char_4000_jnight,正义骑士号,"Justice Knight",狙击,Sniper,速射手,Marksman,卡西米尔,Kazimierz,1,机械,Robot,女,Female
-char_4077_palico,泰拉大陆调查团,Terra Research Commission,狙击,Sniper,轰击手,Bombardier,罗德岛,Rhodes Island,1,未公开,Undisclosed,未知,Unknown
-char_4091_ulika,U-Official,U-Official,辅助,Supporter,吟游者,Bard,罗德岛,Rhodes Island,1,机械,Robot,女,Female
-char_4093_frston,Friston-3,Friston-3,重装,Defender,铁卫,Protector,罗德岛,Rhodes Island,1,机械,Robot,男,Male
-char_4136_phonor,PhonoR-0,PhonoR-0,辅助,Supporter,巫役,Ritualist,罗德岛,Rhodes Island,1,机械,Robot,女,Female
-char_4188_confes,CONFESS-47,CONFESS-47,先锋,Vanguard,尖兵,Pioneer,拉特兰,Laterano,1,机械,Robot,男,Male
-char_4227_gallus,GALLUS²,GALLUS²,术师,Caster,中坚术师,Core Caster,罗德岛,Rhodes Island,1,机械,Robot,男,Male
-char_4215_buddy,罗德岛隐秘队,Rhodes Island Recon,先锋,Vanguard,战术家,Tactician,罗德岛,Rhodes Island,1,未公开,Undisclosed,未知,Unknown
-char_502_nblade,夜刀,Yato,先锋,Vanguard,尖兵,Pioneer,罗德岛,Rhodes Island,2,鬼,鬼,女,Female
-char_500_noirc,黑角,Noir Corne,重装,Defender,铁卫,Protector,罗德岛,Rhodes Island,2,鬼,鬼,男,Male
-char_503_rang,巡林者,Rangers,狙击,Sniper,速射手,Marksman,罗德岛,Rhodes Island,2,萨弗拉,萨弗拉,男,Male
-char_501_durin,杜林,Durin,术师,Caster,中坚术师,Core Caster,罗德岛,Rhodes Island,2,杜林,杜林,女,Female
-char_009_12fce,12F,12F,术师,Caster,扩散术师,Splash Caster,罗德岛,Rhodes Island,2,萨弗拉,萨弗拉,男,Male
-char_123_fang,芬,Fang,先锋,Vanguard,尖兵,Pioneer,罗德岛,Rhodes Island,3,库兰塔,Kuranta,女,Female
-char_240_wyvern,香草,Vanilla,先锋,Vanguard,尖兵,Pioneer,哥伦比亚,Columbia,3,瓦伊凡,瓦伊凡,女,Female
-char_504_rguard,预备干员-近战,Reserve (Melee),先锋,Vanguard,尖兵,Pioneer,未知,Unknown,3,未知,Unknown,未知,Unknown
-char_192_falco,翎羽,Plume,先锋,Vanguard,冲锋手,Charger,拉特兰,Laterano,3,黎博利,Liberi,女,Female
-char_208_melan,玫兰莎,Melantha,近卫,Guard,无畏者,Dreadnought,罗德岛,Rhodes Island,3,菲林,菲林,女,Female
-char_281_popka,泡普卡,Popukar,近卫,Guard,强攻手,Centurion,罗德岛,Rhodes Island,3,卡特斯,卡特斯,女,Female
-char_209_ardign,卡缇,Cardigan,重装,Defender,铁卫,Protector,罗德岛,Rhodes Island,3,佩洛,佩洛,女,Female
-char_122_beagle,米格鲁,Beagle,重装,Defender,铁卫,Protector,罗德岛,Rhodes Island,3,佩洛,Perro,女,Female
-char_514_rdfend,预备干员-重装,Reserve (Defender),重装,Defender,铁卫,Protector,未知,Unknown,3,未知,Unknown,未知,Unknown
-char_284_spot,斑点,Spot,重装,Defender,守护者,Guardian,罗德岛,Rhodes Island,3,瑞柏巴,瑞柏巴,男,Male
-char_124_kroos,克洛丝,Kroos,狙击,Sniper,速射手,Marksman,罗德岛,Rhodes Island,3,卡特斯,Cautus,女,Female
-char_211_adnach,安德切尔,Adnachiel,狙击,Sniper,速射手,Marksman,罗德岛,Rhodes Island,3,萨科塔,Sankta,男,Male
-char_507_rsnipe,预备干员-狙击,Reserve (Sniper),狙击,Sniper,速射手,Marksman,未知,Unknown,3,未知,Unknown,未知,Unknown
-char_121_lava,炎熔,Lava,术师,Caster,扩散术师,Splash Caster,罗德岛,Rhodes Island,3,萨卡兹,Sarkaz,女,Female
-char_120_hibisc,芙蓉,Hibiscus,医疗,Medic,医师,Medic,罗德岛,Rhodes Island,3,萨卡兹,Sarkaz,女,Female
-char_212_ansel,安赛尔,Ansel,医疗,Medic,医师,Medic,罗德岛,Rhodes Island,3,卡特斯,卡特斯,男,Male
-char_506_rmedic,预备干员-后勤,Reserve (Logistic),医疗,Medic,医师,Medic,未知,Unknown,3,未知,Unknown,未知,Unknown
-char_210_stward,史都华德,Steward,术师,Caster,中坚术师,Core Caster,罗德岛,Rhodes Island,3,沃尔珀,Vulpo,男,Male
-char_505_rcast,预备干员-术师,Reserve (Caster),术师,Caster,中坚术师,Core Caster,未知,Unknown,3,未知,Unknown,未知,Unknown
-char_278_orchid,梓兰,Orchid,辅助,Supporter,减速者,Decel Binder,罗德岛,Rhodes Island,3,黎博利,黎博利,女,Female
-char_141_nights,夜烟,Haze,术师,Caster,中坚术师,Core Caster,维多利亚,Victoria,4,菲林,菲林,女,Female
-char_109_fmout,远山,Gitano,术师,Caster,扩散术师,Splash Caster,萨米,Sami,4,萨弗拉,Savra,女,Female
-char_253_greyy,格雷伊,Greyy,术师,Caster,扩散术师,Splash Caster,玻利瓦尔,Bolívar,4,佩洛,佩洛,男,Male
-char_4051_akkord,协律,Akkord,术师,Caster,轰击术师,Blast Caster,莱塔尼亚,Leithanien,4,卡普里尼,卡普里尼,女,Female
-char_328_cammou,卡达,Click,术师,Caster,驭械术师,Mech-Accord Caster,罗德岛,Rhodes Island,4,札拉克,札拉克,女,Female
-char_469_indigo,深靛,Indigo,术师,Caster,秘术师,Mystic Caster,伊比利亚,Iberia,4,斐迪亚,斐迪亚,女,Female
-char_4004_pudd,布丁,Pudding,术师,Caster,链术师,Chain Caster,哥伦比亚,Columbia,4,阿戈尔,阿戈尔,女,Female
-char_235_jesica,杰西卡,Jessica,狙击,Sniper,速射手,Marksman,哥伦比亚,Columbia,4,菲林,菲林,女,Female
-char_126_shotst,流星,Meteor,狙击,Sniper,速射手,Marksman,卡西米尔,Kazimierz,4,库兰塔,库兰塔,女,Female
-char_190_clour,红云,Vermeil,狙击,Sniper,速射手,Marksman,叙拉古,Siracusa,4,沃尔珀,沃尔珀,女,Female
-char_133_mm,梅,May,狙击,Sniper,速射手,Marksman,维多利亚,Victoria,4,黎博利,Liberi,女,Female
-char_118_yuki,白雪,ShiraYuki,狙击,Sniper,炮手,Artilleryman,东国,Higashi,4,阿纳缇,Anaty,女,Female
-char_440_pinecn,松果,Pinecone,狙击,Sniper,投掷手,Flinger,哥伦比亚,Columbia,4,黎博利,黎博利,女,Female
-char_302_glaze,安比尔,Ambriel,狙击,Sniper,神射手,Deadeye,拉特兰,Laterano,4,萨科塔,萨科塔,女,Female
-char_366_acdrop,酸糖,Aciddrop,狙击,Sniper,散射手,Spreadshooter,哥伦比亚,Columbia,4,黎博利,黎博利,女,Female
-char_4062_totter,铅踝,Totter,狙击,Sniper,攻城手,Siege,萨尔贡,Sargon,4,黎博利,黎博利,男,Male
-char_4100_caper,跃跃,Caper,狙击,Sniper,回环射手,Loopshooter,玻利瓦尔,Bolívar,4,卡特斯,卡特斯,女,Female
-char_198_blackd,讯使,Courier,先锋,Vanguard,尖兵,Pioneer,喀兰贸易,Kjerag,4,依特拉,依特拉,男,Male
-char_149_scave,清道夫,Scavenger,先锋,Vanguard,尖兵,Pioneer,罗德岛,Rhodes Island,4,札拉克,Zalak,女,Female
-char_600_cpione,预备干员-先锋,Reserve Operator - Vanguard,先锋,Vanguard,尖兵,Pioneer,未知,Unknown,4,未知,Unknown,未知,Unknown
-char_290_vigna,红豆,Vigna,先锋,Vanguard,冲锋手,Charger,哥伦比亚,Columbia,4,萨卡兹,萨卡兹,女,Female
-char_151_myrtle,桃金娘,Myrtle,先锋,Vanguard,执旗手,Standard Bearer,罗德岛,Rhodes Island,4,阿纳缇,Anaty,女,Female
-char_452_bstalk,豆苗,Beanstalk,先锋,Vanguard,战术家,Tactician,哥伦比亚,Columbia,4,瑞柏巴,瑞柏巴,女,Female
-char_4208_wintim,冬时,Снегурочка,先锋,Vanguard,情报官,Agent,乌萨斯,Ursus,4,黎博利,黎博利,女,Female
-char_130_doberm,杜宾,Dobermann,近卫,Guard,教官,Instructor,罗德岛,Rhodes Island,4,佩洛,佩洛,女,Female
-char_289_gyuki,缠丸,Matoimaru,近卫,Guard,无畏者,Dreadnought,东国,Higashi,4,鬼,鬼,女,Female
-char_159_peacok,断罪者,Conviction,近卫,Guard,无畏者,Dreadnought,米诺斯,Minos,4,未知（疑似黎博利）,未知（疑似黎博利）,断罪,断罪
-char_601_cguard,预备干员-近卫,Reserve Operator - Guard,近卫,Guard,无畏者,Dreadnought,未知,Unknown,4,未知,Unknown,未知,Unknown
-char_193_frostl,霜叶,Frostleaf,近卫,Guard,领主,Lord,罗德岛,Rhodes Island,4,沃尔珀,沃尔珀,女,Female
-char_127_estell,艾丝黛尔,Estelle,近卫,Guard,强攻手,Centurion,萨尔贡,Sargon,4,阿达克利斯,阿达克利斯,女,Female
-char_185_frncat,慕斯,Mousse,近卫,Guard,术战者,Arts Fighter,维多利亚,Victoria,4,菲林,菲林,女,Female
-char_301_cutter,刻刀,Cutter,近卫,Guard,剑豪,Swordmaster,哥伦比亚,Columbia,4,沃尔珀,沃尔珀,女,Female
-char_337_utage,宴,Utage,近卫,Guard,武者,Soloblade,东国,Higashi,4,不明,不明,女,Female
-char_271_spikes,芳汀,Arene,近卫,Guard,领主,Lord,拉特兰,Laterano,4,萨科塔,萨科塔,男,Male
-char_4067_lolxh,罗小黑,Luo Xiaohei,近卫,Guard,领主,Lord,炎,Yan,4,菲林,菲林,男,Male
-char_4063_quartz,石英,Quartz,近卫,Guard,重剑手,Crusher,哥伦比亚,Columbia,4,鲁珀,鲁珀,女,Female
-char_491_humus,休谟斯,Humus,近卫,Guard,收割者,Reaper,罗德岛,Rhodes Island,4,丰蹄,丰蹄,男,Male
-char_445_wscoot,骋风,Windscoot,近卫,Guard,解放者,Liberator,炎,Yan,4,菲林,菲林,男,Male
-char_237_gravel,砾,Gravel,特种,Specialist,处决者,Executor,卡西米尔,Kazimierz,4,札拉克,札拉克,女,Female
-char_607_cspec,预备干员-特种,Reserve Operator - Specialist,特种,Specialist,处决者,Executor,未知,Unknown,4,未知,Unknown,未知,Unknown
-char_272_strong,孑,Jaye,特种,Specialist,行商,Merchant,龙门,Lungmen,4,乌萨斯,乌萨斯,男,Male
-char_236_rope,暗索,Rope,特种,Specialist,拉人特种,Hookmaster,龙门,Lungmen,4,卡特斯,卡特斯,女,Female
-char_117_myrrh,末药,Myrrh,医疗,Medic,医师,Medic,罗德岛,Rhodes Island,4,沃尔珀,Vulpo,女,Female
-char_187_ccheal,嘉维尔,Gavial,医疗,Medic,医师,Medic,罗德岛,Rhodes Island,4,阿达克利斯,阿达克利斯,女,Female
-char_298_susuro,苏苏洛,Sussurro,医疗,Medic,医师,Medic,罗德岛,Rhodes Island,4,沃尔珀,沃尔珀,女,Female
-char_605_cmedic,预备干员-医疗,Reserve Operator - Medic,医疗,Medic,医师,Medic,未知,Unknown,4,未知,Unknown,未知,Unknown
-char_181_flower,调香师,Perfumer,医疗,Medic,群愈师,Multi-target Medic,罗德岛,Rhodes Island,4,沃尔珀,沃尔珀,女,Female
-char_385_finlpp,清流,Purestream,医疗,Medic,疗养师,Wandering Medic,炎,Yan,4,阿戈尔,阿戈尔,女,Female
-char_4041_chnut,褐果,Chestnut,医疗,Medic,行医,Wandering Medic,罗德岛,Rhodes Island,4,杜林,杜林,男,Male
-char_199_yak,角峰,Matterhorn,重装,Defender,铁卫,Protector,喀兰贸易,Kjerag,4,丰蹄,丰蹄,男,Male
-char_150_snakek,蛇屠箱,Cuora,重装,Defender,铁卫,Protector,哥伦比亚,Columbia,4,匹特拉姆,Petram,女,Female
-char_381_bubble,泡泡,Bubble,重装,Defender,铁卫,Protector,萨尔贡,Sargon,4,塞拉托,塞拉托,女,Female
-char_4130_luton,露托,Lutonada,重装,Defender,不屈者,Juggernaut,玻利瓦尔,Bolívar,4,札拉克,札拉克,女,Female
-char_196_sunbr,古米,Гум,重装,Defender,守护者,Guardian,乌萨斯,Ursus,4,乌萨斯,乌萨斯,女,Female
-char_260_durnar,坚雷,Dur-nar,重装,Defender,驭法铁卫,Arts Protector,罗德岛,Rhodes Island,4,沃尔珀,沃尔珀,女,Female
-char_110_deepcl,深海色,Deepcolor,辅助,Supporter,召唤师,Summoner,阿戈尔,Ægir,4,阿戈尔,Aegir,女,Female
-char_183_skgoat,地灵,Earthspirit,辅助,Supporter,减速者,Decel Binder,莱塔尼亚,Leithanien,4,卡普里尼,卡普里尼,女,Female
-char_258_podego,波登可,Podenco,辅助,Supporter,减速者,Decel Binder,罗德岛,Rhodes Island,4,佩洛,佩洛,女,Female
-char_606_csuppo,预备干员-辅助,Reserve Operator - Supporter,辅助,Supporter,减速者,Decel Binder,未知,Unknown,4,未知,Unknown,未知,Unknown
-char_484_robrta,罗比菈塔,Roberta,辅助,Supporter,工匠师,Artificer,哥伦比亚,Columbia,4,阿纳缇,阿纳缇,女,Female
-char_616_pithst,盟约·辅助干员,Alliance/Supportive Opertator,辅助,Supporter,巫役,Ritualist,未知,Unknown,4,未知,Unknown,未知,Unknown
-char_355_ethan,伊桑,Ethan,特种,Specialist,伏击客,Ambusher,罗德岛,Rhodes Island,4,萨弗拉,萨弗拉,男,Male
-char_277_sqrrel,阿消,Shaw,特种,Specialist,推击手,Push Stroker,龙门,Lungmen,4,札拉克,札拉克,女,Female
-char_4107_vrdant,维荻,Verdant,特种,Specialist,傀儡师,Dollkeeper,维多利亚,Victoria,4,斐迪亚,斐迪亚,男,Male
-char_4165_ctrail,云迹,Contrail,特种,Specialist,巡空者,Skywalker,哥伦比亚,Columbia,4,札拉克,札拉克,女,Female
-char_128_plosis,白面鸮,Ptilopsis,医疗,Medic,群愈师,Multi-target Medic,哥伦比亚,Columbia,5,黎博利,Liberi,女,Female
-char_275_breeze,微风,Breeze,医疗,Medic,群愈师,Multi-target Medic,维多利亚,Victoria,5,沃尔珀,沃尔珀,女,Female
-char_4163_rosesa,瑰盐,Rose Salt,医疗,Medic,群愈师,Multi-target Medic,伊比利亚,Iberia,5,斐迪亚,斐迪亚,女,Female
-char_115_headbr,凛冬,Зима,先锋,Vanguard,尖兵,Pioneer,乌萨斯,Ursus,5,乌萨斯,Ursus,女,Female
-char_102_texas,德克萨斯,Texas,先锋,Vanguard,尖兵,Pioneer,龙门,Lungmen,5,鲁珀,Lupo,女,Female
-char_349_chiave,贾维,Chiave,先锋,Vanguard,尖兵,Pioneer,叙拉古,Siracusa,5,沃尔珀,沃尔珀,男,Male
-char_488_buildr,青枳,Poncirus,先锋,Vanguard,尖兵,Pioneer,哥伦比亚,Columbia,5,黎博利,黎博利,女,Female
-char_513_apionr,郁金香,Tulip,先锋,Vanguard,尖兵,Pioneer,未知,Unknown,5,斐迪亚,斐迪亚,女,Female
-char_4023_rfalcn,红隼,Kestrel,先锋,Vanguard,尖兵,Pioneer,萨尔贡,Sargon,5,黎博利,黎博利,女,Female
-char_4199_makiri,松桐,Matsukiri,先锋,Vanguard,回环射手,Counsellor,东国,Higashi,5,鲁珀,鲁珀,男,Male
-char_261_sddrag,苇草,Reed,先锋,Vanguard,冲锋手,Charger,维多利亚,Victoria,5,德拉克,德拉克,女,Female
-char_496_wildmn,野鬃,Wild Mane,先锋,Vanguard,冲锋手,Charger,卡西米尔,Kazimierz,5,库兰塔,库兰塔,女,Female
-char_1036_fang2,历阵锐枪芬,Fang the Fire-sharpened,先锋,Vanguard,冲锋手,Charger,罗德岛,Rhodes Island,5,库兰塔,库兰塔,女,Female
-char_401_elysm,极境,Elysium,先锋,Vanguard,执旗手,Standard Bearer,罗德岛,Rhodes Island,5,黎博利,黎博利,男,Male
-char_4119_wanqin,万顷,Wanqing,先锋,Vanguard,执旗手,Standard Bearer,炎,Yan,5,丰蹄,丰蹄,男,Male
-char_476_blkngt,夜半,Blacknight,先锋,Vanguard,战术家,Tactician,雷姆必拓,Rim Billiton,5,萨弗拉,萨弗拉,女,Female
-char_4147_mitm,渡桥,Mitm,先锋,Vanguard,战术家,Tactician,罗德岛,Rhodes Island,5,萨卡兹,萨卡兹,男,Male
-char_497_ctable,晓歌,Cantabile,先锋,Vanguard,情报官,Agent,罗德岛,Rhodes Island,5,黎博利,黎博利,女,Female
-char_4017_puzzle,谜图,Puzzle,先锋,Vanguard,情报官,Agent,维多利亚,Victoria,5,瓦伊凡,瓦伊凡,男,Male
-char_4144_chilc,齐尔查克,Chilchuck,先锋,Vanguard,情报官,Agent,未知,Unknown,5,半身人（自称）,半身人（自称）,男,Male
-char_4052_surfer,寻澜,Surfer,先锋,Vanguard,情报官,Agent,哥伦比亚,Columbia,5,札拉克,札拉克,女,Female
-char_308_swire,诗怀雅,Swire,近卫,Guard,教官,Instructor,龙门,Lungmen,5,菲林,菲林,女,Female
-char_265_sophia,鞭刃,Whislash,近卫,Guard,教官,Instructor,卡西米尔,Kazimierz,5,库兰塔,库兰塔,女,Female
-char_4106_bryota,苍苔,Bryophyta,近卫,Guard,教官,Instructor,哥伦比亚,Columbia,5,黎博利,黎博利,男,Male
-char_4125_rdoc,医生,Doc,近卫,Guard,教官,Instructor,未知,Unknown,5,人类,Human,男,Male
-char_106_franka,芙兰卡,Franka,近卫,Guard,无畏者,Dreadnought,哥伦比亚,Columbia,5,沃尔珀,Vulpo,女,Female
-char_131_flameb,炎客,Flamebringer,近卫,Guard,无畏者,Dreadnought,罗德岛,Rhodes Island,5,萨卡兹,萨卡兹,男,Male
-char_154_morgan,摩根,Morgan,近卫,Guard,无畏者,Dreadnought,维多利亚,Victoria,5,菲林,菲林,女,Female
-char_508_aguard,Sharp,Sharp,近卫,Guard,无畏者,Dreadnought,未知,Unknown,5,斐迪亚,斐迪亚,男,Male
-char_4142_laios,莱欧斯,Laios,近卫,Guard,无畏者,Dreadnought,未知,Unknown,5,长身人（自称）,长身人（自称）,男,Male
-char_155_tiger,因陀罗,Indra,近卫,Guard,斗士,Brawler,维多利亚,Victoria,5,菲林,菲林,女,Female
-char_415_flint,燧石,Flint,近卫,Guard,斗士,Brawler,萨尔贡,Sargon,5,黎博利,黎博利,女,Female
-char_157_dagda,达格达,Dagda,近卫,Guard,斗士,Brawler,维多利亚,Victoria,5,菲林,菲林,女,Female
-char_140_whitew,拉普兰德,Lappland,近卫,Guard,领主,Lord,叙拉古,Siracusa,5,鲁珀,Lupo,女,Female
-char_294_ayer,断崖,Ayerscarpe,近卫,Guard,领主,Lord,雷姆必拓,Rim Billiton,5,卡特斯,卡特斯,男,Male
-char_194_leto,烈夏,Лето,近卫,Guard,领主,Lord,乌萨斯,Ursus,5,乌萨斯,乌萨斯,女,Female
-char_4083_chimes,铎铃,Wind Chimes,近卫,Guard,重剑手,Crusher,炎,Yan,5,丰蹄,丰蹄,女,Female
-char_252_bibeak,柏喙,Bibeak,近卫,Guard,剑豪,Swordmaster,萨米,Sami,5,黎博利,黎博利,女,Female
-char_459_tachak,战车,Tachanka,近卫,Guard,剑豪,Swordmaster,未知,Unknown,5,人类,Human,男,Male
-char_143_ghost,幽灵鲨,Specter,近卫,Guard,强攻手,Centurion,阿戈尔,Ægir,5,阿戈尔,Aegir,女,Female
-char_356_broca,布洛卡,Broca,近卫,Guard,强攻手,Centurion,叙拉古,Siracusa,5,菲林,菲林,男,Male
-char_4126_fuze,导火索,Fuze,近卫,Guard,强攻手,Centurion,未知,Unknown,5,人类,Human,男,Male
-char_4166_varkis,摆渡人,Varkáris,近卫,Guard,强攻手,Centurion,米诺斯,Minos,5,丰蹄,丰蹄,男,Male
-char_274_astesi,星极,Astesia,近卫,Guard,术战者,Arts Fighter,哥伦比亚,Columbia,5,黎博利,Liberi,女,Female
-char_333_sidero,铸铁,Sideroca,近卫,Guard,术战者,Arts Fighter,米诺斯,Minos,5,丰蹄,丰蹄,女,Female
-char_475_akafyu,赤冬,Akafuyu,近卫,Guard,武者,Soloblade,东国,Higashi,5,阿戈尔,阿戈尔,女,Female
-char_1030_noirc2,火龙S黑角,Rathalos S Noir Corne,近卫,Guard,武者,Soloblade,罗德岛,Rhodes Island,5,鬼,鬼,男,Male
-char_421_crow,羽毛笔,La Pluma,近卫,Guard,收割者,Reaper,玻利瓦尔,Bolívar,5,黎博利,黎博利,女,Female
-char_4066_highmo,海沫,Highmore,近卫,Guard,收割者,Reaper,伊比利亚,Iberia,5,阿戈尔,阿戈尔,女,Female
-char_486_takila,龙舌兰,Tequila,近卫,Guard,解放者,Liberator,玻利瓦尔,Bolívar,5,佩洛,佩洛,男,Male
-char_4131_odda,奥达,Odda,近卫,Guard,撼地者,Earthshaker,罗德岛,Rhodes Island,5,萨卡兹,萨卡兹,男,Male
-char_4187_graceb,聆音,Gracebearer,近卫,Guard,本源近卫,Primal Guard,玻利瓦尔,Bolívar,5,未公开,未公开,女,Female
-char_4185_amoris,祐天寺若麦,Yūtenji Nyamu,近卫,Guard,撼地者,Earthshaker,未知,Unknown,5,人类,Human,女,Female
-char_394_hadiya,哈蒂娅,Hadiya,近卫,Guard,佣兵,Mercenary,萨尔贡,Sargon,5,卡普里尼,卡普里尼,女,Female
-char_1049_catap2,雷狼龙S空爆,Zinogre S Catapult,近卫,Guard,佣兵,Mercenary,罗德岛,Rhodes Island,5,库兰塔,库兰塔,女,Female
-char_129_bluep,蓝毒,Blue Poison,狙击,Sniper,速射手,Marksman,伊比利亚,Iberia,5,安努拉,Anura,女,Female
-char_204_platnm,白金,Platinum,狙击,Sniper,速射手,Marksman,卡西米尔,Kazimierz,5,库兰塔,库兰塔,女,Female
-char_367_swllow,灰喉,GreyThroat,狙击,Sniper,速射手,Marksman,罗德岛,Rhodes Island,5,黎博利,黎博利,女,Female
-char_511_asnipe,Stormeye,Stormeye,狙击,Sniper,速射手,Marksman,未知,Unknown,5,萨卡兹,萨卡兹,男,Male
-char_365_aprl,四月,April,狙击,Sniper,速射手,Marksman,雷姆必拓,Rim Billiton,5,卡特斯,卡特斯,女,Female
-char_1021_kroos2,寒芒克洛丝,Kroos the Keen Glint,狙击,Sniper,速射手,Marksman,罗德岛,Rhodes Island,5,卡特斯,卡特斯,女,Female
-char_498_inside,隐现,Insider,狙击,Sniper,速射手,Marksman,拉特兰,Laterano,5,萨科塔,萨科塔,男,Male
-char_219_meteo,陨星,Meteorite,狙击,Sniper,炮手,Artilleryman,罗德岛,Rhodes Island,5,库兰塔,Kuranta,女,Female
-char_379_sesa,慑砂,Sesa,狙击,Sniper,炮手,Artilleryman,萨尔贡,Sargon,5,瓦伊凡,瓦伊凡,男,Male
-char_4078_bdhkgt,截云,Jieyun,狙击,Sniper,炮手,Artilleryman,炎,Yan,5,阿纳萨,阿纳萨,女,Female
-char_279_excu,送葬人,Executor,狙击,Sniper,投掷手,Flinger,拉特兰,Laterano,5,萨科塔,Sankta,男,Male
-char_346_aosta,奥斯塔,Aosta,狙击,Sniper,投掷手,Flinger,叙拉古,Siracusa,5,鲁珀,鲁珀,男,Male
-char_4203_kichi,吉星,Kichisei,狙击,Sniper,投掷手,Flinger,东国,Higashi,5,佩洛,佩洛,女,Female
-char_4213_skybx,天空盒,Skybox,狙击,Sniper,破空者,Skybreaker,哥伦比亚,Columbia,5,萨弗拉,萨弗拉,男,Male
-char_002_amiya,阿米娅,Amiya,术师,Caster,中坚术师,Core Caster,罗德岛,Rhodes Island,5,卡特斯/奇美拉,Cautus/Chimera,女,Female
-char_405_absin,苦艾,Absinthe,术师,Caster,中坚术师,Core Caster,乌萨斯,Ursus,5,乌萨斯,乌萨斯,女,Female
-char_411_tomimi,特米米,Tomimi,术师,Caster,中坚术师,Core Caster,萨尔贡,Sargon,5,阿达克利斯,阿达克利斯,女,Female
-char_466_qanik,雪绒,Qanipalaat,术师,Caster,中坚术师,Core Caster,萨米,Sami,5,沃尔珀,沃尔珀,男,Male
-char_166_skfire,天火,Skyfire,术师,Caster,扩散术师,Splash Caster,维多利亚,Victoria,5,菲林,菲林,女,Female
-char_509_acast,Pith,Pith,术师,Caster,扩散术师,Splash Caster,未知,Unknown,5,黎博利,黎博利,女,Female
-char_306_leizi,惊蛰,Leizi,术师,Caster,链术师,Chain Caster,炎,Yan,5,麒麟,麒麟,女,Female
-char_135_halo,星源,Astgenne,术师,Caster,链术师,Chain Caster,哥伦比亚,Columbia,5,黎博利,黎博利,女,Female
-char_344_beewax,蜜蜡,Beeswax,术师,Caster,阵法术师,Phalanx Caster,萨尔贡,Sargon,5,卡普里尼,卡普里尼,女,Female
-char_373_lionhd,莱恩哈特,Leonhardt,术师,Caster,扩散术师,Splash Caster,雷姆必拓,Rim Billiton,5,卡特斯,卡特斯,男,Male
-char_341_sntlla,寒檀,Santalla,术师,Caster,扩散术师,Splash Caster,萨米,Sami,5,菲林,菲林,女,Female
-char_4031_liesel,复奏,Ripresa,术师,Caster,扩散术师,Splash Caster,叙拉古,Siracusa,5,卡普里尼,卡普里尼,女,Female
-char_388_mint,薄绿,Mint,术师,Caster,阵法术师,Phalanx Caster,维多利亚,Victoria,5,菲林,菲林,女,Female
-char_338_iris,爱丽丝,Iris,术师,Caster,秘术师,Mystic Caster,维多利亚,Victoria,5,菲林,菲林,女,Female
-char_297_hamoni,和弦,Harmonie,术师,Caster,秘术师,Mystic Caster,维多利亚,Victoria,5,菲林,菲林,女,Female
-char_4110_delphn,戴菲恩,Delphine,术师,Caster,秘术师,Mystic Caster,维多利亚,Victoria,5,菲林,菲林,女,Female
-char_1011_lava2,炎狱炎熔,Lava the Purgatory,术师,Caster,扩散术师,Splash Caster,罗德岛,Rhodes Island,5,萨卡兹,萨卡兹,女,Female
-char_489_serum,蚀清,Corroserum,术师,Caster,轰击术师,Blast Caster,哥伦比亚,Columbia,5,斐迪亚,斐迪亚,男,Male
-char_446_aroma,阿罗玛,Aroma,术师,Caster,轰击术师,Blast Caster,叙拉古,Siracusa,5,鲁珀,鲁珀,女,Female
-char_4013_kjera,耶拉,Kjera,术师,Caster,驭械术师,Mech-Accord Caster,喀兰贸易,Kjerag,5,未公开,未公开,女,Female
-char_4040_rockr,洛洛,Rockrock,术师,Caster,驭械术师,Mech-Accord Caster,维多利亚,Victoria,5,菲林,菲林,女,Female
-char_4054_malist,至简,Minimalist,术师,Caster,驭械术师,Mech-Accord Caster,萨尔贡,Sargon,5,杜林,杜林,男,Male
-char_499_kaitou,折光,Diamante,术师,Caster,本源术师,Primal Caster,莱塔尼亚,Leithanien,5,卡普里尼,卡普里尼,男,Male
-char_4081_warmy,温米,Warmy,术师,Caster,本源术师,Primal Caster,雷姆必拓,Rim Billiton,5,卡特斯,卡特斯,女,Female
-char_4198_christ,Miss.Christine,Miss.Christine,术师,Caster,本源术师,Primal Caster,维多利亚,Victoria,5,未公开,未公开,女士,女士
-char_4164_tecno,特克诺,Tecno,术师,Caster,塑灵术师,Necrosis Caster,玻利瓦尔,Bolívar,5,杜林,杜林,女,Female
-char_242_otter,梅尔,Mayer,辅助,Supporter,召唤师,Summoner,哥伦比亚,Columbia,5,阿纳缇,阿纳缇,女,Female
-char_336_folivo,稀音,Scene,辅助,Supporter,召唤师,Summoner,萨尔贡,Sargon,5,皮洛萨,皮洛萨,女,Female
-char_4140_lasher,衡沙,Sand Reckoner,辅助,Supporter,召唤师,Summoner,萨尔贡,Sargon,5,黎博利,黎博利,男,Male
-char_108_silent,赫默,Silence,医疗,Medic,医师,Medic,哥伦比亚,Columbia,5,黎博利,Liberi,女,Female
-char_171_bldsk,华法琳,Warfarin,医疗,Medic,医师,Medic,罗德岛,Rhodes Island,5,萨卡兹,Sarkaz,女,Female
-char_345_folnic,亚叶,Folinic,医疗,Medic,医师,Medic,罗德岛,Rhodes Island,5,菲林,菲林,女,Female
-char_510_amedic,Touch,Touch,医疗,Medic,医师,Medic,未知,Unknown,5,卡普里尼,卡普里尼,女,Female
-char_4196_reckpr,录武官,Record Keeper,医疗,Medic,医师,Medic,炎,Yan,5,佩洛,佩洛,男,Male
-char_348_ceylon,锡兰,Ceylon,医疗,Medic,疗养师,Wandering Medic,哥伦比亚,Columbia,5,黎博利,黎博利,女,Female
-char_436_whispr,絮雨,Whisperain,医疗,Medic,疗养师,Wandering Medic,伊比利亚,Iberia,5,阿戈尔,阿戈尔,女,Female
-char_4173_nowell,诺威尔,Nowell,医疗,Medic,疗养师,Wandering Medic,维多利亚,Victoria,5,沃尔珀,沃尔珀,男,Male
-char_402_tuye,图耶,Tuye,医疗,Medic,医师,Medic,萨尔贡,Sargon,5,丰蹄,丰蹄,女,Female
-char_473_mberry,桑葚,Mulberry,医疗,Medic,行医,Wandering Medic,炎,Yan,5,黎博利,黎博利,女,Female
-char_449_glider,蜜莓,Honeyberry,医疗,Medic,行医,Wandering Medic,雷姆必拓,Rim Billiton,5,札拉克,札拉克,女,Female
-char_4114_harold,哈洛德,Harold,医疗,Medic,行医,Wandering Medic,维多利亚,Victoria,5,菲林,菲林,男,Male
-char_1024_hbisc2,濯尘芙蓉,Hibiscus the Purifier,医疗,Medic,咒愈师,Incantation Medic,罗德岛,Rhodes Island,5,萨卡兹,萨卡兹,女,Female
-char_494_vendla,刺玫,Vendela,医疗,Medic,咒愈师,Incantation Medic,维多利亚,Victoria,5,菲林,菲林,女,Female
-char_4071_peper,明椒,Paprika,医疗,Medic,链愈师,Chain Medic,罗德岛,Rhodes Island,5,萨卡兹,萨卡兹,女,Female
-char_4139_papyrs,莎草,Papyrus,医疗,Medic,链愈师,Chain Medic,萨尔贡,Sargon,5,菲林,菲林,女,Female
-char_4224_turdus,乌啾,Укусик,医疗,Medic,链愈师,Chain Medic,乌萨斯,Ursus,5,黎博利,黎博利,女,Female
-char_4222_taraxa,风絮,Taraxacum,医疗,Medic,巡哨者,Watchman,炎,Yan,5,库兰塔,库兰塔,男,Male
-char_148_nearl,临光,Nearl,重装,Defender,守护者,Guardian,未知,Unknown,5,库兰塔,Kuranta,女,Female
-char_226_hmau,吽,Hung,重装,Defender,守护者,Guardian,龙门,Lungmen,5,佩洛,佩洛,男,Male
-char_4109_baslin,深律,Bassline,重装,Defender,守护者,Guardian,莱塔尼亚,Leithanien,5,鲁珀,鲁珀,男,Male
-char_4143_sensi,森西,Senshi,重装,Defender,守护者,Guardian,未知,Unknown,5,矮人（自称）,矮人（自称）,男,Male
-char_144_red,红,Projekt Red,特种,Specialist,处决者,Executor,罗德岛,Rhodes Island,5,鲁珀,Lupo,女,Female
-char_243_waaifu,槐琥,Waai Fu,特种,Specialist,处决者,Executor,龙门,Lungmen,5,菲林,菲林,女,Female
-char_214_kafka,卡夫卡,Kafka,特种,Specialist,处决者,Executor,哥伦比亚,Columbia,5,黎博利,黎博利,女,Female
-char_455_nothin,乌有,Mr.Nothing,特种,Specialist,行商,Merchant,炎,Yan,5,黎博利,黎博利,男,Male
-char_4155_talr,裁度,Figurino,特种,Specialist,行商,Merchant,叙拉古,Siracusa,5,鲁珀,鲁珀,男,Male
-char_107_liskam,雷蛇,Liskarm,重装,Defender,哨戒铁卫,Sentry Protector,哥伦比亚,Columbia,5,瓦伊凡,Vouivre,女,Female
-char_4137_udflow,深巡,Underflow,重装,Defender,哨戒铁卫,Sentry Protector,阿戈尔,Ægir,5,阿戈尔,阿戈尔,女,Female
-char_201_moeshd,可颂,Croissant,重装,Defender,铁卫,Protector,龙门,Lungmen,5,丰蹄,丰蹄,女,Female
-char_325_bison,拜松,Bison,重装,Defender,铁卫,Protector,龙门,Lungmen,5,丰蹄,丰蹄,男,Male
-char_163_hpsts,火神,Vulcan,重装,Defender,不屈者,Juggernaut,米诺斯,Minos,5,丰蹄,丰蹄,女,Female
-char_4207_branch,折桠,Веточки,重装,Defender,不屈者,Juggernaut,乌萨斯,Ursus,5,乌萨斯,乌萨斯,女,Female
-char_378_asbest,石棉,Asbestos,重装,Defender,驭法铁卫,Arts Protector,雷姆必拓,Rim Billiton,5,萨弗拉,萨弗拉,女,Female
-char_512_aprot,暮落,Shalem,重装,Defender,驭法铁卫,Arts Protector,未知,Unknown,5,斐迪亚,斐迪亚,男,Male
-char_4047_pianst,车尔尼,Czerny,重装,Defender,驭法铁卫,Arts Protector,莱塔尼亚,Leithanien,5,埃拉菲亚,埃拉菲亚,男,Male
-char_457_blitz,闪击,Blitz,重装,Defender,哨戒铁卫,Sentry Protector,未知,Unknown,5,人类,Human,男,Male
-char_304_zebra,暴雨,Heavyrain,重装,Defender,铁卫,Protector,罗德岛,Rhodes Island,5,库兰塔,库兰塔,女,Female
-char_431_ashlok,灰毫,Ashlock,重装,Defender,要塞,Fortress,卡西米尔,Kazimierz,5,札拉克,札拉克,女,Female
-char_493_firwhl,火哨,Firewhistle,重装,Defender,要塞,Fortress,雷姆必拓,Rim Billiton,5,黎博利,黎博利,女,Female
-char_422_aurora,极光,Aurora,重装,Defender,决战者,Duelist,喀兰贸易,Kjerag,5,乌萨斯,乌萨斯,女,Female
-char_464_cement,洋灰,Cement,重装,Defender,决战者,Duelist,雷姆必拓,Rim Billiton,5,札拉克,札拉克,女,Female
-char_4148_philae,菲莱,Philae,重装,Defender,本源铁卫,Primal Protector,萨尔贡,Sargon,5,萨卡兹,萨卡兹,女,Female
-char_4225_tanya,裂响,Crackborne,重装,Defender,本源铁卫,Primal Protector,乌萨斯,Ursus,5,乌萨斯,乌萨斯,女,Female
-char_145_prove,普罗旺斯,Provence,狙击,Sniper,散射手,Spreadshooter,叙拉古,Siracusa,5,鲁珀,Lupo,女,Female
-char_4006_melnte,玫拉,Melanite,狙击,Sniper,散射手,Spreadshooter,哥伦比亚,Columbia,5,斐迪亚,斐迪亚,女,Female
-char_158_milu,守林人,Firewatch,狙击,Sniper,神射手,Deadeye,罗德岛,Rhodes Island,5,埃拉菲亚,Elafia,女,Female
-char_218_cuttle,安哲拉,Andreana,狙击,Sniper,神射手,Deadeye,阿戈尔,Ægir,5,阿戈尔,阿戈尔,女,Female
-char_4014_lunacu,子月,Lunacub,狙击,Sniper,神射手,Deadeye,叙拉古,Siracusa,5,鲁珀,鲁珀,女,Female
-char_363_toddi,熔泉,Toddifons,狙击,Sniper,攻城手,Siege,维多利亚,Victoria,5,瓦伊凡,瓦伊凡,女,Female
-char_4043_erato,埃拉托,Erato,狙击,Sniper,攻城手,Siege,米诺斯,Minos,5,黎博利,黎博利,女,Female
-char_4221_ju,矩,Ju,狙击,Sniper,攻城手,Siege,炎,Yan,5,未公开,未公开,男,Male
-char_1027_greyy2,承曦格雷伊,Greyy the Lightningbearer,狙击,Sniper,轰击手,Bombardier,罗德岛,Rhodes Island,5,佩洛,佩洛,男,Male
-char_4104_coldst,冰酿,Coldshot,狙击,Sniper,猎手,Hunter,哥伦比亚,Columbia,5,埃拉菲亚,埃拉菲亚,女,Female
-char_4211_snhunt,雪猎,Snow Hunter,狙击,Sniper,猎手,Hunter,喀兰贸易,Kjerag,5,乌萨斯,乌萨斯,女,Female
-char_4177_brigid,水灯心,Brigid,狙击,Sniper,回环射手,Loopshooter,维多利亚,Victoria,5,佩洛,佩洛,女,Female
-char_4015_spuria,空构,Spuria,特种,Specialist,怪杰,Geek,拉特兰,Laterano,5,萨科塔,萨科塔,女,Female
-char_173_slchan,崖心,Cliffheart,特种,Specialist,拉人特种,Hookmaster,喀兰贸易,Kjerag,5,菲林,菲林,女,Female
-char_383_snsant,雪雉,Snowsant,特种,Specialist,拉人特种,Hookmaster,龙门,Lungmen,5,黎博利,黎博利,女,Female
-char_4105_almond,杏仁,Almond,特种,Specialist,拉人特种,Hookmaster,哥伦比亚,Columbia,5,佩洛,佩洛,女,Female
-char_174_slbell,初雪,Pramanix,辅助,Supporter,削弱者,Hexer,喀兰贸易,Kjerag,5,菲林,菲林,女,Female
-char_254_vodfox,巫恋,Shamare,辅助,Supporter,削弱者,Hexer,叙拉古,Siracusa,5,沃尔珀,沃尔珀,女,Female
-char_4079_haini,海霓,Lucilla,辅助,Supporter,削弱者,Hexer,阿戈尔,Ægir,5,阿戈尔,阿戈尔,女,Female
-char_195_glassb,真理,Истина,辅助,Supporter,减速者,Decel Binder,乌萨斯,Ursus,5,乌萨斯,乌萨斯,女,Female
-char_326_glacus,格劳克斯,Glaucus,辅助,Supporter,减速者,Decel Binder,伊比利亚,Iberia,5,未公开,未公开,女,Female
-char_4032_provs,但书,Proviso,辅助,Supporter,减速者,Decel Binder,卡西米尔,Kazimierz,5,库兰塔,库兰塔,女,Female
-char_4122_grabds,小满,Grain Buds,辅助,Supporter,减速者,Decel Binder,炎,Yan,5,黎博利,黎博利,女,Female
-char_433_windft,掠风,Windflit,辅助,Supporter,工匠师,Artificer,哥伦比亚,Columbia,5,佩洛,佩洛,男,Male
-char_4162_cathy,凯瑟琳,Catherine,辅助,Supporter,工匠师,Artificer,维多利亚,Victoria,5,菲林,菲林,女,Female
-char_4178_alanna,阿兰娜,Alanna,辅助,Supporter,工匠师,Artificer,雷姆必拓,Rim Billiton,5,萨弗拉,萨弗拉,女,Female
-char_101_sora,空,Sora,辅助,Supporter,吟游者,Bard,龙门,Lungmen,5,鲁珀,Lupo,女,Female
-char_4045_heidi,海蒂,Heidi,辅助,Supporter,吟游者,Bard,维多利亚,Victoria,5,菲林,菲林,女,Female
-char_4184_dolris,三角初华,Misumi Uika,辅助,Supporter,吟游者,Bard,未知,Unknown,5,人类,Human,女,Female
-char_343_tknogi,月禾,Tsukinogi,辅助,Supporter,护佑者,Abjurer,东国,Higashi,5,埃拉菲亚,埃拉菲亚,女,Female
-char_4019_ncdeer,九色鹿,Nine-Colored Deer,辅助,Supporter,护佑者,Abjurer,炎,Yan,5,埃拉菲亚,埃拉菲亚,女,Female
-char_492_quercu,夏栎,Quercus,辅助,Supporter,护佑者,Abjurer,罗德岛,Rhodes Island,5,菲林,菲林,女,Female
-char_4172_xingzh,行箸,Xingzhu,辅助,Supporter,护佑者,Abjurer,炎,Yan,5,菲林,菲林,女,Female
-char_1022_flwr2,撷英调香师,Perfumer the Distilled,辅助,Supporter,护佑者,Abjurer,罗德岛,Rhodes Island,5,沃尔珀,沃尔珀,女,Female
-char_4102_threye,凛视,Valarqvin,辅助,Supporter,巫役,Ritualist,萨米,Sami,5,萨卡兹,萨卡兹,女,Female
-char_487_bobb,波卜,Bobbing,辅助,Supporter,巫役,Ritualist,哥伦比亚,Columbia,5,佩洛,佩洛,男,Male
-char_4223_botany,伯塔尼,Ботани,辅助,Supporter,巫役,Ritualist,乌萨斯,Ursus,5,埃拉菲亚,埃拉菲亚,女,Female
-char_4234_pedro,佩德洛,Pedro,辅助,Supporter,辅助狙击,Supportive Ranger,玻利瓦尔,Bolívar,5,佩洛,佩洛,男,Male
-char_215_mantic,狮蝎,Manticore,特种,Specialist,伏击客,Ambusher,萨尔贡,Sargon,5,曼提柯,曼提柯,女,Female
-char_478_kirara,绮良,Kirara,特种,Specialist,伏击客,Ambusher,东国,Higashi,5,阿戈尔,阿戈尔,女,Female
-char_4186_tmoris,八幡海铃,Yahata Umiri,特种,Specialist,伏击客,Ambusher,未知,Unknown,5,人类,Human,女,Female
-char_241_panda,食铁兽,FEater,特种,Specialist,推击手,Push Stroker,龙门,Lungmen,5,乌萨斯,乌萨斯,女,Female
-char_4036_forcer,见行者,Enforcer,特种,Specialist,推击手,Push Stroker,拉特兰,Laterano,5,萨科塔,萨科塔,男,Male
-char_451_robin,罗宾,Robin,特种,Specialist,陷阱师,Trapmaster,哥伦比亚,Columbia,5,阿纳缇,阿纳缇,女,Female
-char_458_rfrost,霜华,Frost,特种,Specialist,陷阱师,Trapmaster,未知,Unknown,5,人类,Human,女,Female
-char_4171_wulfen,钼铅,Wulfenite,特种,Specialist,陷阱师,Trapmaster,萨尔贡,Sargon,5,斐迪亚,斐迪亚,女,Female
-char_369_bena,贝娜,Bena,特种,Specialist,傀儡师,Dollkeeper,维多利亚,Victoria,5,卡普里尼,卡普里尼,女,Female
-char_4016_kazema,风丸,Kazemaru,特种,Specialist,傀儡师,Dollkeeper,东国,Higashi,5,菲林,菲林,女,Female
-char_4124_iana,双月,Iana,特种,Specialist,傀儡师,Dollkeeper,未知,Unknown,5,人类,Human,女,Female
-char_4183_mortis,若叶睦,Wakaba Mutsumi,特种,Specialist,傀儡师,Dollkeeper,未知,Unknown,5,人类,Human,女,Female
-char_4151_tinman,锡人,Tin Man,特种,Specialist,炼金师,Alchemist,哥伦比亚,Columbia,5,未公开,未公开,男,Male
-char_4191_tippi,蒂比,Tippi,特种,Specialist,巡空者,Skywalker,哥伦比亚,Columbia,5,黎博利,黎博利,女,Female
-char_103_angel,能天使,Exusiai,狙击,Sniper,速射手,Marksman,龙门,Lungmen,6,萨科塔,Sankta,女,Female
-char_332_archet,空弦,Archetto,狙击,Sniper,速射手,Marksman,拉特兰,Laterano,6,黎博利,黎博利,女,Female
-char_456_ash,灰烬,Ash,狙击,Sniper,速射手,Marksman,未知,Unknown,6,人类,Human,女,Female
-char_340_shwaz,黑,Schwarz,狙击,Sniper,散射手,Spreadshooter,哥伦比亚,Columbia,6,菲林,Feline,女,Female
-char_4055_bgsnow,鸿雪,Позёмка,狙击,Sniper,散射手,Spreadshooter,罗德岛,Rhodes Island,6,鲁珀,鲁珀,女,Female
-char_1048_orchd2,焰狐龙梓兰,Violet Mizutsune Orchid,狙击,Sniper,散射手,Spreadshooter,罗德岛,Rhodes Island,6,黎博利,黎博利,女,Female
-char_430_fartth,远牙,Fartooth,狙击,Sniper,神射手,Deadeye,卡西米尔,Kazimierz,6,黎博利,黎博利,女,Female
-char_4193_lemuen,蕾缪安,Lemuen,狙击,Sniper,神射手,Deadeye,拉特兰,Laterano,6,萨科塔,萨科塔,女,Female
-char_113_cqbw,W,W,狙击,Sniper,炮手,Artilleryman,未知,Unknown,6,萨卡兹,Sarkaz,女,Female
-char_300_phenxi,菲亚梅塔,Fiammetta,狙击,Sniper,炮手,Artilleryman,拉特兰,Laterano,6,黎博利,黎博利,女,Female
-char_197_poca,早露,Роса,狙击,Sniper,攻城手,Siege,乌萨斯,Ursus,6,乌萨斯,乌萨斯,女,Female
-char_2012_typhon,提丰,Typhon,狙击,Sniper,攻城手,Siege,萨米,Sami,6,萨卡兹,萨卡兹,女,Female
-char_391_rosmon,迷迭香,Rosmontis,狙击,Sniper,轰击手,Bombardier,罗德岛,Rhodes Island,6,菲林,Feline,女,Female
-char_1035_wisdel,维什戴尔,Wiš'adel,狙击,Sniper,轰击手,Bombardier,未知,Unknown,6,萨卡兹,萨卡兹,女,Female
-char_1013_chen2,假日威龙陈,Ch'en the Holungday,狙击,Sniper,投掷手,Flinger,罗德岛,Rhodes Island,6,龙,龙,女,Female
-char_4117_ray,莱伊,Ray,狙击,Sniper,猎手,Hunter,雷姆必拓,Rim Billiton,6,卡特斯,卡特斯,女,Female
-char_4138_narant,娜仁图亚,Narantuya,狙击,Sniper,回环射手,Loopshooter,萨尔贡,Sargon,6,库兰塔,库兰塔,女,Female
-char_112_siege,推进之王,Siege,先锋,Vanguard,尖兵,Pioneer,维多利亚,Victoria,6,阿斯兰,Aslan,女,Female
-char_222_bpipe,风笛,Bagpipe,先锋,Vanguard,冲锋手,Charger,维多利亚,Victoria,6,瓦伊凡,瓦伊凡,女,Female
-char_362_saga,嵯峨,Saga,先锋,Vanguard,尖兵,Pioneer,东国,Higashi,6,佩洛,佩洛,女,Female
-char_4026_vulpis,忍冬,Vulpisfoglia,先锋,Vanguard,尖兵,Pioneer,叙拉古,Siracusa,6,沃尔珀,沃尔珀,女,Female
-char_479_sleach,琴柳,Saileach,先锋,Vanguard,执旗手,Standard Bearer,维多利亚,Victoria,6,瓦伊凡,瓦伊凡,女,Female
-char_420_flamtl,焰尾,Flametail,先锋,Vanguard,尖兵,Pioneer,卡西米尔,Kazimierz,6,札拉克,札拉克,女,Female
-char_427_vigil,伺夜,Vigil,先锋,Vanguard,战术家,Tactician,叙拉古,Siracusa,6,鲁珀,鲁珀,男,Male
-char_249_mlyss,缪尔赛思,Muelsyse,先锋,Vanguard,战术家,Tactician,哥伦比亚,Columbia,6,精灵,精灵,女,Female
-char_4228_closur,可露希尔,Closure,先锋,Vanguard,战术家,Tactician,罗德岛,Rhodes Island,6,萨卡兹,萨卡兹,女,Female
-char_1045_svash2,凛御银灰,SilverAsh the Reignfrost,先锋,Vanguard,回环射手,Counsellor,喀兰贸易,Kjerag,6,菲林,菲林,男,Male
-char_4087_ines,伊内丝,Ines,先锋,Vanguard,情报官,Agent,未知,Unknown,6,未公开,未公开,女,Female
-char_134_ifrit,伊芙利特,Ifrit,术师,Caster,轰击术师,Blast Caster,哥伦比亚,Columbia,6,萨卡兹,Sarkaz,女,Female
-char_4229_aphris,谬因,Aphrissa,术师,Caster,轰击术师,Blast Caster,哥伦比亚,Columbia,6,菲林,菲林,女,Female
-char_213_mostma,莫斯提马,Mostima,术师,Caster,扩散术师,Splash Caster,拉特兰,Laterano,6,未公开,未公开,女,Female
-char_180_amgoat,艾雅法拉,Eyjafjalla,术师,Caster,中坚术师,Core Caster,莱塔尼亚,Leithanien,6,卡普里尼,Caprinae,女,Female
-char_2013_cerber,刻俄柏,Ceobe,术师,Caster,中坚术师,Core Caster,罗德岛,Rhodes Island,6,佩洛,佩洛,女,Female
-char_4027_heyak,霍尔海雅,Ho'olheyak,术师,Caster,中坚术师,Core Caster,哥伦比亚,Columbia,6,未公开,未公开,女,Female
-char_4133_logos,逻各斯,Logos,术师,Caster,中坚术师,Core Caster,罗德岛,Rhodes Island,6,萨卡兹,萨卡兹,男,Male
-char_2015_dusk,夕,Dusk,术师,Caster,扩散术师,Splash Caster,炎,Yan,6,未公开,未公开,女,Female
-char_4141_marcil,玛露西尔,Marcille,术师,Caster,扩散术师,Splash Caster,未知,Unknown,6,精灵,精灵,女,Female
-char_472_pasngr,异客,Passenger,术师,Caster,链术师,Chain Caster,萨尔贡,Sargon,6,黎博利,黎博利,男,Male
-char_426_billro,卡涅利安,Carnelian,术师,Caster,阵法术师,Phalanx Caster,莱塔尼亚,Leithanien,6,卡普里尼,卡普里尼,女,Female
-char_4080_lin,林,Lin,术师,Caster,阵法术师,Phalanx Caster,龙门,Lungmen,6,札拉克,札拉克,女,Female
-char_1046_sbell2,圣聆初雪,Pramanix the Prerita,术师,Caster,阵法术师,Phalanx Caster,喀兰贸易,Kjerag,6,菲林,菲林,女,Female
-char_377_gdglow,澄闪,Goldenglow,术师,Caster,驭械术师,Mech-Accord Caster,维多利亚,Victoria,6,菲林,菲林,女,Female
-char_1038_whitw2,荒芜拉普兰德,Lappland the Decadenza,术师,Caster,驭械术师,Mech-Accord Caster,叙拉古,Siracusa,6,鲁珀,鲁珀,女,Female
-char_4046_ebnhlz,黑键,Ebenholz,术师,Caster,秘术师,Mystic Caster,莱塔尼亚,Leithanien,6,卡普里尼,卡普里尼,男,Male
-char_4226_veen,维伊,Вий,术师,Caster,秘术师,Mystic Caster,乌萨斯,Ursus,6,库兰塔,库兰塔,男,Male
-char_4146_nymph,妮芙,Nymph,术师,Caster,本源术师,Primal Caster,罗德岛,Rhodes Island,6,萨卡兹,萨卡兹,女,Female
-char_1040_blaze2,烛煌,Blaze the Igniting Spark,术师,Caster,本源术师,Primal Caster,罗德岛,Rhodes Island,6,菲林,菲林,女,Female
-char_4204_mantra,真言,Mantra,术师,Caster,本源术师,Primal Caster,罗德岛,Rhodes Island,6,斐迪亚,斐迪亚,女,Female
-char_450_necras,死芒,Necrass,术师,Caster,塑灵术师,Necrosis Caster,维多利亚,Victoria,6,德拉克,德拉克,女,Female
-char_206_gnosis,灵知,Gnosis,辅助,Supporter,削弱者,Hexer,喀兰贸易,Kjerag,6,黎博利,黎博利,男,Male
-char_291_aglina,安洁莉娜,Angelina,辅助,Supporter,减速者,Decel Binder,叙拉古,Siracusa,6,沃尔珀,Vulpo,女,Female
-char_358_lisa,铃兰,Suzuran,辅助,Supporter,减速者,Decel Binder,叙拉古,Siracusa,6,沃尔珀,Vulpo,女,Female
-char_614_acsupo,Raidian,Raidian,辅助,Supporter,减速者,Decel Binder,未知,Unknown,6,黎博利,Liberi,女,Female
-char_1047_halo2,溯光星源,Astgenne the Lightchaser,辅助,Supporter,减速者,Decel Binder,哥伦比亚,Columbia,6,黎博利,黎博利,女,Female
-char_248_mgllan,麦哲伦,Magallan,辅助,Supporter,召唤师,Summoner,哥伦比亚,Columbia,6,黎博利,黎博利,女,Female
-char_4195_radian,电弧,Raidian,辅助,Supporter,召唤师,Summoner,罗德岛,Rhodes Island,6,黎博利,黎博利,女,Female
-char_1012_skadi2,浊心斯卡蒂,Skadi the Corrupting Heart,辅助,Supporter,吟游者,Bard,阿戈尔,Ægir,6,未公开,未公开,女,Female
-char_4134_cetsyr,魔王,Civilight Eterna,辅助,Supporter,吟游者,Bard,罗德岛,Rhodes Island,6,未公开,未公开,女,Female
-char_1031_slent2,淬羽赫默,Silence the Paradigmatic,辅助,Supporter,护佑者,Abjurer,哥伦比亚,Columbia,6,黎博利,黎博利,女,Female
-char_4202_haruka,遥,Haruka,辅助,Supporter,护佑者,Abjurer,东国,Higashi,6,阿戈尔,阿戈尔,女,Female
-char_2023_ling,令,Ling,辅助,Supporter,召唤师,Summoner,炎,Yan,6,未公开,未公开,女,Female
-char_4072_ironmn,白铁,Stainless,辅助,Supporter,工匠师,Artificer,维多利亚,Victoria,6,菲林,菲林,男,Male
-char_4212_nasti,娜斯提,Nasti,辅助,Supporter,工匠师,Artificer,哥伦比亚,Columbia,6,萨卡兹,萨卡兹,女,Female
-char_245_cello,塑心,Virtuosa,辅助,Supporter,巫役,Ritualist,拉特兰,Laterano,6,萨科塔,萨科塔,女,Female
-char_1042_phatm2,酒神,Tragodia,辅助,Supporter,巫役,Ritualist,维多利亚,Victoria,6,菲林,菲林,男,Male
-char_250_phatom,傀影,Phantom,特种,Specialist,处决者,Executor,维多利亚,Victoria,6,菲林,菲林,男,Male
-char_1028_texas2,缄默德克萨斯,Texas the Omertosa,特种,Specialist,处决者,Executor,龙门,Lungmen,6,鲁珀,鲁珀,女,Female
-char_1029_yato2,麒麟R夜刀,Kirin R Yato,特种,Specialist,处决者,Executor,罗德岛,Rhodes Island,6,鬼,鬼,女,Female
-char_1502_crosly,弑君者,Crownslayer,特种,Specialist,处决者,Executor,罗德岛,Rhodes Island,6,瑞柏巴,瑞柏巴,女,Female
-char_615_acspec,Misery,Misery,特种,Specialist,处决者,Executor,未知,Unknown,6,萨卡兹,Sarkaz,男,Male
-char_322_lmlee,老鲤,Lee,特种,Specialist,行商,Merchant,龙门,Lungmen,6,龙,龙,男,Male
-char_1033_swire2,琳琅诗怀雅,Swire the Elegant Wit,特种,Specialist,行商,Merchant,龙门,Lungmen,6,菲林,菲林,女,Female
-char_400_weedy,温蒂,Weedy,特种,Specialist,推击手,Push Stroker,罗德岛,Rhodes Island,6,阿戈尔,阿戈尔,女,Female
-char_225_haak,阿,Aak,特种,Specialist,怪杰,Geek,龙门,Lungmen,6,菲林,菲林,男,Male
-char_1041_angel2,新约能天使,Exusiai the New Covenant,特种,Specialist,怪杰,Geek,龙门,Lungmen,6,萨科塔,萨科塔,女,Female
-char_474_glady,歌蕾蒂娅,Gladiia,特种,Specialist,拉人特种,Hookmaster,阿戈尔,Ægir,6,未公开,未公开,女,Female
-char_437_mizuki,水月,Mizuki,特种,Specialist,伏击客,Ambusher,东国,Higashi,6,阿戈尔,阿戈尔,男,Male
-char_4132_ascln,阿斯卡纶,Ascalon,特种,Specialist,伏击客,Ambusher,罗德岛,Rhodes Island,6,萨卡兹,萨卡兹,女,Female
-char_1023_ghost2,归溟幽灵鲨,Specter the Unchained,特种,Specialist,傀儡师,Dollkeeper,阿戈尔,Ægir,6,阿戈尔,阿戈尔,女,Female
-char_4048_doroth,多萝西,Dorothy,特种,Specialist,陷阱师,Trapmaster,哥伦比亚,Columbia,6,札拉克,札拉克,女,Female
-char_4123_ela,艾拉,Ela,特种,Specialist,陷阱师,Trapmaster,未知,Unknown,6,人类,Human,女,Female
-char_2027_wang,望,Wang,特种,Specialist,陷阱师,Trapmaster,炎,Yan,6,未公开,未公开,男,Male
-char_1039_thorn2,引星棘刺,Thorns the Lodestar,特种,Specialist,炼金师,Alchemist,伊比利亚,Iberia,6,阿戈尔,阿戈尔,男,Male
-char_147_shining,闪灵,Shining,医疗,Medic,医师,Medic,未知,Unknown,6,萨卡兹,Sarkaz,女,Female
-char_179_cgbird,夜莺,Nightingale,医疗,Medic,群愈师,Multi-target Medic,未知,Unknown,6,萨卡兹,Sarkaz,女,Female
-char_003_kalts,凯尔希,Kal'tsit,医疗,Medic,医师,Medic,罗德岛,Rhodes Island,6,菲林,Feline,女,Female
-char_4042_lumen,流明,Lumen,医疗,Medic,疗养师,Wandering Medic,伊比利亚,Iberia,6,阿戈尔,阿戈尔,男,Male
-char_1016_agoat2,纯烬艾雅法拉,Eyjafjalla the Hvít Aska,医疗,Medic,行医,Wandering Medic,莱塔尼亚,Leithanien,6,卡普里尼,卡普里尼,女,Female
-char_1020_reed2,焰影苇草,Reed The Flame Shadow,医疗,Medic,咒愈师,Incantation Medic,维多利亚,Victoria,6,德拉克,德拉克,女,Female
-char_4056_titi,缇缇,Titi,医疗,Medic,咒愈师,Incantation Medic,萨尔贡,Sargon,6,菲林,菲林,女,Female
-char_4179_monstr,Mon3tr,Mon3tr,医疗,Medic,链愈师,Chain Medic,罗德岛,Rhodes Island,6,未公开,未公开,女,Female
-char_1052_kalts2,凯尔希·思衡托,Kal'tsit·Esperanta,医疗,Medic,巡哨者,Watchman,罗德岛,Rhodes Island,6,菲林,菲林,女,Female
-char_136_hsguma,星熊,Hoshiguma,重装,Defender,铁卫,Protector,龙门,Lungmen,6,鬼,Oni,女,Female
-char_610_acfend,Mechanist,Mechanist,重装,Defender,铁卫,Protector,未知,Unknown,6,黎博利,Liberi,男,Male
-char_202_demkni,塞雷娅,Saria,重装,Defender,守护者,Guardian,哥伦比亚,Columbia,6,瓦伊凡,Vouivre,女,Female
-char_423_blemsh,瑕光,Blemishine,重装,Defender,守护者,Guardian,卡西米尔,Kazimierz,6,库兰塔,库兰塔,女,Female
-char_2025_shu,黍,Shu,重装,Defender,守护者,Guardian,炎,Yan,6,未公开,未公开,女,Female
-char_2014_nian,年,Nian,重装,Defender,铁卫,Protector,炎,Yan,6,未公开,未公开,女,Female
-char_311_mudrok,泥岩,Mudrock,重装,Defender,不屈者,Juggernaut,罗德岛,Rhodes Island,6,萨卡兹,Sarkaz,女,Female
-char_4065_judge,斥罪,Penance,重装,Defender,不屈者,Juggernaut,叙拉古,Siracusa,6,鲁珀,鲁珀,女,Female
-char_416_zumama,森蚺,Eunectes,重装,Defender,决战者,Duelist,萨尔贡,Sargon,6,斐迪亚,斐迪亚,女,Female
-char_4039_horn,号角,Horn,重装,Defender,要塞,Fortress,维多利亚,Victoria,6,鲁珀,鲁珀,女,Female
-char_1034_jesca2,涤火杰西卡,Jessica the Liberated,重装,Defender,哨戒铁卫,Sentry Protector,哥伦比亚,Columbia,6,菲林,菲林,女,Female
-char_4194_rmixer,信仰搅拌机,Sankta Miksaparato,重装,Defender,哨戒铁卫,Sentry Protector,拉特兰,Laterano,6,萨科塔,萨科塔,男,Male
-char_4230_mcnist,机械师,Mechanist,重装,Defender,哨戒铁卫,Sentry Protector,罗德岛,Rhodes Island,6,埃拉菲亚,埃拉菲亚,男,Male
-char_2026_yu,余,Yu,重装,Defender,本源铁卫,Primal Protector,炎,Yan,6,未公开,未公开,男,Male
-char_1044_hsgma2,斩业星熊,Hoshiguma the Breacher,重装,Defender,驭法铁卫,Arts Protector,龙门,Lungmen,6,鬼,鬼,女,Female
-char_264_f12yin,山,Mountain,近卫,Guard,斗士,Brawler,哥伦比亚,Columbia,6,菲林,Feline,男,Male
-char_2024_chyue,重岳,Chongyue,近卫,Guard,斗士,Brawler,炎,Yan,6,未公开,未公开,男,Male
-char_4037_demetr,贝洛内,Bellone,近卫,Guard,斗士,Brawler,叙拉古,Siracusa,6,鲁珀,鲁珀,男,Male
-char_172_svrash,银灰,SilverAsh,近卫,Guard,领主,Lord,喀兰贸易,Kjerag,6,菲林,Feline,男,Male
-char_293_thorns,棘刺,Thorns,近卫,Guard,领主,Lord,伊比利亚,Iberia,6,阿戈尔,Aegir,男,Male
-char_4082_qiubai,仇白,Qiubai,近卫,Guard,领主,Lord,炎,Yan,6,埃拉菲亚,埃拉菲亚,女,Female
-char_4182_oblvns,丰川祥子,Togawa Sakiko,近卫,Guard,领主,Lord,未知,Unknown,6,人类,Human,女,Female
-char_617_sharp2,领主·Sharp,Lord/Sharp,近卫,Guard,领主,Lord,未知,Unknown,6,黎博利,Liberi,男,Male
-char_4088_hodrer,赫德雷,Hoederer,近卫,Guard,重剑手,Crusher,未知,Unknown,6,萨卡兹,萨卡兹,男,Male
-char_4145_ulpia,乌尔比安,Ulpianus,近卫,Guard,重剑手,Crusher,阿戈尔,Ægir,6,阿戈尔,阿戈尔,男,Male
-char_4058_pepe,佩佩,Pepe,近卫,Guard,撼地者,Earthshaker,萨尔贡,Sargon,6,菲林,菲林,女,Female
-char_1051_headb2,怒潮凛冬,Zima the Raging Tide,近卫,Guard,撼地者,Earthshaker,乌萨斯,Ursus,6,乌萨斯,乌萨斯,女,Female
-char_010_chen,陈,Ch'en,近卫,Guard,剑豪,Swordmaster,龙门,Lungmen,6,龙,Lung,女,Female
-char_4009_irene,艾丽妮,Irene,近卫,Guard,剑豪,Swordmaster,伊比利亚,Iberia,6,黎博利,黎博利,女,Female
-char_4116_blkkgt,锏,Degenbrecher,近卫,Guard,剑豪,Swordmaster,喀兰贸易,Kjerag,6,卡普里尼,卡普里尼,女,Female
-char_017_huang,煌,Blaze,近卫,Guard,强攻手,Centurion,罗德岛,Rhodes Island,6,菲林,Feline,女,Female
-char_1026_gvial2,百炼嘉维尔,Gavial the Invincible,近卫,Guard,强攻手,Centurion,罗德岛,Rhodes Island,6,阿达克利斯,阿达克利斯,女,Female
-char_350_surtr,史尔特尔,Surtr,近卫,Guard,术战者,Arts Fighter,罗德岛,Rhodes Island,6,萨卡兹,萨卡兹,女,Female
-char_4098_vvana,薇薇安娜,Viviana,近卫,Guard,术战者,Arts Fighter,莱塔尼亚,Leithanien,6,埃拉菲亚,埃拉菲亚,女,Female
-char_1019_siege2,维娜·维多利亚,Vina Victoria,近卫,Guard,术战者,Arts Fighter,维多利亚,Victoria,6,阿斯兰,阿斯兰,女,Female
-char_1050_chen3,赤刃明霄陈,Ch'en the Dawnstreak,近卫,Guard,术战者,Arts Fighter,炎,Yan,6,龙,龙,女,Female
-char_188_helage,赫拉格,Hellagur,近卫,Guard,武者,Soloblade,乌萨斯,Ursus,6,黎博利,Liberi,男,Male
-char_4121_zuole,左乐,Zuo Le,近卫,Guard,武者,Soloblade,炎,Yan,6,斐迪亚,斐迪亚,男,Male
-char_485_pallas,帕拉斯,Pallas,近卫,Guard,教官,Instructor,米诺斯,Minos,6,丰蹄,丰蹄,女,Female
-char_1014_nearl2,耀骑士临光,Nearl the Radiant Knight,近卫,Guard,无畏者,Dreadnought,卡西米尔,Kazimierz,6,库兰塔,库兰塔,女,Female
-char_4011_lessng,止颂,Lessing,近卫,Guard,无畏者,Dreadnought,莱塔尼亚,Leithanien,6,卡普里尼,卡普里尼,男,Male
-char_1032_excu2,圣约送葬人,Executor the Ex Foedere,近卫,Guard,收割者,Reaper,拉特兰,Laterano,6,萨科塔,萨科塔,男,Male
-char_4010_etlchi,隐德来希,Entelechia,近卫,Guard,收割者,Reaper,罗德岛,Rhodes Island,6,萨卡兹,萨卡兹,女,Female
-char_4064_mlynar,玛恩纳,Młynar,近卫,Guard,解放者,Liberator,卡西米尔,Kazimierz,6,库兰塔,库兰塔,男,Male
-char_1043_leizi2,司霆惊蛰,Leizi the Thunderbringer,近卫,Guard,解放者,Liberator,炎,Yan,6,麒麟,麒麟,女,Female
-char_4214_cairn,响石,Cairn,重装,Defender,本源铁卫,Primal Protector,哥伦比亚,Columbia,5,菲林,菲林,女,Female
-char_230_savage,暴行,Savage,近卫,Guard,强攻手,Centurion,雷姆必拓,Rim Billiton,5,卡特斯,Cautus,女,Female
-char_282_catap,空爆,Catapult,狙击,Sniper,炮手,Artilleryman,罗德岛,Rhodes Island,3,库兰塔,库兰塔,女,Female
-char_283_midn,月见夜,Midnight,近卫,Guard,领主,Lord,罗德岛,Rhodes Island,3,萨卡兹,萨卡兹,男,Male
-char_137_brownb,猎蜂,Beehunter,近卫,Guard,斗士,Brawler,乌萨斯,Ursus,4,乌萨斯,乌萨斯,女,Female
-char_347_jaksel,杰克,Jackie,近卫,Guard,斗士,Brawler,哥伦比亚,Columbia,4,佩洛,佩洛,女,Female
-char_164_nightm,夜魔,Nightmare,术师,Caster,中坚术师,Core Caster,维多利亚,Victoria,5,菲林,菲林,女,Female
-char_220_grani,格拉尼,Grani,先锋,Vanguard,冲锋手,Charger,维多利亚,Victoria,5,库兰塔,库兰塔,女,Female
-char_263_skadi,斯卡蒂,Skadi,近卫,Guard,无畏者,Dreadnought,阿戈尔,Ægir,6,阿戈尔,Aegir,女,Female
+﻿id,name,nameEn,class,classEn,subclass,subclassEn,faction,factionEn,rarity,race,raceEn,gender,genderEn,releaseYear,position,positionEn,tags,alterBase
+char_285_medic2,Lancet-2,Lancet-2,医疗,Medic,医师,Medic,罗德岛,Rhodes Island,1,机械,Robot,女,Female,2019,高台,Ranged,"['支援机械', '治疗']",
+char_286_cast3,Castle-3,Castle-3,近卫,Guard,无畏者,Dreadnought,罗德岛,Rhodes Island,1,机械,Robot,男,Male,2019,地面,Melee,"['支援机械', '支援']",
+char_376_therex,THRM-EX,Thermal-EX,特种,Specialist,处决者,Executor,罗德岛,Rhodes Island,1,机械,Robot,男,Male,2020,地面,Melee,"['支援机械', '爆发']",
+char_4000_jnight,正义骑士号,Justice Knight,狙击,Sniper,速射手,Marksman,"卡西米尔,红松骑士团","卡西米尔,红松骑士团",1,机械,Robot,女,Female,2021,高台,Ranged,"['支援机械', '支援']",
+char_4077_palico,泰拉大陆调查团,Terra Research Commission,狙击,Sniper,投掷手,Bombardier,罗德岛,Rhodes Island,1,未公开,Undisclosed,未知,Unknown,2023,高台,Ranged,['控场'],
+char_4091_ulika,U-Official,U-Official,辅助,Supporter,吟游者,Bard,罗德岛,Rhodes Island,1,札拉克,札拉克,女,Female,2023,高台,Ranged,['控场'],
+char_4093_frston,Friston-3,Friston-3,重装,Defender,铁卫,Protector,罗德岛,Rhodes Island,1,机械,Robot,男,Male,2023,地面,Melee,"['支援机械', '防护']",
+char_4136_phonor,PhonoR-0,PhonoR-0,辅助,Supporter,巫役,Ritualist,罗德岛,Rhodes Island,1,机械,Robot,女,Female,2024,高台,Ranged,"['支援机械', '元素']",
+char_4188_confes,CONFESS-47,CONFESS-47,先锋,Vanguard,尖兵,Pioneer,拉特兰,Laterano,1,机械,Robot,男,Male,2025,地面,Melee,"['支援机械', '控场']",
+char_4227_gallus,GALLUS²,GALLUS²,术师,Caster,中坚术师,Core Caster,罗德岛,Rhodes Island,1,机械,Robot,男,Male,2026,高台,Ranged,"['支援机械', '削弱']",
+char_4215_buddy,罗德岛隐秘队,Rhodes Island Recon,先锋,Vanguard,战术家,Tactician,罗德岛,Rhodes Island,1,未公开,Undisclosed,未知,Unknown,2026,高台,Ranged,"['费用回复', '控场']",
+char_502_nblade,夜刀,Yato,先锋,Vanguard,尖兵,Pioneer,"罗德岛,行动组A4","罗德岛,行动组A4",2,鬼,鬼,女,Female,2019,地面,Melee,['新手'],
+char_500_noirc,黑角,Noir Corne,重装,Defender,铁卫,Protector,"罗德岛,行动组A4","罗德岛,行动组A4",2,鬼,鬼,男,Male,2019,地面,Melee,['新手'],
+char_503_rang,巡林者,Rangers,狙击,Sniper,速射手,Marksman,"罗德岛,行动组A4","罗德岛,行动组A4",2,萨弗拉,萨弗拉,男,Male,2019,高台,Ranged,['新手'],
+char_501_durin,杜林,Durin,术师,Caster,中坚术师,Core Caster,"罗德岛,行动组A4","罗德岛,行动组A4",2,杜林,杜林,女,Female,2019,高台,Ranged,['新手'],
+char_009_12fce,12F,12F,术师,Caster,扩散术师,Splash Caster,罗德岛,Rhodes Island,2,萨弗拉,萨弗拉,男,Male,2019,高台,Ranged,['新手'],
+char_123_fang,芬,Fang,先锋,Vanguard,尖兵,Pioneer,"罗德岛,行动预备组A1","罗德岛,行动预备组A1",3,库兰塔,Kuranta,女,Female,2019,地面,Melee,['费用回复'],
+char_240_wyvern,香草,Vanilla,先锋,Vanguard,尖兵,Pioneer,"哥伦比亚,黑钢国际","哥伦比亚,黑钢国际",3,瓦伊凡,瓦伊凡,女,Female,2019,地面,Melee,['费用回复'],
+char_192_falco,翎羽,Plume,先锋,Vanguard,冲锋手,Charger,拉特兰,Laterano,3,黎博利,Liberi,女,Female,2019,地面,Melee,"['输出', '费用回复']",
+char_208_melan,玫兰莎,Melantha,近卫,Guard,无畏者,Dreadnought,"罗德岛,行动预备组A4","罗德岛,行动预备组A4",3,菲林,菲林,女,Female,2019,地面,Melee,"['输出', '生存']",
+char_281_popka,泡普卡,Popukar,近卫,Guard,强攻手,Centurion,"罗德岛,行动预备组A6","罗德岛,行动预备组A6",3,卡特斯,卡特斯,女,Female,2019,地面,Melee,"['群攻', '生存']",
+char_209_ardign,卡缇,Cardigan,重装,Defender,铁卫,Protector,"罗德岛,行动预备组A4","罗德岛,行动预备组A4",3,佩洛,佩洛,女,Female,2019,地面,Melee,['防护'],
+char_122_beagle,米格鲁,Beagle,重装,Defender,铁卫,Protector,"罗德岛,行动预备组A1","罗德岛,行动预备组A1",3,佩洛,Perro,女,Female,2019,地面,Melee,['防护'],
+char_284_spot,斑点,Spot,重装,Defender,守护者,Guardian,"罗德岛,行动预备组A6","罗德岛,行动预备组A6",3,瑞柏巴,瑞柏巴,男,Male,2019,地面,Melee,"['防护', '治疗']",
+char_124_kroos,克洛丝,Kroos,狙击,Sniper,速射手,Marksman,"罗德岛,行动预备组A1","罗德岛,行动预备组A1",3,卡特斯,Cautus,女,Female,2019,高台,Ranged,['输出'],
+char_211_adnach,安德切尔,Adnachiel,狙击,Sniper,速射手,Marksman,"罗德岛,行动预备组A4","罗德岛,行动预备组A4",3,萨科塔,Sankta,男,Male,2019,高台,Ranged,['输出'],
+char_121_lava,炎熔,Lava,术师,Caster,扩散术师,Splash Caster,"罗德岛,行动预备组A1","罗德岛,行动预备组A1",3,萨卡兹,Sarkaz,女,Female,2019,高台,Ranged,['群攻'],
+char_120_hibisc,芙蓉,Hibiscus,医疗,Medic,医师,Medic,"罗德岛,行动预备组A1","罗德岛,行动预备组A1",3,萨卡兹,Sarkaz,女,Female,2019,高台,Ranged,['治疗'],
+char_212_ansel,安赛尔,Ansel,医疗,Medic,医师,Medic,"罗德岛,行动预备组A4","罗德岛,行动预备组A4",3,卡特斯,卡特斯,男,Male,2019,高台,Ranged,['治疗'],
+char_210_stward,史都华德,Steward,术师,Caster,中坚术师,Core Caster,"罗德岛,行动预备组A4","罗德岛,行动预备组A4",3,沃尔珀,Vulpo,男,Male,2019,高台,Ranged,['输出'],
+char_278_orchid,梓兰,Orchid,辅助,Supporter,凝滞师,Decel Binder,"罗德岛,行动预备组A6","罗德岛,行动预备组A6",3,黎博利,黎博利,女,Female,2019,高台,Ranged,['减速'],
+char_141_nights,夜烟,Haze,术师,Caster,中坚术师,Core Caster,维多利亚,Victoria,4,菲林,菲林,女,Female,2019,高台,Ranged,"['输出', '削弱']",
+char_109_fmout,远山,Gitano,术师,Caster,扩散术师,Splash Caster,萨米,Sami,4,埃拉菲亚,埃拉菲亚,女,Female,2019,高台,Ranged,['群攻'],
+char_253_greyy,格雷伊,Greyy,术师,Caster,扩散术师,Splash Caster,玻利瓦尔,Bolívar,4,佩洛,佩洛,男,Male,2019,高台,Ranged,"['群攻', '减速']",
+char_4051_akkord,协律,Akkord,术师,Caster,轰击术师,Blast Caster,莱塔尼亚,Leithanien,4,卡普里尼,卡普里尼,女,Female,2025,高台,Ranged,"['群攻', '输出']",
+char_328_cammou,卡达,Click,术师,Caster,驭械术师,Mech-Accord Caster,罗德岛,Rhodes Island,4,札拉克,札拉克,女,Female,2020,高台,Ranged,"['输出', '控场']",
+char_469_indigo,深靛,Indigo,术师,Caster,秘术师,Mystic Caster,伊比利亚,Iberia,4,斐迪亚,斐迪亚,女,Female,2021,高台,Ranged,"['输出', '控场']",
+char_4004_pudd,布丁,Pudding,术师,Caster,链术师,Chain Caster,哥伦比亚,Columbia,4,阿戈尔,阿戈尔,女,Female,2021,高台,Ranged,['输出'],
+char_235_jesica,杰西卡,Jessica,狙击,Sniper,速射手,Marksman,"哥伦比亚,黑钢国际","哥伦比亚,黑钢国际",4,菲林,菲林,女,Female,2019,高台,Ranged,"['输出', '生存']",
+char_126_shotst,流星,Meteor,狙击,Sniper,速射手,Marksman,卡西米尔,Kazimierz,4,库兰塔,库兰塔,女,Female,2019,高台,Ranged,"['输出', '削弱']",
+char_190_clour,红云,Vermeil,狙击,Sniper,速射手,Marksman,叙拉古,Siracusa,4,沃尔珀,沃尔珀,女,Female,2019,高台,Ranged,['输出'],
+char_133_mm,梅,May,狙击,Sniper,速射手,Marksman,维多利亚,Victoria,4,黎博利,Liberi,女,Female,2019,高台,Ranged,"['输出', '减速']",
+char_118_yuki,白雪,ShiraYuki,狙击,Sniper,炮手,Artilleryman,东国,Higashi,4,阿纳缇,Anaty,女,Female,2019,高台,Ranged,"['群攻', '减速']",
+char_440_pinecn,松果,Pinecone,狙击,Sniper,散射手,Flinger,哥伦比亚,Columbia,4,黎博利,黎博利,女,Female,2020,高台,Ranged,"['群攻', '输出']",
+char_302_glaze,安比尔,Ambriel,狙击,Sniper,神射手,Deadeye,拉特兰,Laterano,4,萨科塔,萨科塔,女,Female,2019,高台,Ranged,"['输出', '减速']",
+char_366_acdrop,酸糖,Aciddrop,狙击,Sniper,重射手,Spreadshooter,哥伦比亚,Columbia,4,黎博利,黎博利,女,Female,2020,高台,Ranged,['输出'],
+char_4062_totter,铅踝,Totter,狙击,Sniper,攻城手,Siege,萨尔贡,Sargon,4,黎博利,黎博利,男,Male,2022,高台,Ranged,['输出'],
+char_4100_caper,跃跃,Caper,狙击,Sniper,回环射手,Loopshooter,玻利瓦尔,Bolívar,4,卡特斯,卡特斯,女,Female,2023,高台,Ranged,['输出'],
+char_198_blackd,讯使,Courier,先锋,Vanguard,尖兵,Pioneer,"谢拉格,喀兰贸易","谢拉格,喀兰贸易",4,依特拉,依特拉,男,Male,2019,地面,Melee,"['费用回复', '防护']",
+char_149_scave,清道夫,Scavenger,先锋,Vanguard,尖兵,Pioneer,"罗德岛,S.W.E.E.P.","罗德岛,S.W.E.E.P.",4,札拉克,Zalak,女,Female,2019,地面,Melee,"['费用回复', '输出']",
+char_290_vigna,红豆,Vigna,先锋,Vanguard,冲锋手,Charger,哥伦比亚,Columbia,4,萨卡兹,萨卡兹,女,Female,2019,地面,Melee,"['输出', '费用回复']",
+char_151_myrtle,桃金娘,Myrtle,先锋,Vanguard,执旗手,Standard Bearer,罗德岛,Rhodes Island,4,杜林,杜林,女,Female,2019,地面,Melee,"['费用回复', '治疗']",
+char_452_bstalk,豆苗,Beanstalk,先锋,Vanguard,战术家,Tactician,哥伦比亚,Columbia,4,瑞柏巴,瑞柏巴,女,Female,2021,高台,Ranged,"['费用回复', '召唤']",
+char_4208_wintim,冬时,Снегурочка,先锋,Vanguard,情报官,Agent,乌萨斯,Ursus,4,黎博利,黎博利,女,Female,2025,地面,Melee,"['费用回复', '快速复活']",
+char_130_doberm,杜宾,Dobermann,近卫,Guard,教官,Instructor,罗德岛,Rhodes Island,4,佩洛,佩洛,女,Female,2019,地面,Melee,"['输出', '支援']",
+char_289_gyuki,缠丸,Matoimaru,近卫,Guard,无畏者,Dreadnought,东国,Higashi,4,鬼,鬼,女,Female,2019,地面,Melee,"['生存', '输出']",
+char_159_peacok,断罪者,Conviction,近卫,Guard,无畏者,Dreadnought,米诺斯,Minos,4,未知（疑似黎博利）,未知（疑似黎博利）,断罪,断罪,2020,地面,Melee,"['输出', '生存', '控场', '爆发']",
+char_193_frostl,霜叶,Frostleaf,近卫,Guard,领主,Lord,罗德岛,Rhodes Island,4,沃尔珀,沃尔珀,女,Female,2019,地面,Melee,"['减速', '输出']",
+char_127_estell,艾丝黛尔,Estelle,近卫,Guard,强攻手,Centurion,萨尔贡,Sargon,4,阿达克利斯,阿达克利斯,女,Female,2019,地面,Melee,"['群攻', '生存']",
+char_185_frncat,慕斯,Mousse,近卫,Guard,术战者,Arts Fighter,维多利亚,Victoria,4,菲林,菲林,女,Female,2019,地面,Melee,['输出'],
+char_301_cutter,刻刀,Cutter,近卫,Guard,剑豪,Swordmaster,哥伦比亚,Columbia,4,沃尔珀,沃尔珀,女,Female,2020,地面,Melee,"['爆发', '输出']",
+char_337_utage,宴,Utage,近卫,Guard,武者,Soloblade,东国,Higashi,4,不明,不明,女,Female,2020,地面,Melee,"['输出', '生存']",
+char_271_spikes,芳汀,Arene,近卫,Guard,领主,Lord,拉特兰,Laterano,4,萨科塔,萨科塔,男,Male,2020,地面,Melee,['输出'],
+char_4067_lolxh,罗小黑,Luo Xiaohei,近卫,Guard,领主,Lord,炎,Yan,4,菲林,菲林,男,Male,2022,地面,Melee,['输出'],
+char_4063_quartz,石英,Quartz,近卫,Guard,重剑手,Crusher,哥伦比亚,Columbia,4,鲁珀,鲁珀,女,Female,2022,地面,Melee,['输出'],
+char_491_humus,休谟斯,Humus,近卫,Guard,收割者,Reaper,罗德岛,Rhodes Island,4,丰蹄,丰蹄,男,Male,2023,地面,Melee,"['输出', '生存']",
+char_445_wscoot,骋风,Windscoot,近卫,Guard,解放者,Liberator,炎,Yan,4,菲林,菲林,男,Male,2025,地面,Melee,['爆发'],
+char_237_gravel,砾,Gravel,特种,Specialist,处决者,Executor,卡西米尔,Kazimierz,4,札拉克,札拉克,女,Female,2019,地面,Melee,"['快速复活', '防护']",
+char_272_strong,孑,Jaye,特种,Specialist,行商,Merchant,龙门,Lungmen,4,乌萨斯,乌萨斯,男,Male,2020,地面,Melee,"['快速复活', '输出']",
+char_236_rope,暗索,Rope,特种,Specialist,钩索师,Hookmaster,龙门,Lungmen,4,卡特斯,卡特斯,女,Female,2019,地面,Melee,['位移'],
+char_117_myrrh,末药,Myrrh,医疗,Medic,医师,Medic,罗德岛,Rhodes Island,4,沃尔珀,Vulpo,女,Female,2019,高台,Ranged,['治疗'],
+char_187_ccheal,嘉维尔,Gavial,医疗,Medic,医师,Medic,罗德岛,Rhodes Island,4,阿达克利斯,阿达克利斯,女,Female,2019,高台,Ranged,['治疗'],
+char_298_susuro,苏苏洛,Sussurro,医疗,Medic,医师,Medic,罗德岛,Rhodes Island,4,沃尔珀,沃尔珀,女,Female,2019,高台,Ranged,['治疗'],
+char_181_flower,调香师,Perfumer,医疗,Medic,群愈师,Multi-target Medic,罗德岛,Rhodes Island,4,沃尔珀,沃尔珀,女,Female,2019,高台,Ranged,['治疗'],
+char_385_finlpp,清流,Purestream,医疗,Medic,疗养师,Wandering Medic,炎,Yan,4,阿戈尔,阿戈尔,女,Female,2020,高台,Ranged,"['治疗', '支援']",
+char_4041_chnut,褐果,Chestnut,医疗,Medic,行医,Wandering Medic,罗德岛,Rhodes Island,4,杜林,杜林,男,Male,2022,高台,Ranged,['治疗'],
+char_199_yak,角峰,Matterhorn,重装,Defender,铁卫,Protector,"谢拉格,喀兰贸易","谢拉格,喀兰贸易",4,丰蹄,丰蹄,男,Male,2019,地面,Melee,['防护'],
+char_150_snakek,蛇屠箱,Cuora,重装,Defender,铁卫,Protector,哥伦比亚,Columbia,4,匹特拉姆,Petram,女,Female,2019,地面,Melee,['防护'],
+char_381_bubble,泡泡,Bubble,重装,Defender,铁卫,Protector,萨尔贡,Sargon,4,塞拉托,塞拉托,女,Female,2020,地面,Melee,['防护'],
+char_4130_luton,露托,Lutonada,重装,Defender,不屈者,Juggernaut,玻利瓦尔,Bolívar,4,札拉克,札拉克,女,Female,2024,地面,Melee,"['生存', '防护']",
+char_196_sunbr,古米,Гум,重装,Defender,守护者,Guardian,"乌萨斯,乌萨斯学生自治团","乌萨斯,乌萨斯学生自治团",4,乌萨斯,乌萨斯,女,Female,2019,地面,Melee,"['防护', '治疗']",
+char_260_durnar,坚雷,Dur-nar,重装,Defender,驭法铁卫,Arts Protector,罗德岛,Rhodes Island,4,沃尔珀,沃尔珀,女,Female,2019,地面,Melee,"['防护', '输出']",
+char_110_deepcl,深海色,Deepcolor,辅助,Supporter,召唤师,Summoner,阿戈尔,Ægir,4,未公开,未公开,女,Female,2019,高台,Ranged,['召唤'],
+char_183_skgoat,地灵,Earthspirit,辅助,Supporter,凝滞师,Decel Binder,莱塔尼亚,Leithanien,4,卡普里尼,卡普里尼,女,Female,2019,高台,Ranged,['减速'],
+char_258_podego,波登可,Podenco,辅助,Supporter,凝滞师,Decel Binder,罗德岛,Rhodes Island,4,佩洛,佩洛,女,Female,2020,高台,Ranged,"['减速', '治疗']",
+char_484_robrta,罗比菈塔,Roberta,辅助,Supporter,工匠,Artificer,哥伦比亚,Columbia,4,阿纳缇,阿纳缇,女,Female,2021,地面,Melee,"['防护', '支援']",
+char_355_ethan,伊桑,Ethan,特种,Specialist,伏击客,Ambusher,罗德岛,Rhodes Island,4,萨弗拉,萨弗拉,男,Male,2019,地面,Melee,"['输出', '控场']",
+char_277_sqrrel,阿消,Shaw,特种,Specialist,推击手,Push Stroker,龙门,Lungmen,4,札拉克,札拉克,女,Female,2019,地面,Melee,['位移'],
+char_4107_vrdant,维荻,Verdant,特种,Specialist,傀儡师,Dollkeeper,维多利亚,Victoria,4,斐迪亚,斐迪亚,男,Male,2023,地面,Melee,"['生存', '快速复活']",
+char_4165_ctrail,云迹,Contrail,特种,Specialist,巡空者,Skywalker,哥伦比亚,Columbia,4,札拉克,札拉克,女,Female,2024,地面,Melee,"['高空', '控场']",
+char_128_plosis,白面鸮,Ptilopsis,医疗,Medic,群愈师,Multi-target Medic,"哥伦比亚,莱茵生命","哥伦比亚,莱茵生命",5,黎博利,Liberi,女,Female,2019,高台,Ranged,"['治疗', '支援']",
+char_275_breeze,微风,Breeze,医疗,Medic,群愈师,Multi-target Medic,维多利亚,Victoria,5,沃尔珀,沃尔珀,女,Female,2019,高台,Ranged,"['治疗', '支援']",
+char_4163_rosesa,瑰盐,Rose Salt,医疗,Medic,群愈师,Multi-target Medic,伊比利亚,Iberia,5,斐迪亚,斐迪亚,女,Female,2024,高台,Ranged,"['治疗', '支援']",
+char_115_headbr,凛冬,Зима,先锋,Vanguard,尖兵,Pioneer,"乌萨斯,乌萨斯学生自治团","乌萨斯,乌萨斯学生自治团",5,乌萨斯,Ursus,女,Female,2019,地面,Melee,"['费用回复', '支援']",
+char_102_texas,德克萨斯,Texas,先锋,Vanguard,尖兵,Pioneer,"炎-龙门,企鹅物流","炎-龙门,企鹅物流",5,鲁珀,Lupo,女,Female,2019,地面,Melee,"['费用回复', '控场']",
+char_349_chiave,贾维,Chiave,先锋,Vanguard,尖兵,Pioneer,"叙拉古,贾维团伙","叙拉古,贾维团伙",5,沃尔珀,沃尔珀,男,Male,2020,地面,Melee,"['费用回复', '输出']",
+char_488_buildr,青枳,Poncirus,先锋,Vanguard,尖兵,Pioneer,"哥伦比亚,汐斯塔","哥伦比亚,汐斯塔",5,黎博利,黎博利,女,Female,2023,地面,Melee,"['费用回复', '防护']",
+char_4023_rfalcn,红隼,Kestrel,先锋,Vanguard,尖兵,Pioneer,萨尔贡,Sargon,5,黎博利,黎博利,女,Female,2024,地面,Melee,"['费用回复', '输出']",
+char_4199_makiri,松桐,Matsukiri,先锋,Vanguard,策士,Counsellor,东国,Higashi,5,鲁珀,鲁珀,男,Male,2025,地面,Melee,"['费用回复', '支援']",
+char_261_sddrag,苇草,Reed,先锋,Vanguard,冲锋手,Charger,维多利亚,Victoria,5,德拉克,德拉克,女,Female,2019,地面,Melee,"['费用回复', '输出']",
+char_496_wildmn,野鬃,Wild Mane,先锋,Vanguard,冲锋手,Charger,"卡西米尔,红松骑士团","卡西米尔,红松骑士团",5,库兰塔,库兰塔,女,Female,2021,地面,Melee,"['费用回复', '输出']",
+char_1036_fang2,历阵锐枪芬,Fang the Fire-sharpened,先锋,Vanguard,冲锋手,Charger,罗德岛,Rhodes Island,5,库兰塔,库兰塔,女,Female,2024,地面,Melee,"['费用回复', '输出']",芬
+char_401_elysm,极境,Elysium,先锋,Vanguard,执旗手,Standard Bearer,罗德岛,Rhodes Island,5,黎博利,黎博利,男,Male,2020,地面,Melee,"['费用回复', '支援']",
+char_4119_wanqin,万顷,Wanqing,先锋,Vanguard,执旗手,Standard Bearer,炎,Yan,5,丰蹄,丰蹄,男,Male,2024,地面,Melee,"['费用回复', '支援']",
+char_476_blkngt,夜半,Blacknight,先锋,Vanguard,战术家,Tactician,雷姆必拓,Rim Billiton,5,萨弗拉,萨弗拉,女,Female,2022,高台,Ranged,"['费用回复', '控场']",
+char_4147_mitm,渡桥,Mitm,先锋,Vanguard,战术家,Tactician,罗德岛,Rhodes Island,5,萨卡兹,萨卡兹,男,Male,2024,高台,Ranged,"['费用回复', '爆发']",
+char_497_ctable,晓歌,Cantabile,先锋,Vanguard,情报官,Agent,罗德岛,Rhodes Island,5,黎博利,黎博利,女,Female,2022,地面,Melee,"['费用回复', '快速复活']",
+char_4017_puzzle,谜图,Puzzle,先锋,Vanguard,情报官,Agent,维多利亚,Victoria,5,瓦伊凡,瓦伊凡,男,Male,2022,地面,Melee,"['费用回复', '快速复活']",
+char_4144_chilc,齐尔查克,Chilchuck,先锋,Vanguard,情报官,Agent,莱欧斯小队,莱欧斯小队,5,半身人（自称）,半身人（自称）,男,Male,2024,地面,Melee,"['费用回复', '快速复活']",
+char_4052_surfer,寻澜,Surfer,先锋,Vanguard,情报官,Agent,"哥伦比亚,黑钢国际","哥伦比亚,黑钢国际",5,札拉克,札拉克,女,Female,2025,地面,Melee,"['费用回复', '快速复活']",
+char_308_swire,诗怀雅,Swire,近卫,Guard,教官,Instructor,"炎-龙门,龙门近卫局","炎-龙门,龙门近卫局",5,菲林,菲林,女,Female,2019,地面,Melee,"['输出', '支援']",
+char_265_sophia,鞭刃,Whislash,近卫,Guard,教官,Instructor,卡西米尔,Kazimierz,5,库兰塔,库兰塔,女,Female,2020,地面,Melee,"['输出', '支援']",
+char_4106_bryota,苍苔,Bryophyta,近卫,Guard,教官,Instructor,"哥伦比亚,汐斯塔","哥伦比亚,汐斯塔",5,黎博利,黎博利,男,Male,2023,地面,Melee,"['输出', '支援']",
+char_4125_rdoc,医生,Doc,近卫,Guard,教官,Instructor,彩虹小队,彩虹小队,5,未知,未知,男,Male,2024,地面,Melee,"['治疗', '支援']",
+char_106_franka,芙兰卡,Franka,近卫,Guard,无畏者,Dreadnought,"哥伦比亚,黑钢国际","哥伦比亚,黑钢国际",5,沃尔珀,Vulpo,女,Female,2019,地面,Melee,"['输出', '生存']",
+char_131_flameb,炎客,Flamebringer,近卫,Guard,无畏者,Dreadnought,罗德岛,Rhodes Island,5,萨卡兹,萨卡兹,男,Male,2019,地面,Melee,"['输出', '生存']",
+char_154_morgan,摩根,Morgan,近卫,Guard,无畏者,Dreadnought,"维多利亚,格拉斯哥帮","维多利亚,格拉斯哥帮",5,菲林,菲林,女,Female,2023,地面,Melee,['输出'],
+char_4142_laios,莱欧斯,Laios,近卫,Guard,无畏者,Dreadnought,莱欧斯小队,莱欧斯小队,5,长身人（自称）,长身人（自称）,男,Male,2024,地面,Melee,"['输出', '控场']",
+char_155_tiger,因陀罗,Indra,近卫,Guard,斗士,Brawler,"维多利亚,格拉斯哥帮","维多利亚,格拉斯哥帮",5,菲林,菲林,女,Female,2019,地面,Melee,"['输出', '生存']",
+char_415_flint,燧石,Flint,近卫,Guard,斗士,Brawler,萨尔贡,Sargon,5,黎博利,黎博利,女,Female,2020,地面,Melee,['输出'],
+char_157_dagda,达格达,Dagda,近卫,Guard,斗士,Brawler,"维多利亚,格拉斯哥帮","维多利亚,格拉斯哥帮",5,菲林,菲林,女,Female,2022,地面,Melee,"['输出', '生存']",
+char_140_whitew,拉普兰德,Lappland,近卫,Guard,领主,Lord,叙拉古,Siracusa,5,鲁珀,Lupo,女,Female,2019,地面,Melee,"['输出', '削弱']",
+char_294_ayer,断崖,Ayerscarpe,近卫,Guard,领主,Lord,雷姆必拓,Rim Billiton,5,卡特斯,卡特斯,男,Male,2020,地面,Melee,"['输出', '群攻']",
+char_194_leto,烈夏,Лето,近卫,Guard,领主,Lord,"乌萨斯,乌萨斯学生自治团","乌萨斯,乌萨斯学生自治团",5,乌萨斯,乌萨斯,女,Female,2023,地面,Melee,"['输出', '支援']",
+char_4083_chimes,铎铃,Wind Chimes,近卫,Guard,重剑手,Crusher,炎,Yan,5,丰蹄,丰蹄,女,Female,2023,地面,Melee,['输出'],
+char_252_bibeak,柏喙,Bibeak,近卫,Guard,剑豪,Swordmaster,萨米,Sami,5,黎博利,黎博利,女,Female,2020,地面,Melee,"['爆发', '输出']",
+char_459_tachak,战车,Tachanka,近卫,Guard,剑豪,Swordmaster,彩虹小队,彩虹小队,5,未知,未知,男,Male,2021,地面,Melee,"['爆发', '输出']",
+char_143_ghost,幽灵鲨,Specter,近卫,Guard,强攻手,Centurion,"阿戈尔,深海猎人","阿戈尔,深海猎人",5,未公开,未公开,女,Female,2019,地面,Melee,"['群攻', '生存']",
+char_356_broca,布洛卡,Broca,近卫,Guard,强攻手,Centurion,"叙拉古,贾维团伙","叙拉古,贾维团伙",5,菲林,菲林,男,Male,2019,地面,Melee,"['群攻', '生存']",
+char_4126_fuze,导火索,Fuze,近卫,Guard,强攻手,Centurion,彩虹小队,彩虹小队,5,未知,未知,男,Male,2024,地面,Melee,"['群攻', '生存']",
+char_4166_varkis,摆渡人,Varkáris,近卫,Guard,强攻手,Centurion,米诺斯,Minos,5,丰蹄,丰蹄,男,Male,2026,地面,Melee,"['群攻', '生存']",
+char_274_astesi,星极,Astesia,近卫,Guard,术战者,Arts Fighter,哥伦比亚,Columbia,5,黎博利,Liberi,女,Female,2019,地面,Melee,"['输出', '防护']",
+char_333_sidero,铸铁,Sideroca,近卫,Guard,术战者,Arts Fighter,米诺斯,Minos,5,丰蹄,丰蹄,女,Female,2020,地面,Melee,"['生存', '输出']",
+char_475_akafyu,赤冬,Akafuyu,近卫,Guard,武者,Soloblade,东国,Higashi,5,阿戈尔,阿戈尔,女,Female,2021,地面,Melee,"['生存', '输出']",
+char_1030_noirc2,火龙S黑角,Rathalos S Noir Corne,近卫,Guard,武者,Soloblade,"罗德岛,行动组A4","罗德岛,行动组A4",5,鬼,鬼,男,Male,2023,地面,Melee,"['生存', '输出']",黑角
+char_421_crow,羽毛笔,La Pluma,近卫,Guard,收割者,Reaper,玻利瓦尔,Bolívar,5,黎博利,黎博利,女,Female,2021,地面,Melee,['输出'],
+char_4066_highmo,海沫,Highmore,近卫,Guard,收割者,Reaper,伊比利亚,Iberia,5,阿戈尔,阿戈尔,女,Female,2022,地面,Melee,['输出'],
+char_486_takila,龙舌兰,Tequila,近卫,Guard,解放者,Liberator,玻利瓦尔,Bolívar,5,佩洛,佩洛,男,Male,2021,地面,Melee,['爆发'],
+char_4131_odda,奥达,Odda,近卫,Guard,撼地者,Earthshaker,罗德岛,Rhodes Island,5,萨卡兹,萨卡兹,男,Male,2024,地面,Melee,"['群攻', '控场']",
+char_4187_graceb,聆音,Gracebearer,近卫,Guard,本源近卫,Primal Guard,玻利瓦尔,Bolívar,5,未公开,未公开,女,Female,2025,地面,Melee,"['爆发', '输出']",
+char_4185_amoris,祐天寺若麦,Yūtenji Nyamu,近卫,Guard,撼地者,Earthshaker,Ave Mujica,Ave Mujica,5,未知,未知,女,Female,2025,地面,Melee,"['群攻', '输出', '削弱']",
+char_394_hadiya,哈蒂娅,Hadiya,近卫,Guard,佣兵,Mercenary,萨尔贡,Sargon,5,卡普里尼,卡普里尼,女,Female,2025,地面,Melee,"['输出', '控场']",
+char_1049_catap2,雷狼龙S空爆,Zinogre S Catapult,近卫,Guard,佣兵,Mercenary,"罗德岛,行动预备组A6","罗德岛,行动预备组A6",5,库兰塔,库兰塔,女,Female,2026,地面,Melee,"['群攻', '输出', '爆发']",空爆
+char_129_bluep,蓝毒,Blue Poison,狙击,Sniper,速射手,Marksman,伊比利亚,Iberia,5,安努拉,Anura,女,Female,2019,高台,Ranged,['输出'],
+char_204_platnm,白金,Platinum,狙击,Sniper,速射手,Marksman,卡西米尔,Kazimierz,5,库兰塔,库兰塔,女,Female,2019,高台,Ranged,['输出'],
+char_367_swllow,灰喉,GreyThroat,狙击,Sniper,速射手,Marksman,罗德岛,Rhodes Island,5,黎博利,黎博利,女,Female,2019,高台,Ranged,['输出'],
+char_365_aprl,四月,April,狙击,Sniper,速射手,Marksman,雷姆必拓,Rim Billiton,5,卡特斯,卡特斯,女,Female,2020,高台,Ranged,['输出'],
+char_1021_kroos2,寒芒克洛丝,Kroos the Keen Glint,狙击,Sniper,速射手,Marksman,罗德岛,Rhodes Island,5,卡特斯,卡特斯,女,Female,2022,高台,Ranged,['输出'],克洛丝
+char_498_inside,隐现,Insider,狙击,Sniper,速射手,Marksman,拉特兰,Laterano,5,萨科塔,萨科塔,男,Male,2023,高台,Ranged,['输出'],
+char_219_meteo,陨星,Meteorite,狙击,Sniper,炮手,Artilleryman,罗德岛,Rhodes Island,5,萨卡兹,萨卡兹,女,Female,2019,高台,Ranged,"['群攻', '削弱']",
+char_379_sesa,慑砂,Sesa,狙击,Sniper,炮手,Artilleryman,萨尔贡,Sargon,5,瓦伊凡,瓦伊凡,男,Male,2020,高台,Ranged,"['群攻', '削弱']",
+char_4078_bdhkgt,截云,Jieyun,狙击,Sniper,炮手,Artilleryman,炎,Yan,5,阿纳萨,阿纳萨,女,Female,2023,高台,Ranged,"['群攻', '减速']",
+char_279_excu,送葬人,Executor,狙击,Sniper,散射手,Flinger,拉特兰,Laterano,5,萨科塔,Sankta,男,Male,2019,高台,Ranged,['群攻'],
+char_346_aosta,奥斯塔,Aosta,狙击,Sniper,散射手,Flinger,"叙拉古,贾维团伙","叙拉古,贾维团伙",5,鲁珀,鲁珀,男,Male,2020,高台,Ranged,['群攻'],
+char_4203_kichi,吉星,Kichisei,狙击,Sniper,散射手,Flinger,东国,Higashi,5,佩洛,佩洛,女,Female,2025,高台,Ranged,['群攻'],
+char_4213_skybx,天空盒,Skybox,狙击,Sniper,裂空炮手,Skybreaker,哥伦比亚,Columbia,5,萨弗拉,萨弗拉,男,Male,2025,高台,Ranged,['群攻'],
+char_002_amiya,阿米娅,Amiya,术师,Caster,中坚术师,Core Caster,罗德岛,Rhodes Island,5,卡特斯/奇美拉,Cautus/Chimera,女,Female,2019,高台,Ranged,['输出'],
+char_405_absin,苦艾,Absinthe,术师,Caster,中坚术师,Core Caster,"乌萨斯,乌萨斯学生自治团","乌萨斯,乌萨斯学生自治团",5,乌萨斯,乌萨斯,女,Female,2020,高台,Ranged,['输出'],
+char_411_tomimi,特米米,Tomimi,术师,Caster,中坚术师,Core Caster,萨尔贡,Sargon,5,阿达克利斯,阿达克利斯,女,Female,2020,高台,Ranged,"['输出', '生存']",
+char_466_qanik,雪绒,Qanipalaat,术师,Caster,中坚术师,Core Caster,萨米,Sami,5,沃尔珀,沃尔珀,男,Male,2022,高台,Ranged,"['输出', '控场']",
+char_166_skfire,天火,Skyfire,术师,Caster,扩散术师,Splash Caster,维多利亚,Victoria,5,菲林,菲林,女,Female,2019,高台,Ranged,"['群攻', '控场']",
+char_306_leizi,惊蛰,Leizi,术师,Caster,链术师,Chain Caster,炎,Yan,5,麒麟,麒麟,女,Female,2020,高台,Ranged,['输出'],
+char_135_halo,星源,Astgenne,术师,Caster,链术师,Chain Caster,"哥伦比亚,莱茵生命","哥伦比亚,莱茵生命",5,黎博利,黎博利,女,Female,2022,高台,Ranged,['输出'],
+char_344_beewax,蜜蜡,Beeswax,术师,Caster,阵法术师,Phalanx Caster,萨尔贡,Sargon,5,卡普里尼,卡普里尼,女,Female,2020,高台,Ranged,"['群攻', '防护']",
+char_373_lionhd,莱恩哈特,Leonhardt,术师,Caster,扩散术师,Splash Caster,雷姆必拓,Rim Billiton,5,卡特斯,卡特斯,男,Male,2020,高台,Ranged,"['群攻', '爆发']",
+char_341_sntlla,寒檀,Santalla,术师,Caster,扩散术师,Splash Caster,萨米,Sami,5,菲林,菲林,女,Female,2023,高台,Ranged,"['群攻', '控场']",
+char_4031_liesel,复奏,Ripresa,术师,Caster,扩散术师,Splash Caster,叙拉古,Siracusa,5,卡普里尼,卡普里尼,女,Female,2026,高台,Ranged,"['群攻', '输出']",
+char_388_mint,薄绿,Mint,术师,Caster,阵法术师,Phalanx Caster,维多利亚,Victoria,5,菲林,菲林,女,Female,2020,高台,Ranged,"['群攻', '控场']",
+char_338_iris,爱丽丝,Iris,术师,Caster,秘术师,Mystic Caster,维多利亚,Victoria,5,菲林,菲林,女,Female,2021,高台,Ranged,['输出'],
+char_297_hamoni,和弦,Harmonie,术师,Caster,秘术师,Mystic Caster,"维多利亚,塔拉","维多利亚,塔拉",5,菲林,菲林,女,Female,2022,高台,Ranged,['输出'],
+char_4110_delphn,戴菲恩,Delphine,术师,Caster,秘术师,Mystic Caster,维多利亚,Victoria,5,菲林,菲林,女,Female,2023,高台,Ranged,['输出'],
+char_1011_lava2,炎狱炎熔,Lava the Purgatory,术师,Caster,扩散术师,Splash Caster,罗德岛,Rhodes Island,5,萨卡兹,萨卡兹,女,Female,2021,高台,Ranged,['输出'],炎熔
+char_489_serum,蚀清,Corroserum,术师,Caster,轰击术师,Blast Caster,哥伦比亚,Columbia,5,斐迪亚,斐迪亚,男,Male,2021,高台,Ranged,"['群攻', '削弱']",
+char_446_aroma,阿罗玛,Aroma,术师,Caster,轰击术师,Blast Caster,叙拉古,Siracusa,5,鲁珀,鲁珀,女,Female,2024,高台,Ranged,"['群攻', '控场']",
+char_4013_kjera,耶拉,Kjera,术师,Caster,驭械术师,Mech-Accord Caster,谢拉格,谢拉格,5,未公开,未公开,女,Female,2021,高台,Ranged,"['输出', '控场']",
+char_4040_rockr,洛洛,Rockrock,术师,Caster,驭械术师,Mech-Accord Caster,维多利亚,Victoria,5,菲林,菲林,女,Female,2022,高台,Ranged,['输出'],
+char_4054_malist,至简,Minimalist,术师,Caster,驭械术师,Mech-Accord Caster,萨尔贡,Sargon,5,杜林,杜林,男,Male,2022,高台,Ranged,['输出'],
+char_499_kaitou,折光,Diamante,术师,Caster,本源术师,Primal Caster,莱塔尼亚,Leithanien,5,卡普里尼,卡普里尼,男,Male,2023,高台,Ranged,"['元素', '输出']",
+char_4081_warmy,温米,Warmy,术师,Caster,本源术师,Primal Caster,雷姆必拓,Rim Billiton,5,卡特斯,卡特斯,女,Female,2024,高台,Ranged,"['元素', '爆发']",
+char_4198_christ,Miss.Christine,Miss.Christine,术师,Caster,本源术师,Primal Caster,维多利亚,Victoria,5,未公开,未公开,女士,女士,2025,高台,Ranged,"['元素', '输出']",
+char_4164_tecno,特克诺,Tecno,术师,Caster,塑灵术师,Necrosis Caster,玻利瓦尔,Bolívar,5,杜林,杜林,女,Female,2024,高台,Ranged,['召唤'],
+char_242_otter,梅尔,Mayer,辅助,Supporter,召唤师,Summoner,"哥伦比亚,莱茵生命","哥伦比亚,莱茵生命",5,阿纳缇,阿纳缇,女,Female,2019,高台,Ranged,"['召唤', '控场']",
+char_336_folivo,稀音,Scene,辅助,Supporter,召唤师,Summoner,萨尔贡,Sargon,5,皮洛萨,皮洛萨,女,Female,2020,高台,Ranged,"['召唤', '支援']",
+char_4140_lasher,衡沙,Sand Reckoner,辅助,Supporter,召唤师,Summoner,萨尔贡,Sargon,5,黎博利,黎博利,男,Male,2024,高台,Ranged,"['召唤', '减速']",
+char_108_silent,赫默,Silence,医疗,Medic,医师,Medic,"哥伦比亚,莱茵生命","哥伦比亚,莱茵生命",5,黎博利,Liberi,女,Female,2019,高台,Ranged,['治疗'],
+char_171_bldsk,华法琳,Warfarin,医疗,Medic,医师,Medic,罗德岛,Rhodes Island,5,萨卡兹,Sarkaz,女,Female,2019,高台,Ranged,"['治疗', '支援']",
+char_345_folnic,亚叶,Folinic,医疗,Medic,医师,Medic,罗德岛,Rhodes Island,5,菲林,菲林,女,Female,2020,高台,Ranged,"['治疗', '输出']",
+char_4196_reckpr,录武官,Record Keeper,医疗,Medic,医师,Medic,炎,Yan,5,佩洛,佩洛,男,Male,2025,高台,Ranged,['治疗'],
+char_348_ceylon,锡兰,Ceylon,医疗,Medic,疗养师,Wandering Medic,"哥伦比亚,汐斯塔","哥伦比亚,汐斯塔",5,黎博利,黎博利,女,Female,2019,高台,Ranged,['治疗'],
+char_436_whispr,絮雨,Whisperain,医疗,Medic,疗养师,Wandering Medic,伊比利亚,Iberia,5,阿戈尔,阿戈尔,女,Female,2020,高台,Ranged,['治疗'],
+char_4173_nowell,诺威尔,Nowell,医疗,Medic,疗养师,Wandering Medic,维多利亚,Victoria,5,沃尔珀,沃尔珀,男,Male,2025,高台,Ranged,['治疗'],
+char_402_tuye,图耶,Tuye,医疗,Medic,医师,Medic,萨尔贡,Sargon,5,丰蹄,丰蹄,女,Female,2021,高台,Ranged,['治疗'],
+char_473_mberry,桑葚,Mulberry,医疗,Medic,行医,Wandering Medic,炎,Yan,5,黎博利,黎博利,女,Female,2021,高台,Ranged,['治疗'],
+char_449_glider,蜜莓,Honeyberry,医疗,Medic,行医,Wandering Medic,雷姆必拓,Rim Billiton,5,札拉克,札拉克,女,Female,2021,高台,Ranged,['治疗'],
+char_4114_harold,哈洛德,Harold,医疗,Medic,行医,Wandering Medic,维多利亚,Victoria,5,菲林,菲林,男,Male,2023,高台,Ranged,['治疗'],
+char_1024_hbisc2,濯尘芙蓉,Hibiscus the Purifier,医疗,Medic,咒愈师,Incantation Medic,罗德岛,Rhodes Island,5,萨卡兹,萨卡兹,女,Female,2022,高台,Ranged,['治疗'],芙蓉
+char_494_vendla,刺玫,Vendela,医疗,Medic,咒愈师,Incantation Medic,维多利亚,Victoria,5,菲林,菲林,女,Female,2023,高台,Ranged,['治疗'],
+char_4071_peper,明椒,Paprika,医疗,Medic,链愈师,Chain Medic,罗德岛,Rhodes Island,5,萨卡兹,萨卡兹,女,Female,2022,高台,Ranged,['治疗'],
+char_4139_papyrs,莎草,Papyrus,医疗,Medic,链愈师,Chain Medic,萨尔贡,Sargon,5,菲林,菲林,女,Female,2024,高台,Ranged,['治疗'],
+char_4224_turdus,乌啾,Укусик,医疗,Medic,链愈师,Chain Medic,乌萨斯,Ursus,5,黎博利,黎博利,女,Female,2026,高台,Ranged,['治疗'],
+char_4222_taraxa,风絮,Taraxacum,医疗,Medic,守望者,Watchman,炎,Yan,5,库兰塔,库兰塔,男,Male,2026,高台,Ranged,['治疗'],
+char_148_nearl,临光,Nearl,重装,Defender,守护者,Guardian,使徒,使徒,5,库兰塔,Kuranta,女,Female,2019,地面,Melee,"['防护', '治疗']",
+char_226_hmau,吽,Hung,重装,Defender,守护者,Guardian,"炎-龙门,鲤氏侦探事务所","炎-龙门,鲤氏侦探事务所",5,佩洛,佩洛,男,Male,2020,地面,Melee,"['防护', '治疗']",
+char_4109_baslin,深律,Bassline,重装,Defender,守护者,Guardian,莱塔尼亚,Leithanien,5,鲁珀,鲁珀,男,Male,2023,地面,Melee,"['防护', '治疗']",
+char_4143_sensi,森西,Senshi,重装,Defender,守护者,Guardian,莱欧斯小队,莱欧斯小队,5,矮人（自称）,矮人（自称）,男,Male,2024,地面,Melee,"['防护', '治疗']",
+char_144_red,红,Projekt Red,特种,Specialist,处决者,Executor,"罗德岛,S.W.E.E.P.","罗德岛,S.W.E.E.P.",5,鲁珀,Lupo,女,Female,2019,地面,Melee,"['快速复活', '控场']",
+char_243_waaifu,槐琥,Waai Fu,特种,Specialist,处决者,Executor,"炎-龙门,鲤氏侦探事务所","炎-龙门,鲤氏侦探事务所",5,菲林,菲林,女,Female,2019,地面,Melee,"['快速复活', '削弱']",
+char_214_kafka,卡夫卡,Kafka,特种,Specialist,处决者,Executor,哥伦比亚,Columbia,5,黎博利,黎博利,女,Female,2020,地面,Melee,"['快速复活', '控场']",
+char_455_nothin,乌有,Mr.Nothing,特种,Specialist,行商,Merchant,炎,Yan,5,黎博利,黎博利,男,Male,2021,地面,Melee,"['快速复活', '输出']",
+char_4155_talr,裁度,Figurino,特种,Specialist,行商,Merchant,叙拉古,Siracusa,5,鲁珀,鲁珀,男,Male,2024,地面,Melee,"['快速复活', '控场']",
+char_107_liskam,雷蛇,Liskarm,重装,Defender,哨戒铁卫,Sentry Protector,"哥伦比亚,黑钢国际","哥伦比亚,黑钢国际",5,瓦伊凡,Vouivre,女,Female,2019,地面,Melee,"['防护', '输出']",
+char_4137_udflow,深巡,Underflow,重装,Defender,哨戒铁卫,Sentry Protector,阿戈尔,Ægir,5,阿戈尔,阿戈尔,女,Female,2024,地面,Melee,"['防护', '输出', '减速']",
+char_201_moeshd,可颂,Croissant,重装,Defender,铁卫,Protector,"炎-龙门,企鹅物流","炎-龙门,企鹅物流",5,丰蹄,丰蹄,女,Female,2019,地面,Melee,"['防护', '位移']",
+char_325_bison,拜松,Bison,重装,Defender,铁卫,Protector,龙门,Lungmen,5,丰蹄,丰蹄,男,Male,2019,地面,Melee,['防护'],
+char_163_hpsts,火神,Vulcan,重装,Defender,不屈者,Juggernaut,米诺斯,Minos,5,丰蹄,丰蹄,女,Female,2019,地面,Melee,"['生存', '防护', '输出']",
+char_4207_branch,折桠,Веточки,重装,Defender,不屈者,Juggernaut,乌萨斯,Ursus,5,乌萨斯,乌萨斯,女,Female,2025,地面,Melee,"['防护', '生存']",
+char_378_asbest,石棉,Asbestos,重装,Defender,驭法铁卫,Arts Protector,雷姆必拓,Rim Billiton,5,萨弗拉,萨弗拉,女,Female,2020,地面,Melee,"['防护', '输出']",
+char_512_aprot,暮落,Shalem,重装,Defender,驭法铁卫,Arts Protector,维多利亚,维多利亚,5,斐迪亚,斐迪亚,男,Male,2022,地面,Melee,"['输出', '防护']",
+char_4047_pianst,车尔尼,Czerny,重装,Defender,驭法铁卫,Arts Protector,莱塔尼亚,Leithanien,5,埃拉菲亚,埃拉菲亚,男,Male,2022,地面,Melee,"['防护', '输出']",
+char_457_blitz,闪击,Blitz,重装,Defender,哨戒铁卫,Sentry Protector,彩虹小队,彩虹小队,5,未知,未知,男,Male,2021,地面,Melee,"['防护', '输出']",
+char_304_zebra,暴雨,Heavyrain,重装,Defender,铁卫,Protector,罗德岛,Rhodes Island,5,库兰塔,库兰塔,女,Female,2021,地面,Melee,"['防护', '支援']",
+char_431_ashlok,灰毫,Ashlock,重装,Defender,要塞,Fortress,"卡西米尔,红松骑士团","卡西米尔,红松骑士团",5,札拉克,札拉克,女,Female,2021,地面,Melee,"['输出', '防护']",
+char_493_firwhl,火哨,Firewhistle,重装,Defender,要塞,Fortress,雷姆必拓,Rim Billiton,5,黎博利,黎博利,女,Female,2023,地面,Melee,"['输出', '防护']",
+char_422_aurora,极光,Aurora,重装,Defender,决战者,Duelist,谢拉格,谢拉格,5,乌萨斯,乌萨斯,女,Female,2021,地面,Melee,"['输出', '防护']",
+char_464_cement,洋灰,Cement,重装,Defender,决战者,Duelist,雷姆必拓,Rim Billiton,5,札拉克,札拉克,女,Female,2023,地面,Melee,['防护'],
+char_4148_philae,菲莱,Philae,重装,Defender,本源铁卫,Primal Protector,萨尔贡,Sargon,5,萨卡兹,萨卡兹,女,Female,2024,地面,Melee,"['元素', '防护']",
+char_4225_tanya,裂响,Crackborne,重装,Defender,本源铁卫,Primal Protector,乌萨斯,Ursus,5,乌萨斯,乌萨斯,女,Female,2026,地面,Melee,"['元素', '生存']",
+char_145_prove,普罗旺斯,Provence,狙击,Sniper,重射手,Spreadshooter,叙拉古,Siracusa,5,鲁珀,Lupo,女,Female,2019,高台,Ranged,['输出'],
+char_4006_melnte,玫拉,Melanite,狙击,Sniper,重射手,Spreadshooter,哥伦比亚,Columbia,5,斐迪亚,斐迪亚,女,Female,2023,高台,Ranged,"['输出', '爆发']",
+char_158_milu,守林人,Firewatch,狙击,Sniper,神射手,Deadeye,罗德岛,Rhodes Island,5,埃拉菲亚,Elafia,女,Female,2019,高台,Ranged,"['输出', '爆发']",
+char_218_cuttle,安哲拉,Andreana,狙击,Sniper,神射手,Deadeye,"阿戈尔,深海猎人","阿戈尔,深海猎人",5,阿戈尔,阿戈尔,女,Female,2020,高台,Ranged,"['输出', '减速']",
+char_4014_lunacu,子月,Lunacub,狙击,Sniper,神射手,Deadeye,叙拉古,Siracusa,5,鲁珀,鲁珀,女,Female,2022,高台,Ranged,"['输出', '生存']",
+char_363_toddi,熔泉,Toddifons,狙击,Sniper,攻城手,Siege,维多利亚,Victoria,5,瓦伊凡,瓦伊凡,女,Female,2021,高台,Ranged,['输出'],
+char_4043_erato,埃拉托,Erato,狙击,Sniper,攻城手,Siege,米诺斯,Minos,5,黎博利,黎博利,女,Female,2022,高台,Ranged,"['输出', '控场']",
+char_4221_ju,矩,Ju,狙击,Sniper,攻城手,Siege,炎,Yan,5,未公开,未公开,男,Male,2026,高台,Ranged,['输出'],
+char_1027_greyy2,承曦格雷伊,Greyy the Lightningbearer,狙击,Sniper,投掷手,Bombardier,罗德岛,Rhodes Island,5,佩洛,佩洛,男,Male,2022,高台,Ranged,"['输出', '减速']",格雷伊
+char_4104_coldst,冰酿,Coldshot,狙击,Sniper,猎手,Hunter,哥伦比亚,Columbia,5,埃拉菲亚,埃拉菲亚,女,Female,2023,高台,Ranged,['输出'],
+char_4211_snhunt,雪猎,Snow Hunter,狙击,Sniper,猎手,Hunter,谢拉格,谢拉格,5,乌萨斯,乌萨斯,女,Female,2025,高台,Ranged,"['爆发', '控场']",
+char_4177_brigid,水灯心,Brigid,狙击,Sniper,回环射手,Loopshooter,"维多利亚,塔拉","维多利亚,塔拉",5,佩洛,佩洛,女,Female,2025,高台,Ranged,['输出'],
+char_4015_spuria,空构,Spuria,特种,Specialist,怪杰,Geek,拉特兰,Laterano,5,萨科塔,萨科塔,女,Female,2023,高台,Ranged,"['支援', '输出']",
+char_173_slchan,崖心,Cliffheart,特种,Specialist,钩索师,Hookmaster,谢拉格,谢拉格,5,菲林,菲林,女,Female,2019,地面,Melee,"['位移', '输出']",
+char_383_snsant,雪雉,Snowsant,特种,Specialist,钩索师,Hookmaster,龙门,Lungmen,5,黎博利,黎博利,女,Female,2020,地面,Melee,"['位移', '减速']",
+char_4105_almond,杏仁,Almond,特种,Specialist,钩索师,Hookmaster,"哥伦比亚,黑钢国际","哥伦比亚,黑钢国际",5,佩洛,佩洛,女,Female,2023,地面,Melee,['位移'],
+char_174_slbell,初雪,Pramanix,辅助,Supporter,削弱者,Hexer,谢拉格,谢拉格,5,菲林,菲林,女,Female,2019,高台,Ranged,['削弱'],
+char_254_vodfox,巫恋,Shamare,辅助,Supporter,削弱者,Hexer,叙拉古,Siracusa,5,沃尔珀,沃尔珀,女,Female,2020,高台,Ranged,['削弱'],
+char_4079_haini,海霓,Lucilla,辅助,Supporter,削弱者,Hexer,阿戈尔,Ægir,5,阿戈尔,阿戈尔,女,Female,2024,高台,Ranged,['削弱'],
+char_195_glassb,真理,Истина,辅助,Supporter,凝滞师,Decel Binder,"乌萨斯,乌萨斯学生自治团","乌萨斯,乌萨斯学生自治团",5,乌萨斯,乌萨斯,女,Female,2019,高台,Ranged,"['减速', '输出']",
+char_326_glacus,格劳克斯,Glaucus,辅助,Supporter,凝滞师,Decel Binder,伊比利亚,Iberia,5,未公开,未公开,女,Female,2019,高台,Ranged,"['减速', '控场']",
+char_4032_provs,但书,Proviso,辅助,Supporter,凝滞师,Decel Binder,卡西米尔,Kazimierz,5,库兰塔,库兰塔,女,Female,2022,高台,Ranged,"['削弱', '减速']",
+char_4122_grabds,小满,Grain Buds,辅助,Supporter,凝滞师,Decel Binder,炎,Yan,5,黎博利,黎博利,女,Female,2024,高台,Ranged,"['减速', '控场']",
+char_433_windft,掠风,Windflit,辅助,Supporter,工匠,Artificer,哥伦比亚,Columbia,5,佩洛,佩洛,男,Male,2022,地面,Melee,"['输出', '支援']",
+char_4162_cathy,凯瑟琳,Catherine,辅助,Supporter,工匠,Artificer,维多利亚,Victoria,5,菲林,菲林,女,Female,2024,地面,Melee,"['防护', '支援']",
+char_4178_alanna,阿兰娜,Alanna,辅助,Supporter,工匠,Artificer,雷姆必拓,Rim Billiton,5,萨弗拉,萨弗拉,女,Female,2025,地面,Melee,"['输出', '支援']",
+char_101_sora,空,Sora,辅助,Supporter,吟游者,Bard,"炎-龙门,企鹅物流","炎-龙门,企鹅物流",5,因经纪公司要求不公开,因经纪公司要求不公开,女,Female,2019,高台,Ranged,"['支援', '治疗']",
+char_4045_heidi,海蒂,Heidi,辅助,Supporter,吟游者,Bard,维多利亚,Victoria,5,菲林,菲林,女,Female,2022,高台,Ranged,"['支援', '治疗']",
+char_4184_dolris,三角初华,Misumi Uika,辅助,Supporter,吟游者,Bard,Ave Mujica,Ave Mujica,5,未知,未知,女,Female,2025,高台,Ranged,"['支援', '治疗']",
+char_343_tknogi,月禾,Tsukinogi,辅助,Supporter,护佑者,Abjurer,东国,Higashi,5,埃拉菲亚,埃拉菲亚,女,Female,2020,高台,Ranged,"['支援', '生存']",
+char_4019_ncdeer,九色鹿,Nine-Colored Deer,辅助,Supporter,护佑者,Abjurer,炎,Yan,5,埃拉菲亚,埃拉菲亚,女,Female,2022,高台,Ranged,"['支援', '生存']",
+char_492_quercu,夏栎,Quercus,辅助,Supporter,护佑者,Abjurer,罗德岛,Rhodes Island,5,菲林,菲林,女,Female,2022,高台,Ranged,"['支援', '生存']",
+char_4172_xingzh,行箸,Xingzhu,辅助,Supporter,护佑者,Abjurer,炎,Yan,5,菲林,菲林,女,Female,2025,高台,Ranged,"['支援', '生存']",
+char_1022_flwr2,撷英调香师,Perfumer the Distilled,辅助,Supporter,护佑者,Abjurer,罗德岛,Rhodes Island,5,沃尔珀,沃尔珀,女,Female,2026,高台,Ranged,"['支援', '生存']",调香师
+char_4102_threye,凛视,Valarqvin,辅助,Supporter,巫役,Ritualist,萨米,Sami,5,萨卡兹,萨卡兹,女,Female,2023,高台,Ranged,['元素'],
+char_487_bobb,波卜,Bobbing,辅助,Supporter,巫役,Ritualist,哥伦比亚,Columbia,5,佩洛,佩洛,男,Male,2024,高台,Ranged,['元素'],
+char_4223_botany,伯塔尼,Ботани,辅助,Supporter,巫役,Ritualist,乌萨斯,Ursus,5,埃拉菲亚,埃拉菲亚,女,Female,2026,高台,Ranged,['元素'],
+char_4234_pedro,佩德洛,Pedro,辅助,Supporter,游击手,Supportive Ranger,玻利瓦尔,Bolívar,5,佩洛,佩洛,男,Male,2026,高台,Ranged,"['输出', '支援']",
+char_215_mantic,狮蝎,Manticore,特种,Specialist,伏击客,Ambusher,萨尔贡,Sargon,5,曼提柯,曼提柯,女,Female,2019,地面,Melee,"['输出', '生存']",
+char_478_kirara,绮良,Kirara,特种,Specialist,伏击客,Ambusher,东国,Higashi,5,阿戈尔,阿戈尔,女,Female,2021,地面,Melee,"['输出', '生存']",
+char_4186_tmoris,八幡海铃,Yahata Umiri,特种,Specialist,伏击客,Ambusher,Ave Mujica,Ave Mujica,5,未知,未知,女,Female,2025,地面,Melee,"['输出', '控场']",
+char_241_panda,食铁兽,FEater,特种,Specialist,推击手,Push Stroker,龙门,Lungmen,5,乌萨斯,乌萨斯,女,Female,2019,地面,Melee,"['位移', '减速']",
+char_4036_forcer,见行者,Enforcer,特种,Specialist,推击手,Push Stroker,拉特兰,Laterano,5,萨科塔,萨科塔,男,Male,2022,地面,Melee,"['位移', '控场']",
+char_451_robin,罗宾,Robin,特种,Specialist,陷阱师,Trapmaster,哥伦比亚,Columbia,5,阿纳缇,阿纳缇,女,Female,2020,高台,Ranged,"['召唤', '位移']",
+char_458_rfrost,霜华,Frost,特种,Specialist,陷阱师,Trapmaster,彩虹小队,彩虹小队,5,未知,未知,女,Female,2021,高台,Ranged,"['召唤', '控场']",
+char_4171_wulfen,钼铅,Wulfenite,特种,Specialist,陷阱师,Trapmaster,萨尔贡,Sargon,5,斐迪亚,斐迪亚,女,Female,2025,高台,Ranged,"['召唤', '削弱']",
+char_369_bena,贝娜,Bena,特种,Specialist,傀儡师,Dollkeeper,维多利亚,Victoria,5,卡普里尼,卡普里尼,女,Female,2021,地面,Melee,"['输出', '快速复活']",
+char_4016_kazema,风丸,Kazemaru,特种,Specialist,傀儡师,Dollkeeper,东国,Higashi,5,菲林,菲林,女,Female,2022,地面,Melee,"['输出', '快速复活']",
+char_4124_iana,双月,Iana,特种,Specialist,傀儡师,Dollkeeper,彩虹小队,彩虹小队,5,未知,未知,女,Female,2024,地面,Melee,"['削弱', '快速复活']",
+char_4183_mortis,若叶睦,Wakaba Mutsumi,特种,Specialist,傀儡师,Dollkeeper,Ave Mujica,Ave Mujica,5,未知,未知,女,Female,2025,地面,Melee,"['防护', '快速复活']",
+char_4151_tinman,锡人,Tin Man,特种,Specialist,炼金师,Alchemist,哥伦比亚,Columbia,5,未公开,未公开,男,Male,2024,高台,Ranged,"['削弱', '支援']",
+char_4191_tippi,蒂比,Tippi,特种,Specialist,巡空者,Skywalker,哥伦比亚,Columbia,5,黎博利,黎博利,女,Female,2025,地面,Melee,"['高空', '生存']",
+char_103_angel,能天使,Exusiai,狙击,Sniper,速射手,Marksman,"炎-龙门,企鹅物流","炎-龙门,企鹅物流",6,萨科塔,Sankta,女,Female,2019,高台,Ranged,['输出'],
+char_332_archet,空弦,Archetto,狙击,Sniper,速射手,Marksman,拉特兰,Laterano,6,黎博利,黎博利,女,Female,2021,高台,Ranged,['输出'],
+char_456_ash,灰烬,Ash,狙击,Sniper,速射手,Marksman,彩虹小队,彩虹小队,6,未知,未知,女,Female,2021,高台,Ranged,['输出'],
+char_340_shwaz,黑,Schwarz,狙击,Sniper,重射手,Spreadshooter,"哥伦比亚,汐斯塔","哥伦比亚,汐斯塔",6,菲林,Feline,女,Female,2019,高台,Ranged,['输出'],
+char_4055_bgsnow,鸿雪,Позёмка,狙击,Sniper,重射手,Spreadshooter,罗德岛,Rhodes Island,6,鲁珀,鲁珀,女,Female,2022,高台,Ranged,['输出'],
+char_1048_orchd2,焰狐龙梓兰,Violet Mizutsune Orchid,狙击,Sniper,重射手,Spreadshooter,"罗德岛,行动预备组A6","罗德岛,行动预备组A6",6,黎博利,黎博利,女,Female,2026,高台,Ranged,"['输出', '快速复活']",梓兰
+char_430_fartth,远牙,Fartooth,狙击,Sniper,神射手,Deadeye,"卡西米尔,红松骑士团","卡西米尔,红松骑士团",6,黎博利,黎博利,女,Female,2021,高台,Ranged,['输出'],
+char_4193_lemuen,蕾缪安,Lemuen,狙击,Sniper,神射手,Deadeye,拉特兰,Laterano,6,萨科塔,萨科塔,女,Female,2025,高台,Ranged,"['输出', '爆发']",
+char_113_cqbw,W,W,狙击,Sniper,炮手,Artilleryman,巴别塔,巴别塔,6,萨卡兹,Sarkaz,女,Female,2020,高台,Ranged,"['输出', '控场']",
+char_300_phenxi,菲亚梅塔,Fiammetta,狙击,Sniper,炮手,Artilleryman,拉特兰,Laterano,6,黎博利,黎博利,女,Female,2022,高台,Ranged,['输出'],
+char_197_poca,早露,Роса,狙击,Sniper,攻城手,Siege,"乌萨斯,乌萨斯学生自治团","乌萨斯,乌萨斯学生自治团",6,乌萨斯,乌萨斯,女,Female,2020,高台,Ranged,"['输出', '控场']",
+char_2012_typhon,提丰,Typhon,狙击,Sniper,攻城手,Siege,萨米,Sami,6,萨卡兹,萨卡兹,女,Female,2023,高台,Ranged,['输出'],
+char_391_rosmon,迷迭香,Rosmontis,狙击,Sniper,投掷手,Bombardier,"罗德岛,罗德岛-精英干员","罗德岛,罗德岛-精英干员",6,菲林,Feline,女,Female,2020,高台,Ranged,['输出'],
+char_1035_wisdel,维什戴尔,Wiš'adel,狙击,Sniper,投掷手,Bombardier,巴别塔,巴别塔,6,萨卡兹,萨卡兹,女,Female,2024,高台,Ranged,['输出'],W
+char_1013_chen2,假日威龙陈,Ch'en the Holungday,狙击,Sniper,散射手,Flinger,罗德岛,Rhodes Island,6,龙,龙,女,Female,2021,高台,Ranged,"['输出', '群攻']",陈
+char_4117_ray,莱伊,Ray,狙击,Sniper,猎手,Hunter,雷姆必拓,Rim Billiton,6,卡特斯,卡特斯,女,Female,2024,高台,Ranged,['输出'],
+char_4138_narant,娜仁图亚,Narantuya,狙击,Sniper,回环射手,Loopshooter,萨尔贡,Sargon,6,库兰塔,库兰塔,女,Female,2024,高台,Ranged,['输出'],
+char_112_siege,推进之王,Siege,先锋,Vanguard,尖兵,Pioneer,"维多利亚,格拉斯哥帮","维多利亚,格拉斯哥帮",6,阿斯兰,Aslan,女,Female,2019,地面,Melee,"['费用回复', '输出']",
+char_222_bpipe,风笛,Bagpipe,先锋,Vanguard,冲锋手,Charger,维多利亚,Victoria,6,瓦伊凡,瓦伊凡,女,Female,2020,地面,Melee,"['费用回复', '输出']",
+char_362_saga,嵯峨,Saga,先锋,Vanguard,尖兵,Pioneer,东国,Higashi,6,佩洛,佩洛,女,Female,2021,地面,Melee,"['费用回复', '输出']",
+char_4026_vulpis,忍冬,Vulpisfoglia,先锋,Vanguard,尖兵,Pioneer,叙拉古,Siracusa,6,沃尔珀,沃尔珀,女,Female,2024,地面,Melee,"['费用回复', '输出']",
+char_479_sleach,琴柳,Saileach,先锋,Vanguard,执旗手,Standard Bearer,维多利亚,Victoria,6,瓦伊凡,瓦伊凡,女,Female,2021,地面,Melee,"['费用回复', '支援']",
+char_420_flamtl,焰尾,Flametail,先锋,Vanguard,尖兵,Pioneer,"卡西米尔,红松骑士团","卡西米尔,红松骑士团",6,札拉克,札拉克,女,Female,2021,地面,Melee,"['费用回复', '生存']",
+char_427_vigil,伺夜,Vigil,先锋,Vanguard,战术家,Tactician,叙拉古,Siracusa,6,鲁珀,鲁珀,男,Male,2022,高台,Ranged,"['费用回复', '控场']",
+char_249_mlyss,缪尔赛思,Muelsyse,先锋,Vanguard,战术家,Tactician,"哥伦比亚,莱茵生命","哥伦比亚,莱茵生命",6,精灵,精灵,女,Female,2023,高台,Ranged,"['费用回复', '控场']",
+char_4228_closur,可露希尔,Closure,先锋,Vanguard,战术家,Tactician,罗德岛,Rhodes Island,6,萨卡兹,萨卡兹,女,Female,2026,高台,Ranged,"['费用回复', '控场']",
+char_1045_svash2,凛御银灰,SilverAsh the Reignfrost,先锋,Vanguard,策士,Counsellor,谢拉格,谢拉格,6,菲林,菲林,男,Male,2025,地面,Melee,"['费用回复', '支援']",银灰
+char_4087_ines,伊内丝,Ines,先锋,Vanguard,情报官,Agent,巴别塔,巴别塔,6,未公开,未公开,女,Female,2023,地面,Melee,"['费用回复', '快速复活']",
+char_134_ifrit,伊芙利特,Ifrit,术师,Caster,轰击术师,Blast Caster,"哥伦比亚,莱茵生命","哥伦比亚,莱茵生命",6,萨卡兹,Sarkaz,女,Female,2019,高台,Ranged,"['群攻', '削弱']",
+char_4229_aphris,谬因,Aphrissa,术师,Caster,轰击术师,Blast Caster,哥伦比亚,Columbia,6,菲林,菲林,女,Female,2026,高台,Ranged,"['群攻', '输出']",
+char_213_mostma,莫斯提马,Mostima,术师,Caster,扩散术师,Splash Caster,拉特兰,Laterano,6,未公开,未公开,女,Female,2019,高台,Ranged,"['群攻', '支援', '控场']",
+char_180_amgoat,艾雅法拉,Eyjafjalla,术师,Caster,中坚术师,Core Caster,莱塔尼亚,Leithanien,6,卡普里尼,Caprinae,女,Female,2019,高台,Ranged,"['输出', '削弱']",
+char_2013_cerber,刻俄柏,Ceobe,术师,Caster,中坚术师,Core Caster,罗德岛,Rhodes Island,6,佩洛,佩洛,女,Female,2020,高台,Ranged,"['输出', '控场']",
+char_4027_heyak,霍尔海雅,Ho'olheyak,术师,Caster,中坚术师,Core Caster,哥伦比亚,Columbia,6,未公开,未公开,女,Female,2023,高台,Ranged,"['输出', '控场']",
+char_4133_logos,逻各斯,Logos,术师,Caster,中坚术师,Core Caster,"罗德岛,罗德岛-精英干员","罗德岛,罗德岛-精英干员",6,萨卡兹,萨卡兹,男,Male,2024,高台,Ranged,['输出'],
+char_2015_dusk,夕,Dusk,术师,Caster,扩散术师,Splash Caster,"炎,炎-岁","炎,炎-岁",6,未公开,未公开,女,Female,2021,高台,Ranged,"['群攻', '输出', '控场']",
+char_4141_marcil,玛露西尔,Marcille,术师,Caster,扩散术师,Splash Caster,莱欧斯小队,莱欧斯小队,6,精灵,精灵,女,Female,2024,高台,Ranged,"['群攻', '治疗', '控场']",
+char_472_pasngr,异客,Passenger,术师,Caster,链术师,Chain Caster,萨尔贡,Sargon,6,黎博利,黎博利,男,Male,2021,高台,Ranged,['输出'],
+char_426_billro,卡涅利安,Carnelian,术师,Caster,阵法术师,Phalanx Caster,莱塔尼亚,Leithanien,6,卡普里尼,卡普里尼,女,Female,2021,高台,Ranged,"['群攻', '防护']",
+char_4080_lin,林,Lin,术师,Caster,阵法术师,Phalanx Caster,龙门,Lungmen,6,札拉克,札拉克,女,Female,2023,高台,Ranged,"['群攻', '防护']",
+char_1046_sbell2,圣聆初雪,Pramanix the Prerita,术师,Caster,阵法术师,Phalanx Caster,谢拉格,谢拉格,6,菲林,菲林,女,Female,2025,高台,Ranged,"['群攻', '控场']",初雪
+char_377_gdglow,澄闪,Goldenglow,术师,Caster,驭械术师,Mech-Accord Caster,维多利亚,Victoria,6,菲林,菲林,女,Female,2022,高台,Ranged,['输出'],
+char_1038_whitw2,荒芜拉普兰德,Lappland the Decadenza,术师,Caster,驭械术师,Mech-Accord Caster,叙拉古,Siracusa,6,鲁珀,鲁珀,女,Female,2024,高台,Ranged,"['输出', '削弱']",拉普兰德
+char_4046_ebnhlz,黑键,Ebenholz,术师,Caster,秘术师,Mystic Caster,莱塔尼亚,Leithanien,6,卡普里尼,卡普里尼,男,Male,2022,高台,Ranged,['输出'],
+char_4226_veen,维伊,Вий,术师,Caster,秘术师,Mystic Caster,乌萨斯,Ursus,6,库兰塔,库兰塔,男,Male,2026,高台,Ranged,['输出'],
+char_4146_nymph,妮芙,Nymph,术师,Caster,本源术师,Primal Caster,罗德岛,Rhodes Island,6,萨卡兹,萨卡兹,女,Female,2024,高台,Ranged,"['元素', '输出', '控场']",
+char_1040_blaze2,烛煌,Blaze the Igniting Spark,术师,Caster,本源术师,Primal Caster,"罗德岛,罗德岛-精英干员","罗德岛,罗德岛-精英干员",6,菲林,菲林,女,Female,2025,高台,Ranged,"['元素', '输出', '群攻']",煌
+char_4204_mantra,真言,Mantra,术师,Caster,本源术师,Primal Caster,"罗德岛,罗德岛-精英干员","罗德岛,罗德岛-精英干员",6,斐迪亚,斐迪亚,女,Female,2025,高台,Ranged,"['元素', '输出', '控场']",
+char_450_necras,死芒,Necrass,术师,Caster,塑灵术师,Necrosis Caster,"维多利亚,塔拉","维多利亚,塔拉",6,德拉克,德拉克,女,Female,2025,高台,Ranged,"['召唤', '输出']",
+char_206_gnosis,灵知,Gnosis,辅助,Supporter,削弱者,Hexer,"谢拉格,喀兰贸易","谢拉格,喀兰贸易",6,黎博利,黎博利,男,Male,2021,高台,Ranged,['削弱'],
+char_291_aglina,安洁莉娜,Angelina,辅助,Supporter,凝滞师,Decel Binder,叙拉古,Siracusa,6,沃尔珀,Vulpo,女,Female,2019,高台,Ranged,"['减速', '输出', '支援']",
+char_358_lisa,铃兰,Suzuran,辅助,Supporter,凝滞师,Decel Binder,叙拉古,Siracusa,6,沃尔珀,Vulpo,女,Female,2020,高台,Ranged,"['减速', '支援', '输出']",
+char_1047_halo2,溯光星源,Astgenne the Lightchaser,辅助,Supporter,凝滞师,Decel Binder,"哥伦比亚,莱茵生命","哥伦比亚,莱茵生命",6,黎博利,黎博利,女,Female,2025,高台,Ranged,"['减速', '支援', '输出']",星源
+char_248_mgllan,麦哲伦,Magallan,辅助,Supporter,召唤师,Summoner,"哥伦比亚,莱茵生命","哥伦比亚,莱茵生命",6,黎博利,黎博利,女,Female,2019,高台,Ranged,"['支援', '减速', '输出']",
+char_4195_radian,电弧,Raidian,辅助,Supporter,召唤师,Summoner,"罗德岛,罗德岛-精英干员","罗德岛,罗德岛-精英干员",6,黎博利,黎博利,女,Female,2025,高台,Ranged,"['召唤', '输出', '支援']",
+char_1012_skadi2,浊心斯卡蒂,Skadi the Corrupting Heart,辅助,Supporter,吟游者,Bard,阿戈尔,Ægir,6,未公开,未公开,女,Female,2021,高台,Ranged,"['支援', '生存', '输出']",斯卡蒂
+char_4134_cetsyr,魔王,Civilight Eterna,辅助,Supporter,吟游者,Bard,罗德岛,Rhodes Island,6,未公开,未公开,女,Female,2024,高台,Ranged,"['支援', '生存', '输出']",
+char_1031_slent2,淬羽赫默,Silence the Paradigmatic,辅助,Supporter,护佑者,Abjurer,"哥伦比亚,莱茵生命","哥伦比亚,莱茵生命",6,黎博利,黎博利,女,Female,2023,高台,Ranged,"['支援', '生存', '治疗']",赫默
+char_4202_haruka,遥,Haruka,辅助,Supporter,护佑者,Abjurer,东国,Higashi,6,阿戈尔,阿戈尔,女,Female,2025,高台,Ranged,"['支援', '生存', '治疗']",
+char_2023_ling,令,Ling,辅助,Supporter,召唤师,Summoner,"炎,炎-岁","炎,炎-岁",6,未公开,未公开,女,Female,2022,高台,Ranged,"['召唤', '支援', '控场']",
+char_4072_ironmn,白铁,Stainless,辅助,Supporter,工匠,Artificer,维多利亚,Victoria,6,菲林,菲林,男,Male,2022,地面,Melee,"['支援', '输出']",
+char_4212_nasti,娜斯提,Nasti,辅助,Supporter,工匠,Artificer,"哥伦比亚,莱茵生命","哥伦比亚,莱茵生命",6,萨卡兹,萨卡兹,女,Female,2025,地面,Melee,"['支援', '防护']",
+char_245_cello,塑心,Virtuosa,辅助,Supporter,巫役,Ritualist,拉特兰,Laterano,6,萨科塔,萨科塔,女,Female,2023,高台,Ranged,"['元素', '支援']",
+char_1042_phatm2,酒神,Tragodia,辅助,Supporter,巫役,Ritualist,维多利亚,Victoria,6,菲林,菲林,男,Male,2025,高台,Ranged,"['元素', '控场']",傀影
+char_250_phatom,傀影,Phantom,特种,Specialist,处决者,Executor,维多利亚,Victoria,6,菲林,菲林,男,Male,2020,地面,Melee,"['快速复活', '控场', '输出']",
+char_1028_texas2,缄默德克萨斯,Texas the Omertosa,特种,Specialist,处决者,Executor,"炎-龙门,企鹅物流","炎-龙门,企鹅物流",6,鲁珀,鲁珀,女,Female,2022,地面,Melee,"['快速复活', '输出']",德克萨斯
+char_1029_yato2,麒麟R夜刀,Kirin R Yato,特种,Specialist,处决者,Executor,"罗德岛,行动组A4","罗德岛,行动组A4",6,鬼,鬼,女,Female,2023,地面,Melee,"['快速复活', '爆发']",夜刀
+char_1502_crosly,弑君者,Crownslayer,特种,Specialist,处决者,Executor,罗德岛,Rhodes Island,6,瑞柏巴,瑞柏巴,女,Female,2024,地面,Melee,['快速复活'],
+char_322_lmlee,老鲤,Lee,特种,Specialist,行商,Merchant,"炎-龙门,鲤氏侦探事务所","炎-龙门,鲤氏侦探事务所",6,龙,龙,男,Male,2022,地面,Melee,"['快速复活', '生存', '输出']",
+char_1033_swire2,琳琅诗怀雅,Swire the Elegant Wit,特种,Specialist,行商,Merchant,龙门,Lungmen,6,菲林,菲林,女,Female,2023,地面,Melee,"['快速复活', '爆发']",诗怀雅
+char_400_weedy,温蒂,Weedy,特种,Specialist,推击手,Push Stroker,罗德岛,Rhodes Island,6,阿戈尔,阿戈尔,女,Female,2020,地面,Melee,"['位移', '输出', '控场']",
+char_225_haak,阿,Aak,特种,Specialist,怪杰,Geek,"炎-龙门,鲤氏侦探事务所","炎-龙门,鲤氏侦探事务所",6,菲林,菲林,男,Male,2020,高台,Ranged,"['支援', '输出']",
+char_1041_angel2,新约能天使,Exusiai the New Covenant,特种,Specialist,怪杰,Geek,"炎-龙门,企鹅物流","炎-龙门,企鹅物流",6,萨科塔,萨科塔,女,Female,2025,高台,Ranged,"['输出', '支援']",能天使
+char_474_glady,歌蕾蒂娅,Gladiia,特种,Specialist,钩索师,Hookmaster,"阿戈尔,深海猎人","阿戈尔,深海猎人",6,未公开,未公开,女,Female,2021,地面,Melee,"['位移', '输出', '控场']",
+char_437_mizuki,水月,Mizuki,特种,Specialist,伏击客,Ambusher,东国,Higashi,6,阿戈尔,阿戈尔,男,Male,2021,地面,Melee,"['输出', '控场']",
+char_4132_ascln,阿斯卡纶,Ascalon,特种,Specialist,伏击客,Ambusher,"罗德岛,S.W.E.E.P.","罗德岛,S.W.E.E.P.",6,萨卡兹,萨卡兹,女,Female,2024,地面,Melee,"['减速', '输出']",
+char_1023_ghost2,归溟幽灵鲨,Specter the Unchained,特种,Specialist,傀儡师,Dollkeeper,"阿戈尔,深海猎人","阿戈尔,深海猎人",6,阿戈尔,阿戈尔,女,Female,2022,地面,Melee,"['输出', '快速复活']",幽灵鲨
+char_4048_doroth,多萝西,Dorothy,特种,Specialist,陷阱师,Trapmaster,"哥伦比亚,莱茵生命","哥伦比亚,莱茵生命",6,札拉克,札拉克,女,Female,2022,高台,Ranged,"['召唤', '控场']",
+char_4123_ela,艾拉,Ela,特种,Specialist,陷阱师,Trapmaster,彩虹小队,彩虹小队,6,未知,未知,女,Female,2024,高台,Ranged,"['召唤', '控场', '输出']",
+char_2027_wang,望,Wang,特种,Specialist,陷阱师,Trapmaster,"炎,炎-岁","炎,炎-岁",6,未公开,未公开,男,Male,2026,高台,Ranged,"['召唤', '输出']",
+char_1039_thorn2,引星棘刺,Thorns the Lodestar,特种,Specialist,炼金师,Alchemist,伊比利亚,Iberia,6,阿戈尔,阿戈尔,男,Male,2024,高台,Ranged,"['输出', '支援', '削弱']",棘刺
+char_147_shining,闪灵,Shining,医疗,Medic,医师,Medic,使徒,使徒,6,萨卡兹,Sarkaz,女,Female,2019,高台,Ranged,"['治疗', '支援']",
+char_179_cgbird,夜莺,Nightingale,医疗,Medic,群愈师,Multi-target Medic,使徒,使徒,6,萨卡兹,Sarkaz,女,Female,2019,高台,Ranged,"['治疗', '支援']",
+char_003_kalts,凯尔希,Kal'tsit,医疗,Medic,医师,Medic,罗德岛,Rhodes Island,6,菲林,Feline,女,Female,2021,高台,Ranged,"['召唤', '治疗']",
+char_4042_lumen,流明,Lumen,医疗,Medic,疗养师,Wandering Medic,伊比利亚,Iberia,6,阿戈尔,阿戈尔,男,Male,2022,高台,Ranged,"['治疗', '支援']",
+char_1016_agoat2,纯烬艾雅法拉,Eyjafjalla the Hvít Aska,医疗,Medic,行医,Wandering Medic,莱塔尼亚,Leithanien,6,卡普里尼,卡普里尼,女,Female,2023,高台,Ranged,['治疗'],艾雅法拉
+char_1020_reed2,焰影苇草,Reed The Flame Shadow,医疗,Medic,咒愈师,Incantation Medic,"维多利亚,塔拉","维多利亚,塔拉",6,德拉克,德拉克,女,Female,2022,高台,Ranged,"['治疗', '输出', '削弱']",苇草
+char_4056_titi,缇缇,Titi,医疗,Medic,咒愈师,Incantation Medic,萨尔贡,Sargon,6,菲林,菲林,女,Female,2026,高台,Ranged,"['治疗', '防护', '控场']",
+char_4179_monstr,Mon3tr,Mon3tr,医疗,Medic,链愈师,Chain Medic,罗德岛,Rhodes Island,6,未公开,未公开,女,Female,2025,高台,Ranged,"['治疗', '输出', '支援']",
+char_1052_kalts2,凯尔希·思衡托,Kal'tsit·Esperanta,医疗,Medic,守望者,Watchman,罗德岛,Rhodes Island,6,菲林,菲林,女,Female,2026,高台,Ranged,"['高空', '治疗', '支援']",凯尔希
+char_136_hsguma,星熊,Hoshiguma,重装,Defender,铁卫,Protector,"炎-龙门,龙门近卫局","炎-龙门,龙门近卫局",6,鬼,Oni,女,Female,2019,地面,Melee,"['防护', '输出']",
+char_202_demkni,塞雷娅,Saria,重装,Defender,守护者,Guardian,"哥伦比亚,莱茵生命","哥伦比亚,莱茵生命",6,瓦伊凡,Vouivre,女,Female,2019,地面,Melee,"['防护', '治疗', '支援']",
+char_423_blemsh,瑕光,Blemishine,重装,Defender,守护者,Guardian,卡西米尔,Kazimierz,6,库兰塔,库兰塔,女,Female,2020,地面,Melee,"['防护', '治疗', '输出']",
+char_2025_shu,黍,Shu,重装,Defender,守护者,Guardian,"炎,炎-岁","炎,炎-岁",6,未公开,未公开,女,Female,2024,地面,Melee,"['防护', '治疗', '支援']",
+char_2014_nian,年,Nian,重装,Defender,铁卫,Protector,"炎,炎-岁","炎,炎-岁",6,未公开,未公开,女,Female,2020,地面,Melee,"['防护', '支援']",
+char_311_mudrok,泥岩,Mudrock,重装,Defender,不屈者,Juggernaut,罗德岛,Rhodes Island,6,萨卡兹,Sarkaz,女,Female,2020,地面,Melee,"['生存', '防护', '输出']",
+char_4065_judge,斥罪,Penance,重装,Defender,不屈者,Juggernaut,叙拉古,Siracusa,6,鲁珀,鲁珀,女,Female,2022,地面,Melee,"['生存', '输出']",
+char_416_zumama,森蚺,Eunectes,重装,Defender,决战者,Duelist,萨尔贡,Sargon,6,斐迪亚,斐迪亚,女,Female,2020,地面,Melee,"['输出', '生存', '防护']",
+char_4039_horn,号角,Horn,重装,Defender,要塞,Fortress,维多利亚,Victoria,6,鲁珀,鲁珀,女,Female,2022,地面,Melee,"['输出', '防护']",
+char_1034_jesca2,涤火杰西卡,Jessica the Liberated,重装,Defender,哨戒铁卫,Sentry Protector,"哥伦比亚,黑钢国际","哥伦比亚,黑钢国际",6,菲林,菲林,女,Female,2023,地面,Melee,"['防护', '生存', '输出']",杰西卡
+char_4194_rmixer,信仰搅拌机,Sankta Miksaparato,重装,Defender,哨戒铁卫,Sentry Protector,拉特兰,Laterano,6,萨科塔,萨科塔,男,Male,2025,地面,Melee,"['防护', '输出', '支援']",
+char_4230_mcnist,机械师,Mechanist,重装,Defender,哨戒铁卫,Sentry Protector,"罗德岛,罗德岛-精英干员","罗德岛,罗德岛-精英干员",6,埃拉菲亚,埃拉菲亚,男,Male,2026,地面,Melee,"['生存', '召唤', '输出']",
+char_2026_yu,余,Yu,重装,Defender,本源铁卫,Primal Protector,"炎,炎-岁","炎,炎-岁",6,未公开,未公开,男,Male,2025,地面,Melee,"['元素', '防护']",
+char_1044_hsgma2,斩业星熊,Hoshiguma the Breacher,重装,Defender,驭法铁卫,Arts Protector,"炎-龙门,龙门近卫局","炎-龙门,龙门近卫局",6,鬼,鬼,女,Female,2025,地面,Melee,"['输出', '生存']",星熊
+char_264_f12yin,山,Mountain,近卫,Guard,斗士,Brawler,哥伦比亚,Columbia,6,菲林,Feline,男,Male,2020,地面,Melee,"['输出', '生存']",
+char_2024_chyue,重岳,Chongyue,近卫,Guard,斗士,Brawler,"炎,炎-岁","炎,炎-岁",6,未公开,未公开,男,Male,2023,地面,Melee,['爆发'],
+char_4037_demetr,贝洛内,Bellone,近卫,Guard,斗士,Brawler,叙拉古,Siracusa,6,鲁珀,鲁珀,男,Male,2026,地面,Melee,"['输出', '削弱']",
+char_172_svrash,银灰,SilverAsh,近卫,Guard,领主,Lord,"谢拉格,喀兰贸易","谢拉格,喀兰贸易",6,菲林,Feline,男,Male,2019,地面,Melee,"['输出', '支援']",
+char_293_thorns,棘刺,Thorns,近卫,Guard,领主,Lord,伊比利亚,Iberia,6,阿戈尔,Aegir,男,Male,2020,地面,Melee,"['输出', '防护']",
+char_4082_qiubai,仇白,Qiubai,近卫,Guard,领主,Lord,炎,Yan,6,埃拉菲亚,埃拉菲亚,女,Female,2023,地面,Melee,"['输出', '控场']",
+char_4182_oblvns,丰川祥子,Togawa Sakiko,近卫,Guard,领主,Lord,Ave Mujica,Ave Mujica,6,未知,未知,女,Female,2025,地面,Melee,['输出'],
+char_4088_hodrer,赫德雷,Hoederer,近卫,Guard,重剑手,Crusher,巴别塔,巴别塔,6,萨卡兹,萨卡兹,男,Male,2023,地面,Melee,['输出'],
+char_4145_ulpia,乌尔比安,Ulpianus,近卫,Guard,重剑手,Crusher,"阿戈尔,深海猎人","阿戈尔,深海猎人",6,阿戈尔,阿戈尔,男,Male,2024,地面,Melee,"['输出', '生存']",
+char_4058_pepe,佩佩,Pepe,近卫,Guard,撼地者,Earthshaker,萨尔贡,Sargon,6,菲林,菲林,女,Female,2024,地面,Melee,"['输出', '控场']",
+char_1051_headb2,怒潮凛冬,Zima the Raging Tide,近卫,Guard,撼地者,Earthshaker,"乌萨斯,乌萨斯学生自治团","乌萨斯,乌萨斯学生自治团",6,乌萨斯,乌萨斯,女,Female,2026,地面,Melee,"['输出', '控场']",凛冬
+char_010_chen,陈,Ch'en,近卫,Guard,剑豪,Swordmaster,"炎-龙门,龙门近卫局","炎-龙门,龙门近卫局",6,龙,Lung,女,Female,2019,地面,Melee,"['爆发', '输出']",
+char_4009_irene,艾丽妮,Irene,近卫,Guard,剑豪,Swordmaster,伊比利亚,Iberia,6,黎博利,黎博利,女,Female,2022,地面,Melee,"['爆发', '输出', '控场']",
+char_4116_blkkgt,锏,Degenbrecher,近卫,Guard,剑豪,Swordmaster,"谢拉格,喀兰贸易","谢拉格,喀兰贸易",6,卡普里尼,卡普里尼,女,Female,2023,地面,Melee,"['爆发', '输出', '削弱']",
+char_017_huang,煌,Blaze,近卫,Guard,强攻手,Centurion,"罗德岛,罗德岛-精英干员","罗德岛,罗德岛-精英干员",6,菲林,Feline,女,Female,2019,地面,Melee,"['输出', '生存']",
+char_1026_gvial2,百炼嘉维尔,Gavial the Invincible,近卫,Guard,强攻手,Centurion,罗德岛,Rhodes Island,6,阿达克利斯,阿达克利斯,女,Female,2022,地面,Melee,"['爆发', '输出', '生存']",嘉维尔
+char_350_surtr,史尔特尔,Surtr,近卫,Guard,术战者,Arts Fighter,罗德岛,Rhodes Island,6,萨卡兹,萨卡兹,女,Female,2020,地面,Melee,['输出'],
+char_4098_vvana,薇薇安娜,Viviana,近卫,Guard,术战者,Arts Fighter,莱塔尼亚,Leithanien,6,埃拉菲亚,埃拉菲亚,女,Female,2023,地面,Melee,"['输出', '生存']",
+char_1019_siege2,维娜·维多利亚,Vina Victoria,近卫,Guard,术战者,Arts Fighter,维多利亚,Victoria,6,阿斯兰,阿斯兰,女,Female,2024,地面,Melee,"['输出', '生存']",推进之王
+char_1050_chen3,赤刃明霄陈,Ch'en the Dawnstreak,近卫,Guard,术战者,Arts Fighter,炎,Yan,6,龙,龙,女,Female,2026,地面,Melee,"['爆发', '输出']",陈
+char_188_helage,赫拉格,Hellagur,近卫,Guard,武者,Soloblade,乌萨斯,Ursus,6,黎博利,Liberi,男,Male,2019,地面,Melee,"['输出', '生存']",
+char_4121_zuole,左乐,Zuo Le,近卫,Guard,武者,Soloblade,炎,Yan,6,斐迪亚,斐迪亚,男,Male,2024,地面,Melee,"['输出', '生存']",
+char_485_pallas,帕拉斯,Pallas,近卫,Guard,教官,Instructor,米诺斯,Minos,6,丰蹄,丰蹄,女,Female,2021,地面,Melee,"['输出', '支援']",
+char_1014_nearl2,耀骑士临光,Nearl the Radiant Knight,近卫,Guard,无畏者,Dreadnought,卡西米尔,Kazimierz,6,库兰塔,库兰塔,女,Female,2021,地面,Melee,['输出'],临光
+char_4011_lessng,止颂,Lessing,近卫,Guard,无畏者,Dreadnought,莱塔尼亚,Leithanien,6,卡普里尼,卡普里尼,男,Male,2023,地面,Melee,['输出'],
+char_1032_excu2,圣约送葬人,Executor the Ex Foedere,近卫,Guard,收割者,Reaper,拉特兰,Laterano,6,萨科塔,萨科塔,男,Male,2023,地面,Melee,['输出'],送葬人
+char_4010_etlchi,隐德来希,Entelechia,近卫,Guard,收割者,Reaper,罗德岛,Rhodes Island,6,萨卡兹,萨卡兹,女,Female,2025,地面,Melee,"['输出', '生存']",
+char_4064_mlynar,玛恩纳,Młynar,近卫,Guard,解放者,Liberator,卡西米尔,Kazimierz,6,库兰塔,库兰塔,男,Male,2022,地面,Melee,"['输出', '爆发']",
+char_1043_leizi2,司霆惊蛰,Leizi the Thunderbringer,近卫,Guard,解放者,Liberator,炎,Yan,6,麒麟,麒麟,女,Female,2025,地面,Melee,"['输出', '爆发']",惊蛰
+char_4214_cairn,响石,Cairn,重装,Defender,本源铁卫,Primal Protector,哥伦比亚,Columbia,5,菲林,菲林,女,Female,2025,地面,Melee,"['元素', '防护']",
+char_230_savage,暴行,Savage,近卫,Guard,强攻手,Centurion,雷姆必拓,Rim Billiton,5,卡特斯,Cautus,女,Female,2019,地面,Melee,"['群攻', '爆发']",
+char_282_catap,空爆,Catapult,狙击,Sniper,炮手,Artilleryman,"罗德岛,行动预备组A6","罗德岛,行动预备组A6",3,库兰塔,库兰塔,女,Female,2019,高台,Ranged,['群攻'],
+char_283_midn,月见夜,Midnight,近卫,Guard,领主,Lord,"罗德岛,行动预备组A6","罗德岛,行动预备组A6",3,萨卡兹,萨卡兹,男,Male,2019,地面,Melee,['输出'],
+char_137_brownb,猎蜂,Beehunter,近卫,Guard,斗士,Brawler,乌萨斯,Ursus,4,乌萨斯,乌萨斯,女,Female,2019,地面,Melee,['输出'],
+char_347_jaksel,杰克,Jackie,近卫,Guard,斗士,Brawler,哥伦比亚,Columbia,4,佩洛,佩洛,女,Female,2020,地面,Melee,['输出'],
+char_164_nightm,夜魔,Nightmare,术师,Caster,中坚术师,Core Caster,维多利亚,Victoria,5,菲林,菲林,女,Female,2019,高台,Ranged,"['输出', '治疗', '减速']",
+char_220_grani,格拉尼,Grani,先锋,Vanguard,冲锋手,Charger,维多利亚,Victoria,5,库兰塔,库兰塔,女,Female,2019,地面,Melee,"['费用回复', '防护']",
+char_263_skadi,斯卡蒂,Skadi,近卫,Guard,无畏者,Dreadnought,"阿戈尔,深海猎人","阿戈尔,深海猎人",6,未公开,未公开,女,Female,2019,地面,Melee,"['输出', '生存']",

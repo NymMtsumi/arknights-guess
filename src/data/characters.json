@@ -2302,30 +2302,6 @@
     "positionEn": "Melee"
   },
   {
-    "id": "char_513_apionr",
-    "name": "郁金香",
-    "nameEn": "Tulip",
-    "class": "先锋",
-    "classEn": "Vanguard",
-    "subclass": "尖兵",
-    "subclassEn": "Pioneer",
-    "faction": "未知",
-    "factionEn": "Unknown",
-    "rarity": 5,
-    "race": "斐迪亚",
-    "raceEn": "斐迪亚",
-    "gender": "女",
-    "genderEn": "Female",
-    "releaseYear": 2022,
-    "tags": [
-      "费用回复",
-      "输出"
-    ],
-    "alterBase": "",
-    "position": "地面",
-    "positionEn": "Melee"
-  },
-  {
     "id": "char_4023_rfalcn",
     "name": "红隼",
     "nameEn": "Kestrel",
@@ -2801,30 +2777,6 @@
     "releaseYear": 2023,
     "tags": [
       "输出"
-    ],
-    "alterBase": "",
-    "position": "地面",
-    "positionEn": "Melee"
-  },
-  {
-    "id": "char_508_aguard",
-    "name": "Sharp",
-    "nameEn": "Sharp",
-    "class": "近卫",
-    "classEn": "Guard",
-    "subclass": "无畏者",
-    "subclassEn": "Dreadnought",
-    "faction": "未知",
-    "factionEn": "Unknown",
-    "rarity": 5,
-    "race": "斐迪亚",
-    "raceEn": "斐迪亚",
-    "gender": "男",
-    "genderEn": "Male",
-    "releaseYear": 2020,
-    "tags": [
-      "输出",
-      "生存"
     ],
     "alterBase": "",
     "position": "地面",
@@ -3523,29 +3475,6 @@
     "positionEn": "Ranged"
   },
   {
-    "id": "char_511_asnipe",
-    "name": "Stormeye",
-    "nameEn": "Stormeye",
-    "class": "狙击",
-    "classEn": "Sniper",
-    "subclass": "速射手",
-    "subclassEn": "Marksman",
-    "faction": "未知",
-    "factionEn": "Unknown",
-    "rarity": 5,
-    "race": "萨卡兹",
-    "raceEn": "萨卡兹",
-    "gender": "男",
-    "genderEn": "Male",
-    "releaseYear": 2020,
-    "tags": [
-      "输出"
-    ],
-    "alterBase": "",
-    "position": "高台",
-    "positionEn": "Ranged"
-  },
-  {
     "id": "char_365_aprl",
     "name": "四月",
     "nameEn": "April",
@@ -3893,29 +3822,6 @@
     "tags": [
       "群攻",
       "控场"
-    ],
-    "alterBase": "",
-    "position": "高台",
-    "positionEn": "Ranged"
-  },
-  {
-    "id": "char_509_acast",
-    "name": "Pith",
-    "nameEn": "Pith",
-    "class": "术师",
-    "classEn": "Caster",
-    "subclass": "扩散术师",
-    "subclassEn": "Splash Caster",
-    "faction": "未知",
-    "factionEn": "Unknown",
-    "rarity": 5,
-    "race": "黎博利",
-    "raceEn": "黎博利",
-    "gender": "女",
-    "genderEn": "Female",
-    "releaseYear": 2020,
-    "tags": [
-      "群攻"
     ],
     "alterBase": "",
     "position": "高台",
@@ -4533,29 +4439,6 @@
     "tags": [
       "治疗",
       "输出"
-    ],
-    "alterBase": "",
-    "position": "高台",
-    "positionEn": "Ranged"
-  },
-  {
-    "id": "char_510_amedic",
-    "name": "Touch",
-    "nameEn": "Touch",
-    "class": "医疗",
-    "classEn": "Medic",
-    "subclass": "医师",
-    "subclassEn": "Medic",
-    "faction": "未知",
-    "factionEn": "Unknown",
-    "rarity": 5,
-    "race": "卡普里尼",
-    "raceEn": "卡普里尼",
-    "gender": "女",
-    "genderEn": "Female",
-    "releaseYear": 2020,
-    "tags": [
-      "治疗"
     ],
     "alterBase": "",
     "position": "高台",
@@ -7988,27 +7871,6 @@
     "positionEn": "Ranged"
   },
   {
-    "id": "char_614_acsupo",
-    "name": "Raidian",
-    "nameEn": "Raidian",
-    "class": "辅助",
-    "classEn": "Supporter",
-    "subclass": "凝滞师",
-    "subclassEn": "Decel Binder",
-    "faction": "未知",
-    "factionEn": "Unknown",
-    "rarity": 6,
-    "race": "黎博利",
-    "raceEn": "Liberi",
-    "gender": "女",
-    "genderEn": "Female",
-    "releaseYear": 0,
-    "tags": [],
-    "alterBase": "",
-    "position": "高台",
-    "positionEn": "Ranged"
-  },
-  {
     "id": "char_1047_halo2",
     "name": "溯光星源",
     "nameEn": "Astgenne the Lightchaser",
@@ -8397,27 +8259,6 @@
     "tags": [
       "快速复活"
     ],
-    "alterBase": "",
-    "position": "地面",
-    "positionEn": "Melee"
-  },
-  {
-    "id": "char_615_acspec",
-    "name": "Misery",
-    "nameEn": "Misery",
-    "class": "特种",
-    "classEn": "Specialist",
-    "subclass": "处决者",
-    "subclassEn": "Executor",
-    "faction": "未知",
-    "factionEn": "Unknown",
-    "rarity": 6,
-    "race": "萨卡兹",
-    "raceEn": "Sarkaz",
-    "gender": "男",
-    "genderEn": "Male",
-    "releaseYear": 0,
-    "tags": [],
     "alterBase": "",
     "position": "地面",
     "positionEn": "Melee"
@@ -8985,27 +8826,6 @@
     "positionEn": "Melee"
   },
   {
-    "id": "char_610_acfend",
-    "name": "Mechanist",
-    "nameEn": "Mechanist",
-    "class": "重装",
-    "classEn": "Defender",
-    "subclass": "铁卫",
-    "subclassEn": "Protector",
-    "faction": "未知",
-    "factionEn": "Unknown",
-    "rarity": 6,
-    "race": "黎博利",
-    "raceEn": "Liberi",
-    "gender": "男",
-    "genderEn": "Male",
-    "releaseYear": 0,
-    "tags": [],
-    "alterBase": "",
-    "position": "地面",
-    "positionEn": "Melee"
-  },
-  {
     "id": "char_202_demkni",
     "name": "塞雷娅",
     "nameEn": "Saria",
@@ -9485,29 +9305,6 @@
     "raceEn": "未知",
     "gender": "女",
     "genderEn": "Female",
-    "releaseYear": 2025,
-    "tags": [
-      "输出"
-    ],
-    "alterBase": "",
-    "position": "地面",
-    "positionEn": "Melee"
-  },
-  {
-    "id": "char_617_sharp2",
-    "name": "领主·Sharp",
-    "nameEn": "Lord/Sharp",
-    "class": "近卫",
-    "classEn": "Guard",
-    "subclass": "领主",
-    "subclassEn": "Lord",
-    "faction": "未知",
-    "factionEn": "Unknown",
-    "rarity": 6,
-    "race": "黎博利",
-    "raceEn": "Liberi",
-    "gender": "男",
-    "genderEn": "Male",
     "releaseYear": 2025,
     "tags": [
       "输出"

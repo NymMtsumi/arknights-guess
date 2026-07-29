@@ -226,8 +226,8 @@
     "rarity": 1,
     "race": "机械",
     "raceEn": "Robot",
-    "gender": "男",
-    "genderEn": "Male",
+    "gender": "女",
+    "genderEn": "Female",
     "releaseYear": 2026,
     "tags": [
       "支援机械",

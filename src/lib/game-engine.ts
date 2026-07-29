@@ -83,8 +83,7 @@ function compareFaction(targetFaction: string, guessFaction: string): GuessStatu
   // 阵营大组归类 → close
   const factionGroups: string[][] = [
     ['罗德岛', '巴别塔'],
-    ['龙门', '炎-龙门'],
-    ['炎', '炎-龙门', '炎-岁'],
+    ['炎', '龙门'],
     ['深海猎人', '阿戈尔'],
     ['乌萨斯'],
     ['维多利亚', '塔拉'],

@@ -64,7 +64,6 @@ io.on('connection', (socket) => {
   socket.on('_log', (data) => {
     console.log(`[日志] ${socket.id}: ${JSON.stringify(data)}`);
   });
-  });
 
   // 提交猜测 (广播所有历史颜色行给对手)
   socket.on('guess_update', (data) => {

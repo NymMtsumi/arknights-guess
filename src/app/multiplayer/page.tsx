@@ -6,6 +6,7 @@ import { Header } from '@/components/Header';
 import { GameSearch } from '@/components/GameSearch';
 import { GuessTable } from '@/components/GuessTable';
 import { useGameStore } from '@/stores/game-store';
+import { saveGameStats } from '@/lib/stats';
 import type { Character } from '@/types/character';
 
 const SERVER_URL = process.env.NEXT_PUBLIC_WS_URL || 'https://writing-color-built-rhythm.trycloudflare.com';
@@ -86,7 +87,15 @@ export default function MultiplayerPage() {
       setStage('roundEnd');
       setRoundEndData(d);
       if (timerRef.current) clearInterval(timerRef.current);
+      // 统计战绩
+      const won = d.winner === s.id;
+      saveGameStats(won, store.guesses.length, 'multi', d.targetName || '');
     });
+
+    s.on('match_end', (d: { winner: string | null; winnerName: string; score: string; reason?: string }) => {
+      // 比赛结束时也保存最后一局
+      saveGameStats(d.winner === socket?.id, store.guesses.length, 'multi', '');
+      setStage('matchEnd');
 
     s.on('match_end', (d: { winner: string | null; winnerName: string; score: string; reason?: string }) => {
       setStage('matchEnd');

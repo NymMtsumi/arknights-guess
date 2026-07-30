@@ -3,27 +3,37 @@ import { Server } from 'socket.io';
 import { randomBytes } from 'node:crypto';
 
 const PORT = process.env.PORT || 3001;
-const ROUND_TIME = 120_000;  // 每局2分钟
-const DISCONNECT_LIMIT = 30_000; // 断线30秒判负
-const CLEANUP = 60_000;
+const ROUND_TIME = 120_000;
+const DISCONNECT_LIMIT = 30_000;
+const CLEANUP = 300_000; // 5分钟未活动清理
 
-const httpServer = createServer((req, res) => { res.writeHead(200); res.end('理一把 对战服务器'); });
-const io = new Server(httpServer, { cors: { origin: '*' }, pingTimeout: 60_000 });
+const httpServer = createServer((req, res) => { res.writeHead(200); res.end('OK'); });
+const io = new Server(httpServer, { cors: { origin: '*' }, pingTimeout: 15000, pingInterval: 5000 });
 
 const rooms = new Map();
 
 function genRoomCode() {
-  let code;
-  do {
-    code = String(Math.floor(1000 + Math.random() * 9000)); // 4位纯数字
-  } while (rooms.has(code));
-  return code;
+  let c; do { c = String(Math.floor(1000 + Math.random() * 9000)); } while (rooms.has(c));
+  return c;
+}
+
+function formatScore(room) {
+  const arr = Array.from(room.players.values());
+  return `${arr[0]?.name||'?'} ${arr[0]?.wins||0} - ${arr[1]?.wins||0} ${arr[1]?.name||'?'}`;
+}
+
+function clearRoundTimer(room) {
+  if (room?.currentRound?.timer) { clearTimeout(room.currentRound.timer); room.currentRound.timer = null; }
+}
+
+function notifyDisconnect(room, playerName) {
+  io.to(room.code).emit('opponent_disconnected', { playerName, seconds: 30 });
 }
 
 io.on('connection', (socket) => {
   console.log(`[+] ${socket.id}`);
 
-  // 创建房间 (data: { playerName, bestOf: 3|5|7 })
+  // === 创建房间 ===
   socket.on('create_room', (data) => {
     const code = genRoomCode();
     const bestOf = [3,5,7].includes(data.bestOf) ? data.bestOf : 5;
@@ -31,186 +41,222 @@ io.on('connection', (socket) => {
 
     rooms.set(code, {
       code, bestOf, winsNeeded,
-      host: socket.id,
-      players: new Map([[socket.id, { name: data.playerName || '玩家', wins: 0, disconnectTimer: null }]]),
-      rounds: [],
-      currentRound: null,
-      started: false, finished: false,
+      players: new Map([[socket.id, { name: data.playerName||'玩家', wins: 0, ready: false, disconnectTimer: null }]]),
+      currentRound: null, started: false, finished: false,
+      roundTarget: null,
     });
 
     socket.join(code);
     socket.data.roomCode = code;
-    socket.emit('room_created', { code, bestOf, playerCount: 1 });
-    console.log(`[房] ${code} BO${bestOf} by ${socket.id}`);
+    socket.emit('room_created', { code, bestOf });
+    console.log(`[房] ${code} BO${bestOf}`);
   });
 
-  // 加入房间
+  // === 加入房间 ===
   socket.on('join_room', (data) => {
     const code = (data.code || '').toUpperCase();
     const room = rooms.get(code);
     if (!room) { socket.emit('error_msg', { message: '房间不存在' }); return; }
     if (room.players.size >= 2) { socket.emit('error_msg', { message: '房间已满' }); return; }
 
-    room.players.set(socket.id, { name: data.playerName || '玩家', wins: 0, disconnectTimer: null });
+    room.players.set(socket.id, { name: data.playerName||'玩家', wins: 0, ready: false, disconnectTimer: null });
     socket.join(code);
     socket.data.roomCode = code;
     room.started = true;
-
     startRound(room);
     console.log(`[房] ${code} 满员开战`);
   });
 
-  // 客户端操作日志
+  // === 客户端操作日志 ===
   socket.on('_log', (data) => {
-    console.log(`[日志] ${socket.id}: ${JSON.stringify(data)}`);
+    console.log(`[日志] ${data.action} by ${socket.id}`);
   });
 
-  // 提交猜测 (广播所有历史颜色行给对手)
+  // === 猜测更新 ===
   socket.on('guess_update', (data) => {
     const room = rooms.get(socket.data.roomCode);
     if (!room?.currentRound) return;
     socket.to(room.code).emit('opponent_update', {
       guessCount: data.guessCount,
-      allComparisons: data.allComparisons || [], // 所有历史行的颜色数组
+      allComparisons: data.allComparisons || [],
     });
   });
 
-  // 猜中
+  // === 猜中本局 ===
   socket.on('player_win_round', (data) => {
     const room = rooms.get(socket.data.roomCode);
     if (!room?.currentRound || room.finished) return;
-
     const player = room.players.get(socket.id);
     if (!player) return;
     player.wins++;
-    const won = player.wins >= room.winsNeeded;
 
+    const won = player.wins >= room.winsNeeded;
     clearRoundTimer(room);
+
     io.to(room.code).emit('round_end', {
-      winner: socket.id,
-      winnerName: player.name,
-      targetName: data.targetName || '',
-      score: formatScore(room),
-      roundOver: true,
-      matchOver: won,
+      winner: socket.id, winnerName: player.name,
+      targetName: room.roundTarget?.name || data.targetName || '',
+      score: formatScore(room), matchOver: won,
     });
 
     if (won) {
       room.finished = true;
-      io.to(room.code).emit('match_end', { winner: socket.id, winnerName: player.name, score: formatScore(room) });
-      scheduleCleanup(code);
+      room.players.forEach(p => p.ready = false);
+      io.to(room.code).emit('match_end', {
+        winner: socket.id, winnerName: player.name, score: formatScore(room),
+      });
     } else {
-      setTimeout(() => startRound(room), 5000);
+      setTimeout(() => startRound(room), 6000);
     }
   });
 
-  // 放弃本局
+  // === 放弃本局 ===
   socket.on('surrender_round', (data) => {
     const room = rooms.get(socket.data.roomCode);
     if (!room?.currentRound || room.finished) return;
-
-    // 标记该玩家已放弃
     room.currentRound.surrendered = room.currentRound.surrendered || new Set();
     room.currentRound.surrendered.add(socket.id);
 
-    // 双方都放弃 → 直接平局进入下一局
     if (room.currentRound.surrendered.size >= 2) {
       clearRoundTimer(room);
       io.to(room.code).emit('round_end', {
-        winner: null, winnerName: '', targetName: data.targetName || '',
-        score: formatScore(room), roundOver: true, matchOver: false,
+        winner: null, winnerName: '', targetName: room.roundTarget?.name || '',
+        score: formatScore(room), matchOver: false,
       });
       setTimeout(() => startRound(room), 5000);
       return;
     }
 
-    // 只有一方放弃：通知对方
     io.to(room.code).emit('opponent_surrendered', {
-      playerId: socket.id,
       playerName: room.players.get(socket.id)?.name,
-      targetName: data.targetName || '',
     });
 
-    // 倒计时继续走，另一方猜中才得分，否则超时平局
     const timeout = setTimeout(() => {
       io.to(room.code).emit('round_end', {
-        winner: null, winnerName: '', targetName: data.targetName || '',
-        score: formatScore(room), roundOver: true, matchOver: false,
+        winner: null, winnerName: '', targetName: room.roundTarget?.name || '',
+        score: formatScore(room), matchOver: false,
       });
       setTimeout(() => startRound(room), 5000);
     }, room.currentRound.remaining);
-
-    room.currentRound.timeout = timeout;
+    room.currentRound.timer = timeout;
   });
 
-  // 断开
+  // === 再理一把 ===
+  socket.on('rematch_ready', () => {
+    const room = rooms.get(socket.data.roomCode);
+    if (!room) return;
+    const player = room.players.get(socket.id);
+    if (player) player.ready = true;
+
+    const allReady = Array.from(room.players.values()).every(p => p.ready);
+    if (allReady && room.players.size === 2) {
+      room.players.forEach(p => { p.wins = 0; p.ready = false; });
+      room.finished = false;
+      room.roundTarget = null;
+      io.to(room.code).emit('rematch_start', { bestOf: room.bestOf, winsNeeded: room.winsNeeded });
+      setTimeout(() => startRound(room), 1500);
+    }
+  });
+
+  // === 断开 ===
   socket.on('disconnect', () => {
     const code = socket.data.roomCode;
     const room = rooms.get(code);
     if (!room || room.finished) return;
 
-    // 30秒倒计时，超时判负
     const player = room.players.get(socket.id);
-    if (player) {
-      player.disconnectTimer = setTimeout(() => {
-        const other = Array.from(room.players.keys()).find(id => id !== socket.id);
-        const winner = room.players.get(other);
-        io.to(code).emit('match_end', {
-          winner: other, winnerName: winner?.name || '对手',
-          score: formatScore(room), reason: 'disconnect',
-        });
-        room.finished = true;
-        clearRoundTimer(room);
-        scheduleCleanup(code);
-      }, DISCONNECT_LIMIT);
-    }
+    if (!player) return;
+
+    notifyDisconnect(room, player.name);
+
+    player.disconnectTimer = setTimeout(() => {
+      const other = Array.from(room.players.keys()).find(id => id !== socket.id);
+      io.to(code).emit('match_end', {
+        winner: other, winnerName: room.players.get(other)?.name || '对手',
+        score: formatScore(room), reason: 'disconnect',
+      });
+      room.finished = true;
+      clearRoundTimer(room);
+      scheduleCleanup(code);
+    }, DISCONNECT_LIMIT);
   });
 
-  // 重连
+  // === 重连 ===
   socket.on('reconnect_room', (data) => {
     const code = (data.code || '').toUpperCase();
     const room = rooms.get(code);
-    if (!room) return;
+    if (!room || room.finished) return;
     const player = room.players.get(socket.id);
-    if (player?.disconnectTimer) {
-      clearTimeout(player.disconnectTimer);
-      player.disconnectTimer = null;
-      socket.join(code);
-      socket.data.roomCode = code;
+    if (!player) return;
+    if (player.disconnectTimer) { clearTimeout(player.disconnectTimer); player.disconnectTimer = null; }
+    socket.join(code);
+    socket.data.roomCode = code;
+    io.to(code).emit('opponent_reconnected', { playerName: player.name });
+    // 发送当前回合状态
+    if (room.currentRound) {
+      socket.emit('round_start', {
+        startTime: room.currentRound.startTime,
+        timeLimit: ROUND_TIME,
+        score: formatScore(room),
+        target: room.roundTarget,
+        players: Array.from(room.players.entries()).map(([id, p]) => ({ id, name: p.name, wins: p.wins })),
+      });
     }
+    console.log(`[重连] ${socket.id} → ${code}`);
   });
 });
 
+// ===== 回合管理 =====
+
+// 加载干员数据
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+const __dirname = dirname(fileURLToPath(import.meta.url));
+let ALL_CHARS = [];
+try {
+  const data = JSON.parse(readFileSync(join(__dirname, 'characters.json'), 'utf-8'));
+  ALL_CHARS = data.map(c => ({ id: c.id, name: c.name }));
+} catch { ALL_CHARS = []; }
+console.log(`已加载 ${ALL_CHARS.length} 个干员`);
+
+function randomTarget() {
+  if (!ALL_CHARS.length) return { id: '', name: '随机干员' };
+  return ALL_CHARS[Math.floor(Math.random() * ALL_CHARS.length)];
+}
+
 function startRound(room) {
-  const target = ''; // 目标由客户端各自独立选择（同种子）
+  if (room.finished) return;
+  clearRoundTimer(room);
+
+  // 随机选目标（服务器统一）
+  const target = randomTarget();
+  room.roundTarget = target;
+
+  const remaining = ROUND_TIME;
   room.currentRound = {
-    target: '', targetName: '',
-    startTime: Date.now(), remaining: ROUND_TIME,
-    timeout: setTimeout(() => {
+    startTime: Date.now(), remaining,
+    surrended: new Set(),
+    timer: setTimeout(() => {
       io.to(room.code).emit('round_end', {
         winner: null, winnerName: '',
-        score: formatScore(room), roundOver: true, matchOver: false,
+        targetName: target.name,
+        score: formatScore(room), matchOver: false,
       });
       setTimeout(() => startRound(room), 5000);
-    }, ROUND_TIME),
+    }, remaining),
   };
+
   io.to(room.code).emit('round_start', {
-    startTime: Date.now(),
-    timeLimit: ROUND_TIME,
+    startTime: Date.now(), timeLimit: remaining,
     score: formatScore(room),
+    target,
     players: Array.from(room.players.entries()).map(([id, p]) => ({ id, name: p.name, wins: p.wins })),
   });
 }
 
-function clearRoundTimer(room) {
-  if (room?.currentRound?.timeout) { clearTimeout(room.currentRound.timeout); room.currentRound.timeout = null; }
+function scheduleCleanup(code) {
+  setTimeout(() => rooms.delete(code), CLEANUP);
 }
 
-function formatScore(room) {
-  const arr = Array.from(room.players.values());
-  return `${arr[0]?.name || '?'} ${arr[0]?.wins || 0} - ${arr[1]?.wins || 0} ${arr[1]?.name || '?'}`;
-}
-
-function scheduleCleanup(code) { setTimeout(() => rooms.delete(code), CLEANUP); }
-
-httpServer.listen(PORT, () => console.log(`服务器启动 :${PORT}`));
+httpServer.listen(PORT, () => console.log(`:${PORT}`));

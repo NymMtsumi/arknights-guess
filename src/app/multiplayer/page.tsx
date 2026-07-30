@@ -93,11 +93,9 @@ export default function MultiplayerPage() {
     });
 
     s.on('match_end', (d: { winner: string | null; winnerName: string; score: string; reason?: string }) => {
-      // 比赛结束时也保存最后一局
-      saveGameStats(d.winner === socket?.id, store.guesses.length, 'multi', '');
-      setStage('matchEnd');
-
     s.on('match_end', (d: { winner: string | null; winnerName: string; score: string; reason?: string }) => {
+      // 比赛结束时保存战绩
+      saveGameStats(d.winner === s.id, store.guesses.length, 'multi', '');
       setStage('matchEnd');
       setEndMsg(d.reason === 'disconnect' ? `${d.winnerName} 获胜（对方断线超30秒）` : `${d.winnerName} 赢得比赛！\n${d.score}`);
       s.disconnect();

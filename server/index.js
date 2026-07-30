@@ -14,8 +14,9 @@ const rooms = new Map();
 
 function genRoomCode() {
   let code;
-  do { code = randomBytes(3).toString('base64url').slice(0, 4).toUpperCase(); }
-  while (rooms.has(code));
+  do {
+    code = String(Math.floor(1000 + Math.random() * 9000)); // 4位纯数字
+  } while (rooms.has(code));
   return code;
 }
 

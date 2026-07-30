@@ -11,7 +11,7 @@ import type { Character, GuessComparisons } from '@/types/character';
 import charactersData from '@/data/characters.json';
 import { pickTarget } from '@/lib/game-engine';
 
-const SERVER_URL = process.env.NEXT_PUBLIC_WS_URL || 'http://106.14.144.232:3001';
+const SERVER_URL = process.env.NEXT_PUBLIC_WS_URL || 'https://liyiba-ws.2712506486.workers.dev';
 const allChars = charactersData as Character[];
 const COL_LABELS = ['姓名', '职业', '子职业', '阵营', '星级', '种族', '性别', '年份', '部署位', '词缀'];
 

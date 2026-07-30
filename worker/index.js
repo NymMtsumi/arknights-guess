@@ -1,15 +1,19 @@
-// Cloudflare Worker - WebSocket 代理到阿里云
+// Cloudflare Worker - 代理 Socket.IO 到阿里云 ECS
+const ORIGIN = 'http://106.14.144.232';
+
 export default {
   async fetch(request) {
     const url = new URL(request.url);
-    const upgrade = request.headers.get('Upgrade');
+    const targetUrl = ORIGIN + url.pathname + url.search;
 
-    if (upgrade === 'websocket') {
-      // 代理 WebSocket 到阿里云
-      const target = new URL(url.pathname + url.search, 'http://106.14.144.232:3001');
-      return fetch(target, request);
-    }
+    // 转发所有请求到 ECS
+    const modified = new Request(targetUrl, {
+      method: request.method,
+      headers: request.headers,
+      body: request.method !== 'GET' && request.method !== 'HEAD' ? request.body : undefined,
+      redirect: 'follow',
+    });
 
-    return new Response('理一把 WebSocket 代理', { status: 200 });
+    return fetch(modified);
   }
 };

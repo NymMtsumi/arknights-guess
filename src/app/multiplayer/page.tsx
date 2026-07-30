@@ -93,7 +93,6 @@ export default function MultiplayerPage() {
     });
 
     s.on('match_end', (d: { winner: string | null; winnerName: string; score: string; reason?: string }) => {
-    s.on('match_end', (d: { winner: string | null; winnerName: string; score: string; reason?: string }) => {
       // 比赛结束时保存战绩
       saveGameStats(d.winner === s.id, store.guesses.length, 'multi', '');
       setStage('matchEnd');

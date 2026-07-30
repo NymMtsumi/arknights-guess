@@ -5,12 +5,14 @@ import { Header } from '@/components/Header';
 import { HeroSection } from '@/components/HeroSection';
 import { MenuCard } from '@/components/MenuCard';
 import { RulesDialog } from '@/components/RulesDialog';
+import { ChangelogDialog } from '@/components/ChangelogDialog';
 import { Footer } from '@/components/Footer';
 import { useI18n } from '@/lib/i18n';
 
 export default function HomePage() {
   const { t } = useI18n();
   const [rulesOpen, setRulesOpen] = useState(false);
+  const [changelogOpen, setChangelogOpen] = useState(false);
 
   return (
     <div className="page home-page">
@@ -59,6 +61,17 @@ export default function HomePage() {
             description={t('menu.statsDesc')}
             color="#4d94ff"
           />
+
+          {/* 更新日志 */}
+          <div onClick={() => setChangelogOpen(true)} style={{ cursor: 'pointer' }}>
+            <MenuCard
+              href="#"
+              icon="📋"
+              label="更新日志"
+              description="查看网站历次更新内容与时间"
+              color="#f0a040"
+            />
+          </div>
         </div>
       </div>
 
@@ -66,6 +79,8 @@ export default function HomePage() {
 
       {/* 规则弹窗 */}
       <RulesDialog open={rulesOpen} onClose={() => setRulesOpen(false)} />
+      {/* 更新日志 */}
+      <ChangelogDialog open={changelogOpen} onClose={() => setChangelogOpen(false)} />
     </div>
   );
 }

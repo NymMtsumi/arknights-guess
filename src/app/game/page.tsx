@@ -186,18 +186,24 @@ export default function GamePage() {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             {/* 剩余次数 */}
-            <span style={{
-              fontWeight: 700,
-              fontSize: '1.1rem',
-              color: remainingGuesses <= 3 ? 'var(--danger)' : 'var(--text)',
-            }}>
-              {remainingGuesses <= 3 && (
-                <span style={{ animation: 'urgent-pulse 1.2s ease-in-out infinite' }}>
-                  {t('game.guessesLeft', { count: remainingGuesses })}
-                </span>
-              )}
-              {remainingGuesses > 3 && t('game.guessesLeft', { count: remainingGuesses })}
-            </span>
+            {status === 'playing' && (
+              <span style={{
+                fontWeight: 700,
+                fontSize: '1.1rem',
+                color: remainingGuesses <= 3 ? 'var(--danger)' : 'var(--text)',
+              }}>
+                {remainingGuesses <= 3 && (
+                  <span style={{ animation: 'urgent-pulse 1.2s ease-in-out infinite' }}>
+                    {t('game.guessesLeft', { count: remainingGuesses })}
+                  </span>
+                )}
+                {remainingGuesses > 3 && t('game.guessesLeft', { count: remainingGuesses })}
+              </span>
+            )}
+
+            {/* 结束状态提示 */}
+            {status === 'won' && <span style={{ color: 'var(--correct)', fontWeight: 700 }}>🎉 猜对了！</span>}
+            {status === 'lost' && <span style={{ color: 'var(--danger)', fontWeight: 700 }}>猜测次数用尽</span>}
 
             {/* 放弃 */}
             {status === 'playing' && (

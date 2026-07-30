@@ -62,6 +62,15 @@ export default function HomePage() {
             color="#4d94ff"
           />
 
+          {/* 多人对战 */}
+          <MenuCard
+            href="/multiplayer"
+            icon="⚔️"
+            label="多人对战"
+            description="创建或加入房间，与好友实时对战，120 秒先猜到者获胜"
+            color="#ff6b6b"
+          />
+
           {/* 更新日志 */}
           <div onClick={() => setChangelogOpen(true)} style={{ cursor: 'pointer' }}>
             <MenuCard

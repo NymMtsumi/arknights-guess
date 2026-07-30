@@ -62,9 +62,9 @@ export function GameSearch({ onGuess, disabled, guessedIds }: GameSearchProps) {
       setSelectedIndex(i => Math.max(i - 1, 0));
     } else if (e.key === 'Enter') {
       e.preventDefault();
-      if (selectedIndex >= 0 && results[selectedIndex]) {
-        handleSelect(results[selectedIndex]);
-      }
+      // 有选中项或默认选第一个
+      const idx = selectedIndex >= 0 ? selectedIndex : 0;
+      if (results[idx]) handleSelect(results[idx]);
     } else if (e.key === 'Escape') {
       setShowDropdown(false);
     }

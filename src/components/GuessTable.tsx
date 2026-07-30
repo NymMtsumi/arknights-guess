@@ -74,8 +74,20 @@ export function GuessTable({ guesses, target, hideRarity }: GuessTableProps) {
                 }}
               >
                 {columns.map(col => {
-                  // 名字列：如果是异格匹配，标黄
+                  // 名字列：猜对=绿，异格=黄
                   if (col.key === 'name') {
+                    const isCorrect = target && guess.character.id === target.id;
+                    if (isCorrect) {
+                      return (
+                        <td key={col.key} style={{
+                          padding: '10px 12px', textAlign: 'center', fontWeight: 700,
+                          fontSize: '0.9rem', whiteSpace: 'nowrap',
+                          color: '#fff', background: 'var(--correct)',
+                        }}>
+                          {col.render(guess)}
+                        </td>
+                      );
+                    }
                     if (alterMatch) {
                       return (
                         <td key={col.key} style={{

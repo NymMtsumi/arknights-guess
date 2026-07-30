@@ -16,7 +16,7 @@ export interface GameRecord {
 
 const STATS_KEY = 'arknights-guess-stats';
 const HISTORY_KEY = 'arknights-guess-history';
-const MAX_HISTORY = 20;
+const MAX_HISTORY = 80;
 
 export function loadStats(): StatsData {
   if (typeof window === 'undefined') return { totalGames: 0, wins: 0, losses: 0, totalGuesses: 0, bestScore: 0 };

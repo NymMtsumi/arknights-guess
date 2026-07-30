@@ -7,6 +7,7 @@ import { useI18n } from '@/lib/i18n';
 interface GuessTableProps {
   guesses: GuessResult[];
   target: Character | null;
+  hideRarity?: boolean;
 }
 
 function StatusCell({ status, children }: { status: GuessStatus; children: React.ReactNode }) {
@@ -28,7 +29,7 @@ function StatusCell({ status, children }: { status: GuessStatus; children: React
   );
 }
 
-export function GuessTable({ guesses, target }: GuessTableProps) {
+export function GuessTable({ guesses, target, hideRarity }: GuessTableProps) {
   const { t } = useI18n();
 
   if (guesses.length === 0) return null;
@@ -38,7 +39,7 @@ export function GuessTable({ guesses, target }: GuessTableProps) {
     { key: 'class', label: t('table.class'), render: (g: GuessResult) => g.character.class, statusKey: 'class' as const },
     { key: 'subclass', label: t('table.subclass'), render: (g: GuessResult) => g.character.subclass, statusKey: 'subclass' as const },
     { key: 'faction', label: t('table.faction'), render: (g: GuessResult) => g.character.faction, statusKey: 'faction' as const },
-    { key: 'rarity', label: t('table.rarity'), render: (g: GuessResult) => '★'.repeat(g.character.rarity), statusKey: 'rarity' as const },
+    ...(hideRarity ? [] : [{ key: 'rarity', label: t('table.rarity'), render: (g: GuessResult) => '★'.repeat(g.character.rarity), statusKey: 'rarity' as const }]),
     { key: 'race', label: t('table.race'), render: (g: GuessResult) => g.character.race, statusKey: 'race' as const },
     { key: 'gender', label: t('table.gender'), render: (g: GuessResult) => g.character.gender, statusKey: 'gender' as const },
     { key: 'releaseYear', label: t('table.year'), render: (g: GuessResult) => g.character.releaseYear ? String(g.character.releaseYear) : '?', statusKey: 'releaseYear' as const },

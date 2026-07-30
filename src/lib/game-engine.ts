@@ -7,11 +7,14 @@ import { pickRandom, dailySeed, seededRandom } from './utils';
 export function getPoolByDifficulty(characters: Character[], difficulty: Difficulty): Character[] {
   switch (difficulty) {
     case 'easy':
-      return characters.filter(c => c.popularity === 'hot');
+      // 热门干员 + 全部六星
+      return characters.filter(c => c.popularity === 'hot' || c.rarity >= 6);
     case 'medium':
-      return characters.filter(c => c.popularity === 'hot' || c.popularity === 'normal');
+      // 全部干员
+      return characters;
     case 'hard':
     default:
+      // 全部干员（但表格隐藏星级列）
       return characters;
   }
 }

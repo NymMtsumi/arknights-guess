@@ -138,7 +138,7 @@ export default function StatsPage() {
               marginBottom: '14px',
               color: 'var(--text)',
             }}>
-              📋 最近 20 局
+              📋 最近 80 局
             </h2>
             {history.length === 0 ? (
               <p style={{ color: 'var(--text-light)', fontSize: '0.9rem' }}>暂无记录，完成一局游戏后自动记录</p>

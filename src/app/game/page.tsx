@@ -230,7 +230,7 @@ export default function GamePage() {
           </div>
 
           {/* 猜测表格 */}
-          <GuessTable guesses={guesses} target={target} />
+          <GuessTable guesses={guesses} target={target} hideRarity={difficulty === 'hard'} />
 
           {/* 空状态提示 */}
           {guesses.length === 0 && (

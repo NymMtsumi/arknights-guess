@@ -12,6 +12,7 @@ const SERVER_URL = process.env.NEXT_PUBLIC_WS_URL || 'https://writing-color-buil
 const COL_LABELS = ['姓名', '职业', '子职', '阵营', '星级', '种族', '性别', '年份', '部署', '词缀'];
 
 type Stage = 'menu' | 'lobby' | 'waiting' | 'playing' | 'roundEnd' | 'matchEnd';
+type ConnectingType = '' | 'create' | 'join';
 
 export default function MultiplayerPage() {
   const [stage, setStage] = useState<Stage>('menu');
@@ -19,6 +20,8 @@ export default function MultiplayerPage() {
   const [roomCode, setRoomCode] = useState('');
   const [playerName, setPlayerName] = useState('');
   const [bestOf, setBestOf] = useState(5);
+  const [connecting, setConnecting] = useState<ConnectingType>('');
+  const connectTimer = useRef<NodeJS.Timeout | null>(null);
   const [oppName, setOppName] = useState('');
   const [oppWins, setOppWins] = useState(0);
   const [myWins, setMyWins] = useState(0);
@@ -42,10 +45,11 @@ export default function MultiplayerPage() {
     const s = io(SERVER_URL, { transports: ['websocket', 'polling'] });
     setSocket(s);
 
-    s.on('error_msg', (d: { message: string }) => { setError(d.message); s.disconnect(); });
-    s.on('room_created', (d: { code: string; bestOf: number }) => { setRoomCode(d.code); setBestOf(d.bestOf); setStage('waiting'); });
+    s.on('error_msg', (d: { message: string }) => { clearConnecting(); setError(d.message); s.disconnect(); });
+    s.on('room_created', (d: { code: string; bestOf: number }) => { clearConnecting(); setRoomCode(d.code); setBestOf(d.bestOf); setStage('waiting'); });
 
     s.on('round_start', (d: { score: string; players: { id: string; name: string; wins: number }[] }) => {
+      clearConnecting();
       setStage('playing');
       setTimeLeft(120);
       setOppGuessCount(0);
@@ -94,15 +98,38 @@ export default function MultiplayerPage() {
     return s;
   };
 
+  const clearConnecting = () => {
+    if (connectTimer.current) { clearTimeout(connectTimer.current); connectTimer.current = null; }
+    setConnecting('');
+  };
+
   const handleCreate = () => {
     if (!playerName.trim() || playerName.trim().length > 4) { setError('昵称最多4个汉字'); return; }
-    connect().emit('create_room', { playerName: trimName(playerName), bestOf });
+    setError('');
+    setConnecting('create');
+    const s = connect();
+    s.emit('create_room', { playerName: trimName(playerName), bestOf });
+    s.emit('_log', { action: 'create_room', playerName: trimName(playerName), bestOf });
+    connectTimer.current = setTimeout(() => {
+      s.disconnect();
+      setConnecting('');
+      setError('创建超时，请检查服务器状态');
+    }, 30000);
   };
 
   const handleJoin = () => {
     if (!playerName.trim() || !roomCode.trim()) { setError('请输入昵称和房间码'); return; }
     if (playerName.trim().length > 4) { setError('昵称最多4个汉字'); return; }
-    connect().emit('join_room', { code: roomCode.trim().toUpperCase(), playerName: trimName(playerName) });
+    setError('');
+    setConnecting('join');
+    const s = connect();
+    s.emit('join_room', { code: roomCode.trim().toUpperCase(), playerName: trimName(playerName) });
+    s.emit('_log', { action: 'join_room', code: roomCode.trim().toUpperCase(), playerName: trimName(playerName) });
+    connectTimer.current = setTimeout(() => {
+      s.disconnect();
+      setConnecting('');
+      setError('加入超时，请检查房间码和服务器');
+    }, 30000);
   };
 
   const handleGuess = (char: Character) => {
@@ -298,6 +325,21 @@ export default function MultiplayerPage() {
                 <button onClick={() => setShowSurrenderConfirm(false)} style={{ padding: '8px 20px', background: 'transparent', border: '1px solid var(--border)', borderRadius: 'var(--radius)', cursor: 'pointer', color: 'var(--text)' }}>取消</button>
                 <button onClick={confirmSurrender} style={{ padding: '8px 20px', background: 'var(--danger)', color: '#fff', border: 'none', borderRadius: 'var(--radius)', cursor: 'pointer', fontWeight: 700 }}>确认放弃</button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* 连接中弹窗 */}
+        {connecting && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
+            <div style={{ background: 'var(--card)', padding: '32px', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow-lg)', textAlign: 'center', border: '1px solid var(--border)' }}>
+              <div style={{ fontSize: '2rem', marginBottom: '10px', animation: 'neon-pulse 1.5s infinite' }}>
+                {connecting === 'create' ? '🏠' : '🚪'}
+              </div>
+              <p style={{ fontSize: '1.1rem', fontWeight: 700 }}>
+                {connecting === 'create' ? '正在创建房间...' : '正在加入房间...'}
+              </p>
+              <p style={{ color: 'var(--text-light)', fontSize: '0.8rem', marginTop: '6px' }}>连接服务器中，最多等待 30 秒</p>
             </div>
           </div>
         )}

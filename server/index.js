@@ -60,6 +60,12 @@ io.on('connection', (socket) => {
     console.log(`[房] ${code} 满员开战`);
   });
 
+  // 客户端操作日志
+  socket.on('_log', (data) => {
+    console.log(`[日志] ${socket.id}: ${JSON.stringify(data)}`);
+  });
+  });
+
   // 提交猜测 (广播所有历史颜色行给对手)
   socket.on('guess_update', (data) => {
     const room = rooms.get(socket.data.roomCode);

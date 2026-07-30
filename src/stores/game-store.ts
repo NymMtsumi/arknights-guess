@@ -4,7 +4,24 @@ import { makeGuess, pickTarget, findCharacterByName, isWin } from '@/lib/game-en
 import charactersData from '@/data/characters.json';
 
 const MAX_GUESSES = 8;
+const ANTI_REPEAT = 5;
+const RECENT_KEY = 'arknights-recent-targets';
 const characters: Character[] = charactersData as Character[];
+
+function getRecentTargets(): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const stored = localStorage.getItem(RECENT_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch { return []; }
+}
+
+function addRecentTarget(id: string) {
+  const recent = getRecentTargets();
+  recent.unshift(id);
+  if (recent.length > ANTI_REPEAT) recent.length = ANTI_REPEAT;
+  try { localStorage.setItem(RECENT_KEY, JSON.stringify(recent)); } catch {}
+}
 
 interface GameState {
   status: GameStatus;
@@ -13,7 +30,6 @@ interface GameState {
   remainingGuesses: number;
   difficulty: Difficulty;
 
-  // 动作
   startGame: (difficulty: Difficulty) => void;
   submitGuess: (name: string) => { success: boolean; error?: string };
   giveUp: () => void;
@@ -28,7 +44,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   difficulty: 'medium',
 
   startGame: (difficulty: Difficulty) => {
-    const target = pickTarget(characters, difficulty);
+    const target = pickTarget(characters, difficulty, getRecentTargets());
+    addRecentTarget(target.id);
     set({
       status: 'playing',
       target,

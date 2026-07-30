@@ -1,5 +1,5 @@
 import type { Character, Difficulty, GuessComparisons, GuessResult, GuessStatus } from '@/types/character';
-import { pickRandom } from './utils';
+import { pickRandom, dailySeed, seededRandom } from './utils';
 
 /**
  * 按难度筛选角色池
@@ -7,24 +7,42 @@ import { pickRandom } from './utils';
 export function getPoolByDifficulty(characters: Character[], difficulty: Difficulty): Character[] {
   switch (difficulty) {
     case 'easy':
-      // 简单：仅热门干员 (NGA人气榜 + 知名6星)
       return characters.filter(c => c.popularity === 'hot');
     case 'medium':
-      // 普通：热门 + 普通干员
       return characters.filter(c => c.popularity === 'hot' || c.popularity === 'normal');
     case 'hard':
     default:
-      // 困难：全部
       return characters;
   }
 }
 
 /**
- * 从角色池中随机选择目标
+ * 从角色池中选择目标（防连庄 + 支持每日种子）
  */
-export function pickTarget(characters: Character[], difficulty: Difficulty): Character {
-  const pool = getPoolByDifficulty(characters, difficulty);
+export function pickTarget(
+  characters: Character[],
+  difficulty: Difficulty,
+  recentIds: string[] = [],
+): Character {
+  let pool = getPoolByDifficulty(characters, difficulty);
+
+  // 防连庄：排除最近 ANTI_REPEAT 个干员（如果池子够大）
+  if (recentIds.length > 0 && pool.length > recentIds.length + 5) {
+    const filtered = pool.filter(c => !recentIds.includes(c.id));
+    if (filtered.length > 0) pool = filtered;
+  }
+
   return pickRandom(pool);
+}
+
+/**
+ * 每日挑战：基于日期种子的固定目标
+ */
+export function pickDailyTarget(characters: Character[], difficulty: Difficulty): Character {
+  const pool = getPoolByDifficulty(characters, difficulty);
+  const rng = seededRandom(dailySeed());
+  const index = Math.floor(rng() * pool.length);
+  return pool[index];
 }
 
 /**

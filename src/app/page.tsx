@@ -43,7 +43,7 @@ export default function HomePage() {
           />
 
           {/* 游戏规则 */}
-          <div onClick={() => setRulesOpen(true)} style={{ cursor: 'pointer' }}>
+          <div onClick={(e) => { e.preventDefault(); setRulesOpen(true); }} style={{ cursor: 'pointer' }}>
             <MenuCard
               href="#"
               icon="📖"
@@ -67,12 +67,12 @@ export default function HomePage() {
             href="/multiplayer"
             icon="⚔️"
             label="多人对战"
-            description="创建或加入房间，与好友实时对战，120 秒先猜到者获胜"
+            description="创建或加入房间，与好友实时对战，看看谁是GOAT"
             color="#ff6b6b"
           />
 
           {/* 更新日志 */}
-          <div onClick={() => setChangelogOpen(true)} style={{ cursor: 'pointer' }}>
+          <div onClick={(e) => { e.preventDefault(); setChangelogOpen(true); }} style={{ cursor: 'pointer' }}>
             <MenuCard
               href="#"
               icon="📋"

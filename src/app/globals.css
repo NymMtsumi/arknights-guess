@@ -176,7 +176,6 @@ html[data-theme="blast"] body::before {
     radial-gradient(circle at 72% 62%, rgba(162, 129, 255, 0.09), transparent 22%);
   filter: blur(18px);
   animation: ambient-drift 18s ease-in-out infinite alternate;
-  will-change: transform;
 }
 
 button, input, select, textarea {

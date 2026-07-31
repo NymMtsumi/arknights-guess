@@ -15,7 +15,7 @@ export function RulesDialog({ open, onClose }: RulesDialogProps) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+      style={{ background: 'rgba(0,0,0,0.7)' }}
       onClick={onClose}
     >
       <div
@@ -103,6 +103,10 @@ export function RulesDialog({ open, onClose }: RulesDialogProps) {
           <li>{t('rules.closeRuleRarity')}</li>
           <li>{t('rules.closeRuleSubclass')}</li>
           <li>{t('rules.closeRuleFaction')}</li>
+          <li>{t('rules.closeRuleYear')}</li>
+          <li>{t('rules.closeRuleTags')}</li>
+          <li>{t('rules.closeRulePosition')}</li>
+          <li>{t('rules.closeRuleAlter')}</li>
         </ul>
 
         <p className="text-xs italic" style={{ color: 'var(--primary)' }}>

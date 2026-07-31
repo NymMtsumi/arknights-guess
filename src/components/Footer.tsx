@@ -14,7 +14,7 @@ export function Footer() {
         fontSize: 'var(--fs-2xs)',
       }}
     >
-      <span>{t('footer.credit')}</span>
+      <span>制作人：{t('footer.credit')}</span>
       <span style={{ margin: '0 8px', color: 'var(--border)' }}>·</span>
       <a
         href="https://space.bilibili.com/1327884464"

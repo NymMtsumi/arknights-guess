@@ -47,6 +47,7 @@ export default function MultiplayerPage() {
   const [showSurrenderConfirm, setShowSurrenderConfirm] = useState(false);
   const [connecting, setConnecting] = useState('');
   const [oppDisconnected, setOppDisconnected] = useState(false);
+  const [roomExpireTime, setRoomExpireTime] = useState(0);
   const [rematchReady, setRematchReady] = useState(false);
   const [oppRematchReady, setOppRematchReady] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -81,7 +82,7 @@ export default function MultiplayerPage() {
     });
 
     s.on('error_msg', (d) => { clearConnecting(); setError(d.message); s.disconnect(); });
-    s.on('room_created', (d) => { clearConnecting(); setRoomCode(d.code); roomCodeRef.current = d.code; setBestOf(d.bestOf); setStage('waiting'); });
+    s.on('room_created', (d) => { clearConnecting(); setRoomCode(d.code); roomCodeRef.current = d.code; setBestOf(d.bestOf); setRoomExpireTime(Date.now() + 300_000); setStage('waiting'); });
 
     s.on('round_start', (d) => {
       clearConnecting();
@@ -161,6 +162,14 @@ export default function MultiplayerPage() {
     s.emit('_log', { action: 'join_room' });
     connectTimer.current = setTimeout(() => { s.disconnect(); setConnecting(''); setError('加入超时'); }, 30000);
   };
+
+  // 等待页面倒计时每秒刷新
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    if (stage !== 'waiting') return;
+    const t = setInterval(() => setTick(x => x + 1), 1000);
+    return () => clearInterval(t);
+  }, [stage]);
 
   // 页面切后台不判断线
   useEffect(() => {
@@ -256,6 +265,9 @@ export default function MultiplayerPage() {
             <p>⏳ 等待对手加入</p>
             <p style={{ fontSize: '3rem', fontFamily: 'monospace', fontWeight: 900, color: 'var(--primary)', margin: '16px 0' }}>{roomCode}</p>
             <p style={{ color: 'var(--text-light)' }}>BO{bestOf} · 分享房间码给好友</p>
+            <p style={{ color: 'var(--text-light)', fontSize: '0.8rem', marginTop: '8px' }}>
+              房间将在 {Math.max(0, Math.ceil((roomExpireTime - Date.now()) / 1000))} 秒后自动解散
+            </p>
           </div>
         )}
 

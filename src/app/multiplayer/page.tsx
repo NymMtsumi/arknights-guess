@@ -52,6 +52,8 @@ export default function MultiplayerPage() {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const connectTimer = useRef<NodeJS.Timeout | null>(null);
   const myColorsRef = useRef<string[][]>([]);
+  const roomCodeRef = useRef('');
+  const socketRef = useRef<Socket | null>(null);
 
   const store = useGameStore();
 
@@ -61,11 +63,25 @@ export default function MultiplayerPage() {
   };
 
   const connect = () => {
-    const s = io(SERVER_URL, { transports: ['websocket', 'polling'] });
-    setSocket(s);
+    const s = io(SERVER_URL, {
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: 10,
+    });
+    setSocket(s); socketRef.current = s;
+
+    // 自动重连
+    s.io.on('reconnect', () => {
+      const code = roomCodeRef.current;
+      if (code && s.id) {
+        s.emit('reconnect_room', { code });
+      }
+    });
 
     s.on('error_msg', (d) => { clearConnecting(); setError(d.message); s.disconnect(); });
-    s.on('room_created', (d) => { clearConnecting(); setRoomCode(d.code); setBestOf(d.bestOf); setStage('waiting'); });
+    s.on('room_created', (d) => { clearConnecting(); setRoomCode(d.code); roomCodeRef.current = d.code; setBestOf(d.bestOf); setStage('waiting'); });
 
     s.on('round_start', (d) => {
       clearConnecting();
@@ -139,11 +155,22 @@ export default function MultiplayerPage() {
     if (!playerName.trim() || !roomCode.trim()) { setError('请输入昵称和房间码'); return; }
     if (playerName.trim().length > 4) { setError('昵称最多4个汉字'); return; }
     setError(''); saveNick(playerName.trim()); setConnecting('join');
+    roomCodeRef.current = roomCode.trim().toUpperCase();
     const s = connect();
-    s.emit('join_room', { code: roomCode.trim().toUpperCase(), playerName: playerName.trim() });
+    s.emit('join_room', { code: roomCodeRef.current, playerName: playerName.trim() });
     s.emit('_log', { action: 'join_room' });
     connectTimer.current = setTimeout(() => { s.disconnect(); setConnecting(''); setError('加入超时'); }, 30000);
   };
+
+  // 页面切后台不判断线
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.hidden) return; // 切后台不触发任何操作
+      // 切回前台：如果 socket 断开则自动重连（Socket.IO 自带）
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, []);
 
   const handleGuess = (char: Character) => {
     if (useGameStore.getState().status !== 'playing') return;

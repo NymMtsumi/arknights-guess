@@ -129,7 +129,7 @@ export default function MultiplayerPage() {
       saveGameStats(d.winner === s.id, store.guesses.length, 'multi', '');
       setStage('matchEnd');
       setEndMsg(d.reason === 'disconnect' ? `${d.winnerName} 获胜（对方断线超30秒）` : `${d.winnerName} 赢得比赛！\n${d.score}`);
-      s.disconnect();
+      // 不 disconnect，保留连接给再理一把
       if (timerRef.current) clearInterval(timerRef.current);
     });
 
@@ -202,10 +202,9 @@ export default function MultiplayerPage() {
   const handleRematch = () => {
     setRematchReady(true);
     socket?.emit('rematch_ready');
-    socket?.connect(); // 重新连接如果已断开
   };
 
-  useEffect(() => { return () => { if (timerRef.current) clearInterval(timerRef.current); if (socket) socket.disconnect(); }; }, [socket]);
+  useEffect(() => { return () => { if (timerRef.current) clearInterval(timerRef.current); if (socket) { socket.removeAllListeners(); socket.disconnect(); } }; }, [socket]);
 
   const guessedIds = new Set(store.guesses.map(g => g.character.id));
   const inputDisabled = useGameStore.getState().status !== 'playing' || iSurrendered;

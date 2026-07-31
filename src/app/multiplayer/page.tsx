@@ -11,7 +11,7 @@ import { findCharacterByName } from '@/lib/game-engine';
 import type { Character } from '@/types/character';
 import charactersData from '@/data/characters.json';
 
-const SERVER_URL = process.env.NEXT_PUBLIC_WS_URL || 'https://evident-part-marketplace-interest.trycloudflare.com';
+const SERVER_URL = process.env.NEXT_PUBLIC_WS_URL || 'https://teeth-regarded-semi-folder.trycloudflare.com';
 const allChars = charactersData as Character[];
 const NICK_KEY = 'liyiba-nickname';
 

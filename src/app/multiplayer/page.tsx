@@ -121,7 +121,6 @@ export default function MultiplayerPage() {
     s.on('opponent_reconnected', (d) => { setOppDisconnected(false); });
 
     s.on('round_end', (d) => {
-      if (d.matchOver) return; // 比赛结束由 match_end 处理
       setStage('roundEnd'); setRoundEndData(d);
       if (timerRef.current) clearInterval(timerRef.current);
       saveGameStats(d.winner === s.id, store.guesses.length, 'multi', d.targetName || '');
@@ -334,7 +333,10 @@ export default function MultiplayerPage() {
               {roundEndData.winner ? (roundEndData.winner === socket?.id ? '🎉 你赢了本局' : '😔 对手拿下本局') : '🤝 本局平局'}
             </div>
             <p style={{ color: 'var(--text-light)', fontSize: '0.85rem' }}>答案：{roundEndData.targetName} · {roundEndData.score}</p>
-            {!roundEndData.matchOver && <p style={{ color: 'var(--text-light)', fontSize: '0.8rem' }}>6 秒后下一局...</p>}
+            {roundEndData.matchOver
+              ? <div style={{ marginTop: '12px' }}><p style={{ color: 'var(--text-light)', fontSize: '0.9rem' }}>比赛结束！{roundEndData.score}</p></div>
+              : <p style={{ color: 'var(--text-light)', fontSize: '0.8rem' }}>6 秒后下一局...</p>
+            }
           </div>
         )}
 

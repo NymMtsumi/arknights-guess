@@ -90,7 +90,7 @@ io.on('connection', (socket) => {
   // === 猜测更新 ===
   socket.on('guess_update', (data) => {
     const room = rooms.get(socket.data.roomCode);
-    if (!room?.currentRound) return;
+    if (!room?.currentRound) { console.log(`[猜测] 房间无当前回合: ${socket.data.roomCode}`); return; }
     socket.to(room.code).emit('opponent_update', {
       guessCount: data.guessCount,
       allComparisons: data.allComparisons || [],

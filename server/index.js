@@ -7,7 +7,18 @@ const ROUND_TIME = 120_000;
 const DISCONNECT_LIMIT = 30_000;
 const CLEANUP = 300_000; // 5分钟未活动清理
 
-const httpServer = createServer((req, res) => { res.writeHead(200); res.end('OK'); });
+const httpServer = createServer((req, res) => {
+  if (req.url === '/stats') {
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+    res.end(JSON.stringify({
+      connections: io.engine.clientsCount,
+      rooms: rooms.size,
+      playing: Array.from(rooms.values()).filter(r => r.started && !r.finished).length,
+    }));
+    return;
+  }
+  res.writeHead(200); res.end('OK');
+});
 const io = new Server(httpServer, { cors: { origin: '*' }, pingTimeout: 15000, pingInterval: 5000 });
 
 const rooms = new Map();

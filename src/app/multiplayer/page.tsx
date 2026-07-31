@@ -82,7 +82,7 @@ export default function MultiplayerPage() {
     });
 
     s.on('error_msg', (d) => { clearConnecting(); setError(d.message); s.disconnect(); });
-    s.on('room_created', (d) => { clearConnecting(); setRoomCode(d.code); roomCodeRef.current = d.code; setBestOf(d.bestOf); setRoomExpireTime(Date.now() + 300_000); setStage('waiting'); });
+    s.on('room_created', (d) => { clearConnecting(); setRoomCode(d.code); roomCodeRef.current = d.code; setBestOf(d.bestOf); setRoomExpireTime(Date.now() + 120_000); setStage('waiting'); });
 
     s.on('round_start', (d) => {
       clearConnecting();
@@ -96,16 +96,9 @@ export default function MultiplayerPage() {
       if (opp) { setOppName(opp.name); setOppWins(opp.wins); }
       const meP = d.players.find((p: any) => p.id === me);
       if (meP) setMyWins(meP.wins);
-      // 服务器下发统一目标
-      const target = d.target ? findCharacterByName(allChars, d.target.name || d.target) : null;
+      const target = d.target?.name ? findCharacterByName(allChars, d.target.name) : null;
       if (target) {
-        store.startGame('hard');
-        // 强制设置目标为服务器指定的干员
-        const state = useGameStore.getState();
-        if (state.target?.id !== target.id) {
-          // 用 findCharacterByName 找到的角色作为目标
-          state.target = target;
-        }
+        useGameStore.setState({ status: 'playing', target, guesses: [], remainingGuesses: 8, difficulty: 'hard' });
       } else {
         store.startGame('hard');
       }
@@ -123,11 +116,18 @@ export default function MultiplayerPage() {
     s.on('round_end', (d) => {
       setStage('roundEnd'); setRoundEndData(d);
       if (timerRef.current) clearInterval(timerRef.current);
-      saveGameStats(d.winner === s.id, store.guesses.length, 'multi', d.targetName || '');
+      if (!d.matchOver) {
+        const state = useGameStore.getState();
+        saveGameStats(d.winner === s.id, state.guesses.length, 'multi', d.targetName || '');
+      }
     });
 
     s.on('match_end', (d) => {
-      saveGameStats(d.winner === s.id, store.guesses.length, 'multi', '');
+      const state = useGameStore.getState();
+      // 只在比赛真正结束时统计一次
+      if (d.reason === 'disconnect') {
+        saveGameStats(false, state.guesses.length, 'multi', '');
+      }
       setStage('matchEnd');
       setEndMsg(d.reason === 'disconnect' ? `${d.winnerName} 获胜（对方断线超30秒）` : `${d.winnerName} 赢得比赛！\n${d.score}`);
       // 不 disconnect，保留连接给再理一把
@@ -138,6 +138,10 @@ export default function MultiplayerPage() {
       setStage('playing'); setMyWins(0); setOppWins(0);
       setRematchReady(false); setOppRematchReady(false);
       setBestOf(d.bestOf);
+      setTimeLeft(120); setOppGuessCount(0); setOppGrid([]);
+      setISurrendered(false); setOppSurrendered(false);
+      setOppDisconnected(false); setRoundEndData(null);
+      myColorsRef.current = [];
     });
 
     return s;
@@ -203,9 +207,10 @@ export default function MultiplayerPage() {
 
   const handleSurrender = () => setShowSurrenderConfirm(true);
   const confirmSurrender = () => {
-    setShowSurrenderConfirm(false); setISurrendered(true);
+    setShowSurrenderConfirm(false);
     const sock = socketRef.current;
     if (!sock?.connected || useGameStore.getState().status !== 'playing') return;
+    setISurrendered(true);
     sock.emit('surrender_round', { targetName: store.target?.name || '' });
     store.giveUp();
   };

@@ -11,8 +11,7 @@ import { findCharacterByName } from '@/lib/game-engine';
 import type { Character } from '@/types/character';
 import charactersData from '@/data/characters.json';
 
-// 同主机直连（ECS托管时），否则走Worker
-const SERVER_URL = process.env.NEXT_PUBLIC_WS_URL || (typeof window !== 'undefined' && window.location.hostname === '106.14.144.232' ? '' : 'https://liyiba-ws.2712506486.workers.dev');
+const SERVER_URL = process.env.NEXT_PUBLIC_WS_URL || 'https://scalded-refreeze-unedited.ngrok-free.dev';
 const allChars = charactersData as Character[];
 const NICK_KEY = 'liyiba-nickname';
 

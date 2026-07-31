@@ -71,7 +71,7 @@ export default function MultiplayerPage() {
       reconnectionDelayMax: 5000,
       reconnectionAttempts: 10,
     });
-    setSocket(s); socketRef.current = s; window.__liyiba_socket = s; // 全局调试
+    setSocket(s); socketRef.current = s;
 
     // 自动重连
     s.io.on('reconnect', () => {

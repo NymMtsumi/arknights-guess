@@ -121,6 +121,7 @@ export default function MultiplayerPage() {
     s.on('opponent_reconnected', (d) => { setOppDisconnected(false); });
 
     s.on('round_end', (d) => {
+      if (d.matchOver) return; // 比赛结束由 match_end 处理
       setStage('roundEnd'); setRoundEndData(d);
       if (timerRef.current) clearInterval(timerRef.current);
       saveGameStats(d.winner === s.id, store.guesses.length, 'multi', d.targetName || '');
@@ -211,6 +212,10 @@ export default function MultiplayerPage() {
   const handleRematch = () => {
     setRematchReady(true);
     socket?.emit('rematch_ready');
+    // 60秒超时自动取消
+    setTimeout(() => {
+      setRematchReady(prev => prev ? false : prev);
+    }, 60000);
   };
 
   useEffect(() => { return () => { if (timerRef.current) clearInterval(timerRef.current); if (socket) { socket.removeAllListeners(); socket.disconnect(); } }; }, [socket]);

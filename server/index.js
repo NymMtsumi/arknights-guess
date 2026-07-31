@@ -228,6 +228,9 @@ function randomTarget() {
 function startRound(room) {
   if (room.finished) return;
   clearRoundTimer(room);
+  // 重置本局状态
+  room.roundTarget = null;
+  room.currentRound = null;
 
   // 随机选目标（服务器统一）
   const target = randomTarget();

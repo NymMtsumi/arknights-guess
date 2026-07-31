@@ -5,7 +5,9 @@ import { randomBytes } from 'node:crypto';
 const PORT = process.env.PORT || 3001;
 const ROUND_TIME = 120_000;
 const DISCONNECT_LIMIT = 30_000;
-const CLEANUP = 300_000; // 5分钟未活动清理
+const CLEANUP_DONE = 60_000;    // 比赛结束后 1 分钟清理
+const CLEANUP_ORPHAN = 120_000;  // 未开始的房间 2 分钟清理
+const CLEANUP_EMPTY = 30_000;    // 房间无人后 30 秒清理
 
 const httpServer = createServer((req, res) => {
   if (req.url === '/stats') {
@@ -60,6 +62,8 @@ io.on('connection', (socket) => {
     socket.join(code);
     socket.data.roomCode = code;
     socket.emit('room_created', { code, bestOf });
+    // 2分钟内无人加入则清理
+    cleanupLater(code, CLEANUP_ORPHAN);
     console.log(`[房] ${code} BO${bestOf}`);
   });
 
@@ -116,6 +120,7 @@ io.on('connection', (socket) => {
       io.to(room.code).emit('match_end', {
         winner: socket.id, winnerName: player.name, score: formatScore(room),
       });
+      cleanupLater(code, CLEANUP_DONE);
     } else {
       setTimeout(() => startRound(room), 6000);
     }
@@ -188,7 +193,7 @@ io.on('connection', (socket) => {
       });
       room.finished = true;
       clearRoundTimer(room);
-      scheduleCleanup(code);
+      cleanupLater(code, CLEANUP_DONE);
     }, DISCONNECT_LIMIT);
   });
 
@@ -269,8 +274,31 @@ function startRound(room) {
   });
 }
 
-function scheduleCleanup(code) {
-  setTimeout(() => rooms.delete(code), CLEANUP);
+function cleanupLater(code, delay) {
+  setTimeout(() => {
+    const room = rooms.get(code);
+    if (!room) return;
+    // 检查房间是否还有活跃连接
+    const roomSockets = io.sockets.adapter.rooms.get(code);
+    if (!roomSockets || roomSockets.size === 0) {
+      rooms.delete(code);
+      console.log(`[清理] ${code} (无人)`);
+    }
+  }, delay);
 }
+
+// 定时清理孤儿房间（创建后无人加入）
+setInterval(() => {
+  const now = Date.now();
+  for (const [code, room] of rooms) {
+    if (!room.started && !room.finished) {
+      const roomSockets = io.sockets.adapter.rooms.get(code);
+      if (!roomSockets || roomSockets.size === 0) {
+        rooms.delete(code);
+        console.log(`[清理] ${code} (孤儿房间)`);
+      }
+    }
+  }
+}, 60000);
 
 httpServer.listen(PORT, () => console.log(`:${PORT}`));

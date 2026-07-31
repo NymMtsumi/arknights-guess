@@ -144,7 +144,7 @@ io.on('connection', (socket) => {
       return;
     }
 
-    io.to(room.code).emit('opponent_surrendered', {
+    socket.to(room.code).emit('opponent_surrendered', {
       playerName: room.players.get(socket.id)?.name,
     });
 

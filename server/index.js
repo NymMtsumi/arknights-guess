@@ -107,6 +107,7 @@ io.on('connection', (socket) => {
 
     const won = player.wins >= room.winsNeeded;
     clearRoundTimer(room);
+    console.log(`[胜] ${player.name} 猜中, ${player.wins}/${room.winsNeeded}胜, matchOver=${won}`);
 
     io.to(room.code).emit('round_end', {
       winner: socket.id, winnerName: player.name,
@@ -245,9 +246,6 @@ function randomTarget() {
 function startRound(room) {
   if (room.finished) return;
   clearRoundTimer(room);
-  // 重置本局状态
-  room.roundTarget = null;
-  room.currentRound = null;
 
   // 随机选目标（服务器统一）
   const target = randomTarget();

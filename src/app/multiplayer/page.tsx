@@ -71,7 +71,7 @@ export default function MultiplayerPage() {
       reconnectionDelayMax: 5000,
       reconnectionAttempts: 10,
     });
-    setSocket(s); socketRef.current = s;
+    setSocket(s); socketRef.current = s; window.__liyiba_socket = s; // 全局调试
 
     // 自动重连
     s.io.on('reconnect', () => {
@@ -194,23 +194,25 @@ export default function MultiplayerPage() {
         comp.gender, comp.releaseYear, comp.position, comp.tags,
       ]];
     }
-    if (socket) {
-      socket.emit('guess_update', { guessCount: s.guesses.length, allComparisons: myColorsRef.current });
-      if (s.status === 'won') socket.emit('player_win_round', { targetName: s.target?.name || '' });
+    const sock = socketRef.current;
+    if (sock?.connected) {
+      sock.emit('guess_update', { guessCount: s.guesses.length, allComparisons: myColorsRef.current });
+      if (s.status === 'won') sock.emit('player_win_round', { targetName: s.target?.name || '' });
     }
   };
 
   const handleSurrender = () => setShowSurrenderConfirm(true);
   const confirmSurrender = () => {
     setShowSurrenderConfirm(false); setISurrendered(true);
-    if (!socket || useGameStore.getState().status !== 'playing') return;
-    socket.emit('surrender_round', { targetName: store.target?.name || '' });
+    const sock = socketRef.current;
+    if (!sock?.connected || useGameStore.getState().status !== 'playing') return;
+    sock.emit('surrender_round', { targetName: store.target?.name || '' });
     store.giveUp();
   };
 
   const handleRematch = () => {
     setRematchReady(true);
-    socket?.emit('rematch_ready');
+    socketRef.current?.emit('rematch_ready');
     // 60秒超时自动取消
     setTimeout(() => {
       setRematchReady(prev => prev ? false : prev);

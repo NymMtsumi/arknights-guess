@@ -53,7 +53,7 @@ io.on('connection', (socket) => {
     const winsNeeded = Math.ceil(bestOf / 2);
 
     rooms.set(code, {
-      code, bestOf, winsNeeded,
+      code, bestOf, winsNeeded, _createdAt: Date.now(),
       players: new Map([[socket.id, { name: data.playerName||'玩家', wins: 0, ready: false, disconnectTimer: null }]]),
       currentRound: null, started: false, finished: false,
       roundTarget: null,
@@ -289,17 +289,19 @@ function cleanupLater(code, delay) {
   }, delay);
 }
 
-// 定时清理孤儿房间（创建后无人加入）
+// 定时清理冗余房间
 setInterval(() => {
-  const now = Date.now();
   for (const [code, room] of rooms) {
-    if (!room.started && !room.finished) {
-      const roomSockets = io.sockets.adapter.rooms.get(code);
-      if (!roomSockets || roomSockets.size === 0) {
-        rooms.delete(code);
-        console.log(`[清理] ${code} (孤儿房间)`);
-      }
+    const roomSockets = io.sockets.adapter.rooms.get(code);
+    const socketCount = roomSockets ? roomSockets.size : 0;
+    // 无人连接 → 删除
+    if (socketCount === 0) { rooms.delete(code); continue; }
+    // 未开始 + 已超 5 分钟 → 删除
+    if (!room.started && !room.finished && room._createdAt && Date.now() - room._createdAt > 300_000) {
+      rooms.delete(code); console.log(`[清理] ${code} (超时)`);
     }
+    // 比赛结束 + 只剩1人 → 删除
+    if (room.finished && socketCount <= 1) { rooms.delete(code); }
   }
 }, 60000);
 

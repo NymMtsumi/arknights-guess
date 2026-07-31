@@ -20,7 +20,6 @@ export default function RootLayout({
             __html: `(function(){try{var s=localStorage.getItem('ui-theme');var t=s==='light'?'light':s==='blast'?'blast':(window.matchMedia&&window.matchMedia('(prefers-color-scheme:light)').matches?'light':'blast');document.documentElement.dataset.theme=t;document.documentElement.style.colorScheme=t==='blast'?'dark':'light';document.documentElement.style.background=t==='blast'?'#160a13':'#f3f0ea';}catch(e){document.documentElement.dataset.theme='blast';document.documentElement.style.background='#160a13';}})();`,
           }}
         />
-        <script defer src="https://umami.anglergap.org/script.js" data-website-id="ca561bfa-706f-450f-b8bc-0ff3e42be724" />
       </head>
       <body>
         <Providers>{children}</Providers>

@@ -169,6 +169,7 @@ io.on('connection', (socket) => {
       room.players.forEach(p => { p.wins = 0; p.ready = false; });
       room.finished = false;
       room.roundTarget = null;
+      if (room._cleanupTimer) { clearTimeout(room._cleanupTimer); room._cleanupTimer = null; }
       io.to(room.code).emit('rematch_start', { bestOf: room.bestOf, winsNeeded: room.winsNeeded });
       setTimeout(() => startRound(room), 1500);
     }
@@ -275,14 +276,17 @@ function startRound(room) {
 }
 
 function cleanupLater(code, delay) {
-  setTimeout(() => {
-    const room = rooms.get(code);
-    if (!room) return;
-    // 检查房间是否还有活跃连接
-    const roomSockets = io.sockets.adapter.rooms.get(code);
-    if (!roomSockets || roomSockets.size === 0) {
-      rooms.delete(code);
-      console.log(`[清理] ${code} (无人)`);
+  const room = rooms.get(code);
+  if (!room) return;
+  // 清除之前的定时器
+  if (room._cleanupTimer) clearTimeout(room._cleanupTimer);
+  room._cleanupTimer = setTimeout(() => {
+    if (room.finished || !room.started) {
+      const roomSockets = io.sockets.adapter.rooms.get(code);
+      if (!roomSockets || roomSockets.size === 0) {
+        rooms.delete(code);
+        console.log(`[清理] ${code}`);
+      }
     }
   }, delay);
 }

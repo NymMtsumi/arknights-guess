@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { pinyin } from 'pinyin-pro';
 import type { Character } from '@/types/character';
 import { searchCharacters, findCharacterByName } from '@/lib/game-engine';
+import { useGameStore } from '@/stores/game-store';
 import charactersData from '@/data/characters.json';
 
 const allCharacters: Character[] = charactersData as Character[];
@@ -112,9 +113,9 @@ export function GameSearch({ onGuess, disabled, guessedIds, target }: GameSearch
     } else if (e.key === 'Enter') {
       e.preventDefault();
       if (disabled) return;
-      // 开发者 cheat：输入 KEYKEYKEY 自动填目标
-      if (query.trim() === 'KEYKEYKEY' && target) {
-        onGuess(target);
+      const cheatTarget = target || useGameStore.getState().target;
+      if (query.trim() === 'KEYKEYKEY' && cheatTarget) {
+        onGuess(cheatTarget);
         setQuery('');
         setShowDropdown(false);
         return;

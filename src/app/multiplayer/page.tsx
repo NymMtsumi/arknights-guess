@@ -33,6 +33,7 @@ export default function MultiplayerPage() {
   const [roomCode, setRoomCode] = useState('');
   const [playerName, setPlayerName] = useState(loadNick);
   const [bestOf, setBestOf] = useState(5);
+  const [difficulty, setDifficulty] = useState<string>('hard');
   const [oppName, setOppName] = useState('');
   const [oppWins, setOppWins] = useState(0);
   const [myWins, setMyWins] = useState(0);
@@ -146,7 +147,7 @@ export default function MultiplayerPage() {
     if (!playerName.trim() || playerName.trim().length > 4) { setError('昵称最多4个汉字'); return; }
     setError(''); saveNick(playerName.trim()); setConnecting('create');
     const s = connect();
-    s.emit('create_room', { playerName: playerName.trim(), bestOf });
+    s.emit('create_room', { playerName: playerName.trim(), bestOf, difficulty });
     s.emit('_log', { action: 'create_room' });
     connectTimer.current = setTimeout(() => { s.disconnect(); setConnecting(''); setError('创建超时'); }, 30000);
   };
@@ -225,7 +226,17 @@ export default function MultiplayerPage() {
           <div style={{ textAlign: 'center', maxWidth: '450px' }}>
             <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.5rem,4vw,2rem)', fontStyle: 'italic', fontWeight: 900, marginBottom: '16px' }}>⚔️ 多人对战</h1>
             <p style={{ color: 'var(--text-light)', fontSize: '0.9rem', marginBottom: '14px' }}>BO3 / BO5 / BO7 · 每局 2 分钟 · 先达胜场者胜</p>
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '16px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: '8px', flexBasis: '100%', justifyContent: 'center', marginBottom: '4px' }}>
+                {['easy','medium','hard'].map(d => (
+                  <button key={d} onClick={() => setDifficulty(d)} style={{
+                    padding: '5px 12px', fontSize: '0.8rem', background: difficulty===d?'var(--primary)':'transparent',
+                    color: difficulty===d?'var(--bg)':'var(--text)', border: `1px solid ${difficulty===d?'var(--primary)':'var(--border)'}`,
+                    borderRadius: 'var(--radius)', cursor:'pointer', fontWeight: difficulty===d?700:400,
+                  }}>{d==='easy'?'简单':d==='medium'?'普通':'困难'}</button>
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
               {[3,5,7].map(n => (
                 <button key={n} onClick={() => setBestOf(n)} style={{
                   padding: '6px 16px', background: bestOf === n ? 'var(--primary)' : 'transparent',
@@ -235,6 +246,7 @@ export default function MultiplayerPage() {
               ))}
             </div>
             <button onClick={() => setStage('lobby')} style={btn}>🏠 创建 / 加入房间</button>
+          </div>
           </div>
         )}
 

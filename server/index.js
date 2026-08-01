@@ -11,15 +11,20 @@ const DISCONNECT = 30_000;
 
 // 加载干员
 let ALL_CHARS = [];
+let EASY_CHARS = [];
+let MED_CHARS = [];
 try {
-  ALL_CHARS = JSON.parse(readFileSync(join(__dirname, 'characters.json'), 'utf-8'))
-    .map(c => ({ id: c.id, name: c.name }));
+  const data = JSON.parse(readFileSync(join(__dirname, 'characters.json'), 'utf-8'));
+  ALL_CHARS = data.map(c => ({ id: c.id, name: c.name }));
+  EASY_CHARS = data.filter(c => c.popularity === 'hot' || c.rarity >= 6).map(c => ({ id: c.id, name: c.name }));
+  MED_CHARS = data.filter(c => c.popularity === 'hot' || c.popularity === 'normal').map(c => ({ id: c.id, name: c.name }));
   console.log(`已加载 ${ALL_CHARS.length} 个干员`);
 } catch { console.log('⚠ 未加载干员数据'); }
 
-function randomTarget() {
-  if (!ALL_CHARS.length) return { id: '', name: '?' };
-  return ALL_CHARS[Math.floor(Math.random() * ALL_CHARS.length)];
+function randomTarget(difficulty = 'hard') {
+  const pool = difficulty === 'easy' ? EASY_CHARS : difficulty === 'medium' ? MED_CHARS : ALL_CHARS;
+  if (!pool.length) return { id: '', name: '?' };
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 const http = createServer((req, res) => {
@@ -56,7 +61,7 @@ function startRound(room) {
   if (room.finished) return;
   if (room._roundTimer) clearTimeout(room._roundTimer);
 
-  const target = randomTarget();
+  const target = randomTarget(room.difficulty || 'hard');
   room.target = target;
   room.roundSettled = false;
   room.surrendered = new Set();
@@ -150,14 +155,15 @@ io.on('connection', (socket) => {
     }
     const code = genCode();
     const bestOf = [3,5,7].includes(data?.bestOf) ? data?.bestOf : 5;
+    const difficulty = ['easy','medium','hard'].includes(data?.difficulty) ? data?.difficulty : 'hard';
     rooms.set(code, {
-      code, bestOf, winsNeeded: Math.ceil(bestOf / 2), _createdAt: Date.now(),
+      code, bestOf, winsNeeded: Math.ceil(bestOf / 2), difficulty, _createdAt: Date.now(),
       players: new Map([[socket.id, { name: data?.playerName || '玩家', wins: 0, dcTimer: null, lastSocketId: null }]]),
       started: false, finished: false,
     });
     socket.join(code);
     socket.data.roomCode = code;
-    socket.emit('room_created', { code, bestOf });
+    socket.emit('room_created', { code, bestOf, difficulty });
     console.log(`[房] ${code} BO${bestOf}`);
   });
 

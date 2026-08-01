@@ -67,7 +67,6 @@ function startRound(room) {
   room.surrendered = new Set();
 
   const timer = setTimeout(() => {
-    if (room.roundSettled) return;
     room.roundSettled = true;
     io.to(room.code).emit('round_end', {
       winner: null, winnerName: '', targetName: target.name, score: score(room), matchOver: false,

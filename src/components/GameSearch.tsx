@@ -52,7 +52,7 @@ function rankResults(query: string): Character[] {
   }
 
   ranked.sort((a, b) => b.score - a.score);
-  return ranked.slice(0, 8).map(r => r.char);
+  return ranked.slice(0, 12).map(r => r.char);
 }
 
 interface GameSearchProps {

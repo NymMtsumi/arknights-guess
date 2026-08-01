@@ -58,9 +58,10 @@ interface GameSearchProps {
   onGuess: (character: Character) => void;
   disabled: boolean;
   guessedIds: Set<string>;
+  target?: Character | null; // 开发者 cheat
 }
 
-export function GameSearch({ onGuess, disabled, guessedIds }: GameSearchProps) {
+export function GameSearch({ onGuess, disabled, guessedIds, target }: GameSearchProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Character[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -111,11 +112,17 @@ export function GameSearch({ onGuess, disabled, guessedIds }: GameSearchProps) {
     } else if (e.key === 'Enter') {
       e.preventDefault();
       if (disabled) return;
+      // 开发者 cheat：输入 KEYKEYKEY 自动填目标
+      if (query.trim() === 'KEYKEYKEY' && target) {
+        onGuess(target);
+        setQuery('');
+        setShowDropdown(false);
+        return;
+      }
       if (showDropdown && results.length > 0) {
         const idx = selectedIndex >= 0 ? selectedIndex : 0;
         if (results[idx]) selectChar(results[idx]);
       } else if (query.trim()) {
-        // 下拉隐藏时尝试直接查找
         const char = findCharacterByName(allCharacters, query.trim());
         if (char && !guessedIds.has(char.id)) selectChar(char);
       }

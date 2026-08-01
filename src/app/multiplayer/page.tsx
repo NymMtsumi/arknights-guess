@@ -293,7 +293,7 @@ export default function MultiplayerPage() {
               </div>
             )}
             <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
-              <GameSearch onGuess={handleGuess} disabled={inputDisabled} guessedIds={guessedIds} />
+              <GameSearch onGuess={handleGuess} disabled={inputDisabled} guessedIds={guessedIds} target={store.target} />
               {!inputDisabled && <button onClick={handleSurrender} style={{ padding: '8px 12px', background: 'transparent', color: 'var(--danger)', border: '1px solid var(--danger)', borderRadius: 'var(--radius)', cursor: 'pointer', fontSize: '0.8rem' }}>放弃本局</button>}
               {iSurrendered && <span style={{ color: 'var(--warning)', fontSize: '0.8rem', alignSelf: 'center' }}>你已放弃</span>}
               {oppSurrendered && <span style={{ color: 'var(--warning)', fontSize: '0.8rem', alignSelf: 'center' }}>对手已放弃</span>}

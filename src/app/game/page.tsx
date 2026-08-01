@@ -231,6 +231,7 @@ export default function GamePage() {
               onGuess={handleGuess}
               disabled={status !== 'playing'}
               guessedIds={guessedIds}
+              target={target}
             />
           </div>
 

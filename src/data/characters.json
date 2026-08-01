@@ -20,7 +20,9 @@
       "支援机械",
       "治疗"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_286_cast3",
@@ -43,7 +45,9 @@
       "支援机械",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_376_therex",
@@ -66,7 +70,9 @@
       "支援机械",
       "爆发"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4000_jnight",
@@ -89,7 +95,9 @@
       "支援机械",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4077_palico",
@@ -111,7 +119,9 @@
     "tags": [
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4091_ulika",
@@ -133,7 +143,9 @@
     "tags": [
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4093_frston",
@@ -156,7 +168,9 @@
       "支援机械",
       "防护"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4136_phonor",
@@ -179,7 +193,9 @@
       "支援机械",
       "元素"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4188_confes",
@@ -202,7 +218,9 @@
       "支援机械",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4227_gallus",
@@ -225,7 +243,9 @@
       "支援机械",
       "削弱"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4215_buddy",
@@ -248,7 +268,9 @@
       "费用回复",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_502_nblade",
@@ -270,7 +292,9 @@
     "tags": [
       "新手"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_500_noirc",
@@ -292,7 +316,9 @@
     "tags": [
       "新手"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_503_rang",
@@ -314,7 +340,9 @@
     "tags": [
       "新手"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_501_durin",
@@ -336,7 +364,9 @@
     "tags": [
       "新手"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_009_12fce",
@@ -358,7 +388,9 @@
     "tags": [
       "新手"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_123_fang",
@@ -380,7 +412,9 @@
     "tags": [
       "费用回复"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_240_wyvern",
@@ -402,7 +436,9 @@
     "tags": [
       "费用回复"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_192_falco",
@@ -425,7 +461,9 @@
       "输出",
       "费用回复"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_208_melan",
@@ -448,7 +486,9 @@
       "输出",
       "生存"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_281_popka",
@@ -471,7 +511,9 @@
       "群攻",
       "生存"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_209_ardign",
@@ -493,7 +535,9 @@
     "tags": [
       "防护"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_122_beagle",
@@ -515,7 +559,9 @@
     "tags": [
       "防护"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_284_spot",
@@ -538,7 +584,9 @@
       "防护",
       "治疗"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_124_kroos",
@@ -560,7 +608,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": "寒芒克洛丝"
+    "alterBase": "寒芒克洛丝",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_211_adnach",
@@ -582,7 +632,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_121_lava",
@@ -604,7 +656,9 @@
     "tags": [
       "群攻"
     ],
-    "alterBase": "炎狱炎熔"
+    "alterBase": "炎狱炎熔",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_120_hibisc",
@@ -626,7 +680,9 @@
     "tags": [
       "治疗"
     ],
-    "alterBase": "濯尘芙蓉"
+    "alterBase": "濯尘芙蓉",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_212_ansel",
@@ -648,7 +704,9 @@
     "tags": [
       "治疗"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_210_stward",
@@ -670,7 +728,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_278_orchid",
@@ -692,7 +752,9 @@
     "tags": [
       "减速"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_141_nights",
@@ -715,7 +777,9 @@
       "输出",
       "削弱"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_109_fmout",
@@ -737,7 +801,9 @@
     "tags": [
       "群攻"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_253_greyy",
@@ -760,7 +826,9 @@
       "群攻",
       "减速"
     ],
-    "alterBase": "承曦格雷伊"
+    "alterBase": "承曦格雷伊",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4051_akkord",
@@ -783,7 +851,9 @@
       "群攻",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_328_cammou",
@@ -806,7 +876,9 @@
       "输出",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_469_indigo",
@@ -829,7 +901,9 @@
       "输出",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4004_pudd",
@@ -851,7 +925,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_235_jesica",
@@ -874,7 +950,9 @@
       "输出",
       "生存"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_126_shotst",
@@ -897,7 +975,9 @@
       "输出",
       "削弱"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_190_clour",
@@ -919,7 +999,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_133_mm",
@@ -942,7 +1024,9 @@
       "输出",
       "减速"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_118_yuki",
@@ -965,7 +1049,9 @@
       "群攻",
       "减速"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_440_pinecn",
@@ -988,7 +1074,9 @@
       "群攻",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_302_glaze",
@@ -1011,7 +1099,9 @@
       "输出",
       "减速"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_366_acdrop",
@@ -1033,7 +1123,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4062_totter",
@@ -1055,7 +1147,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4100_caper",
@@ -1077,7 +1171,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_198_blackd",
@@ -1100,7 +1196,9 @@
       "费用回复",
       "防护"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_149_scave",
@@ -1123,7 +1221,9 @@
       "费用回复",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_290_vigna",
@@ -1146,7 +1246,9 @@
       "输出",
       "费用回复"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_151_myrtle",
@@ -1169,7 +1271,9 @@
       "费用回复",
       "治疗"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_452_bstalk",
@@ -1192,7 +1296,9 @@
       "费用回复",
       "召唤"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4208_wintim",
@@ -1215,7 +1321,9 @@
       "费用回复",
       "快速复活"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_130_doberm",
@@ -1238,7 +1346,9 @@
       "输出",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_289_gyuki",
@@ -1261,7 +1371,9 @@
       "生存",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_159_peacok",
@@ -1286,7 +1398,9 @@
       "控场",
       "爆发"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_193_frostl",
@@ -1309,7 +1423,9 @@
       "减速",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_127_estell",
@@ -1332,7 +1448,9 @@
       "群攻",
       "生存"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_185_frncat",
@@ -1354,7 +1472,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_301_cutter",
@@ -1377,7 +1497,9 @@
       "爆发",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_337_utage",
@@ -1400,7 +1522,9 @@
       "输出",
       "生存"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_271_spikes",
@@ -1422,7 +1546,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4067_lolxh",
@@ -1444,7 +1570,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4063_quartz",
@@ -1466,7 +1594,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_491_humus",
@@ -1489,7 +1619,9 @@
       "输出",
       "生存"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_445_wscoot",
@@ -1511,7 +1643,9 @@
     "tags": [
       "爆发"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_237_gravel",
@@ -1534,7 +1668,9 @@
       "快速复活",
       "防护"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_272_strong",
@@ -1557,7 +1693,9 @@
       "快速复活",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_236_rope",
@@ -1579,7 +1717,9 @@
     "tags": [
       "位移"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_117_myrrh",
@@ -1601,7 +1741,9 @@
     "tags": [
       "治疗"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_187_ccheal",
@@ -1623,7 +1765,9 @@
     "tags": [
       "治疗"
     ],
-    "alterBase": "百炼嘉维尔"
+    "alterBase": "百炼嘉维尔",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_298_susuro",
@@ -1645,7 +1789,9 @@
     "tags": [
       "治疗"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_181_flower",
@@ -1667,7 +1813,9 @@
     "tags": [
       "治疗"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_385_finlpp",
@@ -1690,7 +1838,9 @@
       "治疗",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4041_chnut",
@@ -1712,7 +1862,9 @@
     "tags": [
       "治疗"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_199_yak",
@@ -1734,7 +1886,9 @@
     "tags": [
       "防护"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_150_snakek",
@@ -1756,7 +1910,9 @@
     "tags": [
       "防护"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_381_bubble",
@@ -1778,7 +1934,9 @@
     "tags": [
       "防护"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4130_luton",
@@ -1801,7 +1959,9 @@
       "生存",
       "防护"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_196_sunbr",
@@ -1824,7 +1984,9 @@
       "防护",
       "治疗"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_260_durnar",
@@ -1847,7 +2009,9 @@
       "防护",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_110_deepcl",
@@ -1869,7 +2033,9 @@
     "tags": [
       "召唤"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_183_skgoat",
@@ -1891,7 +2057,9 @@
     "tags": [
       "减速"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_258_podego",
@@ -1914,7 +2082,9 @@
       "减速",
       "治疗"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_484_robrta",
@@ -1937,7 +2107,9 @@
       "防护",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_355_ethan",
@@ -1960,7 +2132,9 @@
       "输出",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_277_sqrrel",
@@ -1982,7 +2156,9 @@
     "tags": [
       "位移"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4107_vrdant",
@@ -2005,7 +2181,9 @@
       "生存",
       "快速复活"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4165_ctrail",
@@ -2028,7 +2206,9 @@
       "高空",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_128_plosis",
@@ -2051,7 +2231,9 @@
       "治疗",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_275_breeze",
@@ -2074,7 +2256,9 @@
       "治疗",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4163_rosesa",
@@ -2097,7 +2281,9 @@
       "治疗",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_115_headbr",
@@ -2120,7 +2306,9 @@
       "费用回复",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_102_texas",
@@ -2143,7 +2331,9 @@
       "费用回复",
       "控场"
     ],
-    "alterBase": "缄默德克萨斯"
+    "alterBase": "缄默德克萨斯",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_349_chiave",
@@ -2166,7 +2356,9 @@
       "费用回复",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_488_buildr",
@@ -2189,7 +2381,9 @@
       "费用回复",
       "防护"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4023_rfalcn",
@@ -2212,7 +2406,9 @@
       "费用回复",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4199_makiri",
@@ -2235,7 +2431,9 @@
       "费用回复",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_261_sddrag",
@@ -2258,7 +2456,9 @@
       "费用回复",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_496_wildmn",
@@ -2281,7 +2481,9 @@
       "费用回复",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_1036_fang2",
@@ -2304,7 +2506,9 @@
       "费用回复",
       "输出"
     ],
-    "alterBase": "芬"
+    "alterBase": "芬",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_401_elysm",
@@ -2327,7 +2531,9 @@
       "费用回复",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4119_wanqin",
@@ -2350,7 +2556,9 @@
       "费用回复",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4237_jcinta",
@@ -2373,7 +2581,9 @@
       "费用回复",
       "防护"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_476_blkngt",
@@ -2396,7 +2606,9 @@
       "费用回复",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4147_mitm",
@@ -2419,7 +2631,9 @@
       "费用回复",
       "爆发"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_497_ctable",
@@ -2442,7 +2656,9 @@
       "费用回复",
       "快速复活"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4017_puzzle",
@@ -2465,7 +2681,9 @@
       "费用回复",
       "快速复活"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4144_chilc",
@@ -2488,7 +2706,9 @@
       "费用回复",
       "快速复活"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4052_surfer",
@@ -2511,7 +2731,9 @@
       "费用回复",
       "快速复活"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_308_swire",
@@ -2534,7 +2756,9 @@
       "输出",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_265_sophia",
@@ -2557,7 +2781,9 @@
       "输出",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4106_bryota",
@@ -2580,7 +2806,9 @@
       "输出",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4125_rdoc",
@@ -2603,7 +2831,9 @@
       "治疗",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_106_franka",
@@ -2626,7 +2856,9 @@
       "输出",
       "生存"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_131_flameb",
@@ -2649,7 +2881,9 @@
       "输出",
       "生存"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_154_morgan",
@@ -2671,7 +2905,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4142_laios",
@@ -2694,7 +2930,9 @@
       "输出",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_155_tiger",
@@ -2717,7 +2955,9 @@
       "输出",
       "生存"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_415_flint",
@@ -2739,7 +2979,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_157_dagda",
@@ -2762,7 +3004,9 @@
       "输出",
       "生存"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_140_whitew",
@@ -2785,7 +3029,9 @@
       "输出",
       "削弱"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_294_ayer",
@@ -2808,7 +3054,9 @@
       "输出",
       "群攻"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_194_leto",
@@ -2831,7 +3079,9 @@
       "输出",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4083_chimes",
@@ -2853,7 +3103,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_252_bibeak",
@@ -2876,7 +3128,9 @@
       "爆发",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_459_tachak",
@@ -2899,7 +3153,9 @@
       "爆发",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_143_ghost",
@@ -2922,7 +3178,9 @@
       "群攻",
       "生存"
     ],
-    "alterBase": "归溟幽灵鲨"
+    "alterBase": "归溟幽灵鲨",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_356_broca",
@@ -2945,7 +3203,9 @@
       "群攻",
       "生存"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4126_fuze",
@@ -2968,7 +3228,9 @@
       "群攻",
       "生存"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4166_varkis",
@@ -2991,7 +3253,9 @@
       "群攻",
       "生存"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_274_astesi",
@@ -3014,7 +3278,9 @@
       "输出",
       "防护"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_333_sidero",
@@ -3037,7 +3303,9 @@
       "生存",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_475_akafyu",
@@ -3060,7 +3328,9 @@
       "生存",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_1030_noirc2",
@@ -3083,7 +3353,9 @@
       "生存",
       "输出"
     ],
-    "alterBase": "黑角"
+    "alterBase": "黑角",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_421_crow",
@@ -3105,7 +3377,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4066_highmo",
@@ -3127,7 +3401,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_486_takila",
@@ -3149,7 +3425,9 @@
     "tags": [
       "爆发"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4131_odda",
@@ -3172,7 +3450,9 @@
       "群攻",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4187_graceb",
@@ -3195,7 +3475,9 @@
       "爆发",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4185_amoris",
@@ -3219,7 +3501,9 @@
       "输出",
       "削弱"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_394_hadiya",
@@ -3242,7 +3526,9 @@
       "输出",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_1049_catap2",
@@ -3266,7 +3552,9 @@
       "输出",
       "爆发"
     ],
-    "alterBase": "空爆"
+    "alterBase": "空爆",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_129_bluep",
@@ -3288,7 +3576,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_204_platnm",
@@ -3310,7 +3600,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_367_swllow",
@@ -3332,7 +3624,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_365_aprl",
@@ -3354,7 +3648,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1021_kroos2",
@@ -3376,7 +3672,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": "克洛丝"
+    "alterBase": "克洛丝",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_498_inside",
@@ -3398,7 +3696,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_219_meteo",
@@ -3421,7 +3721,9 @@
       "群攻",
       "削弱"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_379_sesa",
@@ -3444,7 +3746,9 @@
       "群攻",
       "削弱"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4078_bdhkgt",
@@ -3467,7 +3771,9 @@
       "群攻",
       "减速"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_279_excu",
@@ -3489,7 +3795,9 @@
     "tags": [
       "群攻"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_346_aosta",
@@ -3511,7 +3819,9 @@
     "tags": [
       "群攻"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4203_kichi",
@@ -3533,7 +3843,9 @@
     "tags": [
       "群攻"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4213_skybx",
@@ -3555,7 +3867,9 @@
     "tags": [
       "群攻"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_002_amiya",
@@ -3577,7 +3891,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_405_absin",
@@ -3599,7 +3915,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_411_tomimi",
@@ -3622,7 +3940,9 @@
       "输出",
       "生存"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_466_qanik",
@@ -3645,7 +3965,9 @@
       "输出",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_166_skfire",
@@ -3668,7 +3990,9 @@
       "群攻",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_306_leizi",
@@ -3690,7 +4014,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_135_halo",
@@ -3712,7 +4038,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_344_beewax",
@@ -3735,7 +4063,9 @@
       "群攻",
       "防护"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_373_lionhd",
@@ -3758,7 +4088,9 @@
       "群攻",
       "爆发"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_341_sntlla",
@@ -3781,7 +4113,9 @@
       "群攻",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4031_liesel",
@@ -3804,7 +4138,9 @@
       "群攻",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_388_mint",
@@ -3827,7 +4163,9 @@
       "群攻",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_338_iris",
@@ -3849,7 +4187,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_297_hamoni",
@@ -3871,7 +4211,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4110_delphn",
@@ -3893,7 +4235,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1011_lava2",
@@ -3915,7 +4259,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": "炎熔"
+    "alterBase": "炎熔",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_489_serum",
@@ -3938,7 +4284,9 @@
       "群攻",
       "削弱"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_446_aroma",
@@ -3961,7 +4309,9 @@
       "群攻",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4013_kjera",
@@ -3984,7 +4334,9 @@
       "输出",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4040_rockr",
@@ -4006,7 +4358,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4054_malist",
@@ -4028,7 +4382,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4236_tmslot",
@@ -4050,7 +4406,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_499_kaitou",
@@ -4073,7 +4431,9 @@
       "元素",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4081_warmy",
@@ -4096,7 +4456,9 @@
       "元素",
       "爆发"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4198_christ",
@@ -4119,7 +4481,9 @@
       "元素",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4164_tecno",
@@ -4141,7 +4505,9 @@
     "tags": [
       "召唤"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_242_otter",
@@ -4164,7 +4530,9 @@
       "召唤",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_336_folivo",
@@ -4187,7 +4555,9 @@
       "召唤",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4140_lasher",
@@ -4210,7 +4580,9 @@
       "召唤",
       "减速"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_108_silent",
@@ -4232,7 +4604,9 @@
     "tags": [
       "治疗"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_171_bldsk",
@@ -4255,7 +4629,9 @@
       "治疗",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_345_folnic",
@@ -4278,7 +4654,9 @@
       "治疗",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4196_reckpr",
@@ -4300,7 +4678,9 @@
     "tags": [
       "治疗"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_348_ceylon",
@@ -4322,7 +4702,9 @@
     "tags": [
       "治疗"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_436_whispr",
@@ -4344,7 +4726,9 @@
     "tags": [
       "治疗"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4173_nowell",
@@ -4366,7 +4750,9 @@
     "tags": [
       "治疗"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_402_tuye",
@@ -4388,7 +4774,9 @@
     "tags": [
       "治疗"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_473_mberry",
@@ -4410,7 +4798,9 @@
     "tags": [
       "治疗"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_449_glider",
@@ -4432,7 +4822,9 @@
     "tags": [
       "治疗"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4114_harold",
@@ -4454,7 +4846,9 @@
     "tags": [
       "治疗"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1024_hbisc2",
@@ -4476,7 +4870,9 @@
     "tags": [
       "治疗"
     ],
-    "alterBase": "芙蓉"
+    "alterBase": "芙蓉",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_494_vendla",
@@ -4498,7 +4894,9 @@
     "tags": [
       "治疗"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4071_peper",
@@ -4520,7 +4918,9 @@
     "tags": [
       "治疗"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4139_papyrs",
@@ -4542,7 +4942,9 @@
     "tags": [
       "治疗"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4224_turdus",
@@ -4564,7 +4966,9 @@
     "tags": [
       "治疗"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4222_taraxa",
@@ -4586,7 +4990,9 @@
     "tags": [
       "治疗"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_148_nearl",
@@ -4609,7 +5015,9 @@
       "防护",
       "治疗"
     ],
-    "alterBase": "耀骑士临光"
+    "alterBase": "耀骑士临光",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_226_hmau",
@@ -4632,7 +5040,9 @@
       "防护",
       "治疗"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4109_baslin",
@@ -4655,7 +5065,9 @@
       "防护",
       "治疗"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4143_sensi",
@@ -4678,7 +5090,9 @@
       "防护",
       "治疗"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_144_red",
@@ -4701,7 +5115,9 @@
       "快速复活",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_243_waaifu",
@@ -4724,7 +5140,9 @@
       "快速复活",
       "削弱"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_214_kafka",
@@ -4747,7 +5165,9 @@
       "快速复活",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_455_nothin",
@@ -4770,7 +5190,9 @@
       "快速复活",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4155_talr",
@@ -4793,7 +5215,9 @@
       "快速复活",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_107_liskam",
@@ -4816,7 +5240,9 @@
       "防护",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4137_udflow",
@@ -4840,7 +5266,9 @@
       "输出",
       "减速"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_201_moeshd",
@@ -4863,7 +5291,9 @@
       "防护",
       "位移"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_325_bison",
@@ -4885,7 +5315,9 @@
     "tags": [
       "防护"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_163_hpsts",
@@ -4909,7 +5341,9 @@
       "防护",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4207_branch",
@@ -4932,7 +5366,9 @@
       "防护",
       "生存"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_378_asbest",
@@ -4955,7 +5391,9 @@
       "防护",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_512_aprot",
@@ -4978,7 +5416,9 @@
       "输出",
       "防护"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4047_pianst",
@@ -5001,7 +5441,9 @@
       "防护",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_457_blitz",
@@ -5024,7 +5466,9 @@
       "防护",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_304_zebra",
@@ -5047,7 +5491,9 @@
       "防护",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_431_ashlok",
@@ -5070,7 +5516,9 @@
       "输出",
       "防护"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_493_firwhl",
@@ -5093,7 +5541,9 @@
       "输出",
       "防护"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_422_aurora",
@@ -5116,7 +5566,9 @@
       "输出",
       "防护"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_464_cement",
@@ -5138,7 +5590,9 @@
     "tags": [
       "防护"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4148_philae",
@@ -5161,7 +5615,9 @@
       "元素",
       "防护"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4225_tanya",
@@ -5184,7 +5640,9 @@
       "元素",
       "生存"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_145_prove",
@@ -5206,7 +5664,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4006_melnte",
@@ -5229,7 +5689,9 @@
       "输出",
       "爆发"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_158_milu",
@@ -5252,7 +5714,9 @@
       "输出",
       "爆发"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_218_cuttle",
@@ -5275,7 +5739,9 @@
       "输出",
       "减速"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4014_lunacu",
@@ -5298,7 +5764,9 @@
       "输出",
       "生存"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_363_toddi",
@@ -5320,7 +5788,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4043_erato",
@@ -5343,7 +5813,9 @@
       "输出",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4221_ju",
@@ -5365,7 +5837,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1027_greyy2",
@@ -5388,7 +5862,9 @@
       "输出",
       "减速"
     ],
-    "alterBase": "格雷伊"
+    "alterBase": "格雷伊",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4104_coldst",
@@ -5410,7 +5886,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4211_snhunt",
@@ -5433,7 +5911,9 @@
       "爆发",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4177_brigid",
@@ -5455,7 +5935,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4015_spuria",
@@ -5478,7 +5960,9 @@
       "支援",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_173_slchan",
@@ -5501,7 +5985,9 @@
       "位移",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_383_snsant",
@@ -5524,7 +6010,9 @@
       "位移",
       "减速"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4105_almond",
@@ -5546,7 +6034,9 @@
     "tags": [
       "位移"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_174_slbell",
@@ -5568,7 +6058,9 @@
     "tags": [
       "削弱"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_254_vodfox",
@@ -5590,7 +6082,9 @@
     "tags": [
       "削弱"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4079_haini",
@@ -5612,7 +6106,9 @@
     "tags": [
       "削弱"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_195_glassb",
@@ -5635,7 +6131,9 @@
       "减速",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_326_glacus",
@@ -5658,7 +6156,9 @@
       "减速",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4032_provs",
@@ -5681,7 +6181,9 @@
       "削弱",
       "减速"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4122_grabds",
@@ -5704,7 +6206,9 @@
       "减速",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_433_windft",
@@ -5727,7 +6231,9 @@
       "输出",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4162_cathy",
@@ -5750,7 +6256,9 @@
       "防护",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4178_alanna",
@@ -5773,7 +6281,9 @@
       "输出",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_101_sora",
@@ -5796,7 +6306,9 @@
       "支援",
       "治疗"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4045_heidi",
@@ -5819,7 +6331,9 @@
       "支援",
       "治疗"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4184_dolris",
@@ -5842,7 +6356,9 @@
       "支援",
       "治疗"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_343_tknogi",
@@ -5865,7 +6381,9 @@
       "支援",
       "生存"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4019_ncdeer",
@@ -5888,7 +6406,9 @@
       "支援",
       "生存"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_492_quercu",
@@ -5911,7 +6431,9 @@
       "支援",
       "生存"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4172_xingzh",
@@ -5934,7 +6456,9 @@
       "支援",
       "生存"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1022_flwr2",
@@ -5957,7 +6481,9 @@
       "支援",
       "生存"
     ],
-    "alterBase": "调香师"
+    "alterBase": "调香师",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4102_threye",
@@ -5979,7 +6505,9 @@
     "tags": [
       "元素"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_487_bobb",
@@ -6001,7 +6529,9 @@
     "tags": [
       "元素"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4223_botany",
@@ -6023,7 +6553,9 @@
     "tags": [
       "元素"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4234_pedro",
@@ -6046,7 +6578,9 @@
       "输出",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_215_mantic",
@@ -6069,7 +6603,9 @@
       "输出",
       "生存"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_478_kirara",
@@ -6092,7 +6628,9 @@
       "输出",
       "生存"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4186_tmoris",
@@ -6115,7 +6653,9 @@
       "输出",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_241_panda",
@@ -6138,7 +6678,9 @@
       "位移",
       "减速"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4036_forcer",
@@ -6161,7 +6703,9 @@
       "位移",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_451_robin",
@@ -6184,7 +6728,9 @@
       "召唤",
       "位移"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_458_rfrost",
@@ -6207,7 +6753,9 @@
       "召唤",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4171_wulfen",
@@ -6230,7 +6778,9 @@
       "召唤",
       "削弱"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_369_bena",
@@ -6253,7 +6803,9 @@
       "输出",
       "快速复活"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4016_kazema",
@@ -6276,7 +6828,9 @@
       "输出",
       "快速复活"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4124_iana",
@@ -6299,7 +6853,9 @@
       "削弱",
       "快速复活"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4183_mortis",
@@ -6322,7 +6878,9 @@
       "防护",
       "快速复活"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4151_tinman",
@@ -6345,7 +6903,9 @@
       "削弱",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4191_tippi",
@@ -6368,7 +6928,9 @@
       "高空",
       "生存"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_103_angel",
@@ -6390,7 +6952,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_332_archet",
@@ -6412,7 +6976,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_456_ash",
@@ -6434,7 +7000,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_340_shwaz",
@@ -6456,7 +7024,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4055_bgsnow",
@@ -6478,7 +7048,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1048_orchd2",
@@ -6501,7 +7073,9 @@
       "输出",
       "快速复活"
     ],
-    "alterBase": "梓兰"
+    "alterBase": "梓兰",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_430_fartth",
@@ -6523,7 +7097,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4193_lemuen",
@@ -6546,7 +7122,9 @@
       "输出",
       "爆发"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_113_cqbw",
@@ -6569,7 +7147,9 @@
       "输出",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_300_phenxi",
@@ -6591,7 +7171,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_197_poca",
@@ -6614,7 +7196,9 @@
       "输出",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_2012_typhon",
@@ -6636,7 +7220,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_391_rosmon",
@@ -6658,7 +7244,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1035_wisdel",
@@ -6680,7 +7268,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": "W"
+    "alterBase": "W",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1013_chen2",
@@ -6703,7 +7293,9 @@
       "输出",
       "群攻"
     ],
-    "alterBase": "陈"
+    "alterBase": "陈",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4117_ray",
@@ -6725,7 +7317,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4138_narant",
@@ -6747,7 +7341,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_112_siege",
@@ -6770,7 +7366,9 @@
       "费用回复",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_222_bpipe",
@@ -6793,7 +7391,9 @@
       "费用回复",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_362_saga",
@@ -6816,7 +7416,9 @@
       "费用回复",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4026_vulpis",
@@ -6839,7 +7441,9 @@
       "费用回复",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_479_sleach",
@@ -6862,7 +7466,9 @@
       "费用回复",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_420_flamtl",
@@ -6885,7 +7491,9 @@
       "费用回复",
       "生存"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_427_vigil",
@@ -6908,7 +7516,9 @@
       "费用回复",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_249_mlyss",
@@ -6931,7 +7541,9 @@
       "费用回复",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4228_closur",
@@ -6954,7 +7566,9 @@
       "费用回复",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1045_svash2",
@@ -6977,7 +7591,9 @@
       "费用回复",
       "支援"
     ],
-    "alterBase": "银灰"
+    "alterBase": "银灰",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4087_ines",
@@ -7000,7 +7616,9 @@
       "费用回复",
       "快速复活"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_134_ifrit",
@@ -7023,7 +7641,9 @@
       "群攻",
       "削弱"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4229_aphris",
@@ -7046,7 +7666,9 @@
       "群攻",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_213_mostma",
@@ -7070,7 +7692,9 @@
       "支援",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_180_amgoat",
@@ -7093,7 +7717,9 @@
       "输出",
       "削弱"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_2013_cerber",
@@ -7116,7 +7742,9 @@
       "输出",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4027_heyak",
@@ -7139,7 +7767,9 @@
       "输出",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4133_logos",
@@ -7161,7 +7791,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_2015_dusk",
@@ -7185,7 +7817,9 @@
       "输出",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4141_marcil",
@@ -7209,7 +7843,9 @@
       "治疗",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_472_pasngr",
@@ -7231,7 +7867,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_426_billro",
@@ -7254,7 +7892,9 @@
       "群攻",
       "防护"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4080_lin",
@@ -7277,7 +7917,9 @@
       "群攻",
       "防护"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1046_sbell2",
@@ -7300,7 +7942,9 @@
       "群攻",
       "控场"
     ],
-    "alterBase": "初雪"
+    "alterBase": "初雪",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_377_gdglow",
@@ -7322,7 +7966,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1038_whitw2",
@@ -7345,7 +7991,9 @@
       "输出",
       "削弱"
     ],
-    "alterBase": "拉普兰德"
+    "alterBase": "拉普兰德",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4046_ebnhlz",
@@ -7367,7 +8015,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4226_veen",
@@ -7389,7 +8039,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4146_nymph",
@@ -7413,7 +8065,9 @@
       "输出",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1040_blaze2",
@@ -7437,7 +8091,9 @@
       "输出",
       "群攻"
     ],
-    "alterBase": "煌"
+    "alterBase": "煌",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4204_mantra",
@@ -7461,7 +8117,9 @@
       "输出",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_450_necras",
@@ -7484,7 +8142,9 @@
       "召唤",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_206_gnosis",
@@ -7506,7 +8166,9 @@
     "tags": [
       "削弱"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_291_aglina",
@@ -7530,7 +8192,9 @@
       "输出",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_358_lisa",
@@ -7554,7 +8218,9 @@
       "支援",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1047_halo2",
@@ -7578,7 +8244,9 @@
       "支援",
       "输出"
     ],
-    "alterBase": "星源"
+    "alterBase": "星源",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_248_mgllan",
@@ -7602,7 +8270,9 @@
       "减速",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4195_radian",
@@ -7626,7 +8296,9 @@
       "输出",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1012_skadi2",
@@ -7650,7 +8322,9 @@
       "生存",
       "输出"
     ],
-    "alterBase": "斯卡蒂"
+    "alterBase": "斯卡蒂",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4134_cetsyr",
@@ -7674,7 +8348,9 @@
       "生存",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1031_slent2",
@@ -7698,7 +8374,9 @@
       "生存",
       "治疗"
     ],
-    "alterBase": "赫默"
+    "alterBase": "赫默",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4202_haruka",
@@ -7722,7 +8400,9 @@
       "生存",
       "治疗"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_2023_ling",
@@ -7746,7 +8426,9 @@
       "支援",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4072_ironmn",
@@ -7769,7 +8451,9 @@
       "支援",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4212_nasti",
@@ -7792,7 +8476,9 @@
       "支援",
       "防护"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_245_cello",
@@ -7815,7 +8501,9 @@
       "元素",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1042_phatm2",
@@ -7838,7 +8526,9 @@
       "元素",
       "控场"
     ],
-    "alterBase": "傀影"
+    "alterBase": "傀影",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_250_phatom",
@@ -7862,7 +8552,9 @@
       "控场",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_1028_texas2",
@@ -7885,7 +8577,9 @@
       "快速复活",
       "输出"
     ],
-    "alterBase": "德克萨斯"
+    "alterBase": "德克萨斯",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_1029_yato2",
@@ -7908,7 +8602,9 @@
       "快速复活",
       "爆发"
     ],
-    "alterBase": "夜刀"
+    "alterBase": "夜刀",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_1502_crosly",
@@ -7930,7 +8626,9 @@
     "tags": [
       "快速复活"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_322_lmlee",
@@ -7954,7 +8652,9 @@
       "生存",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_1033_swire2",
@@ -7977,7 +8677,9 @@
       "快速复活",
       "爆发"
     ],
-    "alterBase": "诗怀雅"
+    "alterBase": "诗怀雅",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_400_weedy",
@@ -8001,7 +8703,9 @@
       "输出",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_225_haak",
@@ -8024,7 +8728,9 @@
       "支援",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1041_angel2",
@@ -8047,7 +8753,9 @@
       "输出",
       "支援"
     ],
-    "alterBase": "能天使"
+    "alterBase": "能天使",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_474_glady",
@@ -8071,7 +8779,9 @@
       "输出",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_437_mizuki",
@@ -8094,7 +8804,9 @@
       "输出",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4132_ascln",
@@ -8117,7 +8829,9 @@
       "减速",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_1023_ghost2",
@@ -8140,7 +8854,9 @@
       "输出",
       "快速复活"
     ],
-    "alterBase": "幽灵鲨"
+    "alterBase": "幽灵鲨",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4048_doroth",
@@ -8163,7 +8879,9 @@
       "召唤",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4123_ela",
@@ -8187,7 +8905,9 @@
       "控场",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_2027_wang",
@@ -8210,7 +8930,9 @@
       "召唤",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1039_thorn2",
@@ -8234,7 +8956,9 @@
       "支援",
       "削弱"
     ],
-    "alterBase": "棘刺"
+    "alterBase": "棘刺",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1015_aglna2",
@@ -8258,7 +8982,9 @@
       "输出",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_147_shining",
@@ -8281,7 +9007,9 @@
       "治疗",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_179_cgbird",
@@ -8304,7 +9032,9 @@
       "治疗",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_003_kalts",
@@ -8327,7 +9057,9 @@
       "召唤",
       "治疗"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4042_lumen",
@@ -8350,7 +9082,9 @@
       "治疗",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1016_agoat2",
@@ -8372,7 +9106,9 @@
     "tags": [
       "治疗"
     ],
-    "alterBase": "艾雅法拉"
+    "alterBase": "艾雅法拉",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1020_reed2",
@@ -8396,7 +9132,9 @@
       "输出",
       "削弱"
     ],
-    "alterBase": "苇草"
+    "alterBase": "苇草",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4056_titi",
@@ -8420,7 +9158,9 @@
       "防护",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4179_monstr",
@@ -8444,7 +9184,9 @@
       "输出",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1052_kalts2",
@@ -8468,7 +9210,9 @@
       "治疗",
       "支援"
     ],
-    "alterBase": "凯尔希"
+    "alterBase": "凯尔希",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_136_hsguma",
@@ -8491,7 +9235,9 @@
       "防护",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_202_demkni",
@@ -8515,7 +9261,9 @@
       "治疗",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_423_blemsh",
@@ -8539,7 +9287,9 @@
       "治疗",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_2025_shu",
@@ -8563,7 +9313,9 @@
       "治疗",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_2014_nian",
@@ -8586,7 +9338,9 @@
       "防护",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_311_mudrok",
@@ -8610,7 +9364,9 @@
       "防护",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4065_judge",
@@ -8633,7 +9389,9 @@
       "生存",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_416_zumama",
@@ -8657,7 +9415,9 @@
       "生存",
       "防护"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4039_horn",
@@ -8680,7 +9440,9 @@
       "输出",
       "防护"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_1034_jesca2",
@@ -8704,7 +9466,9 @@
       "生存",
       "输出"
     ],
-    "alterBase": "杰西卡"
+    "alterBase": "杰西卡",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4194_rmixer",
@@ -8728,7 +9492,9 @@
       "输出",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4230_mcnist",
@@ -8752,7 +9518,9 @@
       "召唤",
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_2026_yu",
@@ -8775,7 +9543,9 @@
       "元素",
       "防护"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4235_thumpy",
@@ -8798,7 +9568,9 @@
       "元素",
       "防护"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_1044_hsgma2",
@@ -8821,7 +9593,9 @@
       "输出",
       "生存"
     ],
-    "alterBase": "星熊"
+    "alterBase": "星熊",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_264_f12yin",
@@ -8844,7 +9618,9 @@
       "输出",
       "生存"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_2024_chyue",
@@ -8866,7 +9642,9 @@
     "tags": [
       "爆发"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4037_demetr",
@@ -8889,7 +9667,9 @@
       "输出",
       "削弱"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_172_svrash",
@@ -8912,7 +9692,9 @@
       "输出",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_293_thorns",
@@ -8935,7 +9717,9 @@
       "输出",
       "防护"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4082_qiubai",
@@ -8958,7 +9742,9 @@
       "输出",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4182_oblvns",
@@ -8980,7 +9766,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4088_hodrer",
@@ -9002,7 +9790,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4145_ulpia",
@@ -9025,7 +9815,9 @@
       "输出",
       "生存"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4058_pepe",
@@ -9048,7 +9840,9 @@
       "输出",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_1051_headb2",
@@ -9071,7 +9865,9 @@
       "输出",
       "控场"
     ],
-    "alterBase": "凛冬"
+    "alterBase": "凛冬",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_010_chen",
@@ -9094,7 +9890,9 @@
       "爆发",
       "输出"
     ],
-    "alterBase": "假日威龙陈"
+    "alterBase": "假日威龙陈",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4009_irene",
@@ -9118,7 +9916,9 @@
       "输出",
       "控场"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4116_blkkgt",
@@ -9142,7 +9942,9 @@
       "输出",
       "削弱"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_017_huang",
@@ -9165,7 +9967,9 @@
       "输出",
       "生存"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_1026_gvial2",
@@ -9189,7 +9993,9 @@
       "输出",
       "生存"
     ],
-    "alterBase": "嘉维尔"
+    "alterBase": "嘉维尔",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_350_surtr",
@@ -9211,7 +10017,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4098_vvana",
@@ -9234,7 +10042,9 @@
       "输出",
       "生存"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_1019_siege2",
@@ -9257,7 +10067,9 @@
       "输出",
       "生存"
     ],
-    "alterBase": "推进之王"
+    "alterBase": "推进之王",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_1050_chen3",
@@ -9280,7 +10092,9 @@
       "爆发",
       "输出"
     ],
-    "alterBase": "陈"
+    "alterBase": "陈",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_188_helage",
@@ -9303,7 +10117,9 @@
       "输出",
       "生存"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4121_zuole",
@@ -9326,7 +10142,9 @@
       "输出",
       "生存"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_485_pallas",
@@ -9349,7 +10167,9 @@
       "输出",
       "支援"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_1014_nearl2",
@@ -9371,7 +10191,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": "临光"
+    "alterBase": "临光",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4011_lessng",
@@ -9393,7 +10215,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_1032_excu2",
@@ -9415,7 +10239,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": "送葬人"
+    "alterBase": "送葬人",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4010_etlchi",
@@ -9438,7 +10264,9 @@
       "输出",
       "生存"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4064_mlynar",
@@ -9461,7 +10289,9 @@
       "输出",
       "爆发"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_1043_leizi2",
@@ -9484,7 +10314,9 @@
       "输出",
       "爆发"
     ],
-    "alterBase": "惊蛰"
+    "alterBase": "惊蛰",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_4214_cairn",
@@ -9507,7 +10339,9 @@
       "元素",
       "防护"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_230_savage",
@@ -9530,7 +10364,9 @@
       "群攻",
       "爆发"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_282_catap",
@@ -9552,7 +10388,9 @@
     "tags": [
       "群攻"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_283_midn",
@@ -9574,7 +10412,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_137_brownb",
@@ -9596,7 +10436,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_347_jaksel",
@@ -9618,7 +10460,9 @@
     "tags": [
       "输出"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_164_nightm",
@@ -9642,7 +10486,9 @@
       "治疗",
       "减速"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_220_grani",
@@ -9665,7 +10511,9 @@
       "费用回复",
       "防护"
     ],
-    "alterBase": ""
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_263_skadi",
@@ -9688,6 +10536,8 @@
       "输出",
       "生存"
     ],
-    "alterBase": "浊心斯卡蒂"
+    "alterBase": "浊心斯卡蒂",
+    "position": "地面",
+    "positionEn": "Melee"
   }
 ]

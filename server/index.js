@@ -23,7 +23,7 @@ function randomTarget() {
 }
 
 const http = createServer((req, res) => {
-  if (req.url === '/stats') {
+  if (req.url.startsWith('/stats')) {
     res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
     return res.end(JSON.stringify({
       connections: io.engine.clientsCount,
@@ -38,7 +38,15 @@ const io = new Server(http, { cors: { origin: '*' }, pingInterval: 5000, pingTim
 const rooms = new Map();
 
 // ===== HELPERS =====
-function genCode() { let c; do { c = String(Math.floor(1000 + Math.random() * 9000)); } while (rooms.has(c)); return c; }
+function genCode() {
+  let c;
+  for (let i = 0; i < 100; i++) {
+    c = String(Math.floor(1000 + Math.random() * 9000));
+    if (!rooms.has(c)) return c;
+  }
+  // Fallback after max iterations
+  return String(Math.floor(1000 + Math.random() * 9000));
+}
 function score(room) {
   const arr = Array.from(room.players.values());
   return `${arr[0]?.name||'?'} ${arr[0]?.wins||0} - ${arr[1]?.wins||0} ${arr[1]?.name||'?'}`;
@@ -85,9 +93,13 @@ function endRound(room, winnerId, winnerName, targetName, matchOver) {
 }
 
 function cleanup(code) {
-  setTimeout(() => {
+  const existing = rooms.get(code);
+  if (!existing) return;
+  if (existing._cleanupTimer) clearTimeout(existing._cleanupTimer);
+  existing._cleanupTimer = setTimeout(() => {
     const room = rooms.get(code);
     if (!room) return;
+    room._cleanupTimer = null;
     const socks = io.sockets.adapter.rooms.get(code);
     if (!socks || socks.size === 0) rooms.delete(code);
   }, 60000);
@@ -98,8 +110,18 @@ setInterval(() => {
   for (const [code, room] of rooms) {
     const socks = io.sockets.adapter.rooms.get(code);
     const cnt = socks ? socks.size : 0;
-    if (cnt === 0) { rooms.delete(code); continue; }
+    if (cnt === 0) {
+      if (room._roundTimer) { clearTimeout(room._roundTimer); room._roundTimer = null; }
+      if (room._nextRound) { clearTimeout(room._nextRound); room._nextRound = null; }
+      if (room._cleanupTimer) { clearTimeout(room._cleanupTimer); room._cleanupTimer = null; }
+      if (room._rematchTimer) { clearTimeout(room._rematchTimer); room._rematchTimer = null; }
+      rooms.delete(code); continue;
+    }
     if (!room.started && !room.finished && room._createdAt && Date.now() - room._createdAt > 300_000) {
+      if (room._roundTimer) { clearTimeout(room._roundTimer); room._roundTimer = null; }
+      if (room._nextRound) { clearTimeout(room._nextRound); room._nextRound = null; }
+      if (room._cleanupTimer) { clearTimeout(room._cleanupTimer); room._cleanupTimer = null; }
+      if (room._rematchTimer) { clearTimeout(room._rematchTimer); room._rematchTimer = null; }
       rooms.delete(code);
     }
   }
@@ -110,6 +132,22 @@ io.on('connection', (socket) => {
   console.log(`[+] ${socket.id}`);
 
   socket.on('create_room', (data) => {
+    // Leave and clean up previous room if this socket already has one
+    if (socket.data.roomCode) {
+      const prevRoom = rooms.get(socket.data.roomCode);
+      if (prevRoom) {
+        prevRoom.players.delete(socket.id);
+        socket.leave(socket.data.roomCode);
+        const socks = io.sockets.adapter.rooms.get(socket.data.roomCode);
+        if (!socks || socks.size === 0) {
+          if (prevRoom._roundTimer) { clearTimeout(prevRoom._roundTimer); prevRoom._roundTimer = null; }
+          if (prevRoom._nextRound) { clearTimeout(prevRoom._nextRound); prevRoom._nextRound = null; }
+          if (prevRoom._cleanupTimer) { clearTimeout(prevRoom._cleanupTimer); prevRoom._cleanupTimer = null; }
+          if (prevRoom._rematchTimer) { clearTimeout(prevRoom._rematchTimer); prevRoom._rematchTimer = null; }
+          rooms.delete(socket.data.roomCode);
+        }
+      }
+    }
     const code = genCode();
     const bestOf = [3,5,7].includes(data?.bestOf) ? data?.bestOf : 5;
     rooms.set(code, {
@@ -193,11 +231,12 @@ io.on('connection', (socket) => {
 
     const allReady = Array.from(room.players.values()).every(p => p.ready);
     if (allReady && room.players.size >= 2) {
+      if (room._cleanupTimer) { clearTimeout(room._cleanupTimer); room._cleanupTimer = null; }
       room.players.forEach(p => { p.wins = 0; p.ready = false; });
       room.finished = false;
       room.target = null;
       io.to(room.code).emit('rematch_start', { bestOf: room.bestOf, winsNeeded: room.winsNeeded });
-      setTimeout(() => startRound(room), 1500);
+      room._rematchTimer = setTimeout(() => { room._rematchTimer = null; startRound(room); }, 1500);
     }
   });
 

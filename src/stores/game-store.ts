@@ -91,6 +91,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   giveUp: () => {
+    const { status } = get();
+    if (status !== 'playing') return;
     set({ status: 'lost' });
   },
 

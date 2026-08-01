@@ -40,5 +40,6 @@ export function seededRandom(seed: number): () => number {
  * 格式化星级显示
  */
 export function formatRarity(rarity: number): string {
-  return '★'.repeat(rarity) + '☆'.repeat(6 - rarity);
+  const r = Math.max(0, Math.min(6, rarity));
+  return '★'.repeat(r) + '☆'.repeat(6 - r);
 }

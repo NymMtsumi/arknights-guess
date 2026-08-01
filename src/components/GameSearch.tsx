@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import type { Character } from '@/types/character';
-import { searchCharacters } from '@/lib/game-engine';
+import { searchCharacters, findCharacterByName } from '@/lib/game-engine';
 import charactersData from '@/data/characters.json';
 
 const allCharacters: Character[] = charactersData as Character[];
@@ -53,18 +53,26 @@ export function GameSearch({ onGuess, disabled, guessedIds }: GameSearchProps) {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!showDropdown) return;
+    if (disabled) return;
     if (e.key === 'ArrowDown') {
+      if (!showDropdown) return;
       e.preventDefault();
       setSelectedIndex(i => Math.min(i + 1, results.length - 1));
     } else if (e.key === 'ArrowUp') {
+      if (!showDropdown) return;
       e.preventDefault();
       setSelectedIndex(i => Math.max(i - 1, 0));
     } else if (e.key === 'Enter') {
       e.preventDefault();
-      // 有选中项或默认选第一个
-      const idx = selectedIndex >= 0 ? selectedIndex : 0;
-      if (results[idx]) handleSelect(results[idx]);
+      if (showDropdown) {
+        // 有选中项或默认选第一个
+        const idx = selectedIndex >= 0 ? selectedIndex : 0;
+        if (results[idx]) handleSelect(results[idx]);
+      } else if (query.trim()) {
+        // 下拉未显示时，尝试直接提交输入
+        const found = findCharacterByName(allCharacters, query.trim());
+        if (found) handleSelect(found);
+      }
     } else if (e.key === 'Escape') {
       setShowDropdown(false);
     }
@@ -118,7 +126,8 @@ export function GameSearch({ onGuess, disabled, guessedIds }: GameSearchProps) {
           {results.map((char, i) => (
             <button
               key={char.id}
-              onClick={() => handleSelect(char)}
+              onClick={() => { if (!disabled) handleSelect(char); }}
+              disabled={disabled}
               style={{
                 width: '100%',
                 display: 'flex',

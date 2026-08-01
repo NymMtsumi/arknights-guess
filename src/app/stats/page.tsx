@@ -8,7 +8,7 @@ import { useI18n } from '@/lib/i18n';
 import type { StatsData, GameRecord } from '@/lib/stats';
 import { loadStats, loadHistory } from '@/lib/stats';
 
-const DIFF_LABEL: Record<string, string> = { easy: '简单', medium: '普通', hard: '困难' };
+const DIFF_LABEL: Record<string, string> = { easy: '简单', medium: '普通', hard: '困难', multi: '多人' };
 
 export default function StatsPage() {
   const { t } = useI18n();

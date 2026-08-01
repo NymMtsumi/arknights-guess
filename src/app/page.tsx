@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { Header } from '@/components/Header';
 import { HeroSection } from '@/components/HeroSection';
 import { MenuCard } from '@/components/MenuCard';
@@ -13,6 +13,22 @@ export default function HomePage() {
   const { t } = useI18n();
   const [rulesOpen, setRulesOpen] = useState(false);
   const [changelogOpen, setChangelogOpen] = useState(false);
+  const rulesTimer = useRef<NodeJS.Timeout | null>(null);
+  const changelogTimer = useRef<NodeJS.Timeout | null>(null);
+
+  const handleRulesClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (rulesTimer.current) clearTimeout(rulesTimer.current);
+    rulesTimer.current = setTimeout(() => setRulesOpen(true), 80);
+  }, []);
+
+  const handleChangelogClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (changelogTimer.current) clearTimeout(changelogTimer.current);
+    changelogTimer.current = setTimeout(() => setChangelogOpen(true), 80);
+  }, []);
 
   return (
     <div className="page home-page">
@@ -43,15 +59,14 @@ export default function HomePage() {
           />
 
           {/* 游戏规则 */}
-          <div onClick={(e) => { e.preventDefault(); setRulesOpen(true); }} style={{ cursor: 'pointer' }}>
-            <MenuCard
-              href="#"
-              icon="📖"
-              label={t('menu.rules')}
-              description={t('menu.rulesDesc')}
-              color="var(--accent)"
-            />
-          </div>
+          <MenuCard
+            href="#"
+            icon="📖"
+            label={t('menu.rules')}
+            description={t('menu.rulesDesc')}
+            color="var(--accent)"
+            onClick={handleRulesClick}
+          />
 
           {/* 统计记录 */}
           <MenuCard
@@ -72,15 +87,14 @@ export default function HomePage() {
           />
 
           {/* 更新日志 */}
-          <div onClick={(e) => { e.preventDefault(); setChangelogOpen(true); }} style={{ cursor: 'pointer' }}>
-            <MenuCard
-              href="#"
-              icon="📋"
-              label="更新日志"
-              description="查看网站历次更新内容与时间"
-              color="#f0a040"
-            />
-          </div>
+          <MenuCard
+            href="#"
+            icon="📋"
+            label="更新日志"
+            description="查看网站历次更新内容与时间"
+            color="#f0a040"
+            onClick={handleChangelogClick}
+          />
         </div>
       </div>
 

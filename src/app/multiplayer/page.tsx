@@ -49,7 +49,6 @@ export default function MultiplayerPage() {
   const [oppDisconnected, setOppDisconnected] = useState(false);
   const [roomExpireTime, setRoomExpireTime] = useState(0);
   const [rematchReady, setRematchReady] = useState(false);
-  const [oppRematchReady, setOppRematchReady] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const connectTimer = useRef<NodeJS.Timeout | null>(null);
   const myColorsRef = useRef<string[][]>([]);
@@ -102,9 +101,9 @@ export default function MultiplayerPage() {
       } else {
         console.error('[round_start] Target not found in local data:', d.target?.name);
       }
-      if (timerRef.current) clearInterval(timerRef.current);
+      if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
       timerRef.current = setInterval(() => {
-        setTimeLeft(t => { if (t <= 1) { clearInterval(timerRef.current!); return 0; } return t - 1; });
+        setTimeLeft(t => { if (t <= 1) { clearInterval(timerRef.current!); timerRef.current = null; return 0; } return t - 1; });
       }, 1000);
     });
 
@@ -115,7 +114,7 @@ export default function MultiplayerPage() {
 
     s.on('round_end', (d) => {
       setStage('roundEnd'); setRoundEndData(d);
-      if (timerRef.current) clearInterval(timerRef.current);
+      if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     });
 
     s.on('match_end', (d) => {
@@ -125,17 +124,18 @@ export default function MultiplayerPage() {
       setStage('matchEnd');
       setEndMsg(d.reason === 'disconnect' ? `${d.winnerName} 获胜（对方断线超30秒）` : `${d.winnerName} 赢得比赛！\n${d.score}`);
       // 不 disconnect，保留连接给再理一把
-      if (timerRef.current) clearInterval(timerRef.current);
+      if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     });
 
     s.on('rematch_start', (d) => {
       setStage('playing'); setMyWins(0); setOppWins(0);
-      setRematchReady(false); setOppRematchReady(false);
+      setRematchReady(false);
       setBestOf(d.bestOf);
       setTimeLeft(120); setOppGuessCount(0); setOppGrid([]);
       setISurrendered(false); setOppSurrendered(false);
       setOppDisconnected(false); setRoundEndData(null);
       myColorsRef.current = [];
+      useGameStore.setState({ status: 'idle', target: null, guesses: [], remainingGuesses: 8, difficulty: 'hard' });
     });
 
     return s;
@@ -170,16 +170,6 @@ export default function MultiplayerPage() {
     const t = setInterval(() => setTick(x => x + 1), 1000);
     return () => clearInterval(t);
   }, [stage]);
-
-  // 页面切后台不判断线
-  useEffect(() => {
-    const handleVisibility = () => {
-      if (document.hidden) return; // 切后台不触发任何操作
-      // 切回前台：如果 socket 断开则自动重连（Socket.IO 自带）
-    };
-    document.addEventListener('visibilitychange', handleVisibility);
-    return () => document.removeEventListener('visibilitychange', handleVisibility);
-  }, []);
 
   const handleGuess = (char: Character) => {
     if (useGameStore.getState().status !== 'playing') return;
@@ -220,7 +210,7 @@ export default function MultiplayerPage() {
     }, 60000);
   };
 
-  useEffect(() => { return () => { if (timerRef.current) clearInterval(timerRef.current); if (socket) { socket.removeAllListeners(); socket.disconnect(); } }; }, [socket]);
+  useEffect(() => { return () => { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; } if (socket) { socket.removeAllListeners(); socket.disconnect(); } }; }, [socket]);
 
   const guessedIds = new Set(store.guesses.map(g => g.character.id));
   const inputDisabled = useGameStore.getState().status !== 'playing' || iSurrendered;
@@ -269,12 +259,21 @@ export default function MultiplayerPage() {
         {/* ===== 等待 ===== */}
         {stage === 'waiting' && (
           <div style={{ textAlign: 'center' }}>
-            <p>⏳ 等待对手加入</p>
-            <p style={{ fontSize: '3rem', fontFamily: 'monospace', fontWeight: 900, color: 'var(--primary)', margin: '16px 0' }}>{roomCode}</p>
-            <p style={{ color: 'var(--text-light)' }}>BO{bestOf} · 分享房间码给好友</p>
-            <p style={{ color: 'var(--text-light)', fontSize: '0.8rem', marginTop: '8px' }}>
-              房间将在 {Math.max(0, Math.ceil((roomExpireTime - Date.now()) / 1000))} 秒后自动解散
-            </p>
+            {roomExpireTime > 0 && roomExpireTime - Date.now() <= 0 ? (
+              <>
+                <p style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--danger)', marginBottom: '16px' }}>房间已过期</p>
+                <a href="/multiplayer" style={{ padding: '8px 20px', background: 'var(--primary)', color: 'var(--bg)', border: 'none', borderRadius: 'var(--radius)', fontWeight: 700, textDecoration: 'none' }}>返回</a>
+              </>
+            ) : (
+              <>
+                <p>⏳ 等待对手加入</p>
+                <p style={{ fontSize: '3rem', fontFamily: 'monospace', fontWeight: 900, color: 'var(--primary)', margin: '16px 0' }}>{roomCode}</p>
+                <p style={{ color: 'var(--text-light)' }}>BO{bestOf} · 分享房间码给好友</p>
+                <p style={{ color: 'var(--text-light)', fontSize: '0.8rem', marginTop: '8px' }}>
+                  房间将在 {Math.max(0, Math.ceil((roomExpireTime - Date.now()) / 1000))} 秒后自动解散
+                </p>
+              </>
+            )}
           </div>
         )}
 
@@ -338,7 +337,7 @@ export default function MultiplayerPage() {
             <p style={{ color: 'var(--text-light)', fontSize: '0.85rem' }}>答案：{roundEndData.targetName} · {roundEndData.score}</p>
             {roundEndData.matchOver
               ? <div style={{ marginTop: '12px' }}><p style={{ color: 'var(--text-light)', fontSize: '0.9rem' }}>比赛结束！{roundEndData.score}</p></div>
-              : <p style={{ color: 'var(--text-light)', fontSize: '0.8rem' }}>6 秒后下一局...</p>
+              : <p style={{ color: 'var(--text-light)', fontSize: '0.8rem' }}>等待服务器...</p>
             }
           </div>
         )}
@@ -358,7 +357,6 @@ export default function MultiplayerPage() {
               </button>
               <a href="/multiplayer" style={{ padding: '10px 24px', background: 'transparent', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', fontWeight: 700, textDecoration: 'none' }}>退出</a>
             </div>
-            {oppRematchReady && <p style={{ color: 'var(--text-light)', fontSize: '0.85rem', marginTop: '8px' }}>对手已准备，等你确认</p>}
           </div>
         )}
 

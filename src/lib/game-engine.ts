@@ -48,8 +48,11 @@ export function pickTarget(
  */
 export function pickDailyTarget(characters: Character[], difficulty: Difficulty): Character {
   const pool = getPoolByDifficulty(characters, difficulty);
+  if (pool.length === 0) {
+    throw new Error('pickDailyTarget: no characters available for the given difficulty');
+  }
   const rng = seededRandom(dailySeed());
-  const index = Math.floor(rng() * pool.length);
+  const index = Math.floor(rng() * pool.length) % pool.length;
   return pool[index];
 }
 
@@ -89,17 +92,19 @@ function compareSubclass(
  * - 同阵营大组 → close
  */
 function compareFaction(targetFaction: string, guessFaction: string): GuessStatus {
-  if (targetFaction === guessFaction) return 'correct';
+  const t = targetFaction.trim();
+  const g = guessFaction.trim();
+  if (t === g) return 'correct';
 
-  const targetParts = targetFaction.split(/[,，]/).map(s => s.trim());
-  const guessParts = guessFaction.split(/[,，]/).map(s => s.trim());
+  const targetParts = t.split(/[,，]/).map(s => s.trim());
+  const guessParts = g.split(/[,，]/).map(s => s.trim());
 
   const targetIsSimple = targetParts.length === 1;
   const guessIsSimple = guessParts.length === 1;
 
   // 一方是简单阵营，匹配另一方的主阵营 → close (同主阵营但一方无子阵营)
-  if (targetIsSimple && guessParts.includes(targetFaction)) return 'close';
-  if (guessIsSimple && targetParts.includes(guessFaction)) return 'close';
+  if (targetIsSimple && guessParts.includes(t)) return 'close';
+  if (guessIsSimple && targetParts.includes(g)) return 'close';
 
   // 同主阵营 → close (无论另一方是简单还是复合)
   if (targetParts[0] === guessParts[0]) return 'close';

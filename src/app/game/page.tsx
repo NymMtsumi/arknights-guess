@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/Header';
 import { GameSearch } from '@/components/GameSearch';
@@ -11,7 +11,6 @@ import { Footer } from '@/components/Footer';
 import { useGameStore } from '@/stores/game-store';
 import { useI18n } from '@/lib/i18n';
 import { saveGameStats } from '@/lib/stats';
-import { useEffect, useRef } from 'react';
 import type { Difficulty } from '@/types/character';
 
 export default function GamePage() {
@@ -23,7 +22,7 @@ export default function GamePage() {
 
   const { status, target, guesses, remainingGuesses, difficulty, startGame, submitGuess, giveUp, resetGame } = store;
 
-  const guessedIds = new Set(guesses.map(g => g.character.id));
+  const guessedIds = useMemo(() => new Set(guesses.map(g => g.character.id)), [guesses]);
 
   // 游戏结束时保存统计
   const prevStatus = useRef(status);
@@ -32,7 +31,7 @@ export default function GamePage() {
       saveGameStats(status === 'won', guesses.length, difficulty, target?.name || '');
     }
     prevStatus.current = status;
-  }, [status, guesses.length]);
+  }, [status, guesses.length, difficulty, target]);
 
   const handleStart = (diff: Difficulty) => {
     startGame(diff);

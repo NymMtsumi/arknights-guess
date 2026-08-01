@@ -28,7 +28,7 @@ SUBPROFESSION_MAP = {
     "soulcaster":       {"zh": "塑灵术师", "en": "Necrosis Caster"},
     "physician":        {"zh": "医师", "en": "Medic"},
     "ringhealer":       {"zh": "群愈师", "en": "Multi-target Medic"},
-    "healer":           {"zh": "疗养师", "en": "Wandering Medic"},
+    "healer":           {"zh": "行医", "en": "Wandering Medic"},
     "wandermedic":      {"zh": "行医", "en": "Wandering Medic"},
     "chainhealer":      {"zh": "链愈师", "en": "Chain Medic"},
     "incantationmedic": {"zh": "咒愈师", "en": "Incantation Medic"},

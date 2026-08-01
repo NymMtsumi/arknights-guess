@@ -259,6 +259,8 @@ def main():
             "raceEn": race_data["en"],
             "gender": gender_data["zh"],
             "genderEn": gender_data["en"],
+            "position": "高台" if val.get("position") == "RANGED" else "地面" if val.get("position") == "MELEE" else "未知",
+            "positionEn": "Ranged" if val.get("position") == "RANGED" else "Melee" if val.get("position") == "MELEE" else "Unknown",
         })
 
     # 写入输出文件

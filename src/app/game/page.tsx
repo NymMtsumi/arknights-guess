@@ -250,6 +250,17 @@ export default function GamePage() {
             </div>
           )}
         </div>
+
+        {/* 查看战绩模式：再来一把 */}
+        {dialogClosed && (status === 'won' || status === 'lost') && (
+          <div style={{ textAlign: 'center', marginTop: '20px' }}>
+            <button onClick={handleNewGame} style={{
+              padding: '12px 32px', background: 'var(--primary)', color: 'var(--bg)',
+              border: 'none', borderRadius: 'var(--radius)', fontSize: '1rem',
+              fontWeight: 700, cursor: 'pointer',
+            }}>🔄 再理一把！</button>
+          </div>
+        )}
       </div>
 
       {/* 胜利/失败弹窗 */}

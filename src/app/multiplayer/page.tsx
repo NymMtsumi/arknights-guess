@@ -100,7 +100,7 @@ export default function MultiplayerPage() {
       if (target) {
         useGameStore.setState({ status: 'playing', target, guesses: [], remainingGuesses: 8, difficulty: 'hard' });
       } else {
-        store.startGame('hard');
+        console.error('[round_start] Target not found in local data:', d.target?.name);
       }
       if (timerRef.current) clearInterval(timerRef.current);
       timerRef.current = setInterval(() => {
@@ -116,18 +116,12 @@ export default function MultiplayerPage() {
     s.on('round_end', (d) => {
       setStage('roundEnd'); setRoundEndData(d);
       if (timerRef.current) clearInterval(timerRef.current);
-      if (!d.matchOver) {
-        const state = useGameStore.getState();
-        saveGameStats(d.winner === s.id, state.guesses.length, 'multi', d.targetName || '');
-      }
     });
 
     s.on('match_end', (d) => {
       const state = useGameStore.getState();
-      // 只在比赛真正结束时统计一次
-      if (d.reason === 'disconnect') {
-        saveGameStats(false, state.guesses.length, 'multi', '');
-      }
+      // 比赛结束时统计（无论何种原因）
+      saveGameStats(d.winnerName === playerName, state.guesses.length, 'multi', '');
       setStage('matchEnd');
       setEndMsg(d.reason === 'disconnect' ? `${d.winnerName} 获胜（对方断线超30秒）` : `${d.winnerName} 赢得比赛！\n${d.score}`);
       // 不 disconnect，保留连接给再理一把
@@ -148,6 +142,7 @@ export default function MultiplayerPage() {
   };
 
   const handleCreate = () => {
+    clearConnecting();
     if (!playerName.trim() || playerName.trim().length > 4) { setError('昵称最多4个汉字'); return; }
     setError(''); saveNick(playerName.trim()); setConnecting('create');
     const s = connect();
@@ -157,6 +152,7 @@ export default function MultiplayerPage() {
   };
 
   const handleJoin = () => {
+    clearConnecting();
     if (!playerName.trim() || !roomCode.trim()) { setError('请输入昵称和房间码'); return; }
     if (playerName.trim().length > 4) { setError('昵称最多4个汉字'); return; }
     setError(''); saveNick(playerName.trim()); setConnecting('join');

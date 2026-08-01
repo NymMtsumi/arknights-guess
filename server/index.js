@@ -111,10 +111,10 @@ io.on('connection', (socket) => {
 
   socket.on('create_room', (data) => {
     const code = genCode();
-    const bestOf = [3,5,7].includes(data.bestOf) ? data.bestOf : 5;
+    const bestOf = [3,5,7].includes(data?.bestOf) ? data?.bestOf : 5;
     rooms.set(code, {
       code, bestOf, winsNeeded: Math.ceil(bestOf / 2), _createdAt: Date.now(),
-      players: new Map([[socket.id, { name: data.playerName||'玩家', wins: 0, dcTimer: null }]]),
+      players: new Map([[socket.id, { name: data?.playerName || '玩家', wins: 0, dcTimer: null, lastSocketId: null }]]),
       started: false, finished: false,
     });
     socket.join(code);
@@ -124,12 +124,12 @@ io.on('connection', (socket) => {
   });
 
   socket.on('join_room', (data) => {
-    const code = (data.code || '').toUpperCase();
+    const code = (data?.code || '').toUpperCase();
     const room = rooms.get(code);
     if (!room) { socket.emit('error_msg', { message: '房间不存在' }); return; }
     if (room.players.size >= 2) { socket.emit('error_msg', { message: '房间已满' }); return; }
 
-    room.players.set(socket.id, { name: data.playerName||'玩家', wins: 0, dcTimer: null });
+    room.players.set(socket.id, { name: data?.playerName || '玩家', wins: 0, dcTimer: null, lastSocketId: null });
     socket.join(code);
     socket.data.roomCode = code;
     room.started = true;
@@ -141,33 +141,33 @@ io.on('connection', (socket) => {
 
   socket.on('guess_update', (data) => {
     const room = rooms.get(socket.data.roomCode);
-    if (!room || room.finished || room.roundSettled) return;
+    if (!room || !data || room.finished || room.roundSettled) return;
     socket.to(room.code).emit('opponent_update', {
-      guessCount: data.guessCount,
-      allComparisons: data.allComparisons || [],
+      guessCount: data?.guessCount ?? 0,
+      allComparisons: data?.allComparisons || [],
     });
   });
 
   socket.on('player_win_round', (data) => {
     const room = rooms.get(socket.data.roomCode);
-    if (!room || room.finished || room.roundSettled) return;
+    if (!room || !data || room.finished || room.roundSettled) return;
     const player = room.players.get(socket.id);
     if (!player) return;
 
     player.wins++;
     const won = player.wins >= room.winsNeeded;
     console.log(`[胜] ${player.name} ${player.wins}/${room.winsNeeded}`);
-    endRound(room, socket.id, player.name, data.targetName || room.target?.name || '', won);
+    endRound(room, socket.id, player.name, data?.targetName || room.target?.name || '', won);
     if (won) cleanup(room.code);
   });
 
   socket.on('surrender_round', (data) => {
     const room = rooms.get(socket.data.roomCode);
-    if (!room || room.finished || room.roundSettled) return;
+    if (!room || !data || room.finished || room.roundSettled) return;
     room.surrendered.add(socket.id);
 
     if (room.surrendered.size >= 2) {
-      endRound(room, null, '', data.targetName || room.target?.name || '', false);
+      endRound(room, null, '', data?.targetName || room.target?.name || '', false);
       return;
     }
 
@@ -181,7 +181,7 @@ io.on('connection', (socket) => {
     const remaining = Math.max(5000, ROUND_TIME - elapsed);
     room._roundTimer = setTimeout(() => {
       if (room.roundSettled) return;
-      endRound(room, null, '', data.targetName || room.target?.name || '', false);
+      endRound(room, null, '', data?.targetName || room.target?.name || '', false);
     }, remaining);
   });
 
@@ -207,6 +207,9 @@ io.on('connection', (socket) => {
     const player = room.players.get(socket.id);
     if (!player) return;
 
+    // Store old socket ID so reconnecting clients can be matched
+    player.lastSocketId = socket.id;
+
     io.to(room.code).emit('opponent_disconnected', { playerName: player.name });
 
     player.dcTimer = setTimeout(() => {
@@ -218,6 +221,52 @@ io.on('connection', (socket) => {
       room.finished = true;
       cleanup(room.code);
     }, DISCONNECT);
+  });
+
+  socket.on('reconnect_room', (data) => {
+    if (!data) { socket.emit('error_msg', { message: '无效的重连数据' }); return; }
+    const code = (data?.code || '').toUpperCase();
+    const room = rooms.get(code);
+    if (!room) { socket.emit('error_msg', { message: '房间不存在' }); return; }
+
+    // Find the player by matching stored lastSocketId
+    let foundPlayerId = null;
+    for (const [id, p] of room.players) {
+      if (p.lastSocketId === data?.oldSocketId) { foundPlayerId = id; break; }
+    }
+    if (!foundPlayerId) { socket.emit('error_msg', { message: '未找到玩家信息' }); return; }
+
+    const player = room.players.get(foundPlayerId);
+
+    // Cancel the disconnect timer
+    if (player.dcTimer) { clearTimeout(player.dcTimer); player.dcTimer = null; }
+
+    // Remove old entry and re-add with new socket ID
+    room.players.delete(foundPlayerId);
+    room.players.set(socket.id, player);
+
+    socket.join(code);
+    socket.data.roomCode = code;
+
+    // Notify the room that opponent reconnected
+    socket.to(code).emit('opponent_reconnected', { playerName: player.name });
+
+    // Send current round state to the reconnecting socket
+    socket.emit('reconnect_state', {
+      code,
+      bestOf: room.bestOf,
+      winsNeeded: room.winsNeeded,
+      started: room.started,
+      finished: room.finished,
+      score: score(room),
+      target: room.target || null,
+      roundSettled: room.roundSettled || false,
+      timeLimit: ROUND_TIME,
+      myWins: player.wins,
+      players: Array.from(room.players.entries()).map(([id, p]) => ({ id, name: p.name, wins: p.wins })),
+    });
+
+    console.log(`[重连] ${player.name} -> ${code}`);
   });
 });
 

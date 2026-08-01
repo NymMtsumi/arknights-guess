@@ -69,9 +69,9 @@ export function GuessTable({ guesses, target, hideRarity }: GuessTableProps) {
             return (
               <tr
                 key={guess.timestamp}
-                style={{
-                  animation: `surface-enter 0.4s ${i * 0.05}s cubic-bezier(0.2, 0.72, 0.25, 1) both`,
-                }}
+                style={i === 0 ? {
+                  animation: 'surface-enter 0.4s 0s cubic-bezier(0.2, 0.72, 0.25, 1) both',
+                } : {}}
               >
                 {columns.map(col => {
                   // 名字列：猜对=绿，异格=黄

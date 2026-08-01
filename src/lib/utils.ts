@@ -12,6 +12,7 @@ export function cn(...inputs: ClassValue[]): string {
  * 从数组中随机选取一个元素
  */
 export function pickRandom<T>(arr: T[]): T {
+  if (arr.length === 0) throw new Error('pickRandom: array is empty');
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
@@ -31,7 +32,7 @@ export function seededRandom(seed: number): () => number {
   let s = seed;
   return () => {
     s = (s * 1664525 + 1013904223) & 0xffffffff;
-    return (s >>> 0) / 0xffffffff;
+    return (s >>> 0) / 0x100000000;
   };
 }
 

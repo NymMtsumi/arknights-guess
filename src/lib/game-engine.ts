@@ -35,6 +35,11 @@ export function pickTarget(
     if (filtered.length > 0) pool = filtered;
   }
 
+  // 池子为空时回退到全角色列表
+  if (pool.length === 0) {
+    pool = characters;
+  }
+
   return pickRandom(pool);
 }
 

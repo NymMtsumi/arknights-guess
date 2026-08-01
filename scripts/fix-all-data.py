@@ -86,6 +86,10 @@ print(f"阵营分布 ({len(factions)} 种):")
 for f, cnt in sorted(factions.items(), key=lambda x:-x[1])[:20]:
     print(f"  {f}: {cnt}")
 
+# 后处理：炎-龙门 → 炎,龙门（统一格式）
+for c in chars:
+    c['faction'] = c['faction'].replace('炎-龙门', '炎,龙门').replace('炎-岁', '岁')
+
 # 保存
 with open("src/data/characters.json", "w", encoding="utf-8") as f:
     json.dump(chars, f, ensure_ascii=False, indent=2)

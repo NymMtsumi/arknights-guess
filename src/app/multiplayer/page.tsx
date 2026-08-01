@@ -86,6 +86,7 @@ export default function MultiplayerPage() {
 
     s.on('round_start', (d) => {
       clearConnecting();
+      if (d.difficulty) setDifficulty(d.difficulty);
       setStage('playing'); setTimeLeft(120);
       setOppGuessCount(0); setOppGrid([]);
       setISurrendered(false); setOppSurrendered(false);
@@ -313,7 +314,7 @@ export default function MultiplayerPage() {
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
               <div style={{ flex: '1 1 48%', minWidth: '280px' }}>
                 <div style={{ fontWeight: 700, marginBottom: '4px', fontSize: '0.85rem', color: 'var(--primary)' }}>你的猜测</div>
-                <div style={{ overflowX: 'auto' }}><GuessTable guesses={store.guesses} target={store.target} /></div>
+                <div style={{ overflowX: 'auto' }}><GuessTable guesses={store.guesses} target={store.target} hideRarity={difficulty === 'hard'} /></div>
               </div>
               <div style={{ flex: '1 1 48%', minWidth: '280px' }}>
                 <div style={{ fontWeight: 700, marginBottom: '4px', fontSize: '0.85rem', color: 'var(--accent)' }}>{oppName}（{oppGuessCount}次）</div>

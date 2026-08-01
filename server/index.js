@@ -76,7 +76,7 @@ function startRound(room) {
   room._roundTimer = timer;
 
   io.to(room.code).emit('round_start', {
-    startTime: Date.now(), timeLimit: ROUND_TIME, score: score(room), target,
+    startTime: Date.now(), timeLimit: ROUND_TIME, score: score(room), target, difficulty: room.difficulty || 'hard',
     players: Array.from(room.players.entries()).map(([id, p]) => ({ id, name: p.name, wins: p.wins })),
   });
 }

@@ -90,7 +90,10 @@ function endRound(room, winnerId, winnerName, targetName, matchOver) {
   io.to(room.code).emit('round_end', { winner: winnerId, winnerName, targetName, score: score(room), matchOver });
   if (matchOver) {
     room.finished = true;
-    io.to(room.code).emit('match_end', { winner: winnerId, winnerName, score: score(room) });
+    // 延迟 3 秒再弹出总结算，给败方看答案
+    setTimeout(() => {
+      io.to(room.code).emit('match_end', { winner: winnerId, winnerName, score: score(room) });
+    }, 3000);
   } else {
     room._nextRound = setTimeout(() => startRound(room), 6000);
   }

@@ -74,14 +74,19 @@ export default function MultiplayerPage() {
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
       reconnectionAttempts: 10,
+      autoConnect: false,
     });
-    setSocket(s); socketRef.current = s;
-    let oldSocketId = s.id;
 
-    s.on('connect_error', (err) => {
+    // 在连接前注册事件监听器（避免漏掉服务器自动恢复事件）
+    s.on('connect_error', (err) => { clearConnecting(); setError('服务器连接失败：' + (err?.message || '')); s.disconnect(); });
+    s.on('connect_timeout', () => { clearConnecting(); setError('连接超时，请检查网络'); });
+    s.on('error_msg', (d: any) => { clearConnecting(); setError(d.message); s.disconnect(); });
+    s.on('existing_room', (d: any) => {
       clearConnecting();
-      setError('服务器连接失败：' + (err?.message || ''));
-      s.disconnect();
+      setRoomCode(d.code); roomCodeRef.current = d.code; saveRoomCode(d.code);
+      setBestOf(d.bestOf); if (d.difficulty) setDifficulty(d.difficulty);
+      if (d.started) { setStage('playing'); setMyWins(d.wins||0); }
+      else { setRoomExpireTime(Date.now() + 120_000); setStage('waiting'); }
     });
     s.on('connect_timeout', () => {
       clearConnecting();
@@ -100,19 +105,7 @@ export default function MultiplayerPage() {
       if (code) s.emit('reconnect_room', { code, oldSocketId });
     });
 
-    s.on('error_msg', (d) => { clearConnecting(); setError(d.message); s.disconnect(); });
     s.on('room_created', (d) => { clearConnecting(); setRoomCode(d.code); roomCodeRef.current = d.code; saveRoomCode(d.code); setBestOf(d.bestOf); setRoomExpireTime(Date.now() + 120_000); setStage('waiting'); });
-    s.on('existing_room', (d) => {
-      clearConnecting();
-      setRoomCode(d.code); roomCodeRef.current = d.code; saveRoomCode(d.code); setBestOf(d.bestOf);
-      if (d.started) {
-        // 游戏进行中，等 round_start
-        setStage('playing');
-      } else {
-        setRoomExpireTime(Date.now() + 120_000);
-        setStage('waiting');
-      }
-    });
 
     s.on('round_start', (d) => {
       clearConnecting();
@@ -170,6 +163,11 @@ export default function MultiplayerPage() {
       myColorsRef.current = [];
       useGameStore.setState({ status: 'idle', target: null, guesses: [], remainingGuesses: 8, difficulty: 'hard' });
     });
+
+    // 全部监听器就绪后才连接
+    s.connect();
+    setSocket(s); socketRef.current = s;
+    const oldSocketId = s.id || '';
 
     return s;
   };

@@ -260,6 +260,7 @@ io.on('connection', (socket) => {
     io.to(room.code).emit('opponent_disconnected', { playerName: player.name });
 
     player.dcTimer = setTimeout(() => {
+      if (room.roundSettled || room.finished) return;
       const other = Array.from(room.players.keys()).find(id => id !== socket.id);
       io.to(room.code).emit('match_end', {
         winner: other, winnerName: room.players.get(other)?.name || '对手',

@@ -72,13 +72,11 @@ export default function MultiplayerPage() {
       reconnectionAttempts: 10,
     });
     setSocket(s); socketRef.current = s;
-
-    // 自动重连
+    let oldSocketId = s.id;
+    s.io.on('reconnect_attempt', () => { oldSocketId = oldSocketId || s.id; });
     s.io.on('reconnect', () => {
       const code = roomCodeRef.current;
-      if (code && s.id) {
-        s.emit('reconnect_room', { code });
-      }
+      if (code) s.emit('reconnect_room', { code, oldSocketId });
     });
 
     s.on('error_msg', (d) => { clearConnecting(); setError(d.message); s.disconnect(); });

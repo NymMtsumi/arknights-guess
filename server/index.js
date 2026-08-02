@@ -199,6 +199,14 @@ io.on('connection', (socket) => {
         }
       }
     }
+    // 检查是否已有活跃房间（同身份）
+    for (const [code, r] of rooms) {
+      if (!r.finished && Array.from(r.players.values()).some(p => p.playerKey === socket.data.playerKey)) {
+        socket.emit('room_created', { code, bestOf: r.bestOf, difficulty: r.difficulty || 'hard' });
+        return;
+      }
+    }
+
     const code = genCode();
     const bestOf = [3,5,7].includes(data?.bestOf) ? data?.bestOf : 5;
     const difficulty = ['easy','medium','hard'].includes(data?.difficulty) ? data?.difficulty : 'hard';

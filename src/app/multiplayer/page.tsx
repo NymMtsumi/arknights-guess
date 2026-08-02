@@ -26,6 +26,11 @@ function loadRoomCode(): string { try { return localStorage.getItem(ROOM_KEY) ||
 function clearRoomCode() { try { localStorage.removeItem(ROOM_KEY); } catch {} }
 
 const COL_LABELS = ['姓名', '职业', '子职', '阵营', '星级', '种族', '性别', '年份', '部署', '词缀'];
+// 困难模式：隐藏第 3 列（星级，index 3）
+const COL_LABELS_HARD = COL_LABELS.filter((_, i) => i !== 3);
+function filterOppGrid(grid: string[][]) {
+  return grid.map(row => row.filter((_, i) => i !== 3));
+}
 
 function loadNick(): string {
   if (typeof window === 'undefined') return '';
@@ -361,11 +366,11 @@ export default function MultiplayerPage() {
                 <div style={{ fontWeight: 700, marginBottom: '4px', fontSize: '0.85rem', color: 'var(--accent)' }}>{oppName}（{oppGuessCount}次）</div>
                 <div style={{ overflowX: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.65rem' }}>
-                    <thead><tr>{COL_LABELS.map((l,i)=><th key={i} style={{padding:'3px 2px',fontWeight:600,color:'var(--text-light)',borderBottom:'1px solid var(--border)',whiteSpace:'nowrap'}}>{l}</th>)}</tr></thead>
+                    <thead><tr>{(difficulty==='hard'?COL_LABELS_HARD:COL_LABELS).map((l,i)=><th key={i} style={{padding:'3px 2px',fontWeight:600,color:'var(--text-light)',borderBottom:'1px solid var(--border)',whiteSpace:'nowrap'}}>{l}</th>)}</tr></thead>
                     <tbody>
                       {oppGrid.length===0
-                        ? <tr><td colSpan={10} style={{padding:'16px',textAlign:'center',color:'var(--text-light)',fontSize:'0.75rem'}}>等待对手猜测...</td></tr>
-                        : [...oppGrid].reverse().map((row,i)=>(
+                        ? <tr><td colSpan={difficulty==='hard'?9:10} style={{padding:'16px',textAlign:'center',color:'var(--text-light)',fontSize:'0.75rem'}}>等待对手猜测...</td></tr>
+                        : [...(difficulty==='hard'?filterOppGrid(oppGrid):oppGrid)].reverse().map((row,i)=>(
                           <tr key={i} style={{animation:'surface-enter 0.35s both'}}>
                             {row.map((color,j)=>(
                               <td key={j} style={{padding:'3px 2px',textAlign:'center'}}>

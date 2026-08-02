@@ -4,13 +4,93 @@ import { readFileSync } from 'node:fs';
 import { randomBytes } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import Database from 'better-sqlite3';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 3001;
 const ROUND_TIME = 120_000;
 const DISCONNECT = 30_000;
+const JWT_SECRET = process.env.JWT_SECRET || 'arknights-guess-secret-change-in-production';
+const DB_PATH = join(__dirname, 'data.db');
 
-// 加载干员
+// ===== 数据库 =====
+const db = new Database(DB_PATH);
+db.pragma('journal_mode = WAL');
+db.pragma('foreign_keys = ON');
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    player_key TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS games (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    player_key TEXT NOT NULL,
+    won INTEGER NOT NULL DEFAULT 0,
+    guess_count INTEGER NOT NULL DEFAULT 0,
+    difficulty TEXT NOT NULL DEFAULT 'hard',
+    target_name TEXT NOT NULL DEFAULT '',
+    timestamp TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+  CREATE INDEX IF NOT EXISTS idx_users_player_key ON users(player_key);
+  CREATE INDEX IF NOT EXISTS idx_games_player_key ON games(player_key);
+`);
+
+// ===== JWT =====
+function signToken(payload) {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' });
+}
+
+function verifyToken(token) {
+  try {
+    return jwt.verify(token, JWT_SECRET);
+  } catch {
+    return null;
+  }
+}
+
+// ===== 辅助函数 =====
+function parseCookies(str) {
+  if (!str) return {};
+  const result = {};
+  for (const part of str.split(';')) {
+    const [k, ...r] = part.split('=');
+    if (k) { try { result[k.trim()] = decodeURIComponent(r.join('=').trim()); } catch {} }
+  }
+  return result;
+}
+
+function parseBody(req) {
+  return new Promise((resolve) => {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      try { resolve(JSON.parse(body)); } catch { resolve({}); }
+    });
+  });
+}
+
+function jsonResponse(res, data, status = 200) {
+  const body = JSON.stringify(data);
+  res.writeHead(status, {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Content-Length': Buffer.byteLength(body),
+  });
+  res.end(body);
+}
+
+// ===== 干员数据 =====
 let ALL_CHARS = [], EASY_CHARS = [], MED_CHARS = [];
 try {
   const data = JSON.parse(readFileSync(join(__dirname, 'characters.json'), 'utf-8'));
@@ -26,11 +106,190 @@ function randomTarget(diff = 'hard') {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
-const http = createServer((req, res) => {
-  if (req.url && req.url.startsWith('/stats')) {
-    res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
-    return res.end(JSON.stringify({ connections: io.engine.clientsCount, rooms: rooms.size, playing: Array.from(rooms.values()).filter(r => r.started && !r.finished).length }));
+// ===== HTTP 服务器 =====
+const http = createServer(async (req, res) => {
+  // CORS 预检
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204, {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    });
+    return res.end();
   }
+
+  const url = req.url || '';
+
+  // 旧统计端点
+  if (url.startsWith('/stats')) {
+    return jsonResponse(res, {
+      connections: io.engine.clientsCount,
+      rooms: rooms.size,
+      playing: Array.from(rooms.values()).filter(r => r.started && !r.finished).length,
+    });
+  }
+
+  // ===== POST /api/register =====
+  if (req.method === 'POST' && url === '/api/register') {
+    const body = await parseBody(req);
+    const { username, password } = body;
+
+    if (!username || !password) {
+      return jsonResponse(res, { error: '用户名和密码不能为空' }, 400);
+    }
+    if (typeof username !== 'string' || username.trim().length < 2 || username.trim().length > 20) {
+      return jsonResponse(res, { error: '用户名需要 2-20 个字符' }, 400);
+    }
+    if (typeof password !== 'string' || password.length < 4) {
+      return jsonResponse(res, { error: '密码至少需要 4 个字符' }, 400);
+    }
+    if (!/^[a-zA-Z0-9_一-鿿]+$/.test(username.trim())) {
+      return jsonResponse(res, { error: '用户名只能包含字母、数字、下划线和中文' }, 400);
+    }
+
+    const existing = db.prepare('SELECT id FROM users WHERE username = ?').get(username.trim());
+    if (existing) {
+      return jsonResponse(res, { error: '用户名已被注册' }, 409);
+    }
+
+    const password_hash = await bcrypt.hash(password, 10);
+    const result = db.prepare('INSERT INTO users (username, password_hash) VALUES (?, ?)').run(username.trim(), password_hash);
+    const token = signToken({ userId: result.lastInsertRowid, username: username.trim() });
+
+    return jsonResponse(res, { token, username: username.trim(), userId: result.lastInsertRowid });
+  }
+
+  // ===== POST /api/login =====
+  if (req.method === 'POST' && url === '/api/login') {
+    const body = await parseBody(req);
+    const { username, password } = body;
+
+    if (!username || !password) {
+      return jsonResponse(res, { error: '用户名和密码不能为空' }, 400);
+    }
+
+    const user = db.prepare('SELECT id, username, password_hash, player_key FROM users WHERE username = ?').get(username.trim());
+    if (!user) {
+      return jsonResponse(res, { error: '用户名或密码错误' }, 401);
+    }
+
+    const valid = await bcrypt.compare(password, user.password_hash);
+    if (!valid) {
+      return jsonResponse(res, { error: '用户名或密码错误' }, 401);
+    }
+
+    const token = signToken({ userId: user.id, username: user.username });
+
+    return jsonResponse(res, {
+      token,
+      username: user.username,
+      userId: user.id,
+      player_key: user.player_key || null,
+    });
+  }
+
+  // ===== POST /api/sync =====
+  if (req.method === 'POST' && url === '/api/sync') {
+    const body = await parseBody(req);
+    const { player_key, games } = body;
+
+    if (!player_key || !Array.isArray(games)) {
+      return jsonResponse(res, { error: '需要 player_key 和 games 数组' }, 400);
+    }
+
+    // 验证 JWT（可选：已登录用户绑定）
+    const authHeader = req.headers.authorization || '';
+    let userId = null;
+    if (authHeader.startsWith('Bearer ')) {
+      const decoded = verifyToken(authHeader.slice(7));
+      if (decoded) userId = decoded.userId;
+    }
+
+    // 如果已登录，更新用户的 player_key
+    if (userId) {
+      db.prepare('UPDATE users SET player_key = ? WHERE id = ?').run(player_key, userId);
+    }
+
+    const insert = db.prepare('INSERT INTO games (player_key, won, guess_count, difficulty, target_name, timestamp) VALUES (?, ?, ?, ?, ?, ?)');
+    const insertMany = db.transaction((rows) => {
+      for (const g of rows) {
+        insert.run(player_key, g.won ? 1 : 0, g.guessCount || 0, g.difficulty || 'hard', g.targetName || '', g.timestamp || new Date().toISOString());
+      }
+    });
+
+    try {
+      insertMany(games);
+      return jsonResponse(res, { synced: games.length });
+    } catch (err) {
+      console.error('[sync] error:', err.message);
+      return jsonResponse(res, { error: '同步失败' }, 500);
+    }
+  }
+
+  // ===== GET /api/me =====
+  if (req.method === 'GET' && url === '/api/me') {
+    const authHeader = req.headers.authorization || '';
+    if (!authHeader.startsWith('Bearer ')) {
+      return jsonResponse(res, { error: '未登录' }, 401);
+    }
+
+    const decoded = verifyToken(authHeader.slice(7));
+    if (!decoded) {
+      return jsonResponse(res, { error: 'token 无效或已过期' }, 401);
+    }
+
+    const user = db.prepare('SELECT id, username, player_key, created_at FROM users WHERE id = ?').get(decoded.userId);
+    if (!user) {
+      return jsonResponse(res, { error: '用户不存在' }, 404);
+    }
+
+    // 统计
+    const stats = db.prepare(`
+      SELECT
+        COUNT(*) as totalGames,
+        SUM(won) as wins,
+        COUNT(*) - SUM(won) as losses,
+        SUM(guess_count) as totalGuesses,
+        MIN(CASE WHEN won = 1 THEN guess_count ELSE NULL END) as bestScore
+      FROM games WHERE player_key = ?
+    `).get(user.player_key || '');
+
+    return jsonResponse(res, {
+      username: user.username,
+      player_key: user.player_key,
+      created_at: user.created_at,
+      stats: {
+        totalGames: stats?.totalGames || 0,
+        wins: stats?.wins || 0,
+        losses: stats?.losses || 0,
+        totalGuesses: stats?.totalGuesses || 0,
+        bestScore: stats?.bestScore || 0,
+      },
+    });
+  }
+
+  // ===== POST /api/link-player-key =====
+  if (req.method === 'POST' && url === '/api/link-player-key') {
+    const authHeader = req.headers.authorization || '';
+    if (!authHeader.startsWith('Bearer ')) {
+      return jsonResponse(res, { error: '未登录' }, 401);
+    }
+    const decoded = verifyToken(authHeader.slice(7));
+    if (!decoded) {
+      return jsonResponse(res, { error: 'token 无效或已过期' }, 401);
+    }
+
+    const body = await parseBody(req);
+    const { player_key } = body;
+    if (!player_key) {
+      return jsonResponse(res, { error: '需要 player_key' }, 400);
+    }
+
+    db.prepare('UPDATE users SET player_key = ? WHERE id = ?').run(player_key, decoded.userId);
+    return jsonResponse(res, { success: true });
+  }
+
+  // 默认响应
   res.writeHead(200);
   res.end('OK');
 });
@@ -45,20 +304,10 @@ function score(room) {
   return `${arr[0]?.name||'?'} ${arr[0]?.wins||0} - ${arr[1]?.wins||0} ${arr[1]?.name||'?'}`;
 }
 function generateKey() { return 'p_' + randomBytes(9).toString('base64url'); }
-function parseCookies(str) {
-  if (!str) return {};
-  const result = {};
-  for (const part of str.split(';')) {
-    const [k, ...r] = part.split('=');
-    if (k) { try { result[k.trim()] = decodeURIComponent(r.join('=').trim()); } catch {} }
-  }
-  return result;
-}
 
 // Cookie 身份中间件
 io.use((socket, next) => {
   const cookies = parseCookies(socket.handshake.headers.cookie || '');
-  // 优先读 Cookie，其次读 URL 查询参数 pk
   const urlPk = socket.handshake.query?.pk;
   if (cookies.player_key) {
     socket.data.playerKey = cookies.player_key;
@@ -108,7 +357,6 @@ function endRound(room, winnerId, winnerName, targetName, matchOver) {
   }
 }
 
-// 查找玩家已有的活跃房间
 function findRoomByPlayerKey(pk) {
   for (const [code, r] of rooms) {
     if (r.finished) continue;
@@ -119,14 +367,13 @@ function findRoomByPlayerKey(pk) {
   return null;
 }
 
-// 周期清理：空房等 60 秒后才删，未开始的等 5 分钟
+// 周期清理
 setInterval(() => {
   const now = Date.now();
   for (const [code, room] of rooms) {
     const socks = io.sockets.adapter.rooms.get(code);
     const cnt = socks ? socks.size : 0;
     if (cnt === 0) {
-      // 首次变空时记录时间，60秒后才删
       if (!room._emptySince) room._emptySince = now;
       if (now - room._emptySince > 60000) {
         if (room._roundTimer) clearTimeout(room._roundTimer);
@@ -146,7 +393,6 @@ setInterval(() => {
 io.on('connection', (socket) => {
   console.log(`[+] ${socket.id} pk=${socket.data.playerKey?.slice(0,10)}`);
 
-  // === 自动恢复：连接时查旧房 ===
   const existing = findRoomByPlayerKey(socket.data.playerKey);
   if (existing) {
     for (const [pid, player] of existing.players) {
@@ -174,16 +420,13 @@ io.on('connection', (socket) => {
     }
   }
 
-  // === 创建房间 ===
   socket.on('create_room', (data) => {
-    // 先查是否已有活跃房间
     const hasRoom = findRoomByPlayerKey(socket.data.playerKey);
     if (hasRoom) {
       socket.emit('existing_room', { code: hasRoom.code, bestOf: hasRoom.bestOf, difficulty: hasRoom.difficulty || 'hard', started: hasRoom.started });
       return;
     }
 
-    // 旧房间已过期，提示并创建新房间
     if (data?._fromQuickRejoin) {
       socket.emit('room_expired', { message: '原房间已过期，已为您创建新房间' });
     }
@@ -198,13 +441,11 @@ io.on('connection', (socket) => {
     console.log(`[房] ${code} BO${bestOf}`);
   });
 
-  // === 加入房间 ===
   socket.on('join_room', (data) => {
     const code = (data?.code || '').toUpperCase();
     const room = rooms.get(code);
     if (!room) { socket.emit('error_msg', { message: '房间不存在' }); return; }
     if (room.players.size >= 2) {
-      // 检查是否有一方断线且同身份
       for (const [pid, p] of room.players) {
         if (p.dcTimer && p.playerKey === socket.data.playerKey) {
           if (p.dcTimer) clearTimeout(p.dcTimer);
@@ -232,14 +473,12 @@ io.on('connection', (socket) => {
 
   socket.on('_log', (d) => console.log(`[日志] ${d.action}`));
 
-  // === 猜测 ===
   socket.on('guess_update', (data) => {
     const room = rooms.get(socket.data.roomCode);
     if (!room || room.finished || room.roundSettled) return;
     socket.to(room.code).emit('opponent_update', { guessCount: data?.guessCount ?? 0, allComparisons: data?.allComparisons || [] });
   });
 
-  // === 猜中 ===
   socket.on('player_win_round', (data) => {
     const room = rooms.get(socket.data.roomCode);
     if (!room || room.finished || room.roundSettled) return;
@@ -251,7 +490,6 @@ io.on('connection', (socket) => {
     endRound(room, socket.id, player.name, data?.targetName || room.target?.name || '', won);
   });
 
-  // === 弃权 ===
   socket.on('surrender_round', (data) => {
     const room = rooms.get(socket.data.roomCode);
     if (!room || room.finished || room.roundSettled) return;
@@ -265,7 +503,6 @@ io.on('connection', (socket) => {
     room._roundTimer = setTimeout(() => endRound(room, null, '', data?.targetName || room.target?.name || '', false), remaining);
   });
 
-  // === 再理一把 ===
   socket.on('rematch_ready', () => {
     const room = rooms.get(socket.data.roomCode);
     if (!room || !room.finished) return;
@@ -279,7 +516,6 @@ io.on('connection', (socket) => {
     }
   });
 
-  // === 断开 ===
   socket.on('disconnect', () => {
     const room = rooms.get(socket.data.roomCode);
     if (!room || room.finished) return;
@@ -295,7 +531,6 @@ io.on('connection', (socket) => {
     }, DISCONNECT);
   });
 
-  // === 主动重连 ===
   socket.on('reconnect_room', (data) => {
     const code = (data?.code || '').toUpperCase();
     const room = rooms.get(code);

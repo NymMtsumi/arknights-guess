@@ -262,7 +262,7 @@ export default function MultiplayerPage() {
               <div style={{ width: '100%', maxWidth: '320px', padding: '12px', background: 'var(--card-soft)', borderRadius: 'var(--radius)', border: '1px solid var(--primary)', marginBottom: '12px' }}>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-light)', marginBottom: '4px' }}>📋 上次房间</p>
                 <p style={{ fontSize: '1.3rem', fontFamily: 'monospace', fontWeight: 900, color: 'var(--primary)' }}>{loadRoomCode()}</p>
-                <button onClick={() => { setRoomCode(loadRoomCode()); setStage('join'); }} style={{ ...btn, marginTop: '8px', padding: '6px 16px', fontSize: '0.9rem' }}>🚪 快速加入</button>
+                <button onClick={() => { setRoomCode(loadRoomCode()); setStage('lobby'); }} style={{ ...btn, marginTop: '8px', padding: '6px 16px', fontSize: '0.9rem' }}>🚪 快速加入</button>
               </div>
             )}
             <button onClick={() => setStage('lobby')} style={btn}>🏠 创建 / 加入房间</button>

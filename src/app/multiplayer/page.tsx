@@ -284,14 +284,13 @@ export default function MultiplayerPage() {
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-light)', marginBottom: '4px' }}>📋 上次房间</p>
                 <p style={{ fontSize: '1.3rem', fontFamily: 'monospace', fontWeight: 900, color: 'var(--primary)' }}>{loadRoomCode()}</p>
                 <button onClick={() => {
-                  const code = loadRoomCode();
-                  if (!code) return;
-                  setError(''); setConnecting('join');
+                  setConnecting('join');
                   const s = connect();
-                  s.emit('join_room', { code, playerName: playerName.trim() || '玩家' });
-                  s.emit('_log', { action: 'quick_join' });
-                  connectTimer.current = setTimeout(() => { s.disconnect(); setConnecting(''); setError('加入超时'); }, 30000);
-                }} style={{ ...btn, marginTop: '8px', padding: '6px 16px', fontSize: '0.9rem' }}>🚪 快速加入</button>
+                  // 直接发 create_room，服务器会检测已有房间并重定向
+                  s.emit('create_room', { playerName: playerName.trim() || '玩家', bestOf: 5, difficulty: 'hard' });
+                  s.emit('_log', { action: 'quick_rejoin' });
+                  connectTimer.current = setTimeout(() => { s.disconnect(); setConnecting(''); setError('重连超时'); }, 30000);
+                }} style={{ ...btn, marginTop: '8px', padding: '6px 16px', fontSize: '0.9rem' }}>🚪 快速重连</button>
               </div>
             )}
             <button onClick={() => setStage('lobby')} style={btn}>🏠 创建 / 加入房间</button>

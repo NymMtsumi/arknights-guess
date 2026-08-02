@@ -96,7 +96,7 @@ export default function MultiplayerPage() {
     // 接收服务器 Cookie 设置指令
     s.on('set_cookie', (d: any) => {
       if (typeof document !== 'undefined') {
-        document.cookie = `${d.name}=${d.value}; path=/; max-age=${365*86400}; SameSite=Lax`;
+        document.cookie = `${d.name}=${d.value}; path=/; max-age=${365*86400}; SameSite=None; Secure`;
       }
     });
     s.io.on('reconnect', () => {

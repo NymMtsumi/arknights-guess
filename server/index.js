@@ -31,6 +31,7 @@ const http = createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
     return res.end(JSON.stringify({ connections: io.engine.clientsCount, rooms: rooms.size, playing: Array.from(rooms.values()).filter(r => r.started && !r.finished).length }));
   }
+  res.writeHead(200);
   res.end('OK');
 });
 

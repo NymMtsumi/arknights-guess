@@ -99,7 +99,6 @@ export default function MultiplayerPage() {
         document.cookie = `${d.name}=${d.value}; path=/; max-age=${365*86400}; SameSite=Lax`;
       }
     });
-    s.io.on('reconnect_attempt', () => { oldSocketId = oldSocketId || s.id; });
     s.io.on('reconnect', () => {
       const code = roomCodeRef.current;
       if (code) s.emit('reconnect_room', { code });

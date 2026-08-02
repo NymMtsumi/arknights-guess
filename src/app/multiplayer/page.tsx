@@ -102,7 +102,7 @@ export default function MultiplayerPage() {
     s.io.on('reconnect_attempt', () => { oldSocketId = oldSocketId || s.id; });
     s.io.on('reconnect', () => {
       const code = roomCodeRef.current;
-      if (code) s.emit('reconnect_room', { code, oldSocketId });
+      if (code) s.emit('reconnect_room', { code });
     });
 
     s.on('room_created', (d) => { clearConnecting(); setRoomCode(d.code); roomCodeRef.current = d.code; saveRoomCode(d.code); setBestOf(d.bestOf); setRoomExpireTime(Date.now() + 120_000); setStage('waiting'); });

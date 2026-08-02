@@ -73,6 +73,13 @@ export default function MultiplayerPage() {
     });
     setSocket(s); socketRef.current = s;
     let oldSocketId = s.id;
+
+    // 接收服务器 Cookie 设置指令
+    s.on('set_cookie', (d: any) => {
+      if (typeof document !== 'undefined') {
+        document.cookie = `${d.name}=${d.value}; path=/; max-age=${365*86400}; SameSite=Lax`;
+      }
+    });
     s.io.on('reconnect_attempt', () => { oldSocketId = oldSocketId || s.id; });
     s.io.on('reconnect', () => {
       const code = roomCodeRef.current;

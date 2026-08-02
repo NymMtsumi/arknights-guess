@@ -1,6 +1,7 @@
 import { createServer } from 'node:http';
 import { Server } from 'socket.io';
 import { readFileSync } from 'node:fs';
+import { randomBytes } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -41,6 +42,34 @@ const http = createServer((req, res) => {
 
 const io = new Server(http, { cors: { origin: '*' }, pingInterval: 5000, pingTimeout: 15000 });
 const rooms = new Map();
+
+// === Cookie 解析 & 匿名身份 ===
+function parseCookies(str) {
+  if (!str) return {};
+  const result = {};
+  for (const part of str.split(';')) {
+    const [key, ...rest] = part.split('=');
+    if (key) result[key.trim()] = decodeURIComponent(rest.join('=').trim());
+  }
+  return result;
+}
+
+function generateKey() {
+  return 'p_' + randomBytes(9).toString('base64url');
+}
+
+io.use((socket, next) => {
+  const cookies = parseCookies(socket.handshake.headers.cookie || '');
+  if (cookies.player_key) {
+    socket.data.playerKey = cookies.player_key;
+  } else {
+    const key = generateKey();
+    socket.data.playerKey = key;
+    // 通知客户端保存 Cookie
+    socket.emit('set_cookie', { name: 'player_key', value: key });
+  }
+  next();
+});
 
 // ===== HELPERS =====
 function genCode() {

@@ -58,6 +58,9 @@ function generateKey() {
   return 'p_' + randomBytes(9).toString('base64url');
 }
 
+const ipConns = new Map();
+const MAX_CONNS_PER_IP = 3;
+
 io.use((socket, next) => {
   const cookies = parseCookies(socket.handshake.headers.cookie || '');
   if (cookies.player_key) {
@@ -65,9 +68,21 @@ io.use((socket, next) => {
   } else {
     const key = generateKey();
     socket.data.playerKey = key;
-    // 通知客户端保存 Cookie
     socket.emit('set_cookie', { name: 'player_key', value: key });
   }
+
+  // IP 限制
+  const ip = socket.handshake.address;
+  const cnt = (ipConns.get(ip) || 0);
+  if (cnt >= MAX_CONNS_PER_IP) {
+    return next(new Error('同IP连接数已达上限'));
+  }
+  ipConns.set(ip, cnt + 1);
+  socket.on('disconnect', () => {
+    const c = ipConns.get(ip) || 1;
+    if (c <= 1) ipConns.delete(ip); else ipConns.set(ip, c - 1);
+  });
+
   next();
 });
 
@@ -189,7 +204,7 @@ io.on('connection', (socket) => {
     const difficulty = ['easy','medium','hard'].includes(data?.difficulty) ? data?.difficulty : 'hard';
     rooms.set(code, {
       code, bestOf, winsNeeded: Math.ceil(bestOf / 2), difficulty, _createdAt: Date.now(),
-      players: new Map([[socket.id, { name: data?.playerName || '玩家', wins: 0, dcTimer: null, lastSocketId: null }]]),
+      players: new Map([[socket.id, { name: data?.playerName || '玩家', wins: 0, dcTimer: null, lastSocketId: null, playerKey: socket.data.playerKey }]]),
       started: false, finished: false,
     });
     socket.join(code);
@@ -202,9 +217,22 @@ io.on('connection', (socket) => {
     const code = (data?.code || '').toUpperCase();
     const room = rooms.get(code);
     if (!room) { socket.emit('error_msg', { message: '房间不存在' }); return; }
-    if (room.players.size >= 2) { socket.emit('error_msg', { message: '房间已满' }); return; }
 
-    room.players.set(socket.id, { name: data?.playerName || '玩家', wins: 0, dcTimer: null, lastSocketId: null });
+    // 满员时检查是否为断线重连的玩家
+    if (room.players.size >= 2) {
+      const pk = socket.data.playerKey;
+      let found = null;
+      for (const [id, p] of room.players) {
+        if (p.dcTimer && p.playerKey === pk) { found = id; break; }
+      }
+      if (!found) { socket.emit('error_msg', { message: '房间已满' }); return; }
+      // 清除旧条目，允许重连
+      if (room.players.get(found).dcTimer) { clearTimeout(room.players.get(found).dcTimer); }
+      room.players.delete(found);
+      socket.leave(code); // leave the old socket's room slot
+    }
+
+    room.players.set(socket.id, { name: data?.playerName || '玩家', wins: 0, dcTimer: null, lastSocketId: null, playerKey: socket.data.playerKey });
     socket.join(code);
     socket.data.roomCode = code;
     room.started = true;

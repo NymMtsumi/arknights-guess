@@ -1,12 +1,13 @@
 import { createServer } from 'node:http';
 import { Server } from 'socket.io';
 import { readFileSync } from 'node:fs';
-import { randomBytes } from 'node:crypto';
+import { randomBytes, createHash } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Database from 'better-sqlite3';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { createTransport } from 'nodemailer';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 3001;
@@ -14,6 +15,19 @@ const ROUND_TIME = 120_000;
 const DISCONNECT = 30_000;
 const JWT_SECRET = process.env.JWT_SECRET || 'arknights-guess-secret-change-in-production';
 const DB_PATH = join(__dirname, 'data.db');
+
+// ===== SMTP 邮件配置 =====
+const SMTP_CONFIG = {
+  host: 'smtp.qq.com',
+  port: 465,
+  secure: true,
+  auth: {
+    user: '3479083602@qq.com',
+    pass: process.env.SMTP_PASS || '',
+  },
+};
+const transporter = createTransport(SMTP_CONFIG);
+const SITE_URL = process.env.SITE_URL || 'http://localhost:3000';
 
 // ===== 数据库 =====
 const db = new Database(DB_PATH);
@@ -39,10 +53,49 @@ db.exec(`
     timestamp TEXT DEFAULT (datetime('now'))
   );
 
+  CREATE TABLE IF NOT EXISTS email_verifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    email TEXT NOT NULL,
+    token_hash TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+
   CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
   CREATE INDEX IF NOT EXISTS idx_users_player_key ON users(player_key);
   CREATE INDEX IF NOT EXISTS idx_games_player_key ON games(player_key);
 `);
+
+// 补充列（兼容旧数据库，列已存在则跳过）
+for (const [table, col, type] of [
+  ['users', 'email', 'TEXT'],
+  ['users', 'email_verified_at', 'TEXT'],
+]) {
+  try { db.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${type}`); } catch {}
+}
+
+// ===== 频率限制（内存） =====
+const rateLimitStore = new Map(); // key -> { count, resetAt }
+
+function checkRateLimit(key, maxRequests, windowMs) {
+  const now = Date.now();
+  let entry = rateLimitStore.get(key);
+  if (!entry || now > entry.resetAt) {
+    entry = { count: 0, resetAt: now + windowMs };
+    rateLimitStore.set(key, entry);
+  }
+  entry.count++;
+  return entry.count <= maxRequests;
+}
+
+// 定期清理过期记录
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of rateLimitStore) {
+    if (now > entry.resetAt) rateLimitStore.delete(key);
+  }
+}, 120_000);
 
 // ===== JWT =====
 function signToken(payload) {
@@ -58,6 +111,12 @@ function verifyToken(token) {
 }
 
 // ===== 辅助函数 =====
+function getClientIP(req) {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (forwarded) return forwarded.split(',')[0].trim();
+  return req.socket.remoteAddress || 'unknown';
+}
+
 function parseCookies(str) {
   if (!str) return {};
   const result = {};
@@ -78,19 +137,28 @@ function parseBody(req) {
   });
 }
 
-function jsonResponse(res, data, status = 200) {
+function jsonResponse(res, data, status = 200, extraHeaders = {}) {
   const body = JSON.stringify(data);
-  res.writeHead(status, {
+  const headers = {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Credentials': 'true',
     'Content-Length': Buffer.byteLength(body),
-  });
+    ...extraHeaders,
+  };
+  res.writeHead(status, headers);
   res.end(body);
 }
 
-// ===== 干员数据 =====
+// 输入清理：trim 所有字符串，强制最大长度
+function sanitizeString(val, maxLen) {
+  if (typeof val !== 'string') return '';
+  return val.trim().slice(0, maxLen);
+}
+
+// ===== 加载干员 =====
 let ALL_CHARS = [], EASY_CHARS = [], MED_CHARS = [];
 try {
   const data = JSON.parse(readFileSync(join(__dirname, 'characters.json'), 'utf-8'));
@@ -114,11 +182,13 @@ const http = createServer(async (req, res) => {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Allow-Credentials': 'true',
     });
     return res.end();
   }
 
   const url = req.url || '';
+  const ip = getClientIP(req);
 
   // 旧统计端点
   if (url.startsWith('/stats')) {
@@ -131,44 +201,64 @@ const http = createServer(async (req, res) => {
 
   // ===== POST /api/register =====
   if (req.method === 'POST' && url === '/api/register') {
+    // 频率限制: 5次/小时/IP
+    if (!checkRateLimit(`reg:${ip}`, 5, 3600_000)) {
+      return jsonResponse(res, { error: '注册请求过于频繁，请1小时后再试' }, 429);
+    }
+
     const body = await parseBody(req);
-    const { username, password } = body;
+    const username = sanitizeString(body.username, 20);
+    const password = typeof body.password === 'string' ? body.password : '';
+    const email = sanitizeString(body.email, 320);
 
     if (!username || !password) {
       return jsonResponse(res, { error: '用户名和密码不能为空' }, 400);
     }
-    if (typeof username !== 'string' || username.trim().length < 2 || username.trim().length > 20) {
+    if (username.length < 2 || username.length > 20) {
       return jsonResponse(res, { error: '用户名需要 2-20 个字符' }, 400);
     }
-    if (typeof password !== 'string' || password.length < 4) {
-      return jsonResponse(res, { error: '密码至少需要 4 个字符' }, 400);
+    if (password.length < 8) {
+      return jsonResponse(res, { error: '密码至少需要 8 个字符' }, 400);
     }
-    if (!/^[a-zA-Z0-9_一-鿿]+$/.test(username.trim())) {
+    if (!/^[a-zA-Z0-9_一-鿿]+$/.test(username)) {
       return jsonResponse(res, { error: '用户名只能包含字母、数字、下划线和中文' }, 400);
     }
+    if (email && email.length > 320) {
+      return jsonResponse(res, { error: '邮箱地址过长' }, 400);
+    }
 
-    const existing = db.prepare('SELECT id FROM users WHERE username = ?').get(username.trim());
+    const existing = db.prepare('SELECT id FROM users WHERE username = ?').get(username);
     if (existing) {
       return jsonResponse(res, { error: '用户名已被注册' }, 409);
     }
 
     const password_hash = await bcrypt.hash(password, 10);
-    const result = db.prepare('INSERT INTO users (username, password_hash) VALUES (?, ?)').run(username.trim(), password_hash);
-    const token = signToken({ userId: result.lastInsertRowid, username: username.trim() });
+    const result = db.prepare('INSERT INTO users (username, password_hash, email) VALUES (?, ?, ?)').run(username, password_hash, email || null);
+    const token = signToken({ userId: result.lastInsertRowid, username });
 
-    return jsonResponse(res, { token, username: username.trim(), userId: result.lastInsertRowid });
+    // 设置 httpOnly cookie 作为更强的认证方式
+    const cookieHeader = `token=${token}; SameSite=None; Secure; HttpOnly; Path=/; Max-Age=2592000`;
+    return jsonResponse(res, { token, username, userId: result.lastInsertRowid }, 200, {
+      'Set-Cookie': cookieHeader,
+    });
   }
 
   // ===== POST /api/login =====
   if (req.method === 'POST' && url === '/api/login') {
+    // 频率限制: 10次/15分钟/IP
+    if (!checkRateLimit(`login:${ip}`, 10, 900_000)) {
+      return jsonResponse(res, { error: '登录请求过于频繁，请15分钟后再试' }, 429);
+    }
+
     const body = await parseBody(req);
-    const { username, password } = body;
+    const username = sanitizeString(body.username, 20);
+    const password = typeof body.password === 'string' ? body.password : '';
 
     if (!username || !password) {
       return jsonResponse(res, { error: '用户名和密码不能为空' }, 400);
     }
 
-    const user = db.prepare('SELECT id, username, password_hash, player_key FROM users WHERE username = ?').get(username.trim());
+    const user = db.prepare('SELECT id, username, password_hash, player_key, email, email_verified_at FROM users WHERE username = ?').get(username);
     if (!user) {
       return jsonResponse(res, { error: '用户名或密码错误' }, 401);
     }
@@ -180,18 +270,54 @@ const http = createServer(async (req, res) => {
 
     const token = signToken({ userId: user.id, username: user.username });
 
+    // 设置 httpOnly cookie
+    const cookieHeader = `token=${token}; SameSite=None; Secure; HttpOnly; Path=/; Max-Age=2592000`;
     return jsonResponse(res, {
       token,
       username: user.username,
       userId: user.id,
       player_key: user.player_key || null,
+      email: user.email || null,
+      email_verified: !!user.email_verified_at,
+    }, 200, {
+      'Set-Cookie': cookieHeader,
+    });
+  }
+
+  // ===== POST /api/auth-cookie =====
+  if (req.method === 'POST' && url === '/api/auth-cookie') {
+    const body = await parseBody(req);
+    let token = body.token;
+
+    // 也接受 Authorization header
+    if (!token) {
+      const authHeader = req.headers.authorization || '';
+      if (authHeader.startsWith('Bearer ')) {
+        token = authHeader.slice(7);
+      }
+    }
+
+    if (!token) {
+      return jsonResponse(res, { error: '需要 token' }, 400);
+    }
+
+    // 验证 token 有效性
+    const decoded = verifyToken(token);
+    if (!decoded) {
+      return jsonResponse(res, { error: 'token 无效或已过期' }, 401);
+    }
+
+    const cookieHeader = `token=${token}; SameSite=None; Secure; HttpOnly; Path=/; Max-Age=2592000`;
+    return jsonResponse(res, { ok: true }, 200, {
+      'Set-Cookie': cookieHeader,
     });
   }
 
   // ===== POST /api/sync =====
   if (req.method === 'POST' && url === '/api/sync') {
     const body = await parseBody(req);
-    const { player_key, games } = body;
+    const player_key = typeof body.player_key === 'string' ? body.player_key.trim() : '';
+    const games = body.games;
 
     if (!player_key || !Array.isArray(games)) {
       return jsonResponse(res, { error: '需要 player_key 和 games 数组' }, 400);
@@ -213,7 +339,7 @@ const http = createServer(async (req, res) => {
     const insert = db.prepare('INSERT INTO games (player_key, won, guess_count, difficulty, target_name, timestamp) VALUES (?, ?, ?, ?, ?, ?)');
     const insertMany = db.transaction((rows) => {
       for (const g of rows) {
-        insert.run(player_key, g.won ? 1 : 0, g.guessCount || 0, g.difficulty || 'hard', g.targetName || '', g.timestamp || new Date().toISOString());
+        insert.run(player_key, g.won ? 1 : 0, g.guessCount || 0, g.difficulty || 'hard', sanitizeString(g.targetName || '', 100), g.timestamp || new Date().toISOString());
       }
     });
 
@@ -238,7 +364,7 @@ const http = createServer(async (req, res) => {
       return jsonResponse(res, { error: 'token 无效或已过期' }, 401);
     }
 
-    const user = db.prepare('SELECT id, username, player_key, created_at FROM users WHERE id = ?').get(decoded.userId);
+    const user = db.prepare('SELECT id, username, player_key, email, email_verified_at, created_at FROM users WHERE id = ?').get(decoded.userId);
     if (!user) {
       return jsonResponse(res, { error: '用户不存在' }, 404);
     }
@@ -257,6 +383,8 @@ const http = createServer(async (req, res) => {
     return jsonResponse(res, {
       username: user.username,
       player_key: user.player_key,
+      email: user.email || null,
+      email_verified: !!user.email_verified_at,
       created_at: user.created_at,
       stats: {
         totalGames: stats?.totalGames || 0,
@@ -280,7 +408,7 @@ const http = createServer(async (req, res) => {
     }
 
     const body = await parseBody(req);
-    const { player_key } = body;
+    const player_key = typeof body.player_key === 'string' ? body.player_key.trim() : '';
     if (!player_key) {
       return jsonResponse(res, { error: '需要 player_key' }, 400);
     }
@@ -289,15 +417,108 @@ const http = createServer(async (req, res) => {
     return jsonResponse(res, { success: true });
   }
 
-  // 默认响应
-  res.writeHead(200);
+  // ===== POST /api/send-verification =====
+  if (req.method === 'POST' && url === '/api/send-verification') {
+    const authHeader = req.headers.authorization || '';
+    if (!authHeader.startsWith('Bearer ')) {
+      return jsonResponse(res, { error: '未登录' }, 401);
+    }
+    const decoded = verifyToken(authHeader.slice(7));
+    if (!decoded) {
+      return jsonResponse(res, { error: 'token 无效或已过期' }, 401);
+    }
+
+    const body = await parseBody(req);
+    const email = sanitizeString(body.email, 320);
+
+    if (!email || !email.includes('@')) {
+      return jsonResponse(res, { error: '请输入有效的邮箱地址' }, 400);
+    }
+
+    const user = db.prepare('SELECT id, email, email_verified_at FROM users WHERE id = ?').get(decoded.userId);
+    if (!user) {
+      return jsonResponse(res, { error: '用户不存在' }, 404);
+    }
+    if (user.email_verified_at) {
+      return jsonResponse(res, { error: '邮箱已验证' }, 400);
+    }
+
+    // 更新用户邮箱
+    db.prepare('UPDATE users SET email = ? WHERE id = ?').run(email, decoded.userId);
+
+    // 生成验证 token
+    const verifyToken_ = randomBytes(32).toString('hex');
+    const tokenHash = createHash('sha256').update(verifyToken_).digest('hex');
+    const expiresAt = new Date(Date.now() + 3600_000).toISOString(); // 1小时过期
+
+    // 删除旧的验证记录
+    db.prepare('DELETE FROM email_verifications WHERE user_id = ?').run(decoded.userId);
+    // 插入新的验证记录
+    db.prepare('INSERT INTO email_verifications (user_id, email, token_hash, expires_at) VALUES (?, ?, ?, ?)').run(decoded.userId, email, tokenHash, expiresAt);
+
+    const verifyLink = `${SITE_URL}/verify?token=${verifyToken_}`;
+
+    // 发送邮件
+    try {
+      await transporter.sendMail({
+        from: '"明日方舟猜干员" <3479083602@qq.com>',
+        to: email,
+        subject: '验证你的邮箱 - 明日方舟猜干员',
+        html: `
+          <div style="max-width:480px;margin:0 auto;font-family:sans-serif">
+            <h2>验证你的邮箱</h2>
+            <p>感谢注册！点击下方按钮验证你的邮箱地址：</p>
+            <a href="${verifyLink}" style="display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none;font-weight:bold">验证邮箱</a>
+            <p style="color:#666;margin-top:20px;font-size:0.85rem">或者复制此链接到浏览器：<br>${verifyLink}</p>
+            <p style="color:#999;font-size:0.8rem">此链接1小时内有效。如果你没有注册此账号，请忽略此邮件。</p>
+          </div>
+        `,
+      });
+      return jsonResponse(res, { ok: true, message: '验证邮件已发送' });
+    } catch (err) {
+      console.error('[send-verification] email error:', err.message);
+      return jsonResponse(res, { error: '邮件发送失败，请稍后再试' }, 500);
+    }
+  }
+
+  // ===== GET /api/verify-email =====
+  if (req.method === 'GET' && url.startsWith('/api/verify-email')) {
+    const urlObj = new URL(url, 'http://localhost');
+    const token = urlObj.searchParams.get('token');
+
+    if (!token) {
+      return jsonResponse(res, { error: '缺少验证 token' }, 400);
+    }
+
+    const tokenHash = createHash('sha256').update(token).digest('hex');
+
+    // 查找有效的验证记录
+    const record = db.prepare('SELECT id, user_id, email, expires_at FROM email_verifications WHERE token_hash = ?').get(tokenHash);
+    if (!record) {
+      return jsonResponse(res, { error: '无效的验证链接' }, 400);
+    }
+    if (new Date(record.expires_at) < new Date()) {
+      db.prepare('DELETE FROM email_verifications WHERE id = ?').run(record.id);
+      return jsonResponse(res, { error: '验证链接已过期，请重新发送' }, 400);
+    }
+
+    // 标记邮箱为已验证
+    db.prepare('UPDATE users SET email = ?, email_verified_at = datetime(\'now\') WHERE id = ?').run(record.email, record.user_id);
+    // 删除已使用的验证记录
+    db.prepare('DELETE FROM email_verifications WHERE id = ?').run(record.id);
+
+    return jsonResponse(res, { ok: true, email: record.email });
+  }
+
+  // 未匹配的路由
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
   res.end('OK');
 });
 
 const io = new Server(http, { cors: { origin: '*' }, pingInterval: 5000, pingTimeout: 15000 });
 const rooms = new Map();
 
-// ===== 辅助函数 =====
+// ===== 游戏辅助函数 =====
 function genCode() { let c; do { c = String(Math.floor(1000 + Math.random() * 9000)); } while (rooms.has(c)); return c; }
 function score(room) {
   const arr = Array.from(room.players.values());
@@ -357,6 +578,7 @@ function endRound(room, winnerId, winnerName, targetName, matchOver) {
   }
 }
 
+// 查找玩家已有的活跃房间
 function findRoomByPlayerKey(pk) {
   for (const [code, r] of rooms) {
     if (r.finished) continue;
@@ -369,30 +591,25 @@ function findRoomByPlayerKey(pk) {
 
 // 周期清理
 setInterval(() => {
-  const now = Date.now();
   for (const [code, room] of rooms) {
     const socks = io.sockets.adapter.rooms.get(code);
     const cnt = socks ? socks.size : 0;
     if (cnt === 0) {
-      if (!room._emptySince) room._emptySince = now;
-      if (now - room._emptySince > 60000) {
-        if (room._roundTimer) clearTimeout(room._roundTimer);
-        if (room._nextRound) clearTimeout(room._nextRound);
-        rooms.delete(code);
-      }
-    } else {
-      room._emptySince = null;
+      if (room._roundTimer) clearTimeout(room._roundTimer);
+      if (room._nextRound) clearTimeout(room._nextRound);
+      rooms.delete(code);
     }
-    if (!room.started && !room.finished && room._createdAt && now - room._createdAt > 300_000) {
+    if (!room.started && !room.finished && room._createdAt && Date.now() - room._createdAt > 300_000) {
       rooms.delete(code);
     }
   }
-}, 30000);
+}, 60000);
 
 // ===== Socket 连接 =====
 io.on('connection', (socket) => {
   console.log(`[+] ${socket.id} pk=${socket.data.playerKey?.slice(0,10)}`);
 
+  // === 自动恢复：连接时查旧房 ===
   const existing = findRoomByPlayerKey(socket.data.playerKey);
   if (existing) {
     for (const [pid, player] of existing.players) {
@@ -420,13 +637,16 @@ io.on('connection', (socket) => {
     }
   }
 
+  // === 创建房间 ===
   socket.on('create_room', (data) => {
+    // 先查是否已有活跃房间
     const hasRoom = findRoomByPlayerKey(socket.data.playerKey);
     if (hasRoom) {
       socket.emit('existing_room', { code: hasRoom.code, bestOf: hasRoom.bestOf, difficulty: hasRoom.difficulty || 'hard', started: hasRoom.started });
       return;
     }
 
+    // 旧房间已过期，提示并创建新房间
     if (data?._fromQuickRejoin) {
       socket.emit('room_expired', { message: '原房间已过期，已为您创建新房间' });
     }
@@ -441,11 +661,13 @@ io.on('connection', (socket) => {
     console.log(`[房] ${code} BO${bestOf}`);
   });
 
+  // === 加入房间 ===
   socket.on('join_room', (data) => {
     const code = (data?.code || '').toUpperCase();
     const room = rooms.get(code);
     if (!room) { socket.emit('error_msg', { message: '房间不存在' }); return; }
     if (room.players.size >= 2) {
+      // 检查是否有一方断线且同身份
       for (const [pid, p] of room.players) {
         if (p.dcTimer && p.playerKey === socket.data.playerKey) {
           if (p.dcTimer) clearTimeout(p.dcTimer);
@@ -473,12 +695,14 @@ io.on('connection', (socket) => {
 
   socket.on('_log', (d) => console.log(`[日志] ${d.action}`));
 
+  // === 猜测 ===
   socket.on('guess_update', (data) => {
     const room = rooms.get(socket.data.roomCode);
     if (!room || room.finished || room.roundSettled) return;
     socket.to(room.code).emit('opponent_update', { guessCount: data?.guessCount ?? 0, allComparisons: data?.allComparisons || [] });
   });
 
+  // === 猜中 ===
   socket.on('player_win_round', (data) => {
     const room = rooms.get(socket.data.roomCode);
     if (!room || room.finished || room.roundSettled) return;
@@ -490,6 +714,7 @@ io.on('connection', (socket) => {
     endRound(room, socket.id, player.name, data?.targetName || room.target?.name || '', won);
   });
 
+  // === 弃权 ===
   socket.on('surrender_round', (data) => {
     const room = rooms.get(socket.data.roomCode);
     if (!room || room.finished || room.roundSettled) return;
@@ -503,6 +728,7 @@ io.on('connection', (socket) => {
     room._roundTimer = setTimeout(() => endRound(room, null, '', data?.targetName || room.target?.name || '', false), remaining);
   });
 
+  // === 再理一把 ===
   socket.on('rematch_ready', () => {
     const room = rooms.get(socket.data.roomCode);
     if (!room || !room.finished) return;
@@ -516,6 +742,7 @@ io.on('connection', (socket) => {
     }
   });
 
+  // === 断开 ===
   socket.on('disconnect', () => {
     const room = rooms.get(socket.data.roomCode);
     if (!room || room.finished) return;
@@ -531,6 +758,7 @@ io.on('connection', (socket) => {
     }, DISCONNECT);
   });
 
+  // === 主动重连 ===
   socket.on('reconnect_room', (data) => {
     const code = (data?.code || '').toUpperCase();
     const room = rooms.get(code);

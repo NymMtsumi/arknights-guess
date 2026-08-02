@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { register, login, syncGames, linkPlayerKey, getUser, getPlayerKey, logout } from '@/lib/auth';
+import { register, login, syncGames, linkPlayerKey, getUser, getPlayerKey, logout, apiCall } from '@/lib/auth';
 import { loadHistory } from '@/lib/stats';
 
 interface AuthDialogProps {
@@ -13,19 +13,35 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('');
   const [error, setError] = useState('');
+  const [msg, setMsg] = useState('');
   const [loading, setLoading] = useState(false);
+  const [sendingVerify, setSendingVerify] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const currentUser = typeof window !== 'undefined' ? getUser() : null;
 
   if (!open) return null;
 
+  const handleSendVerify = async () => {
+    setSendingVerify(true); setMsg('');
+    try {
+      await apiCall('/api/send-verification', { method: 'POST', body: JSON.stringify({ email: currentUser?.email || '' }) });
+      setMsg('验证邮件已发送，请查收');
+    } catch (e: any) { setError(e.message); }
+    setSendingVerify(false);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError(''); setMsg('');
 
     if (!username.trim() || !password) {
       setError('请填写用户名和密码');
+      return;
+    }
+    if (mode === 'register' && !email.trim()) {
+      setError('请填写邮箱');
       return;
     }
 
@@ -187,6 +203,16 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
               </button>
             </div>
 
+            {mode === 'register' && (
+              <input
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="邮箱（用于验证）"
+                style={inpStyle}
+                autoComplete="email"
+                type="email"
+              />
+            )}
             <input
               value={username}
               onChange={e => setUsername(e.target.value)}

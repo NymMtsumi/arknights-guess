@@ -26,10 +26,10 @@ function loadRoomCode(): string { try { return localStorage.getItem(ROOM_KEY) ||
 function clearRoomCode() { try { localStorage.removeItem(ROOM_KEY); } catch {} }
 
 const COL_LABELS = ['姓名', '职业', '子职', '阵营', '星级', '种族', '性别', '年份', '部署', '词缀'];
-// 困难模式：隐藏第 3 列（星级，index 3）
-const COL_LABELS_HARD = COL_LABELS.filter((_, i) => i !== 3);
+// 困难模式：隐藏星级列（index 4）
+const COL_LABELS_HARD = COL_LABELS.filter((_, i) => i !== 4);
 function filterOppGrid(grid: string[][]) {
-  return grid.map(row => row.filter((_, i) => i !== 3));
+  return grid.map(row => row.filter((_, i) => i !== 4));
 }
 
 function loadNick(): string {

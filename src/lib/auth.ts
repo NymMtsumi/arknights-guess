@@ -6,6 +6,7 @@ const USER_KEY = 'arknights-auth-user';
 export interface AuthUser {
   username: string;
   userId: number;
+  email?: string;
 }
 
 export interface ServerStats {

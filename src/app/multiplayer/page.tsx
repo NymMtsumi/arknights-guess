@@ -102,6 +102,17 @@ export default function MultiplayerPage() {
 
     s.on('error_msg', (d) => { clearConnecting(); setError(d.message); s.disconnect(); });
     s.on('room_created', (d) => { clearConnecting(); setRoomCode(d.code); roomCodeRef.current = d.code; saveRoomCode(d.code); setBestOf(d.bestOf); setRoomExpireTime(Date.now() + 120_000); setStage('waiting'); });
+    s.on('existing_room', (d) => {
+      clearConnecting();
+      setRoomCode(d.code); roomCodeRef.current = d.code; saveRoomCode(d.code); setBestOf(d.bestOf);
+      if (d.started) {
+        // 游戏进行中，等 round_start
+        setStage('playing');
+      } else {
+        setRoomExpireTime(Date.now() + 120_000);
+        setStage('waiting');
+      }
+    });
 
     s.on('round_start', (d) => {
       clearConnecting();
@@ -272,7 +283,15 @@ export default function MultiplayerPage() {
               <div style={{ width: '100%', maxWidth: '320px', padding: '12px', background: 'var(--card-soft)', borderRadius: 'var(--radius)', border: '1px solid var(--primary)', marginBottom: '12px' }}>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-light)', marginBottom: '4px' }}>📋 上次房间</p>
                 <p style={{ fontSize: '1.3rem', fontFamily: 'monospace', fontWeight: 900, color: 'var(--primary)' }}>{loadRoomCode()}</p>
-                <button onClick={() => { setRoomCode(loadRoomCode()); setStage('lobby'); }} style={{ ...btn, marginTop: '8px', padding: '6px 16px', fontSize: '0.9rem' }}>🚪 快速加入</button>
+                <button onClick={() => {
+                  const code = loadRoomCode();
+                  if (!code) return;
+                  setError(''); setConnecting('join');
+                  const s = connect();
+                  s.emit('join_room', { code, playerName: playerName.trim() || '玩家' });
+                  s.emit('_log', { action: 'quick_join' });
+                  connectTimer.current = setTimeout(() => { s.disconnect(); setConnecting(''); setError('加入超时'); }, 30000);
+                }} style={{ ...btn, marginTop: '8px', padding: '6px 16px', fontSize: '0.9rem' }}>🚪 快速加入</button>
               </div>
             )}
             <button onClick={() => setStage('lobby')} style={btn}>🏠 创建 / 加入房间</button>

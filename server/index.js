@@ -58,9 +58,6 @@ function generateKey() {
   return 'p_' + randomBytes(9).toString('base64url');
 }
 
-const ipConns = new Map();
-const MAX_CONNS_PER_IP = 3;
-
 io.use((socket, next) => {
   const cookies = parseCookies(socket.handshake.headers.cookie || '');
   if (cookies.player_key) {
@@ -70,19 +67,6 @@ io.use((socket, next) => {
     socket.data.playerKey = key;
     socket.emit('set_cookie', { name: 'player_key', value: key });
   }
-
-  // IP 限制
-  const ip = socket.handshake.address;
-  const cnt = (ipConns.get(ip) || 0);
-  if (cnt >= MAX_CONNS_PER_IP) {
-    return next(new Error('同IP连接数已达上限'));
-  }
-  ipConns.set(ip, cnt + 1);
-  socket.on('disconnect', () => {
-    const c = ipConns.get(ip) || 1;
-    if (c <= 1) ipConns.delete(ip); else ipConns.set(ip, c - 1);
-  });
-
   next();
 });
 
@@ -199,10 +183,16 @@ io.on('connection', (socket) => {
         }
       }
     }
-    // 检查是否已有活跃房间（同身份）
+    // 检查是否已有活跃房间（同身份 或 同IP房主）
     for (const [code, r] of rooms) {
-      if (!r.finished && Array.from(r.players.values()).some(p => p.playerKey === socket.data.playerKey)) {
-        socket.emit('room_created', { code, bestOf: r.bestOf, difficulty: r.difficulty || 'hard' });
+      if (r.finished) continue;
+      const isPlayer = Array.from(r.players.values()).some(p => p.playerKey === socket.data.playerKey);
+      const isHost = r._hostIp === socket.handshake.address;
+      if (isPlayer || isHost) {
+        // 发回已有房间信息
+        socket.join(code);
+        socket.data.roomCode = code;
+        socket.emit('existing_room', { code, bestOf: r.bestOf, difficulty: r.difficulty || 'hard', isHost, started: r.started });
         return;
       }
     }
@@ -211,7 +201,7 @@ io.on('connection', (socket) => {
     const bestOf = [3,5,7].includes(data?.bestOf) ? data?.bestOf : 5;
     const difficulty = ['easy','medium','hard'].includes(data?.difficulty) ? data?.difficulty : 'hard';
     rooms.set(code, {
-      code, bestOf, winsNeeded: Math.ceil(bestOf / 2), difficulty, _createdAt: Date.now(),
+      code, bestOf, winsNeeded: Math.ceil(bestOf / 2), difficulty, _createdAt: Date.now(), _hostIp: socket.handshake.address,
       players: new Map([[socket.id, { name: data?.playerName || '玩家', wins: 0, dcTimer: null, lastSocketId: null, playerKey: socket.data.playerKey }]]),
       started: false, finished: false,
     });

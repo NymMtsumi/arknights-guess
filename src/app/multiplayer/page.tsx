@@ -14,6 +14,10 @@ import charactersData from '@/data/characters.json';
 const SERVER_URL = process.env.NEXT_PUBLIC_WS_URL || 'https://ws.arknights-guess.online';
 const allChars = charactersData as Character[];
 const NICK_KEY = 'liyiba-nickname';
+const ROOM_KEY = 'liyiba-room';
+function saveRoomCode(code: string) { try { localStorage.setItem(ROOM_KEY, code); } catch {} }
+function loadRoomCode(): string { try { return localStorage.getItem(ROOM_KEY) || ''; } catch { return ''; } }
+function clearRoomCode() { try { localStorage.removeItem(ROOM_KEY); } catch {} }
 
 const COL_LABELS = ['姓名', '职业', '子职', '阵营', '星级', '种族', '性别', '年份', '部署', '词缀'];
 
@@ -87,7 +91,7 @@ export default function MultiplayerPage() {
     });
 
     s.on('error_msg', (d) => { clearConnecting(); setError(d.message); s.disconnect(); });
-    s.on('room_created', (d) => { clearConnecting(); setRoomCode(d.code); roomCodeRef.current = d.code; setBestOf(d.bestOf); setRoomExpireTime(Date.now() + 120_000); setStage('waiting'); });
+    s.on('room_created', (d) => { clearConnecting(); setRoomCode(d.code); roomCodeRef.current = d.code; saveRoomCode(d.code); setBestOf(d.bestOf); setRoomExpireTime(Date.now() + 120_000); setStage('waiting'); });
 
     s.on('round_start', (d) => {
       clearConnecting();
@@ -128,6 +132,7 @@ export default function MultiplayerPage() {
       const state = useGameStore.getState();
       // 比赛结束时统计（无论何种原因）
       saveGameStats(d.winnerName === playerName, state.guesses.length, 'multi', '');
+      clearRoomCode();
       setStage('matchEnd');
       setEndMsg(d.reason === 'disconnect' ? `${d.winnerName} 获胜（对方断线超30秒）` : `${d.winnerName} 赢得比赛！\n${d.score}`);
       // 不 disconnect，保留连接给再理一把
@@ -164,6 +169,7 @@ export default function MultiplayerPage() {
     if (playerName.trim().length > 4) { setError('昵称最多4个汉字'); return; }
     setError(''); saveNick(playerName.trim()); setConnecting('join');
     roomCodeRef.current = roomCode.trim().toUpperCase();
+    saveRoomCode(roomCodeRef.current);
     const s = connect();
     s.emit('join_room', { code: roomCodeRef.current, playerName: playerName.trim() });
     s.emit('_log', { action: 'join_room' });
@@ -251,6 +257,14 @@ export default function MultiplayerPage() {
                 }}>BO{n}</button>
               ))}
             </div>
+            {/* 我的房间 */}
+            {loadRoomCode() && (
+              <div style={{ width: '100%', maxWidth: '320px', padding: '12px', background: 'var(--card-soft)', borderRadius: 'var(--radius)', border: '1px solid var(--primary)', marginBottom: '12px' }}>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-light)', marginBottom: '4px' }}>📋 上次房间</p>
+                <p style={{ fontSize: '1.3rem', fontFamily: 'monospace', fontWeight: 900, color: 'var(--primary)' }}>{loadRoomCode()}</p>
+                <button onClick={() => { setRoomCode(loadRoomCode()); setStage('join'); }} style={{ ...btn, marginTop: '8px', padding: '6px 16px', fontSize: '0.9rem' }}>🚪 快速加入</button>
+              </div>
+            )}
             <button onClick={() => setStage('lobby')} style={btn}>🏠 创建 / 加入房间</button>
           </div>
           </div>

@@ -167,8 +167,6 @@ export default function MultiplayerPage() {
     // 全部监听器就绪后才连接
     s.connect();
     setSocket(s); socketRef.current = s;
-    const oldSocketId = s.id || '';
-
     return s;
   };
 

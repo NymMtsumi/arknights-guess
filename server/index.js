@@ -166,6 +166,43 @@ setInterval(() => {
 io.on('connection', (socket) => {
   console.log(`[+] ${socket.id}`);
 
+  // === 自动恢复：连接时查找已有房间 ===
+  const pk = socket.data.playerKey;
+  if (pk) {
+    for (const [code, room] of rooms) {
+      if (room.finished) continue;
+      for (const [pid, player] of room.players) {
+        if (player.playerKey === pk) {
+          // 取消断线计时器
+          if (player.dcTimer) { clearTimeout(player.dcTimer); player.dcTimer = null; }
+          // 更新 socketId（保留其他所有字段：wins, name, ready等）
+          player.lastSocketId = pid;
+          room.players.delete(pid);
+          room.players.set(socket.id, player);
+          // 加入房间
+          socket.join(code);
+          socket.data.roomCode = code;
+          // 通知房间
+          socket.to(code).emit('opponent_reconnected', { playerName: player.name });
+          // 告诉重连者当前状态
+          socket.emit('existing_room', {
+            code, bestOf: room.bestOf, difficulty: room.difficulty || 'hard',
+            started: room.started, reconnected: true,
+          });
+          if (room.started) {
+            socket.emit('reconnect_state', {
+              code, bestOf: room.bestOf, winsNeeded: room.winsNeeded,
+              score: score(room), target: room.target, roundSettled: room.roundSettled,
+              players: Array.from(room.players.entries()).map(([id, p]) => ({ id, name: p.name, wins: p.wins })),
+            });
+          }
+          console.log(`[重连] ${socket.id} → ${code}`);
+          break;
+        }
+      }
+    }
+  }
+
   socket.on('create_room', (data) => {
     // Leave and clean up previous room if this socket already has one
     if (socket.data.roomCode) {
@@ -183,21 +220,10 @@ io.on('connection', (socket) => {
         }
       }
     }
-    // 检查是否已有活跃房间（仅同 Cookie 身份）
-    for (const [code, r] of rooms) {
-      if (r.finished) continue;
-      if (Array.from(r.players.values()).some(p => p.playerKey === socket.data.playerKey)) {
-        socket.join(code);
-        socket.data.roomCode = code;
-        socket.emit('existing_room', { code, bestOf: r.bestOf, difficulty: r.difficulty || 'hard', started: r.started });
-        return;
-      }
-    }
-
-    // 同 IP 限制：仅拒绝，不重定向
+    // 同 IP 限制：拒绝重复创建等待房
     const sameIpRoom = Array.from(rooms.values()).find(r => !r.finished && !r.started && r._hostIp === socket.handshake.address);
     if (sameIpRoom) {
-      socket.emit('error_msg', { message: `该网络已有等待中的房间 ${sameIpRoom.code}，请先加入或等待其过期` });
+      socket.emit('error_msg', { message: `该网络已有等待中的房间 ${sameIpRoom.code}` });
       return;
     }
 
@@ -220,34 +246,16 @@ io.on('connection', (socket) => {
     const room = rooms.get(code);
     if (!room) { socket.emit('error_msg', { message: '房间不存在' }); return; }
 
-    // 满员时检查是否为断线重连的玩家
-    let reconnecting = false;
     if (room.players.size >= 2) {
-      const pk = socket.data.playerKey;
-      let found = null;
-      for (const [id, p] of room.players) {
-        if (p.dcTimer && p.playerKey === pk) { found = id; break; }
-      }
-      if (!found) { socket.emit('error_msg', { message: '房间已满' }); return; }
-      // 保留旧玩家数据（胜场、名字）
-      const oldPlayer = room.players.get(found);
-      if (oldPlayer.dcTimer) { clearTimeout(oldPlayer.dcTimer); oldPlayer.dcTimer = null; }
-      oldPlayer.lastSocketId = null;
-      room.players.delete(found);
-      room.players.set(socket.id, oldPlayer);
-      reconnecting = true;
-    } else {
-      room.players.set(socket.id, { name: data?.playerName || '玩家', wins: 0, dcTimer: null, lastSocketId: null, playerKey: socket.data.playerKey });
+      socket.emit('error_msg', { message: '房间已满' }); return;
     }
 
+    room.players.set(socket.id, { name: data?.playerName || '玩家', wins: 0, dcTimer: null, lastSocketId: null, playerKey: socket.data.playerKey });
     socket.join(code);
     socket.data.roomCode = code;
-    // 仅在首次满员时开始回合，重连不重启
-    if (!reconnecting) {
-      room.started = true;
-      startRound(room);
-    }
-    console.log(`[房] ${code} ${reconnecting ? '重连' : '满员'}`);
+    room.started = true;
+    startRound(room);
+    console.log(`[房] ${code} 满员`);
   });
 
   socket.on('_log', (d) => console.log(`[日志] ${d.action}`));

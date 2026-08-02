@@ -171,6 +171,11 @@ io.on('connection', (socket) => {
       return;
     }
 
+    // 旧房间已过期，提示并创建新房间
+    if (data?._fromQuickRejoin) {
+      socket.emit('room_expired', { message: '原房间已过期，已为您创建新房间' });
+    }
+
     const code = genCode();
     const bestOf = [3,5,7].includes(data?.bestOf) ? data?.bestOf : 5;
     const difficulty = ['easy','medium','hard'].includes(data?.difficulty) ? data?.difficulty : 'hard';

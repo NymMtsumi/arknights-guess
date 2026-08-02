@@ -220,20 +220,11 @@ io.on('connection', (socket) => {
         }
       }
     }
-    // 同 IP 限制：用 Cloudflare 转发的真实 IP
-    const realIp = socket.handshake.headers['cf-connecting-ip'] || socket.handshake.address;
-    const sameIpRoom = Array.from(rooms.values()).find(r => !r.finished && !r.started && r._hostIp === realIp);
-    if (sameIpRoom) {
-      socket.emit('error_msg', { message: `该网络已有等待中的房间 ${sameIpRoom.code}` });
-      return;
-    }
-
     const code = genCode();
     const bestOf = [3,5,7].includes(data?.bestOf) ? data?.bestOf : 5;
     const difficulty = ['easy','medium','hard'].includes(data?.difficulty) ? data?.difficulty : 'hard';
-    const realIp = socket.handshake.headers['cf-connecting-ip'] || socket.handshake.address;
     rooms.set(code, {
-      code, bestOf, winsNeeded: Math.ceil(bestOf / 2), difficulty, _createdAt: Date.now(), _hostIp: realIp,
+      code, bestOf, winsNeeded: Math.ceil(bestOf / 2), difficulty, _createdAt: Date.now(),
       players: new Map([[socket.id, { name: data?.playerName || '玩家', wins: 0, dcTimer: null, lastSocketId: null, playerKey: socket.data.playerKey }]]),
       started: false, finished: false,
     });

@@ -183,16 +183,15 @@ io.on('connection', (socket) => {
         }
       }
     }
-    // 检查是否已有活跃房间（同身份 或 同IP房主）
+    // 检查是否已有活跃房间（同身份/同IP未开始）
     for (const [code, r] of rooms) {
       if (r.finished) continue;
       const isPlayer = Array.from(r.players.values()).some(p => p.playerKey === socket.data.playerKey);
-      const isHost = r._hostIp === socket.handshake.address;
-      if (isPlayer || isHost) {
-        // 发回已有房间信息
+      const isOwner = !r.started && r._hostIp === socket.handshake.address;
+      if (isPlayer || isOwner) {
         socket.join(code);
         socket.data.roomCode = code;
-        socket.emit('existing_room', { code, bestOf: r.bestOf, difficulty: r.difficulty || 'hard', isHost, started: r.started });
+        socket.emit('existing_room', { code, bestOf: r.bestOf, difficulty: r.difficulty || 'hard', started: r.started });
         return;
       }
     }

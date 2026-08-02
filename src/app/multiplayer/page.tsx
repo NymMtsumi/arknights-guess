@@ -284,20 +284,6 @@ export default function MultiplayerPage() {
               <div style={{ width: '100%', maxWidth: '320px', padding: '12px', background: 'var(--card-soft)', borderRadius: 'var(--radius)', border: '1px solid var(--primary)', marginBottom: '12px' }}>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-light)', marginBottom: '4px' }}>📋 上次房间</p>
                 <p style={{ fontSize: '1.3rem', fontFamily: 'monospace', fontWeight: 900, color: 'var(--primary)' }}>{loadRoomCode()}</p>
-                <button onClick={() => {
-                  setConnecting('join');
-                  const s = connect();
-                  // 直接发 create_room，服务器会检测已有房间并重定向
-                  s.emit('create_room', { playerName: playerName.trim() || '玩家', bestOf: 5, difficulty: 'hard' });
-                  s.emit('_log', { action: 'quick_rejoin' });
-                  connectTimer.current = setTimeout(() => { s.disconnect(); setConnecting(''); setError('重连超时'); }, 30000);
-                }} style={{ ...btn, marginTop: '8px', padding: '6px 16px', fontSize: '0.9rem' }}>🚪 快速重连</button>
-              </div>
-            )}
-            {loadRoomCode() && (
-              <div style={{ width: '100%', maxWidth: '320px', padding: '12px', background: 'var(--card-soft)', borderRadius: 'var(--radius)', border: '1px solid var(--primary)', marginBottom: '12px' }}>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-light)', marginBottom: '4px' }}>📋 上次房间</p>
-                <p style={{ fontSize: '1.3rem', fontFamily: 'monospace', fontWeight: 900, color: 'var(--primary)' }}>{loadRoomCode()}</p>
                 <button onClick={() => { setConnecting('join'); const s = connect(); s.emit('create_room', { playerName: playerName.trim() || '玩家', bestOf: 5, difficulty: 'hard', _fromQuickRejoin: true }); s.emit('_log', { action: 'quick_rejoin' }); connectTimer.current = setTimeout(() => { s.disconnect(); setConnecting(''); setError('重连超时'); }, 30000); }} style={{ ...btn, marginTop: '8px', padding: '6px 16px', fontSize: '0.9rem' }}>🚪 快速重连</button>
               </div>
             )}

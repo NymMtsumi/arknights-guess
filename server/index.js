@@ -115,21 +115,28 @@ function findRoomByPlayerKey(pk) {
   return null;
 }
 
-// 周期清理
+// 周期清理：空房等 60 秒后才删，未开始的等 5 分钟
 setInterval(() => {
+  const now = Date.now();
   for (const [code, room] of rooms) {
     const socks = io.sockets.adapter.rooms.get(code);
     const cnt = socks ? socks.size : 0;
     if (cnt === 0) {
-      if (room._roundTimer) clearTimeout(room._roundTimer);
-      if (room._nextRound) clearTimeout(room._nextRound);
-      rooms.delete(code);
+      // 首次变空时记录时间，60秒后才删
+      if (!room._emptySince) room._emptySince = now;
+      if (now - room._emptySince > 60000) {
+        if (room._roundTimer) clearTimeout(room._roundTimer);
+        if (room._nextRound) clearTimeout(room._nextRound);
+        rooms.delete(code);
+      }
+    } else {
+      room._emptySince = null;
     }
-    if (!room.started && !room.finished && room._createdAt && Date.now() - room._createdAt > 300_000) {
+    if (!room.started && !room.finished && room._createdAt && now - room._createdAt > 300_000) {
       rooms.delete(code);
     }
   }
-}, 60000);
+}, 30000);
 
 // ===== Socket 连接 =====
 io.on('connection', (socket) => {

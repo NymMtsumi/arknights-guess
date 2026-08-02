@@ -183,17 +183,22 @@ io.on('connection', (socket) => {
         }
       }
     }
-    // 检查是否已有活跃房间（同身份/同IP未开始）
+    // 检查是否已有活跃房间（仅同 Cookie 身份）
     for (const [code, r] of rooms) {
       if (r.finished) continue;
-      const isPlayer = Array.from(r.players.values()).some(p => p.playerKey === socket.data.playerKey);
-      const isOwner = !r.started && r._hostIp === socket.handshake.address;
-      if (isPlayer || isOwner) {
+      if (Array.from(r.players.values()).some(p => p.playerKey === socket.data.playerKey)) {
         socket.join(code);
         socket.data.roomCode = code;
         socket.emit('existing_room', { code, bestOf: r.bestOf, difficulty: r.difficulty || 'hard', started: r.started });
         return;
       }
+    }
+
+    // 同 IP 限制：仅拒绝，不重定向
+    const sameIpRoom = Array.from(rooms.values()).find(r => !r.finished && !r.started && r._hostIp === socket.handshake.address);
+    if (sameIpRoom) {
+      socket.emit('error_msg', { message: `该网络已有等待中的房间 ${sameIpRoom.code}，请先加入或等待其过期` });
+      return;
     }
 
     const code = genCode();

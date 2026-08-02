@@ -58,8 +58,12 @@ function parseCookies(str) {
 // Cookie 身份中间件
 io.use((socket, next) => {
   const cookies = parseCookies(socket.handshake.headers.cookie || '');
+  // 优先读 Cookie，其次读 URL 查询参数 pk
+  const urlPk = socket.handshake.query?.pk;
   if (cookies.player_key) {
     socket.data.playerKey = cookies.player_key;
+  } else if (urlPk && typeof urlPk === 'string' && urlPk.startsWith('p_')) {
+    socket.data.playerKey = urlPk;
   } else {
     socket.data.playerKey = generateKey();
     socket.emit('set_cookie', { name: 'player_key', value: socket.data.playerKey });

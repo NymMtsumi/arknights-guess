@@ -11,7 +11,13 @@ import { findCharacterByName } from '@/lib/game-engine';
 import type { Character } from '@/types/character';
 import charactersData from '@/data/characters.json';
 
-const SERVER_URL = process.env.NEXT_PUBLIC_WS_URL || 'https://ws.arknights-guess.online';
+// 跨域传身份：Cookie只在pages.dev，WebSocket在arknights-guess.online
+function getWsUrl() {
+  const base = process.env.NEXT_PUBLIC_WS_URL || 'https://ws.arknights-guess.online';
+  const key = typeof document !== 'undefined' ? document.cookie.split('; ').find(r => r.startsWith('player_key='))?.split('=')[1] : '';
+  return key ? `${base}?pk=${encodeURIComponent(key)}` : base;
+}
+const SERVER_URL = getWsUrl();
 const allChars = charactersData as Character[];
 const NICK_KEY = 'liyiba-nickname';
 const ROOM_KEY = 'liyiba-room';

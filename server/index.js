@@ -49,7 +49,7 @@ function parseCookies(str) {
   const result = {};
   for (const part of str.split(';')) {
     const [key, ...rest] = part.split('=');
-    if (key) result[key.trim()] = decodeURIComponent(rest.join('=').trim());
+    if (key) { try { result[key.trim()] = decodeURIComponent(rest.join('=').trim()); } catch {} }
   }
   return result;
 }
@@ -227,6 +227,7 @@ io.on('connection', (socket) => {
     if (!room) { socket.emit('error_msg', { message: '房间不存在' }); return; }
 
     // 满员时检查是否为断线重连的玩家
+    let reconnecting = false;
     if (room.players.size >= 2) {
       const pk = socket.data.playerKey;
       let found = null;
@@ -234,18 +235,25 @@ io.on('connection', (socket) => {
         if (p.dcTimer && p.playerKey === pk) { found = id; break; }
       }
       if (!found) { socket.emit('error_msg', { message: '房间已满' }); return; }
-      // 清除旧条目，允许重连
-      if (room.players.get(found).dcTimer) { clearTimeout(room.players.get(found).dcTimer); }
+      // 保留旧玩家数据（胜场、名字）
+      const oldPlayer = room.players.get(found);
+      if (oldPlayer.dcTimer) { clearTimeout(oldPlayer.dcTimer); oldPlayer.dcTimer = null; }
+      oldPlayer.lastSocketId = null;
       room.players.delete(found);
-      socket.leave(code); // leave the old socket's room slot
+      room.players.set(socket.id, oldPlayer);
+      reconnecting = true;
+    } else {
+      room.players.set(socket.id, { name: data?.playerName || '玩家', wins: 0, dcTimer: null, lastSocketId: null, playerKey: socket.data.playerKey });
     }
 
-    room.players.set(socket.id, { name: data?.playerName || '玩家', wins: 0, dcTimer: null, lastSocketId: null, playerKey: socket.data.playerKey });
     socket.join(code);
     socket.data.roomCode = code;
-    room.started = true;
-    startRound(room);
-    console.log(`[房] ${code} 满员`);
+    // 仅在首次满员时开始回合，重连不重启
+    if (!reconnecting) {
+      room.started = true;
+      startRound(room);
+    }
+    console.log(`[房] ${code} ${reconnecting ? '重连' : '满员'}`);
   });
 
   socket.on('_log', (d) => console.log(`[日志] ${d.action}`));

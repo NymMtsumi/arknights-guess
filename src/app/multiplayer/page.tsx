@@ -78,6 +78,16 @@ export default function MultiplayerPage() {
     setSocket(s); socketRef.current = s;
     let oldSocketId = s.id;
 
+    s.on('connect_error', (err) => {
+      clearConnecting();
+      setError('服务器连接失败：' + (err?.message || ''));
+      s.disconnect();
+    });
+    s.on('connect_timeout', () => {
+      clearConnecting();
+      setError('连接超时，请检查网络');
+    });
+
     // 接收服务器 Cookie 设置指令
     s.on('set_cookie', (d: any) => {
       if (typeof document !== 'undefined') {

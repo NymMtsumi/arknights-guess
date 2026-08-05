@@ -903,6 +903,7 @@ const http = createServer(async (req, res) => {
         SELECT g.player_key, u.username, u.display_id, u.nickname,
                SUM(g.won) as wins,
                COUNT(*) as totalGames,
+               SUM(g.guess_count) as totalGuesses,
                ROUND(CAST(SUM(g.won) AS REAL) / CAST(COUNT(*) AS REAL) * 100, 1) as winRate
         FROM games g
         INNER JOIN users u ON u.player_key = g.player_key
@@ -917,6 +918,7 @@ const http = createServer(async (req, res) => {
         SELECT g.player_key, u.username, u.display_id, u.nickname,
                SUM(g.won) as wins,
                COUNT(*) as totalGames,
+               SUM(g.guess_count) as totalGuesses,
                ROUND(CAST(SUM(g.won) AS REAL) / CAST(COUNT(*) AS REAL) * 100, 1) as winRate
         FROM games g
         INNER JOIN users u ON u.player_key = g.player_key
@@ -937,6 +939,7 @@ const http = createServer(async (req, res) => {
       displayName: row.nickname || row.username,
       wins: row.wins,
       totalGames: row.totalGames,
+      totalGuesses: row.totalGuesses || 0,
       winRate: row.winRate,
     }));
 

@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: 触发 VPS 部署
         run: |
-          curl -s -X POST https://www.arknights-guess.online/api/deploy \
+          curl -s -X POST http://160.236.110.37:3001/api/deploy \
             -H "Content-Type: application/json" \
             -d "{\"token\": \"${{ secrets.DEPLOY_TOKEN }}\"}"
           echo ""

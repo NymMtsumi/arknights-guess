@@ -580,8 +580,8 @@ html:not([data-theme="blast"]) .home-hero h1 {
   align-items: flex-start;
   justify-content: flex-start;
   gap: clamp(12px, 2vw, 18px);
-  min-height: 205px;
-  padding: clamp(18px, 3vw, 28px);
+  min-height: 160px;
+  padding: clamp(16px, 2.5vw, 24px);
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -687,23 +687,23 @@ html[data-theme="blast"] .menu-arrow { color: var(--primary); }
 
 /* 小卡片变体 — 高度降低，更紧凑 */
 .menu-card-sm {
-  min-height: 120px;
-  padding: clamp(14px, 2vw, 20px);
-  gap: clamp(10px, 1.5vw, 14px);
+  min-height: 90px;
+  padding: clamp(12px, 1.5vw, 16px);
+  gap: clamp(8px, 1.2vw, 12px);
 }
 
 .menu-card-sm .menu-icon {
-  width: clamp(32px, 4vw, 42px);
-  height: clamp(32px, 4vw, 42px);
-  font-size: clamp(1.1rem, 2vw, 1.4rem);
+  width: clamp(28px, 3.5vw, 36px);
+  height: clamp(28px, 3.5vw, 36px);
+  font-size: clamp(1rem, 1.6vw, 1.2rem);
 }
 
 .menu-card-sm .menu-label {
-  font-size: clamp(0.92rem, 1.2vw, 1.02rem);
+  font-size: clamp(0.85rem, 1.1vw, 0.95rem);
 }
 
 .menu-card-sm .menu-description {
-  font-size: var(--fs-2xs);
+  font-size: var(--fs-3xs);
 }
 
 .menu-grid {
@@ -734,8 +734,8 @@ html[data-theme="blast"] .menu-arrow { color: var(--primary); }
   html[data-theme="blast"] .home-hero h1 { text-shadow: 3px 3px 0 rgba(217, 255, 63, 0.2); }
   .hero-subtitle { font-size: 0.94rem; }
   .menu-grid { gap: 10px; }
-  .menu-card { min-height: 158px; padding: 18px 13px; }
-  .menu-card-sm { min-height: 100px; padding: 14px 12px; gap: 10px; }
+  .menu-card { min-height: 128px; padding: 16px 13px; }
+  .menu-card-sm { min-height: 78px; padding: 12px 12px; gap: 8px; }
   html[data-theme="blast"] .menu-card {
     clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
   }
@@ -748,8 +748,8 @@ html[data-theme="blast"] .menu-arrow { color: var(--primary); }
 @media (max-width: 520px) {
   .home-hero { min-height: 250px; padding-inline: 16px; }
   .home-hero h1 { font-size: clamp(2.8rem, 17vw, 4rem); }
-  .menu-card { min-height: 112px; padding: 16px 18px; gap: 14px; }
-  .menu-card-sm { min-height: 90px; padding: 14px 16px; gap: 10px; }
+  .menu-card { min-height: 96px; padding: 14px 16px; gap: 12px; }
+  .menu-card-sm { min-height: 68px; padding: 12px 14px; gap: 8px; }
   .menu-icon { flex: 0 0 auto; }
   .menu-description { display: block; font-size: var(--fs-xs); }
   .menu-arrow { right: 14px; bottom: 14px; }

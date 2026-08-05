@@ -57,7 +57,7 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
     setSendingVerify(true); setMsg(''); setError('');
     try {
       await apiCall('/api/send-verification', { method: 'POST', body: JSON.stringify({ email: currentUser?.email || '' }) });
-      setMsg('验证邮件已发送，请查收');
+      setMsg('验证邮件已发送，请查收。如未收到请检查垃圾邮件箱');
     } catch (e: any) { setError(e.message); }
     setSendingVerify(false);
   };
@@ -80,7 +80,7 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
       if (mode === 'register') {
         // 先发验证邮件再创建账号（新流程）
         const result = await register(username.trim(), password, email.trim());
-        setMsg(result.message || '验证邮件已发送，请查收邮件并点击链接完成注册');
+        setMsg(result.message || '验证邮件已发送，请查收邮件并点击链接完成注册。如未收到请检查垃圾邮件箱');
         setLoading(false);
         return; // 不关闭弹窗，不自动登录
       } else {

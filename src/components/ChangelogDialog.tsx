@@ -1,11 +1,23 @@
 'use client';
 
+import { useState, useEffect, useCallback } from 'react';
+import { apiCall } from '@/lib/auth';
+
 interface ChangelogDialogProps {
   open: boolean;
   onClose: () => void;
 }
 
-const changelog = [
+interface Announcement {
+  id: number;
+  title: string;
+  content: string;
+  is_popup: boolean;
+  created_at: string;
+}
+
+// 历史硬编码日志，作为 API 不可用时的 fallback
+const HISTORICAL_CHANGELOG = [
   { date: '2026-08-02', items: [
     '更新了服务器和域名，优化了多人对战的体验',
     '修复和优化了阵营匹配的逻辑',
@@ -53,7 +65,27 @@ const changelog = [
 ];
 
 export function ChangelogDialog({ open, onClose }: ChangelogDialogProps) {
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [apiOk, setApiOk] = useState(false);
+
+  const load = useCallback(async () => {
+    if (!open) return;
+    try {
+      const data = await apiCall('/api/announcements');
+      setAnnouncements(data as Announcement[]);
+      setApiOk(true);
+    } catch {
+      setApiOk(false);
+    }
+  }, [open]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
   if (!open) return null;
+
+  const hasApiData = apiOk && announcements.length > 0;
 
   return (
     <div
@@ -74,6 +106,7 @@ export function ChangelogDialog({ open, onClose }: ChangelogDialogProps) {
         <button
           onClick={onClose}
           className="absolute top-3 right-3 text-[var(--text-light)] hover:text-[var(--text)] text-xl leading-none"
+          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px' }}
         >
           ✕
         </button>
@@ -92,25 +125,52 @@ export function ChangelogDialog({ open, onClose }: ChangelogDialogProps) {
           📋 更新日志
         </h2>
 
-        {changelog.map((entry) => (
-          <div key={entry.date} style={{ marginBottom: '18px' }}>
-            <div style={{
-              fontSize: '0.82rem',
-              fontWeight: 700,
-              color: 'var(--text-light)',
-              marginBottom: '6px',
-              borderBottom: '1px solid var(--border)',
-              paddingBottom: '4px',
-            }}>
-              {entry.date}
+        {hasApiData ? (
+          announcements.map((a) => (
+            <div key={a.id} style={{ marginBottom: '18px' }}>
+              <div style={{
+                fontSize: '0.82rem',
+                fontWeight: 700,
+                color: 'var(--text-light)',
+                marginBottom: '4px',
+                borderBottom: '1px solid var(--border)',
+                paddingBottom: '4px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'baseline',
+              }}>
+                <span>{a.title}</span>
+                <span style={{ fontWeight: 400, fontSize: '0.75rem' }}>
+                  {new Date(a.created_at).toLocaleDateString('zh-CN')}
+                </span>
+              </div>
+              <div
+                style={{ margin: 0, fontSize: '0.9rem', lineHeight: 1.7, color: 'var(--text-sec)' }}
+                dangerouslySetInnerHTML={{ __html: a.content }}
+              />
             </div>
-            <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '0.9rem', lineHeight: 1.7, color: 'var(--text-sec)' }}>
-              {entry.items.map((item, i) => (
-                <li key={i}>{item}</li>
-              ))}
-            </ul>
-          </div>
-        ))}
+          ))
+        ) : (
+          HISTORICAL_CHANGELOG.map((entry) => (
+            <div key={entry.date} style={{ marginBottom: '18px' }}>
+              <div style={{
+                fontSize: '0.82rem',
+                fontWeight: 700,
+                color: 'var(--text-light)',
+                marginBottom: '6px',
+                borderBottom: '1px solid var(--border)',
+                paddingBottom: '4px',
+              }}>
+                {entry.date}
+              </div>
+              <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '0.9rem', lineHeight: 1.7, color: 'var(--text-sec)' }}>
+                {entry.items.map((item, i) => (
+                  <li key={i}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

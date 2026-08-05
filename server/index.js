@@ -423,8 +423,10 @@ const http = createServer(async (req, res) => {
             <a href="${verifyLink}" style="display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none;font-weight:bold">完成注册</a>
             <p style="color:#666;margin-top:20px;font-size:0.85rem">或者复制此链接到浏览器：<br>${verifyLink}</p>
             <p style="color:#999;font-size:0.8rem">此链接1小时内有效。如果你没有注册此账号，请忽略此邮件。</p>
+            <p style="color:#999;font-size:0.8rem;margin-top:12px">如果未收到邮件，请检查垃圾邮件箱。</p>
           </div>
         `,
+        text: `完成你的注册 - 明日方舟猜干员\n\n感谢注册！请复制以下链接到浏览器完成注册：\n\n${verifyLink}\n\n此链接1小时内有效。如果你没有注册此账号，请忽略此邮件。\n如果未收到邮件，请检查垃圾邮件箱。`,
       });
 
       return jsonResponse(res, {
@@ -717,8 +719,10 @@ const http = createServer(async (req, res) => {
             <a href="${verifyLink}" style="display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none;font-weight:bold">验证邮箱</a>
             <p style="color:#666;margin-top:20px;font-size:0.85rem">或者复制此链接到浏览器：<br>${verifyLink}</p>
             <p style="color:#999;font-size:0.8rem">此链接1小时内有效。如果你没有注册此账号，请忽略此邮件。</p>
+            <p style="color:#999;font-size:0.8rem;margin-top:12px">如果未收到邮件，请检查垃圾邮件箱。</p>
           </div>
         `,
+        text: `验证你的邮箱 - 明日方舟猜干员\n\n请复制以下链接到浏览器验证你的邮箱地址：\n\n${verifyLink}\n\n此链接1小时内有效。如果你没有注册此账号，请忽略此邮件。\n如果未收到邮件，请检查垃圾邮件箱。`,
       });
       return jsonResponse(res, { ok: true, message: '验证邮件已发送' });
     } catch (err) {

@@ -1153,7 +1153,7 @@ const http = createServer(async (req, res) => {
   res.end('OK');
 });
 
-// auto-deploy v3: echo key + verbose SSH
+// auto-deploy: webhook (curl → /api/deploy → git pull → pm2 restart)
 const io = new Server(http, { cors: { origin: '*' }, pingInterval: 5000, pingTimeout: 15000 });
 const rooms = new Map();
 

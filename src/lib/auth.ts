@@ -151,7 +151,94 @@ export async function login(username: string, password: string): Promise<{
     nickname: data.nickname,
     role: data.role,
   });
+
+  // 登录后迁移旧游客的本地游戏数据到账号 player_key
+  if (data.player_key) {
+    await migrateGuestDataToAccount(data.player_key);
+  }
+
   return data;
+}
+
+/**
+ * 登录后调用：把旧游客（无账号时）的本地战绩迁移到账号的 player_key 下。
+ * 直接读取 localStorage 原始数据，通过 /api/sync 批量上传，避免引入循环依赖。
+ */
+export async function migrateGuestDataToAccount(accountPlayerKey: string): Promise<void> {
+  if (typeof window === 'undefined') return;
+  try {
+    const HISTORY_KEY = 'arknights-guess-history';
+    const rawHistory = localStorage.getItem(HISTORY_KEY);
+    if (!rawHistory) return;
+
+    const history = JSON.parse(rawHistory);
+    if (!Array.isArray(history) || history.length === 0) return;
+
+    // 提取所有单人战绩（mode !== 'multi'），转换为服务器格式
+    const singleGames = history
+      .filter((r: any) => r && r.mode !== 'multi' && typeof r.timestamp === 'number')
+      .map((r: any) => ({
+        timestamp: new Date(r.timestamp).toISOString(),
+        targetName: String(r.targetName || ''),
+        won: Boolean(r.won),
+        guessCount: Number(r.guessCount) || 0,
+        difficulty: String(r.difficulty || 'hard'),
+      }));
+
+    if (singleGames.length > 0) {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      const token = getToken();
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const res = await fetch(`${getServerUrl()}/api/sync`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ player_key: accountPlayerKey, games: singleGames }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        console.log(`[Auth] Migrated ${data.synced || singleGames.length} guest game(s) to account`);
+      }
+    }
+
+    // 多人战绩也同步
+    const multiGames = history
+      .filter((r: any) => r && r.mode === 'multi' && typeof r.timestamp === 'number')
+      .map((r: any) => ({
+        timestamp: new Date(r.timestamp).toISOString(),
+        targetName: String(r.opponentName || ''),
+        won: Boolean(r.won),
+        guessCount: (Array.isArray(r.rounds) ? r.rounds.reduce((sum: number, rd: any) => sum + (Number(rd.guessCount) || 0), 0) : 0),
+        difficulty: 'multi',
+      }));
+
+    if (multiGames.length > 0) {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      const token = getToken();
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      // 多人战绩逐条保存（/api/save-game 对模式有单独校验）
+      for (const g of multiGames) {
+        await fetch(`${getServerUrl()}/api/save-game`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            player_key: accountPlayerKey,
+            won: g.won,
+            guessCount: g.guessCount,
+            difficulty: 'multi',
+            targetName: g.targetName,
+            mode: 'multi',
+            timestamp: g.timestamp,
+          }),
+        });
+      }
+      console.log(`[Auth] Migrated ${multiGames.length} guest multi-game(s) to account`);
+    }
+  } catch (err) {
+    console.warn('[Auth] Guest data migration failed (non-critical):', err);
+  }
 }
 
 // ===== 退出登录 =====

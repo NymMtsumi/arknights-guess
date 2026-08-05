@@ -807,7 +807,13 @@ const http = createServer(async (req, res) => {
     const mode = sanitizeString(body.mode || 'single', 10);
     let difficulty = sanitizeString(body.difficulty || 'hard', 20);
     const targetName = sanitizeString(body.targetName || '', 100);
-    const timestamp = typeof body.timestamp === 'string' ? body.timestamp : new Date().toISOString();
+    // 兼容数字时间戳（Date.now()）和 ISO 字符串
+    let timestamp = body.timestamp;
+    if (typeof timestamp === 'number') {
+      timestamp = new Date(timestamp).toISOString();
+    } else if (typeof timestamp !== 'string' || !timestamp) {
+      timestamp = new Date().toISOString();
+    }
 
     // 多人模式：difficulty 可以是 'multi'
     if (mode === 'multi') {

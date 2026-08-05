@@ -8,7 +8,7 @@ import { ScrollSlider } from '@/components/ScrollSlider';
 import { useI18n } from '@/lib/i18n';
 import type { StatsData } from '@/lib/stats';
 import type { HistoryRecord, GameRecord, MultiGameRecord } from '@/lib/stats';
-import { loadStats, loadHistory, fetchHistoryFromServer } from '@/lib/stats';
+import { loadStats, loadHistory, fetchHistoryFromServer, mergeHistories } from '@/lib/stats';
 import { getUser, apiCall } from '@/lib/auth';
 import type { ServerStats } from '@/lib/auth';
 
@@ -47,26 +47,54 @@ export default function StatsPage() {
   const fetchFromServer = useCallback(async () => {
     if (!getUser()) return;
     setLoading(true);
+    // 先从本地加载一份作为基础数据
+    const localHistory = loadHistory();
+    const localStats = loadStats();
     try {
       const data = await apiCall('/api/me');
-      setStats(toStatsData(data.stats));
+      // 合并服务端统计：以更完整的为准
+      const serverStats = toStatsData(data.stats);
+      const mergedStats: StatsData = {
+        totalGames: Math.max(localStats.totalGames, serverStats.totalGames),
+        wins: Math.max(localStats.wins, serverStats.wins),
+        losses: Math.max(localStats.losses, serverStats.losses),
+        totalGuesses: Math.max(localStats.totalGuesses, serverStats.totalGuesses),
+        bestScore: serverStats.bestScore > 0
+          ? (localStats.bestScore > 0 ? Math.min(localStats.bestScore, serverStats.bestScore) : serverStats.bestScore)
+          : localStats.bestScore,
+      };
+      setStats(mergedStats);
       setServerSynced(true);
-      // 同时从服务器拉取历史记录
+      // 拉取服务端历史记录并合并
       const serverHistory = await fetchHistoryFromServer(80);
       if (serverHistory.length > 0) {
-        setHistory(serverHistory);
+        const merged = mergeHistories(localHistory, serverHistory);
+        setHistory(merged);
+        // 写回本地保持同步
+        if (merged.length > 0) {
+          try { localStorage.setItem('arknights-guess-history', JSON.stringify(merged)); } catch {}
+        }
+      } else {
+        // 服务端无历史时，保持本地数据不变
+        // setHistory 只在首次 mounted 时调用 loadHistory，这里不覆盖
+        if (localHistory.length > 0) {
+          setHistory(localHistory);
+        }
       }
     } catch {
-      setStats(loadStats());
+      // 服务端有数据则使用，否则保留本地
+      setStats(localStats);
       setServerSynced(false);
+      // 不覆盖 history —— 保持上次加载的数据
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
+    const localHistory = loadHistory();
+    setHistory(localHistory);
     setMounted(true);
-    setHistory(loadHistory());
     if (getUser()) {
       fetchFromServer();
     } else {
@@ -75,7 +103,8 @@ export default function StatsPage() {
   }, [fetchFromServer]);
 
   const refresh = () => {
-    setHistory(loadHistory());
+    const freshHistory = loadHistory();
+    setHistory(freshHistory);
     if (getUser()) {
       fetchFromServer();
     } else {

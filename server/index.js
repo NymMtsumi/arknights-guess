@@ -11,6 +11,25 @@ import jwt from 'jsonwebtoken';
 import { createTransport } from 'nodemailer';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+
+// 加载 .env 文件（用于 PM2 等不自动注入环境变量的场景）
+try {
+  const envPath = join(__dirname, '..', '.env');
+  const envContent = readFileSync(envPath, 'utf-8');
+  for (const line of envContent.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eqIdx = trimmed.indexOf('=');
+    if (eqIdx === -1) continue;
+    const key = trimmed.slice(0, eqIdx).trim();
+    const val = trimmed.slice(eqIdx + 1).trim();
+    if (key && !process.env[key]) {
+      process.env[key] = val;
+    }
+  }
+  console.log('[env] loaded .env file');
+} catch { /* .env 不存在则跳过 */ }
+
 const PORT = process.env.PORT || 3001;
 const ROUND_TIME = 120_000;
 const DISCONNECT = 30_000;

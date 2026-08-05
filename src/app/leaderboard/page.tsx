@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { useI18n } from '@/lib/i18n';
@@ -12,6 +12,7 @@ interface LeaderboardEntry {
   displayName: string;
   wins: number;
   totalGames: number;
+  totalGuesses: number;
   winRate: number; // 0-100
 }
 
@@ -36,6 +37,15 @@ const MODES = [
   { key: 'multi', label: '多人' },
 ] as const;
 
+/** 单行高度（px），与 CSS 中 --lb-row-height 保持一致 */
+const ROW_HEIGHT = 44;
+/** 表头高度（px），与 CSS 中 --lb-header-height 保持一致 */
+const HEADER_HEIGHT = 42;
+/** 单屏展示条数 */
+const VISIBLE_ROWS = 7;
+/** 最大加载条数 */
+const MAX_ROWS = 50;
+
 export default function LeaderboardPage() {
   const { t } = useI18n();
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
@@ -49,14 +59,15 @@ export default function LeaderboardPage() {
     setError(null);
     try {
       const base = getApiBaseUrl();
-      const params = new URLSearchParams({ limit: '50', mode: m });
+      const params = new URLSearchParams({ limit: String(MAX_ROWS), mode: m });
       if (diff) params.set('difficulty', diff);
       const res = await fetch(`${base}/api/leaderboard?${params.toString()}`);
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}`);
       }
       const data = await res.json();
-      setEntries(data.leaderboard || []);
+      // 前端二次截断确保最多 50 条
+      setEntries((data.leaderboard || []).slice(0, MAX_ROWS));
     } catch (err: any) {
       setError(err?.message || 'Failed to fetch leaderboard');
       setEntries([]);
@@ -75,11 +86,17 @@ export default function LeaderboardPage() {
 
   const handleModeChange = (m: string) => {
     setMode(m);
-    setDifficulty(''); // 切换模式时重置难度
+    setDifficulty('');
   };
 
   const getDisplayName = (entry: LeaderboardEntry) => {
     return entry.nickname || entry.username || entry.displayName;
+  };
+
+  /** 计算平均猜测数，0局兜底为 "--" */
+  const formatAvgGuesses = (e: LeaderboardEntry): string => {
+    if (!e.totalGames || e.totalGames <= 0) return '--';
+    return (e.totalGuesses / e.totalGames).toFixed(2);
   };
 
   const getRankEmoji = (rank: number) => {
@@ -90,118 +107,37 @@ export default function LeaderboardPage() {
   };
 
   const getRankStyle = (rank: number): React.CSSProperties => {
-    if (rank === 1) return { color: '#ffd700', fontWeight: 900 };
-    if (rank === 2) return { color: '#c0c0c0', fontWeight: 900 };
-    if (rank === 3) return { color: '#cd7f32', fontWeight: 900 };
+    if (rank === 1) return { color: '#ffd700', fontWeight: 900, fontSize: '1.1rem' };
+    if (rank === 2) return { color: '#c0c0c0', fontWeight: 900, fontSize: '1.1rem' };
+    if (rank === 3) return { color: '#cd7f32', fontWeight: 900, fontSize: '1.1rem' };
     return {};
   };
 
-  const thStyle: React.CSSProperties = {
-    padding: '10px 14px',
-    textAlign: 'center',
-    fontWeight: 700,
-    fontSize: '0.8rem',
-    color: 'var(--text-light)',
-    borderBottom: '2px solid var(--border)',
-    whiteSpace: 'nowrap',
+  // 斑马纹 + 前三名背景
+  const getRowBackground = (rank: number, index: number): string => {
+    if (rank === 1) return 'var(--leaderboard-gold-bg, rgba(255,215,0,0.12))';
+    if (rank === 2) return 'var(--leaderboard-silver-bg, rgba(192,192,192,0.10))';
+    if (rank === 3) return 'var(--leaderboard-bronze-bg, rgba(205,127,50,0.10))';
+    return index % 2 === 0 ? 'transparent' : 'var(--card-soft)';
   };
 
-  const tdStyle: React.CSSProperties = {
-    padding: '10px 14px',
-    textAlign: 'center',
-    whiteSpace: 'nowrap',
-  };
+  // 视口高度 = 表头 + 单行×条数 (实际渲染条数不超过 7 时精确匹配，超过则出现滚动条)
+  const viewportHeight = HEADER_HEIGHT + ROW_HEIGHT * VISIBLE_ROWS;
 
-  let content: React.ReactNode;
+  // 是否显示 avgGuesses 列（仅单人模式）
+  const showAvgGuesses = mode === 'single';
 
-  if (loading) {
-    content = (
-      <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--text-light)' }}>
-        <p style={{ fontSize: '1.1rem' }}>加载中...</p>
-      </div>
-    );
-  } else if (error) {
-    content = (
-      <div style={{ textAlign: 'center', padding: '48px 0' }}>
-        <p style={{ color: 'var(--danger)', fontSize: '1rem', marginBottom: '16px' }}>
-          加载失败：{error}
-        </p>
-        <button
-          onClick={() => fetchLeaderboard(difficulty, mode)}
-          style={{
-            padding: '8px 20px',
-            background: 'var(--primary)',
-            color: 'var(--bg)',
-            border: 'none',
-            borderRadius: 'var(--radius)',
-            fontWeight: 700,
-            cursor: 'pointer',
-            fontSize: '0.9rem',
-          }}
-        >
-          重试
-        </button>
-      </div>
-    );
-  } else if (entries.length === 0) {
-    content = (
-      <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--text-light)' }}>
-        <p style={{ fontSize: '3rem', marginBottom: '16px' }}>📭</p>
-        <p style={{ fontSize: '1.1rem' }}>暂无排行数据</p>
-      </div>
-    );
-  } else {
-    content = (
-      <div style={{ overflowX: 'auto', width: '100%' }}>
-        <table
-          style={{
-            width: '100%',
-            borderCollapse: 'collapse',
-            fontSize: '0.85rem',
-            minWidth: '520px',
-          }}
-        >
-          <thead>
-            <tr>
-              <th style={{ ...thStyle, width: '60px' }}>#</th>
-              <th style={{ ...thStyle, textAlign: 'left' }}>玩家</th>
-              <th style={thStyle}>胜场</th>
-              <th style={thStyle}>总局数</th>
-              <th style={thStyle}>胜率</th>
-            </tr>
-          </thead>
-          <tbody>
-            {entries.map((entry) => (
-              <tr
-                key={entry.rank}
-                style={{
-                  borderBottom: '1px solid var(--border)',
-                  background:
-                    entry.rank <= 3 ? 'var(--primary-soft)' : 'transparent',
-                  animation: 'surface-enter 0.35s ease both',
-                }}
-              >
-                <td style={{ ...tdStyle, fontWeight: 700 }} {...(entry.rank <= 3 ? { 'data-rank-top': 'true' } : {})}>
-                  <span style={{ ...getRankStyle(entry.rank), fontSize: entry.rank <= 3 ? '1.1rem' : '0.85rem' }}>
-                    {getRankEmoji(entry.rank)} {entry.rank}
-                  </span>
-                </td>
-                <td style={{ ...tdStyle, textAlign: 'left', fontWeight: 600 }}>
-                  {getDisplayName(entry)}
-                </td>
-                <td style={{ ...tdStyle, fontWeight: 700 }}>{entry.wins}</td>
-                <td style={tdStyle}>{entry.totalGames}</td>
-                <td style={{ ...tdStyle, fontWeight: 700 }}>
-                  {entry.winRate.toFixed(1)}%
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    );
-  }
+  // 列宽分配（百分比）
+  const colWidths = useMemo(() => {
+    if (showAvgGuesses) {
+      // rank:8% | player:auto | wins:13% | total:13% | winRate:13% | avgGuess:17%
+      return { rank: '8%', wins: '13%', total: '13%', winRate: '13%', avgGuess: '17%' };
+    }
+    // rank:8% | player:auto | wins:17% | total:17% | winRate:17%
+    return { rank: '8%', wins: '17%', total: '17%', winRate: '17%' };
+  }, [showAvgGuesses]);
 
+  // ===== 渲染 =====
   return (
     <div className="page">
       <Header />
@@ -231,66 +167,29 @@ export default function LeaderboardPage() {
         </h1>
 
         {/* 模式切换 */}
-        <div
-          style={{
-            display: 'flex',
-            gap: '4px',
-            justifyContent: 'center',
-            marginBottom: '16px',
-            background: 'var(--input-bg)',
-            borderRadius: 'var(--radius)',
-            padding: '3px',
-          }}
-        >
+        <div className="leaderboard-mode-tabs" role="tablist">
           {MODES.map((m) => (
             <button
               key={m.key}
+              type="button"
+              role="tab"
+              aria-selected={mode === m.key}
               onClick={() => handleModeChange(m.key)}
-              style={{
-                padding: '6px 20px',
-                fontSize: '0.85rem',
-                fontWeight: mode === m.key ? 700 : 400,
-                background: mode === m.key ? 'var(--primary)' : 'transparent',
-                color: mode === m.key ? 'var(--bg)' : 'var(--text)',
-                border: 'none',
-                borderRadius: 'var(--radius)',
-                cursor: 'pointer',
-                transition: 'all 0.15s',
-              }}
+              className={mode === m.key ? 'active' : ''}
             >
               {m.label}
             </button>
           ))}
         </div>
 
-        {/* 难度筛选 — 多人模式不显示（多人难度未区分存储） */}
+        {/* 难度筛选 — 多人模式不显示 */}
         {mode !== 'multi' && (
-          <div
-            style={{
-              display: 'flex',
-              gap: '8px',
-              justifyContent: 'center',
-              marginBottom: '28px',
-              flexWrap: 'wrap',
-            }}
-          >
+          <div className="leaderboard-difficulty-bar">
             {DIFFICULTIES.map((d) => (
               <button
                 key={d.key}
                 onClick={() => handleDifficultyChange(d.key)}
-                style={{
-                  padding: '6px 16px',
-                  fontSize: '0.85rem',
-                  background:
-                    difficulty === d.key ? 'var(--primary)' : 'transparent',
-                  color:
-                    difficulty === d.key ? 'var(--bg)' : 'var(--text)',
-                  border: `1px solid ${difficulty === d.key ? 'var(--primary)' : 'var(--border)'}`,
-                  borderRadius: 'var(--radius)',
-                  cursor: 'pointer',
-                  fontWeight: difficulty === d.key ? 700 : 400,
-                  transition: 'all 0.2s ease',
-                }}
+                className={difficulty === d.key ? 'active' : ''}
               >
                 {d.label}
               </button>
@@ -298,22 +197,376 @@ export default function LeaderboardPage() {
           </div>
         )}
 
-        {/* 排行榜内容 */}
-        <div
-          style={{
-            maxWidth: '700px',
-            width: '100%',
-            background: 'var(--card)',
-            border: '1px solid var(--border)',
-            borderRadius: 'var(--radius)',
-            overflow: 'hidden',
-          }}
-        >
-          {content}
+        {/* 排行榜卡片 */}
+        <div className="leaderboard-card">
+          {loading ? (
+            <div className="leaderboard-empty">
+              <p style={{ fontSize: '1.1rem' }}>加载中...</p>
+            </div>
+          ) : error ? (
+            <div className="leaderboard-empty">
+              <p style={{ color: 'var(--danger)', fontSize: '1rem', marginBottom: '16px' }}>
+                加载失败：{error}
+              </p>
+              <button
+                onClick={() => fetchLeaderboard(difficulty, mode)}
+                style={{
+                  padding: '8px 20px',
+                  background: 'var(--primary)',
+                  color: 'var(--bg)',
+                  border: 'none',
+                  borderRadius: 'var(--radius)',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  fontSize: '0.9rem',
+                }}
+              >
+                重试
+              </button>
+            </div>
+          ) : entries.length === 0 ? (
+            <div className="leaderboard-empty">
+              <p style={{ fontSize: '3rem', marginBottom: '16px' }}>📭</p>
+              <p style={{ fontSize: '1.1rem' }}>暂无排行数据</p>
+            </div>
+          ) : (
+            <div className="leaderboard-table-wrap">
+              {/* 粘性表头 */}
+              <div className="leaderboard-table-header">
+                <table>
+                  <colgroup>
+                    <col style={{ width: colWidths.rank }} />
+                    <col />
+                    <col style={{ width: colWidths.wins }} />
+                    <col style={{ width: colWidths.total }} />
+                    <col style={{ width: colWidths.winRate }} />
+                    {showAvgGuesses && <col style={{ width: colWidths.avgGuess }} />}
+                  </colgroup>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th className="lb-th-left">玩家</th>
+                      <th>胜场</th>
+                      <th>总局数</th>
+                      <th>胜率</th>
+                      {showAvgGuesses && <th>平均猜测</th>}
+                    </tr>
+                  </thead>
+                </table>
+              </div>
+
+              {/* 可滚动表体，视口高度 = 表头 + 7行 */}
+              <div
+                className="leaderboard-table-body"
+                style={{
+                  maxHeight: `${viewportHeight}px`,
+                }}
+              >
+                <table>
+                  <colgroup>
+                    <col style={{ width: colWidths.rank }} />
+                    <col />
+                    <col style={{ width: colWidths.wins }} />
+                    <col style={{ width: colWidths.total }} />
+                    <col style={{ width: colWidths.winRate }} />
+                    {showAvgGuesses && <col style={{ width: colWidths.avgGuess }} />}
+                  </colgroup>
+                  <tbody>
+                    {entries.map((entry, index) => (
+                      <tr
+                        key={entry.rank}
+                        className={entry.rank <= 3 ? `lb-row lb-row-top${entry.rank}` : 'lb-row'}
+                        style={{
+                          backgroundColor: getRowBackground(entry.rank, index),
+                          animationDelay: `${Math.min(index * 30, 600)}ms`,
+                        }}
+                      >
+                        <td className="lb-rank">
+                          <span style={getRankStyle(entry.rank)}>
+                            {getRankEmoji(entry.rank)} {entry.rank}
+                          </span>
+                        </td>
+                        <td className="lb-player">{getDisplayName(entry)}</td>
+                        <td className="lb-stat">{entry.wins}</td>
+                        <td>{entry.totalGames}</td>
+                        <td className="lb-stat">{entry.winRate.toFixed(1)}%</td>
+                        {showAvgGuesses && (
+                          <td className="lb-stat">{formatAvgGuesses(entry)}</td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* 总数提示 */}
+              <div className="leaderboard-footer">
+                共 {entries.length} 条记录
+                {entries.length >= MAX_ROWS ? '（仅显示前 50 名）' : ''}
+              </div>
+            </div>
+          )}
         </div>
 
         <Footer />
       </div>
+
+      {/* 内联样式 */}
+      <style>{`
+        /* ===== 模式切换标签 ===== */
+        .leaderboard-mode-tabs {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          width: min(320px, 100%);
+          margin: 0 auto 14px;
+          padding: 3px;
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          background: var(--card-soft);
+        }
+        .leaderboard-mode-tabs button {
+          min-width: 0;
+          padding: 9px 12px;
+          border: 0;
+          border-radius: calc(var(--radius) - 1px);
+          background: transparent;
+          color: var(--text-sec);
+          cursor: pointer;
+          font: inherit;
+          font-weight: 650;
+          font-size: 0.88rem;
+          transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+        }
+        .leaderboard-mode-tabs button.active {
+          background: var(--card);
+          color: var(--text);
+          box-shadow: var(--shadow-sm);
+        }
+
+        /* ===== 难度筛选 ===== */
+        .leaderboard-difficulty-bar {
+          display: flex;
+          gap: 6px;
+          justify-content: center;
+          margin-bottom: 24px;
+          flex-wrap: wrap;
+        }
+        .leaderboard-difficulty-bar button {
+          padding: 5px 14px;
+          font-size: 0.82rem;
+          background: transparent;
+          color: var(--text);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          cursor: pointer;
+          font-weight: 400;
+          transition: all 0.15s;
+        }
+        .leaderboard-difficulty-bar button.active {
+          background: var(--primary);
+          color: var(--bg);
+          border-color: var(--primary);
+          font-weight: 700;
+        }
+
+        /* ===== 排行榜卡片 ===== */
+        .leaderboard-card {
+          width: min(700px, 100%);
+          margin: 0 auto;
+          background: var(--card);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          overflow: hidden;
+        }
+        .leaderboard-empty {
+          text-align: center;
+          padding: 56px 20px;
+          color: var(--text-light);
+        }
+
+        /* ===== 表格包裹层 ===== */
+        .leaderboard-table-wrap {
+          position: relative;
+        }
+
+        /* ===== 粘性表头 ===== */
+        .leaderboard-table-header {
+          position: sticky;
+          top: 0;
+          z-index: 2;
+          background: var(--card-soft);
+          border-bottom: 2px solid var(--border);
+        }
+        .leaderboard-table-header table {
+          width: 100%;
+          table-layout: fixed;
+          border-collapse: collapse;
+        }
+        .leaderboard-table-header th {
+          padding: 10px 8px;
+          text-align: center;
+          font-weight: 700;
+          font-size: 0.78rem;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          color: var(--text-light);
+          white-space: nowrap;
+          line-height: 1.3;
+        }
+        .leaderboard-table-header th.lb-th-left {
+          text-align: left;
+          padding-left: 14px;
+        }
+        html[data-theme="blast"] .leaderboard-table-header th {
+          color: var(--primary);
+        }
+
+        /* ===== 可滚动表体 ===== */
+        .leaderboard-table-body {
+          overflow-y: auto;
+          overflow-x: hidden;
+          scroll-behavior: smooth;
+          overscroll-behavior: contain;
+          -webkit-overflow-scrolling: touch;
+        }
+        .leaderboard-table-body table {
+          width: 100%;
+          table-layout: fixed;
+          border-collapse: collapse;
+          font-size: 0.85rem;
+        }
+        .leaderboard-table-body td {
+          padding: 11px 8px;
+          text-align: center;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          line-height: 1.3;
+          border-bottom: 1px solid var(--border);
+        }
+
+        /* ===== 滚动条样式 ===== */
+        .leaderboard-table-body::-webkit-scrollbar {
+          width: 6px;
+        }
+        .leaderboard-table-body::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .leaderboard-table-body::-webkit-scrollbar-thumb {
+          background: rgba(217, 255, 63, 0.28);
+          border-radius: 3px;
+        }
+        .leaderboard-table-body::-webkit-scrollbar-thumb:hover {
+          background: rgba(217, 255, 63, 0.48);
+        }
+        html:not([data-theme="blast"]) .leaderboard-table-body::-webkit-scrollbar-thumb {
+          background: rgba(32, 17, 24, 0.18);
+        }
+        html:not([data-theme="blast"]) .leaderboard-table-body::-webkit-scrollbar-thumb:hover {
+          background: rgba(32, 17, 24, 0.32);
+        }
+        .leaderboard-table-body {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(217, 255, 63, 0.28) transparent;
+        }
+
+        /* ===== 单元格 ===== */
+        .lb-rank { font-weight: 700; }
+        .lb-player {
+          text-align: left !important;
+          padding-left: 14px !important;
+          font-weight: 600;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .lb-stat { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+        /* ===== 行样式 ===== */
+        .lb-row {
+          animation: lb-row-enter 0.35s ease both;
+          transition: background 0.15s;
+        }
+        .lb-row:hover {
+          filter: brightness(1.04);
+        }
+
+        /* ===== 前三名奖牌行 ===== */
+        .lb-row-top1 {
+          border-left: 3px solid #ffd700;
+          font-weight: 700;
+        }
+        .lb-row-top2 {
+          border-left: 3px solid #c0c0c0;
+          font-weight: 700;
+        }
+        .lb-row-top3 {
+          border-left: 3px solid #cd7f32;
+          font-weight: 700;
+        }
+        /* Blast 主题下前三名额外发光 */
+        html[data-theme="blast"] .lb-row-top1 {
+          box-shadow: inset 0 0 18px rgba(255,215,0,0.08);
+        }
+        html[data-theme="blast"] .lb-row-top2 {
+          box-shadow: inset 0 0 14px rgba(192,192,192,0.06);
+        }
+        html[data-theme="blast"] .lb-row-top3 {
+          box-shadow: inset 0 0 12px rgba(205,127,50,0.06);
+        }
+
+        @keyframes lb-row-enter {
+          from { opacity: 0; transform: translateY(6px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== 底部计数 ===== */
+        .leaderboard-footer {
+          padding: 9px 16px;
+          text-align: center;
+          font-size: 0.78rem;
+          color: var(--text-light);
+          border-top: 1px solid var(--border);
+          background: var(--card-soft);
+        }
+
+        /* ===== 移动端适配 ===== */
+        @media (max-width: 640px) {
+          .leaderboard-card {
+            border-radius: var(--radius-sm);
+          }
+          .leaderboard-table-body {
+            max-height: ${HEADER_HEIGHT + ROW_HEIGHT * VISIBLE_ROWS}px !important;
+          }
+          .leaderboard-table-header th,
+          .leaderboard-table-body td {
+            padding: 8px 3px;
+            font-size: 0.72rem;
+          }
+          .leaderboard-table-header th.lb-th-left,
+          .lb-player {
+            padding-left: 8px !important;
+          }
+          .leaderboard-mode-tabs {
+            width: 100%;
+          }
+          .leaderboard-mode-tabs button {
+            padding: 8px 8px;
+            font-size: 0.82rem;
+          }
+        }
+
+        @media (max-width: 380px) {
+          .leaderboard-table-header th,
+          .leaderboard-table-body td {
+            font-size: 0.65rem;
+            padding: 6px 1px;
+          }
+          .leaderboard-table-header th.lb-th-left,
+          .lb-player {
+            padding-left: 4px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

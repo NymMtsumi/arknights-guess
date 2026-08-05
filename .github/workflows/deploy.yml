@@ -11,13 +11,16 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: 部署到 VPS
-        shell: bash
+      - name: 连通性测试
         run: |
-          mkdir -p ~/.ssh
-          printf '%s\n' "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
+          echo "Testing SSH connectivity..."
+          nc -zv -w5 ${{ secrets.VPS_HOST }} 22 || echo "WARNING: Port 22 blocked"
+
+      - name: 部署到 VPS
+        run: |
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh -i ~/.ssh/deploy_key \
+          ssh -v -i ~/.ssh/deploy_key \
             -o StrictHostKeyChecking=no \
             -o IdentitiesOnly=yes \
             -o ConnectTimeout=15 \
@@ -29,4 +32,4 @@ jobs:
               npm install --production
               pm2 restart liyiba
               echo '✅ 部署完成'
-            "
+            " 2>&1

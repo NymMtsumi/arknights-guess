@@ -1,10 +1,6 @@
 'use client';
 
-import { useI18n } from '@/lib/i18n';
-
 export function Footer() {
-  const { t } = useI18n();
-
   return (
     <footer
       style={{
@@ -14,16 +10,9 @@ export function Footer() {
         fontSize: 'var(--fs-2xs)',
       }}
     >
-      <span>制作人：{t('footer.credit')}</span>
+      <span>Made with ❤️ by 若叶家若麦</span>
       <span style={{ margin: '0 8px', color: 'var(--border)' }}>·</span>
-      <a
-        href="https://space.bilibili.com/1327884464"
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{ color: 'var(--primary)', textDecoration: 'none', fontWeight: 600 }}
-      >
-        {t('footer.bilibili')}
-      </a>
+      <span>Based on PRTS data & Friberg open-source project</span>
     </footer>
   );
 }

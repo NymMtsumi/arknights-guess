@@ -685,12 +685,44 @@ html:not([data-theme="blast"]) .menu-description { color: var(--text-sec); }
 
 html[data-theme="blast"] .menu-arrow { color: var(--primary); }
 
+/* 小卡片变体 — 高度降低，更紧凑 */
+.menu-card-sm {
+  min-height: 120px;
+  padding: clamp(14px, 2vw, 20px);
+  gap: clamp(10px, 1.5vw, 14px);
+}
+
+.menu-card-sm .menu-icon {
+  width: clamp(32px, 4vw, 42px);
+  height: clamp(32px, 4vw, 42px);
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+}
+
+.menu-card-sm .menu-label {
+  font-size: clamp(0.92rem, 1.2vw, 1.02rem);
+}
+
+.menu-card-sm .menu-description {
+  font-size: var(--fs-2xs);
+}
+
 .menu-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
   gap: 14px;
   max-width: var(--content-max);
   margin: 0 auto;
+}
+
+.menu-grid-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 1.8vw, 1.35rem);
+  font-weight: 800;
+  font-style: italic;
+  letter-spacing: 0.04em;
+  color: var(--text-light);
+  margin-bottom: 10px;
+  padding-left: 2px;
 }
 
 @media (max-width: 640px) {
@@ -703,6 +735,7 @@ html[data-theme="blast"] .menu-arrow { color: var(--primary); }
   .hero-subtitle { font-size: 0.94rem; }
   .menu-grid { gap: 10px; }
   .menu-card { min-height: 158px; padding: 18px 13px; }
+  .menu-card-sm { min-height: 100px; padding: 14px 12px; gap: 10px; }
   html[data-theme="blast"] .menu-card {
     clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
   }
@@ -716,6 +749,7 @@ html[data-theme="blast"] .menu-arrow { color: var(--primary); }
   .home-hero { min-height: 250px; padding-inline: 16px; }
   .home-hero h1 { font-size: clamp(2.8rem, 17vw, 4rem); }
   .menu-card { min-height: 112px; padding: 16px 18px; gap: 14px; }
+  .menu-card-sm { min-height: 90px; padding: 14px 16px; gap: 10px; }
   .menu-icon { flex: 0 0 auto; }
   .menu-description { display: block; font-size: var(--fs-xs); }
   .menu-arrow { right: 14px; bottom: 14px; }

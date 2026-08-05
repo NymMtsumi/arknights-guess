@@ -34,6 +34,9 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# sensitive project info
+PROJECT_CREDENTIALS.md
+
 # vercel
 .vercel
 
@@ -44,3 +47,16 @@ next-env.d.ts
 # raw game data (14MB, not needed for build)
 scripts/character_table_raw.json
 cloudflared-linux-amd64
+
+# OpenNext
+.open-next
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+
+# SQLite database (contains user data, do not commit)
+server/data.db
+server/data.db-shm
+server/data.db-wal

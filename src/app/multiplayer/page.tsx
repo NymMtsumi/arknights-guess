@@ -7,7 +7,8 @@ import { GameSearch } from '@/components/GameSearch';
 import { GuessTable } from '@/components/GuessTable';
 import { ScrollSlider } from '@/components/ScrollSlider';
 import { useGameStore } from '@/stores/game-store';
-import { saveGameStats } from '@/lib/stats';
+import { saveMultiGameStats, type MultiRoundResult } from '@/lib/stats';
+import { getUser } from '@/lib/auth';
 import { findCharacterByName } from '@/lib/game-engine';
 import type { Character } from '@/types/character';
 import charactersData from '@/data/characters.json';
@@ -41,7 +42,7 @@ function saveNick(n: string) {
   try { localStorage.setItem(NICK_KEY, n); } catch {}
 }
 
-type Stage = 'menu' | 'lobby' | 'waiting' | 'playing' | 'roundEnd' | 'matchEnd';
+type Stage = 'menu' | 'lobby' | 'waiting' | 'playing' | 'roundEnd' | 'matchEnd' | 'matchmaking';
 
 export default function MultiplayerPage() {
   const [stage, setStage] = useState<Stage>('menu');
@@ -66,13 +67,56 @@ export default function MultiplayerPage() {
   const [oppDisconnected, setOppDisconnected] = useState(false);
   const [roomExpireTime, setRoomExpireTime] = useState(0);
   const [rematchReady, setRematchReady] = useState(false);
+  const [queuePosition, setQueuePosition] = useState(0);
+  const [matchDifficulty, setMatchDifficulty] = useState('');
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const connectTimer = useRef<NodeJS.Timeout | null>(null);
   const myColorsRef = useRef<string[][]>([]);
+  const roundResultsRef = useRef<MultiRoundResult[]>([]);
+  const bestOfRef = useRef(5);
+  const oppNameRef = useRef('');
   const roomCodeRef = useRef('');
   const socketRef = useRef<Socket | null>(null);
   const myBoardScrollRef = useRef<HTMLDivElement>(null);
   const oppBoardScrollRef = useRef<HTMLDivElement>(null);
+
+  // 页面加载时自动重连已保存的房间
+  useEffect(() => {
+    const savedCode = loadRoomCode();
+    if (!savedCode) return;
+    if (socketRef.current?.connected) return;
+    const s = connect();
+    s.emit("reconnect_room", { code: savedCode });
+    s.emit("_log", { action: "auto_reconnect" });
+    connectTimer.current = setTimeout(() => { s.disconnect(); setConnecting(""); }, 15000);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Set default player name from auth or guest identity
+  useEffect(() => {
+    if (loadNick()) return; // User already has a saved name
+
+    const user = getUser();
+    if (user) {
+      const name = user.nickname || user.username;
+      if (name) setPlayerName(name.slice(0, 4));
+      return;
+    }
+
+    // Not logged in — fetch guest identity
+    const wsUrl = process.env.NEXT_PUBLIC_WS_URL;
+    const base = (wsUrl && wsUrl.startsWith('https://ws.'))
+      ? wsUrl.replace('https://ws.', 'https://')
+      : 'http://localhost:3001';
+    fetch(`${base}/api/guest-identity`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.displayName) setPlayerName(data.displayName.slice(0, 4));
+      })
+      .catch(() => {}); // Silently fail
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Keep refs in sync for socket event handlers
+  useEffect(() => { bestOfRef.current = bestOf; }, [bestOf]);
+  useEffect(() => { oppNameRef.current = oppName; }, [oppName]);
 
   const store = useGameStore();
 
@@ -82,6 +126,11 @@ export default function MultiplayerPage() {
   };
 
   const connect = () => {
+    // 如果已有活跃连接，先断开旧的
+    if (socketRef.current?.connected) {
+      socketRef.current.removeAllListeners();
+      socketRef.current.disconnect();
+    }
     const s = io(SERVER_URL, {
       transports: ['websocket', 'polling'],
       reconnection: true,
@@ -102,10 +151,6 @@ export default function MultiplayerPage() {
       if (d.started) { setStage('playing'); setMyWins(d.wins||0); }
       else { setRoomExpireTime(Date.now() + 120_000); setStage('waiting'); }
     });
-    s.on('connect_timeout', () => {
-      clearConnecting();
-      setError('连接超时，请检查网络');
-    });
 
     // 接收服务器 Cookie 设置指令
     s.on('set_cookie', (d: any) => {
@@ -119,6 +164,30 @@ export default function MultiplayerPage() {
     });
 
     s.on('room_created', (d) => { clearConnecting(); setRoomCode(d.code); roomCodeRef.current = d.code; saveRoomCode(d.code); setBestOf(d.bestOf); setRoomExpireTime(Date.now() + 120_000); setStage('waiting'); });
+    // 重连后恢复完整游戏状态
+    s.on("reconnect_state", (d) => {
+      clearConnecting();
+      setRoomCode(d.code); roomCodeRef.current = d.code; saveRoomCode(d.code);
+      setBestOf(d.bestOf); if (d.difficulty) setDifficulty(d.difficulty);
+      setStage("playing"); setTimeLeft(120);
+      setOppGuessCount(0); setOppGrid([]);
+      setISurrendered(false); setOppSurrendered(false);
+      setOppDisconnected(false);
+      setRoundEndData(null); myColorsRef.current = [];
+      const me = s.id;
+      const opp = d.players.find((p: any) => p.id !== me);
+      if (opp) { setOppName(opp.name); setOppWins(opp.wins); }
+      const meP = d.players.find((p: any) => p.id === me);
+      if (meP) setMyWins(meP.wins);
+      const target = d.target?.name ? findCharacterByName(allChars, d.target.name) : null;
+      if (target) {
+        useGameStore.setState({ status: "playing", target, guesses: [], remainingGuesses: 8, difficulty: "hard" });
+      }
+      if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+      timerRef.current = setInterval(() => {
+        setTimeLeft(t => { if (t <= 1) { clearInterval(timerRef.current!); timerRef.current = null; return 0; } return t - 1; });
+      }, 1000);
+    });
 
     s.on('round_start', (d) => {
       clearConnecting();
@@ -152,13 +221,33 @@ export default function MultiplayerPage() {
 
     s.on('round_end', (d) => {
       setStage('roundEnd'); setRoundEndData(d);
+      // 记录本小局结果
+      const mySid = s.id as string;
+      const state = useGameStore.getState();
+      roundResultsRef.current.push({
+        targetName: d.targetName || '?',
+        won: d.winner === mySid,
+        guessCount: state.guesses.length,
+      });
       if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     });
 
     s.on('match_end', (d) => {
-      const state = useGameStore.getState();
-      // 比赛结束时统计（无论何种原因）
-      saveGameStats(d.winnerName === playerName, state.guesses.length, 'multi', '');
+      // 比赛结束时保存详细统计
+      const mySid = s.id as string;
+      const scoreMap: Record<string, number> = d.score || {};
+      const myScore = scoreMap[mySid] || 0;
+      const oppId = Object.keys(scoreMap).find(k => k !== mySid) || '';
+      const oppScore = scoreMap[oppId] || 0;
+      saveMultiGameStats({
+        won: d.winner === mySid,
+        bestOf: bestOfRef.current || 1,
+        myScore,
+        opponentScore: oppScore,
+        opponentName: oppNameRef.current || '对手',
+        rounds: [...roundResultsRef.current],
+      });
+      roundResultsRef.current = [];
       clearRoomCode();
       setStage('matchEnd');
       setEndMsg(d.reason === 'disconnect' ? `${d.winnerName} 获胜（对方断线超30秒）` : `${d.winnerName} 赢得比赛！\n${d.score}`);
@@ -172,9 +261,48 @@ export default function MultiplayerPage() {
       setBestOf(d.bestOf);
       setTimeLeft(120); setOppGuessCount(0); setOppGrid([]);
       setISurrendered(false); setOppSurrendered(false);
+      roundResultsRef.current = [];
       setOppDisconnected(false); setRoundEndData(null);
       myColorsRef.current = [];
       useGameStore.setState({ status: 'idle', target: null, guesses: [], remainingGuesses: 8, difficulty: 'hard' });
+    });
+
+    // === 匹配队列事件 ===
+    s.on('matchmaking:status', (d: any) => {
+      if (d.queued) {
+        setQueuePosition(d.position);
+        setMatchDifficulty(d.difficulty);
+        setStage('matchmaking');
+        clearConnecting();
+      } else {
+        // 离开队列
+        setStage('menu');
+        setQueuePosition(0);
+        setMatchDifficulty('');
+      }
+    });
+
+    s.on('matchmaking:matched', (d: any) => {
+      clearConnecting();
+      setRoomCode(d.roomCode);
+      roomCodeRef.current = d.roomCode;
+      saveRoomCode(d.roomCode);
+      setBestOf(d.bestOf);
+      if (d.difficulty) setDifficulty(d.difficulty);
+      setOppName(d.opponent.name);
+      setMyWins(0);
+      setOppWins(0);
+      setOppGuessCount(0);
+      setOppGrid([]);
+      setTimeLeft(120);
+      setISurrendered(false);
+      setOppSurrendered(false);
+      setOppDisconnected(false);
+      setRoundEndData(null);
+      myColorsRef.current = [];
+      setQueuePosition(0);
+      setMatchDifficulty('');
+      // round_start 会紧随其后，触发 stage → 'playing'
     });
 
     // 全部监听器就绪后才连接
@@ -204,6 +332,29 @@ export default function MultiplayerPage() {
     s.emit('join_room', { code: roomCodeRef.current, playerName: playerName.trim() });
     s.emit('_log', { action: 'join_room' });
     connectTimer.current = setTimeout(() => { s.disconnect(); setConnecting(''); setError('加入超时'); }, 30000);
+  };
+
+  const handleQuickMatch = () => {
+    clearConnecting();
+    if (!playerName.trim() || playerName.trim().length > 4) { setError('昵称最多4个汉字'); return; }
+    setError(''); saveNick(playerName.trim()); setConnecting('quickmatch');
+    const s = connect();
+    s.emit('matchmaking:join', { playerName: playerName.trim(), difficulty });
+    s.emit('_log', { action: 'quickmatch' });
+    connectTimer.current = setTimeout(() => { s.disconnect(); setConnecting(''); setError('匹配超时，请重试'); }, 60000);
+  };
+
+  const handleLeaveQueue = () => {
+    const s = socketRef.current;
+    if (s?.connected) {
+      s.emit('matchmaking:leave');
+      s.emit('_log', { action: 'leave_queue' });
+    }
+    setStage('menu');
+    setQueuePosition(0);
+    setMatchDifficulty('');
+    setConnecting('');
+    if (connectTimer.current) { clearTimeout(connectTimer.current); connectTimer.current = null; }
   };
 
   // 等待页面倒计时每秒刷新
@@ -268,7 +419,8 @@ export default function MultiplayerPage() {
           <div style={{ textAlign: 'center', maxWidth: '450px' }}>
             <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.5rem,4vw,2rem)', fontStyle: 'italic', fontWeight: 900, marginBottom: '16px' }}>⚔️ 多人对战</h1>
             <p style={{ color: 'var(--text-light)', fontSize: '0.9rem', marginBottom: '14px' }}>BO3 / BO5 / BO7 · 每局 2 分钟 · 先达胜场者胜</p>
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '16px', flexWrap: 'wrap' }}>
+            <input value={playerName} onChange={e => setPlayerName(e.target.value)} placeholder="昵称（最多4个字）" style={{ ...inp, marginBottom: '10px', maxWidth: '240px' }} maxLength={4} />
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '12px', flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', gap: '8px', flexBasis: '100%', justifyContent: 'center', marginBottom: '4px' }}>
                 {['easy','medium','hard'].map(d => (
                   <button key={d} onClick={() => setDifficulty(d)} style={{
@@ -278,6 +430,12 @@ export default function MultiplayerPage() {
                   }}>{d==='easy'?'简单':d==='medium'?'普通':'困难'}</button>
                 ))}
               </div>
+            {/* 快速匹配按钮 */}
+            <button onClick={handleQuickMatch} disabled={!!connecting} style={{
+              width: '100%', padding: '12px 20px', background: connecting ? 'var(--card-soft)' : 'var(--accent)', color: connecting ? 'var(--text-light)' : '#fff',
+              border: 'none', borderRadius: 'var(--radius)', fontSize: '1.05rem', fontWeight: 700,
+              cursor: connecting ? 'default' : 'pointer', marginTop: '4px', opacity: connecting ? 0.7 : 1,
+            }}>{connecting ? '连接中...' : '⚡ 快速匹配'}</button>
               <div style={{ display: 'flex', gap: '8px' }}>
               {[3,5,7].map(n => (
                 <button key={n} onClick={() => setBestOf(n)} style={{
@@ -287,15 +445,16 @@ export default function MultiplayerPage() {
                 }}>BO{n}</button>
               ))}
             </div>
+            {error && <p style={{ color: 'var(--danger)', fontSize: '0.85rem', marginTop: '8px' }}>{error}</p>}
             {/* 我的房间 */}
             {loadRoomCode() && (
-              <div style={{ width: '100%', maxWidth: '320px', padding: '12px', background: 'var(--card-soft)', borderRadius: 'var(--radius)', border: '1px solid var(--primary)', marginBottom: '12px' }}>
+              <div style={{ width: '100%', maxWidth: '320px', padding: '12px', background: 'var(--card-soft)', borderRadius: 'var(--radius)', border: '1px solid var(--primary)', marginBottom: '12px', marginTop: '12px' }}>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-light)', marginBottom: '4px' }}>📋 上次房间</p>
                 <p style={{ fontSize: '1.3rem', fontFamily: 'monospace', fontWeight: 900, color: 'var(--primary)' }}>{loadRoomCode()}</p>
-                <button onClick={() => { setConnecting('join'); const s = connect(); s.emit('create_room', { playerName: playerName.trim() || '玩家', bestOf: 5, difficulty: 'hard', _fromQuickRejoin: true }); s.emit('_log', { action: 'quick_rejoin' }); connectTimer.current = setTimeout(() => { s.disconnect(); setConnecting(''); setError('重连超时'); }, 30000); }} style={{ ...btn, marginTop: '8px', padding: '6px 16px', fontSize: '0.9rem' }}>🚪 快速重连</button>
+                <button onClick={() => { setConnecting('join'); const s = connect(); s.emit('reconnect_room', { code: loadRoomCode() }); s.emit('_log', { action: 'quick_rejoin' }); connectTimer.current = setTimeout(() => { s.disconnect(); setConnecting(''); setError('重连超时'); }, 30000); }} style={{ ...btn, marginTop: '8px', padding: '6px 16px', fontSize: '0.9rem' }}>🚪 快速重连</button>
               </div>
             )}
-            <button onClick={() => setStage('lobby')} style={btn}>🏠 创建 / 加入房间</button>
+            <button onClick={() => setStage('lobby')} style={{ ...btn, marginTop: '8px' }}>🏠 创建 / 加入房间</button>
           </div>
           </div>
         )}
@@ -336,6 +495,29 @@ export default function MultiplayerPage() {
                 </p>
               </>
             )}
+          </div>
+        )}
+
+        {/* ===== 匹配中 ===== */}
+        {stage === 'matchmaking' && (
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '2.5rem', marginBottom: '10px', animation: 'neon-pulse 1.5s infinite' }}>⚡</div>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontStyle: 'italic', fontWeight: 700, marginBottom: '8px' }}>
+              正在寻找对手...
+            </h2>
+            <p style={{ color: 'var(--text-light)', fontSize: '0.9rem', marginBottom: '8px' }}>
+              难度：{matchDifficulty === 'easy' ? '简单' : matchDifficulty === 'medium' ? '普通' : '困难'} · BO5
+            </p>
+            {queuePosition > 0 && (
+              <p style={{ color: 'var(--text-light)', fontSize: '0.85rem', marginBottom: '16px' }}>
+                队列位置：第 {queuePosition} 位
+              </p>
+            )}
+            <button onClick={handleLeaveQueue} style={{
+              padding: '10px 24px', background: 'transparent', color: 'var(--text)',
+              border: '1px solid var(--border)', borderRadius: 'var(--radius)',
+              fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem',
+            }}>取消匹配</button>
           </div>
         )}
 
@@ -440,9 +622,9 @@ export default function MultiplayerPage() {
         {connecting && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }}>
             <div style={{ background:'var(--card)', padding:'32px', borderRadius:'var(--radius)', textAlign:'center' }}>
-              <div style={{ fontSize:'2rem', marginBottom:'10px', animation:'neon-pulse 1.5s infinite' }}>{connecting==='create'?'🏠':'🚪'}</div>
-              <p style={{ fontSize:'1.1rem', fontWeight:700 }}>{connecting==='create'?'正在创建房间...':'正在加入房间...'}</p>
-              <p style={{ color:'var(--text-light)', fontSize:'0.8rem', marginTop:'6px' }}>连接中，最多 30 秒</p>
+              <div style={{ fontSize:'2rem', marginBottom:'10px', animation:'neon-pulse 1.5s infinite' }}>{connecting==='create'?'🏠':connecting==='quickmatch'?'⚡':'🚪'}</div>
+              <p style={{ fontSize:'1.1rem', fontWeight:700 }}>{connecting==='create'?'正在创建房间...':connecting==='quickmatch'?'正在寻找对手...':'正在加入房间...'}</p>
+              <p style={{ color:'var(--text-light)', fontSize:'0.8rem', marginTop:'6px' }}>{connecting==='quickmatch'?'连接中，最多 60 秒':'连接中，最多 30 秒'}</p>
             </div>
           </div>
         )}

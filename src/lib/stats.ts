@@ -1,3 +1,5 @@
+import { getServerUrl, getToken, getPlayerKey } from './auth';
+
 export interface StatsData {
   totalGames: number;
   wins: number;
@@ -14,9 +16,114 @@ export interface GameRecord {
   difficulty: string;
 }
 
+export interface MultiRoundResult {
+  targetName: string;
+  won: boolean;        // 该小局是否获胜
+  guessCount: number;
+}
+
+export interface MultiGameRecord {
+  timestamp: number;
+  mode: 'multi';
+  won: boolean;         // 整场比赛是否获胜
+  bestOf: number;
+  myScore: number;
+  opponentScore: number;
+  opponentName: string;
+  rounds: MultiRoundResult[];
+}
+
+export type HistoryRecord = GameRecord | MultiGameRecord;
+
 const STATS_KEY = 'arknights-guess-stats';
 const HISTORY_KEY = 'arknights-guess-history';
+const VERSION_KEY = 'arknights-guess-data-version';
 const MAX_HISTORY = 80;
+
+// 当前数据格式版本（递增此值以触发客户端迁移）
+const CURRENT_DATA_VERSION = 2;
+
+/** 检测并迁移旧版数据到当前版本 */
+function migrateData(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const storedVersion = parseInt(localStorage.getItem(VERSION_KEY) || '0', 10);
+    if (storedVersion >= CURRENT_DATA_VERSION) return;
+
+    console.log(`[DataMigration] v${storedVersion} → v${CURRENT_DATA_VERSION}, migrating...`);
+
+    // v0 → v1: 无版本号 → 首次标记
+    // v1 → v2: 旧版 stats/history 格式兼容
+    //   - 修复 stats 中某些字段可能为字符串的问题
+    //   - 修复 history 中可能缺少字段的旧记录
+    if (storedVersion < 2) {
+      // 迁移 stats
+      try {
+        const rawStats = localStorage.getItem(STATS_KEY);
+        if (rawStats) {
+          const stats = JSON.parse(rawStats);
+          if (stats && typeof stats === 'object') {
+            // 确保所有字段都是数字
+            stats.totalGames = Number(stats.totalGames) || 0;
+            stats.wins = Number(stats.wins) || 0;
+            stats.losses = Number(stats.losses) || 0;
+            stats.totalGuesses = Number(stats.totalGuesses) || 0;
+            stats.bestScore = Number(stats.bestScore) || 0;
+            localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+          }
+        }
+      } catch {}
+
+      // 迁移 history
+      try {
+        const rawHistory = localStorage.getItem(HISTORY_KEY);
+        if (rawHistory) {
+          const history = JSON.parse(rawHistory);
+          if (Array.isArray(history)) {
+            const migrated = history
+              .filter(r => r && typeof r === 'object')
+              .map((r: any) => {
+                // 转换旧字段（如果缺失）
+                return {
+                  timestamp: Number(r.timestamp) || Date.now(),
+                  won: Boolean(r.won),
+                  guessCount: Number(r.guessCount) || 0,
+                  difficulty: String(r.difficulty || 'hard'),
+                  targetName: String(r.targetName || r.name || ''),
+                  // 保留多人字段（如果存在）
+                  ...(r.mode === 'multi' ? {
+                    mode: 'multi' as const,
+                    bestOf: Number(r.bestOf) || 0,
+                    myScore: Number(r.myScore) || 0,
+                    opponentScore: Number(r.opponentScore) || 0,
+                    opponentName: String(r.opponentName || ''),
+                    rounds: Array.isArray(r.rounds) ? r.rounds.map((rd: any) => ({
+                      targetName: String(rd.targetName || ''),
+                      won: Boolean(rd.won),
+                      guessCount: Number(rd.guessCount) || 0,
+                    })) : [],
+                  } : {}),
+                };
+              })
+              .slice(0, MAX_HISTORY);
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(migrated));
+          }
+        }
+      } catch {}
+    }
+
+    // 标记当前版本
+    localStorage.setItem(VERSION_KEY, String(CURRENT_DATA_VERSION));
+    console.log(`[DataMigration] Migration to v${CURRENT_DATA_VERSION} complete`);
+  } catch (err) {
+    console.warn('[DataMigration] Migration error:', err);
+  }
+}
+
+// 初始化时执行迁移
+if (typeof window !== 'undefined') {
+  migrateData();
+}
 
 function isValidStatsData(data: unknown): data is StatsData {
   if (!data || typeof data !== 'object') return false;
@@ -43,23 +150,38 @@ export function loadStats(): StatsData {
   return { totalGames: 0, wins: 0, losses: 0, totalGuesses: 0, bestScore: 0 };
 }
 
-function isValidGameRecord(r: unknown): r is GameRecord {
+function isValidRecord(r: unknown): r is HistoryRecord {
   if (!r || typeof r !== 'object') return false;
   const rec = r as Record<string, unknown>;
+  // MultiGameRecord check
+  if (rec.mode === 'multi') {
+    return typeof rec.timestamp === 'number' &&
+      typeof rec.won === 'boolean' &&
+      typeof rec.bestOf === 'number' &&
+      typeof rec.myScore === 'number' &&
+      typeof rec.opponentScore === 'number' &&
+      typeof rec.opponentName === 'string' &&
+      Array.isArray(rec.rounds) &&
+      rec.rounds.every((rd: any) =>
+        typeof rd.targetName === 'string' &&
+        typeof rd.won === 'boolean' &&
+        typeof rd.guessCount === 'number'
+      );
+  }
+  // Single GameRecord check
   return typeof rec.timestamp === 'number' &&
-    typeof rec.targetName === 'string' &&
     typeof rec.won === 'boolean' &&
     typeof rec.guessCount === 'number' &&
     typeof rec.difficulty === 'string';
 }
 
-export function loadHistory(): GameRecord[] {
+export function loadHistory(): HistoryRecord[] {
   if (typeof window === 'undefined') return [];
   try {
     const stored = localStorage.getItem(HISTORY_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed) && parsed.every(isValidGameRecord)) return parsed;
+      if (Array.isArray(parsed) && parsed.every(isValidRecord)) return parsed;
       console.warn('[Stats] Invalid history shape in localStorage, resetting to defaults');
     }
   } catch (err) {
@@ -68,6 +190,54 @@ export function loadHistory(): GameRecord[] {
   return [];
 }
 
+function saveHistory(record: HistoryRecord) {
+  const history = loadHistory();
+  console.log('[Stats] Saving record:', record);
+  history.unshift(record);
+  if (history.length > MAX_HISTORY) history.length = MAX_HISTORY;
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(history)); } catch (err) { console.warn('[Stats] Failed to save history:', err); }
+}
+
+export async function saveGameToServer(won: boolean, guessCount: number, difficulty: string, targetName: string): Promise<void> {
+  if (typeof window === 'undefined') return;
+
+  try {
+    const base = getServerUrl();
+    const token = getToken();
+    const playerKey = getPlayerKey();
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const res = await fetch(`${base}/api/save-game`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        player_key: playerKey,
+        won,
+        guessCount,
+        difficulty,
+        targetName,
+        mode: 'single',
+        timestamp: Date.now(),
+      }),
+    });
+
+    if (res.ok) {
+      console.log('[Stats] Game saved to server');
+    } else {
+      console.warn('[Stats] Server save-game returned non-ok:', res.status);
+    }
+  } catch (err) {
+    console.warn('[Stats] Failed to save game to server:', err);
+  }
+}
+
+/** 单人游戏存档 */
 export function saveGameStats(won: boolean, guessCount: number, difficulty: string, targetName: string) {
   const stats = loadStats();
   stats.totalGames++;
@@ -82,16 +252,131 @@ export function saveGameStats(won: boolean, guessCount: number, difficulty: stri
   }
   try { localStorage.setItem(STATS_KEY, JSON.stringify(stats)); } catch (err) { console.warn('[Stats] Failed to save stats:', err); }
 
-  // 保存历史
-  const history = loadHistory();
-  console.log('[Stats] Saving game:', { won, guessCount, difficulty, targetName, historyBefore: history.length });
-  history.unshift({
+  saveHistory({
     timestamp: Date.now(),
     targetName,
     won,
     guessCount,
     difficulty,
   });
-  if (history.length > MAX_HISTORY) history.length = MAX_HISTORY;
-  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(history)); } catch (err) { console.warn('[Stats] Failed to save history:', err); }
+
+  // Fire-and-forget server sync
+  saveGameToServer(won, guessCount, difficulty, targetName).catch(() => {});
+}
+
+/** 多人比赛存档 */
+export function saveMultiGameStats(result: {
+  won: boolean;
+  bestOf: number;
+  myScore: number;
+  opponentScore: number;
+  opponentName: string;
+  rounds: MultiRoundResult[];
+}) {
+  const stats = loadStats();
+  stats.totalGames++;
+  if (result.won) {
+    stats.wins++;
+    // 多人模式不计 bestScore（逻辑不适用）
+  } else {
+    stats.losses++;
+  }
+  try { localStorage.setItem(STATS_KEY, JSON.stringify(stats)); } catch (err) { console.warn('[Stats] Failed to save stats:', err); }
+
+  saveHistory({
+    timestamp: Date.now(),
+    mode: 'multi',
+    won: result.won,
+    bestOf: result.bestOf,
+    myScore: result.myScore,
+    opponentScore: result.opponentScore,
+    opponentName: result.opponentName,
+    rounds: result.rounds,
+  });
+
+  // 同步到服务器
+  saveMultiToServer(result).catch(() => {});
+}
+
+/** 从服务器获取游戏历史 */
+export async function fetchHistoryFromServer(limit = 80): Promise<HistoryRecord[]> {
+  if (typeof window === 'undefined') return [];
+  try {
+    const base = getServerUrl();
+    const token = getToken();
+    if (!token) return [];
+
+    const headers: Record<string, string> = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+    const res = await fetch(`${base}/api/history?limit=${limit}`, { headers });
+    if (!res.ok) return [];
+    const data = await res.json();
+    if (Array.isArray(data.history)) {
+      return data.history.map((r: any) => {
+        if (r.mode === 'multi') {
+          return {
+            timestamp: r.timestamp,
+            mode: 'multi' as const,
+            won: r.won,
+            bestOf: r.bestOf || 0,
+            myScore: r.myScore || 0,
+            opponentScore: r.opponentScore || 0,
+            opponentName: r.opponentName || r.targetName || '',
+            rounds: r.rounds || [],
+          };
+        }
+        return {
+          timestamp: r.timestamp,
+          targetName: r.targetName || '',
+          won: r.won,
+          guessCount: r.guessCount || 0,
+          difficulty: r.difficulty || 'hard',
+        };
+      });
+    }
+    return [];
+  } catch (err) {
+    console.warn('[Stats] Failed to fetch history from server:', err);
+    return [];
+  }
+}
+
+/** 检测是否为鉴权错误（401），供调用方处理过期登录 */
+export function isAuthError(err: unknown): boolean {
+  return err instanceof Error && err.message.includes('登录已过期');
+}
+
+/** 多人比赛存档到服务器 */
+async function saveMultiToServer(result: {
+  won: boolean;
+  bestOf: number;
+  myScore: number;
+  opponentScore: number;
+  opponentName: string;
+  rounds: MultiRoundResult[];
+}) {
+  if (typeof window === 'undefined') return;
+  try {
+    const base = getServerUrl();
+    const token = getToken();
+    const playerKey = getPlayerKey();
+
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    await fetch(`${base}/api/save-game`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        player_key: playerKey,
+        won: result.won,
+        guessCount: result.rounds.reduce((sum, r) => sum + r.guessCount, 0),
+        difficulty: 'multi',
+        targetName: result.opponentName,
+        mode: 'multi',
+        timestamp: Date.now(),
+      }),
+    });
+  } catch (err) {
+    console.warn('[Stats] Failed to save multi game to server:', err);
+  }
 }

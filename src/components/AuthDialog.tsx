@@ -20,11 +20,41 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
   const [sendingVerify, setSendingVerify] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const currentUser = typeof window !== 'undefined' ? getUser() : null;
+  // 本次登录时返回的 email_verified，避免重新调用 fetchMe
+  const [loginEmailVerified, setLoginEmailVerified] = useState<boolean | null>(null);
+  // 检测验证成功跳转回来的标记
+  const [verifySuccessMsg, setVerifySuccessMsg] = useState('');
+  if (open && typeof window !== 'undefined' && !currentUser) {
+    try {
+      const raw = localStorage.getItem('arknights-verify-success');
+      if (raw) {
+        const data = JSON.parse(raw);
+        if (Date.now() - data.ts < 600_000 && data.username) { // 10分钟内有效
+          setVerifySuccessMsg(`✅ 邮箱 ${data.email || ''} 验证成功！请用账号 ${data.username} 登录`);
+          setMode('login');
+        }
+        localStorage.removeItem('arknights-verify-success');
+      }
+    } catch {}
+  }
 
   if (!open) return null;
 
+  // 判断邮箱验证状态
+  const emailForStatus = currentUser?.email;
+  // 如果当前用户有 email（但不追踪 email_verified），简化处理：
+  // 使用一个辅助组件来显示验证状态
+
+  // 登录成功后更新 email 状态
+  const handleLoginSuccess = (data: any) => {
+    if (data.email) {
+      setLoginEmailVerified(data.email_verified ?? false);
+    }
+  };
+
+  // 重新发送验证邮件
   const handleSendVerify = async () => {
-    setSendingVerify(true); setMsg('');
+    setSendingVerify(true); setMsg(''); setError('');
     try {
       await apiCall('/api/send-verification', { method: 'POST', body: JSON.stringify({ email: currentUser?.email || '' }) });
       setMsg('验证邮件已发送，请查收');
@@ -48,9 +78,14 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
     setLoading(true);
     try {
       if (mode === 'register') {
-        await register(username.trim(), password);
+        // 先发验证邮件再创建账号（新流程）
+        const result = await register(username.trim(), password, email.trim());
+        setMsg(result.message || '验证邮件已发送，请查收邮件并点击链接完成注册');
+        setLoading(false);
+        return; // 不关闭弹窗，不自动登录
       } else {
-        await login(username.trim(), password);
+        const loginData = await login(username.trim(), password);
+        handleLoginSuccess(loginData);
       }
 
       // After login/register, try to sync existing game history
@@ -60,8 +95,9 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
         try {
           await linkPlayerKey(pk);
           const history = loadHistory();
-          if (history.length > 0) {
-            await syncGames(pk, history);
+          const singleGames = history.filter(r => !('mode' in r && r.mode === 'multi'));
+          if (singleGames.length > 0) {
+            await syncGames(pk, singleGames as any[]);
           }
           // Clear local game history after syncing (server is now the source of truth)
           try {
@@ -155,6 +191,50 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
             <p style={{ color: 'var(--text-light)', fontSize: '0.9rem', marginBottom: '16px' }}>
               已登录账号 · 游戏数据自动同步
             </p>
+            {/* 邮箱未验证提示 */}
+            {currentUser.email && loginEmailVerified === false && (
+              <div style={{
+                background: '#fff8e1',
+                color: '#8a6d14',
+                padding: '10px 12px',
+                borderRadius: 'var(--radius)',
+                marginBottom: '14px',
+                fontSize: '0.82rem',
+                lineHeight: 1.5,
+              }}>
+                ⚠ 邮箱尚未验证。
+                <button
+                  type="button"
+                  onClick={handleSendVerify}
+                  disabled={sendingVerify}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--primary)',
+                    cursor: 'pointer',
+                    fontWeight: 700,
+                    padding: 0,
+                    marginLeft: '4px',
+                    fontSize: '0.82rem',
+                    textDecoration: 'underline',
+                  }}
+                >
+                  {sendingVerify ? '发送中...' : '发送验证邮件'}
+                </button>
+              </div>
+            )}
+            {msg && (
+              <p style={{ color: 'var(--correct)', fontSize: '0.82rem', marginBottom: '10px', textAlign: 'center' }}>
+                {msg}
+              </p>
+            )}
+            {/* 个人中心 */}
+            <button onClick={() => { window.location.href = '/profile'; }} style={{
+              ...btnStyle,
+              marginBottom: '10px',
+            }}>
+              个人中心
+            </button>
             <button onClick={handleLogout} style={{
               ...btnStyle,
               background: 'transparent',
@@ -166,6 +246,19 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
           </div>
         ) : (
           <form onSubmit={handleSubmit}>
+            {verifySuccessMsg && (
+              <p style={{
+                color: 'var(--correct)',
+                fontSize: '0.9rem',
+                marginBottom: '14px',
+                textAlign: 'center',
+                padding: '10px',
+                background: 'rgba(25, 154, 96, 0.1)',
+                borderRadius: 'var(--radius)',
+                border: '1px solid var(--correct)',
+                whiteSpace: 'pre-line',
+              }}>{verifySuccessMsg}</p>
+            )}
             <div style={{ display: 'flex', gap: '0', marginBottom: '16px' }}>
               <button
                 type="button"
@@ -225,7 +318,7 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              placeholder="密码 (至少4个字符)"
+              placeholder="密码 (至少8个字符)"
               style={inpStyle}
               maxLength={100}
               autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
@@ -238,6 +331,12 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
             {syncing && (
               <p style={{ color: 'var(--text-light)', fontSize: '0.8rem', marginBottom: '10px' }}>
                 正在同步历史数据...
+              </p>
+            )}
+
+            {msg && (
+              <p style={{ color: 'var(--correct)', fontSize: '0.85rem', marginBottom: '10px', textAlign: 'center' }}>
+                {msg}
               </p>
             )}
 

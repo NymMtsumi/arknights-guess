@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import { Providers } from "./providers";
 import { VersionCheck } from "@/components/VersionCheck";
+import { HistoryInit } from "@/components/HistoryInit";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -24,6 +25,7 @@ export default function RootLayout({
           {`if(location.hostname==='arknights-guess.pages.dev')location.replace('https://www.arknights-guess.online'+location.pathname+location.search)`}
         </Script>
         <VersionCheck />
+        <HistoryInit />
         <Providers>{children}</Providers>
       </body>
     </html>

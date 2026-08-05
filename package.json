@@ -2,6 +2,7 @@
   "name": "arknights-guess",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "build": "next build",
     "dev": "next dev",
@@ -20,6 +21,11 @@
     "pinyin-pro": "^3.28.2",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^11.0.0",
+    "jsonwebtoken": "^9.0.0",
+    "nodemailer": "^6.9.0",
+    "socket.io": "^4.8.0",
     "socket.io-client": "^4.8.3",
     "zustand": "^5.0.14"
   },

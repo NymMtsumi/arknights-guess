@@ -16,7 +16,7 @@ const ROUND_TIME = 120_000;
 const DISCONNECT = 30_000;
 const JWT_SECRET = process.env.JWT_SECRET || 'arknights-guess-secret-change-in-production';
 const APP_VERSION = '2026-08-05-001'; // 每次部署前递增此值，客户端将自动强制刷新
-const DB_PATH = join(__dirname, 'data.db');
+const DB_PATH = join(__dirname, '..', 'data.db');
 
 // ===== SMTP 邮件配置 =====
 const SMTP_CONFIG = {

@@ -5,6 +5,7 @@ import { io, Socket } from 'socket.io-client';
 import { Header } from '@/components/Header';
 import { GameSearch } from '@/components/GameSearch';
 import { GuessTable } from '@/components/GuessTable';
+import { ScrollSlider } from '@/components/ScrollSlider';
 import { useGameStore } from '@/stores/game-store';
 import { saveGameStats } from '@/lib/stats';
 import { findCharacterByName } from '@/lib/game-engine';
@@ -70,6 +71,8 @@ export default function MultiplayerPage() {
   const myColorsRef = useRef<string[][]>([]);
   const roomCodeRef = useRef('');
   const socketRef = useRef<Socket | null>(null);
+  const myBoardScrollRef = useRef<HTMLDivElement>(null);
+  const oppBoardScrollRef = useRef<HTMLDivElement>(null);
 
   const store = useGameStore();
 
@@ -360,11 +363,12 @@ export default function MultiplayerPage() {
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
               <div style={{ flex: '1 1 48%', minWidth: '280px' }}>
                 <div style={{ fontWeight: 700, marginBottom: '4px', fontSize: '0.85rem', color: 'var(--primary)' }}>你的猜测</div>
-                <div style={{ overflowX: 'auto' }}><GuessTable guesses={store.guesses} target={store.target} hideRarity={difficulty === 'hard'} /></div>
+                <div ref={myBoardScrollRef} style={{ overflowX: 'auto', scrollBehavior: 'smooth' }} className="scroll-slider-container"><GuessTable guesses={store.guesses} target={store.target} hideRarity={difficulty === 'hard'} /></div>
+                <ScrollSlider containerRef={myBoardScrollRef} />
               </div>
               <div style={{ flex: '1 1 48%', minWidth: '280px' }}>
                 <div style={{ fontWeight: 700, marginBottom: '4px', fontSize: '0.85rem', color: 'var(--accent)' }}>{oppName}（{oppGuessCount}次）</div>
-                <div style={{ overflowX: 'auto' }}>
+                <div ref={oppBoardScrollRef} style={{ overflowX: 'auto', scrollBehavior: 'smooth' }} className="scroll-slider-container">
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.65rem' }}>
                     <thead><tr>{(difficulty==='hard'?COL_LABELS_HARD:COL_LABELS).map((l,i)=><th key={i} style={{padding:'3px 2px',fontWeight:600,color:'var(--text-light)',borderBottom:'1px solid var(--border)',whiteSpace:'nowrap'}}>{l}</th>)}</tr></thead>
                     <tbody>
@@ -382,6 +386,7 @@ export default function MultiplayerPage() {
                     </tbody>
                   </table>
                 </div>
+                <ScrollSlider containerRef={oppBoardScrollRef} />
               </div>
             </div>
           </div>

@@ -259,6 +259,133 @@ html:not([data-theme="blast"]) *::-webkit-scrollbar-thumb {
 }
 
 /* ============================================
+   平滑滚动
+   ============================================ */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ============================================
+   自定义滚动滑块 (ScrollSlider)
+   ============================================ */
+
+/* 滑块轨道 */
+.scroll-slider-track {
+  position: relative;
+  width: 100%;
+  height: 8px;
+  margin-top: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  cursor: pointer;
+  overflow: visible;
+  touch-action: none;
+}
+
+html:not([data-theme="blast"]) .scroll-slider-track {
+  background: rgba(32, 17, 24, 0.08);
+}
+
+/* 滑块手柄 */
+.scroll-slider-thumb {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  min-width: 30px;
+  height: 100%;
+  background: rgba(217, 255, 63, 0.42);
+  border-radius: 4px;
+  cursor: grab;
+  transition: background 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+html:not([data-theme="blast"]) .scroll-slider-thumb {
+  background: rgba(201, 234, 22, 0.45);
+}
+
+/* hover: 加深颜色 + 轻微放大 */
+@media (hover: hover) and (pointer: fine) {
+  .scroll-slider-thumb:hover {
+    background: rgba(217, 255, 63, 0.65);
+    transform: translateY(-50%) scaleY(1.4);
+    box-shadow: 0 0 10px rgba(217, 255, 63, 0.25);
+  }
+
+  html:not([data-theme="blast"]) .scroll-slider-thumb:hover {
+    background: rgba(201, 234, 22, 0.7);
+    box-shadow: 0 0 10px rgba(201, 234, 22, 0.2);
+  }
+}
+
+/* active / 拖拽中: 更亮 + 略微更大 */
+.scroll-slider-thumb:active {
+  background: rgba(217, 255, 63, 0.78);
+  transform: translateY(-50%) scaleY(1.5);
+  box-shadow: 0 0 16px rgba(217, 255, 63, 0.35);
+  cursor: grabbing;
+}
+
+html:not([data-theme="blast"]) .scroll-slider-thumb:active {
+  background: rgba(201, 234, 22, 0.85);
+  box-shadow: 0 0 14px rgba(201, 234, 22, 0.28);
+}
+
+/* 轨道 hover 微调 */
+@media (hover: hover) and (pointer: fine) {
+  .scroll-slider-track:hover .scroll-slider-thumb:not(:active) {
+    background: rgba(217, 255, 63, 0.5);
+  }
+  html:not([data-theme="blast"]) .scroll-slider-track:hover .scroll-slider-thumb:not(:active) {
+    background: rgba(201, 234, 22, 0.55);
+  }
+}
+
+/* 手机端适配: 轨道和滑块稍高便于触控 */
+@media (pointer: coarse) {
+  .scroll-slider-track {
+    height: 10px;
+    margin-top: 12px;
+    border-radius: 5px;
+  }
+
+  .scroll-slider-thumb {
+    min-width: 36px;
+    border-radius: 5px;
+    background: rgba(217, 255, 63, 0.48);
+  }
+
+  html:not([data-theme="blast"]) .scroll-slider-thumb {
+    background: rgba(201, 234, 22, 0.5);
+  }
+
+  /* 触屏不显示 hover，但 active 要进一步扩大 */
+  .scroll-slider-thumb:active {
+    background: rgba(217, 255, 63, 0.8);
+    transform: translateY(-50%) scaleY(1.6);
+    box-shadow: 0 0 18px rgba(217, 255, 63, 0.4);
+  }
+
+  html:not([data-theme="blast"]) .scroll-slider-thumb:active {
+    background: rgba(201, 234, 22, 0.88);
+    box-shadow: 0 0 16px rgba(201, 234, 22, 0.3);
+  }
+}
+
+/* 隐藏使用自定义滑块的容器的原生水平滚动条 */
+.scroll-slider-container {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scroll-slider-container::-webkit-scrollbar {
+  height: 0;
+  width: 0;
+}
+
+/* ============================================
    关键帧动画
    ============================================ */
 @keyframes ambient-drift {

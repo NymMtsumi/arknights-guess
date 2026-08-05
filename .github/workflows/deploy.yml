@@ -11,17 +11,17 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: 拉取代码并重启服务
-        uses: appleboy/ssh-action@v1.2.2
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          script: |
+      - name: 部署到 VPS
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "
             cd /opt/liyiba
             git fetch origin main
             git reset --hard origin/main
-            export PATH=$PATH:/root/.nvm/versions/node/v18.20.4/bin
+            export PATH=\$PATH:/root/.nvm/versions/node/v18.20.4/bin
             npm install --production
             pm2 restart liyiba
-            echo "✅ 部署完成 $(date +'%Y-%m-%d %H:%M:%S')"
+            echo '✅ 部署完成'
+          "

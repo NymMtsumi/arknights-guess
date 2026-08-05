@@ -1131,6 +1131,7 @@ const http = createServer(async (req, res) => {
   res.end('OK');
 });
 
+// auto-deploy via GitHub Actions
 const io = new Server(http, { cors: { origin: '*' }, pingInterval: 5000, pingTimeout: 15000 });
 const rooms = new Map();
 

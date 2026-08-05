@@ -1,4 +1,5 @@
 import { createServer } from 'node:http';
+import { spawn } from 'node:child_process';
 import { Server } from 'socket.io';
 import { readFileSync } from 'node:fs';
 import { randomBytes, createHash } from 'node:crypto';
@@ -1124,6 +1125,27 @@ const http = createServer(async (req, res) => {
   // ===== GET /api/version — 客户端版本检测（强制刷新旧缓存） =====
   if (req.method === 'GET' && url === '/api/version') {
     return jsonResponse(res, { version: APP_VERSION });
+  }
+
+  // ===== POST /api/deploy — Webhook 自动部署 =====
+  if (req.method === 'POST' && url === '/api/deploy') {
+    const body = await parseBody(req);
+    const DEPLOY_TOKEN = process.env.DEPLOY_TOKEN || '';
+    if (!DEPLOY_TOKEN) {
+      return jsonResponse(res, { error: 'DEPLOY_TOKEN not configured' }, 500);
+    }
+    if (body.token !== DEPLOY_TOKEN) {
+      return jsonResponse(res, { error: 'invalid token' }, 403);
+    }
+    jsonResponse(res, { ok: true, message: 'deploy triggered' });
+    // detached 子进程避免被 PM2 重启影响
+    setTimeout(() => {
+      const child = spawn('bash', ['-c',
+        'cd /opt/liyiba && git fetch origin main && git reset --hard origin/main && export PATH=$PATH:/root/.nvm/versions/node/v18.20.4/bin && npm install --production && pm2 restart liyiba'
+      ], { detached: true, stdio: 'ignore' });
+      child.unref();
+    }, 500);
+    return;
   }
 
   // 未匹配的路由

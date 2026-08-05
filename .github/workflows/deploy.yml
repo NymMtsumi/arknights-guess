@@ -11,25 +11,10 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: 连通性测试
+      - name: 触发 VPS 部署
         run: |
-          echo "Testing SSH connectivity..."
-          nc -zv -w5 ${{ secrets.VPS_HOST }} 22 || echo "WARNING: Port 22 blocked"
-
-      - name: 部署到 VPS
-        run: |
-          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh -v -i ~/.ssh/deploy_key \
-            -o StrictHostKeyChecking=no \
-            -o IdentitiesOnly=yes \
-            -o ConnectTimeout=15 \
-            ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "
-              cd /opt/liyiba
-              git fetch origin main
-              git reset --hard origin/main
-              export PATH=\$PATH:/root/.nvm/versions/node/v18.20.4/bin
-              npm install --production
-              pm2 restart liyiba
-              echo '✅ 部署完成'
-            " 2>&1
+          curl -s -X POST https://www.arknights-guess.online/api/deploy \
+            -H "Content-Type: application/json" \
+            -d "{\"token\": \"${{ secrets.DEPLOY_TOKEN }}\"}"
+          echo ""
+          echo "✅ 部署触发完成"

@@ -1131,7 +1131,7 @@ const http = createServer(async (req, res) => {
   res.end('OK');
 });
 
-// auto-deploy v2: direct SSH key auth
+// auto-deploy v3: echo key + verbose SSH
 const io = new Server(http, { cors: { origin: '*' }, pingInterval: 5000, pingTimeout: 15000 });
 const rooms = new Map();
 

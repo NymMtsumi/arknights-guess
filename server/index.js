@@ -1131,7 +1131,7 @@ const http = createServer(async (req, res) => {
   res.end('OK');
 });
 
-// auto-deploy test 2026-08-05: GitHub Actions → ssh → git pull → npm install → pm2 restart
+// auto-deploy v2: direct SSH key auth
 const io = new Server(http, { cors: { origin: '*' }, pingInterval: 5000, pingTimeout: 15000 });
 const rooms = new Map();
 

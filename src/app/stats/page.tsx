@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import { ScrollSlider } from '@/components/ScrollSlider';
 import { useI18n } from '@/lib/i18n';
 import type { StatsData, GameRecord } from '@/lib/stats';
 import { loadStats, loadHistory } from '@/lib/stats';
@@ -35,6 +36,7 @@ export default function StatsPage() {
 
   const thStyle: React.CSSProperties = { padding: '8px 10px', textAlign: 'center', fontWeight: 700, fontSize: '0.8rem', color: 'var(--text-light)', borderBottom: '2px solid var(--border)', whiteSpace: 'nowrap' };
   const tdStyle: React.CSSProperties = { padding: '8px 10px', textAlign: 'center', whiteSpace: 'nowrap' };
+  const historyScrollRef = useRef<HTMLDivElement>(null);
 
   return (
     <div className="page">
@@ -143,7 +145,8 @@ export default function StatsPage() {
             {history.length === 0 ? (
               <p style={{ color: 'var(--text-light)', fontSize: '0.9rem' }}>暂无记录，完成一局游戏后自动记录</p>
             ) : (
-            <div style={{ overflowX: 'auto' }}>
+            <>
+            <div ref={historyScrollRef} style={{ overflowX: 'auto', scrollBehavior: 'smooth' }} className="scroll-slider-container">
               <table className="game-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                 <thead>
                   <tr>
@@ -176,6 +179,8 @@ export default function StatsPage() {
                 </tbody>
               </table>
             </div>
+            <ScrollSlider containerRef={historyScrollRef} />
+            </>
             )}
           </div>
         )}

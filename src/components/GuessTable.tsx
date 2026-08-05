@@ -1,8 +1,10 @@
 'use client';
 
+import { useRef } from 'react';
 import type { Character, GuessResult, GuessStatus } from '@/types/character';
 import { isAlterRelation } from '@/lib/game-engine';
 import { useI18n } from '@/lib/i18n';
+import { ScrollSlider } from './ScrollSlider';
 
 interface GuessTableProps {
   guesses: GuessResult[];
@@ -31,6 +33,7 @@ function StatusCell({ status, children }: { status: GuessStatus; children: React
 
 export function GuessTable({ guesses, target, hideRarity }: GuessTableProps) {
   const { t } = useI18n();
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   if (guesses.length === 0) return null;
 
@@ -48,7 +51,16 @@ export function GuessTable({ guesses, target, hideRarity }: GuessTableProps) {
   ];
 
   return (
-    <div style={{ overflowX: 'auto', marginBottom: '24px' }}>
+    <div>
+      <div
+        ref={scrollRef}
+        style={{
+          overflowX: 'auto',
+          marginBottom: '0',
+          scrollBehavior: 'smooth',
+        }}
+        className="scroll-slider-container"
+      >
       <table className="game-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
         <thead>
           <tr>
@@ -129,6 +141,8 @@ export function GuessTable({ guesses, target, hideRarity }: GuessTableProps) {
         .game-table td { border: 1px solid var(--border); }
         @media (max-width: 640px) { .game-table td, .game-table th { padding: 8px 4px; font-size: 0.75rem; } }
       `}</style>
+      </div>
+      <ScrollSlider containerRef={scrollRef} />
     </div>
   );
 }

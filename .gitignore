@@ -60,4 +60,7 @@ cloudflared-linux-amd64
 server/data.db
 server/data.db-shm
 server/data.db-wal
+data.db
+data.db-shm
+data.db-wal
 package-lock.json

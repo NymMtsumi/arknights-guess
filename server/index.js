@@ -908,6 +908,31 @@ const http = createServer(async (req, res) => {
     });
   }
 
+  // ===== POST /api/heartbeat =====
+  if (req.method === 'POST' && url === '/api/heartbeat') {
+    const body = await parseBody(req);
+    const playerKey = sanitizeString(body.playerKey || '', 64);
+    if (!playerKey) return jsonResponse(res, { error: '需要 playerKey' }, 400);
+
+    const userRow = db.prepare('SELECT id, username, nickname FROM users WHERE player_key = ?').get(playerKey);
+    const displayName = userRow?.nickname || userRow?.username || deriveGuestName(playerKey);
+
+    const existing = onlinePlayers.get(playerKey);
+    const currentType = (existing && existing.type === 'multi') ? 'multi' : 'single';
+
+    onlinePlayers.set(playerKey, {
+      playerKey,
+      displayName,
+      username: userRow?.username || null,
+      userId: userRow?.id || null,
+      type: currentType,
+      roomCode: existing?.roomCode || null,
+      lastSeen: Date.now(),
+    });
+
+    return jsonResponse(res, { ok: true });
+  }
+
   // ===== GET /api/leaderboard =====
   if (req.method === 'GET' && url.startsWith('/api/leaderboard')) {
     const urlObj = new URL(url, 'http://localhost');
@@ -1119,6 +1144,35 @@ const http = createServer(async (req, res) => {
     });
   }
 
+  // ===== GET /api/admin/online =====
+  if (req.method === 'GET' && url === '/api/admin/online') {
+    const admin = requireAdmin(req, res); if (!admin) return;
+
+    const now = Date.now();
+    const result = { totalOnline: 0, inMultiplayer: 0, inSinglePlayer: 0, idle: 0, players: [] };
+
+    for (const [pk, entry] of onlinePlayers) {
+      const sockSet = onlineSockets.get(pk);
+      if ((!sockSet || sockSet.size === 0) && now - entry.lastSeen > ONLINE_TIMEOUT) continue;
+
+      result.totalOnline++;
+      if (entry.type === 'multi') result.inMultiplayer++;
+      else if (entry.type === 'single') result.inSinglePlayer++;
+      else result.idle++;
+
+      result.players.push({
+        playerKey: pk.slice(0, 10),
+        displayName: entry.displayName || deriveGuestName(pk),
+        username: entry.username,
+        type: entry.type,
+        roomCode: entry.roomCode || null,
+        lastSeen: new Date(entry.lastSeen).toISOString(),
+      });
+    }
+
+    return jsonResponse(res, result);
+  }
+
   // ===== GET /api/history =====
   if (req.method === 'GET' && url.startsWith('/api/history')) {
     const auth = requireAuth(req, res);
@@ -1183,6 +1237,11 @@ const http = createServer(async (req, res) => {
 const io = new Server(http, { cors: { origin: '*' }, pingInterval: 5000, pingTimeout: 15000 });
 const rooms = new Map();
 
+// ===== 在线玩家追踪 =====
+const onlinePlayers = new Map(); // playerKey → { playerKey, displayName, username, userId, type, roomCode, lastSeen }
+const onlineSockets = new Map(); // playerKey → Set<socketId>
+const ONLINE_TIMEOUT = 90_000; // 90s 无信号视为离线
+
 // ===== 匹配队列 =====
 const matchmakingQueue = new Map(); // socketId -> { socketId, playerKey, playerName, difficulty, joinedAt }
 
@@ -1234,6 +1293,12 @@ function tryMatch(difficulty) {
   sock2.join(code);
   sock2.data.roomCode = code;
 
+  // 在线追踪：标记匹配成功的双方
+  [sock1, sock2].forEach(s => {
+    const entry = onlinePlayers.get(s.data.playerKey);
+    if (entry) { entry.type = 'multi'; entry.roomCode = code; }
+  });
+
   console.log(`[匹配] ${p1.playerName} vs ${p2.playerName} 房间 ${code} 难度 ${difficulty}`);
 
   // 通知双方
@@ -1265,6 +1330,13 @@ io.use((socket, next) => {
     socket.emit('set_cookie', { name: 'player_key', value: socket.data.playerKey });
   }
   socket.data.identityKey = socket.data.playerKey;
+  // 查询用户信息用于在线追踪
+  try {
+    const userRow = db.prepare('SELECT id, username, nickname FROM users WHERE player_key = ?').get(socket.data.playerKey);
+    socket.data.userId = userRow?.id || null;
+    socket.data.username = userRow?.username || null;
+    socket.data.displayName = userRow?.nickname || userRow?.username || deriveGuestName(socket.data.playerKey);
+  } catch { /* ignore */ }
   next();
 });
 
@@ -1299,6 +1371,11 @@ function endRound(room, winnerId, winnerName, targetName, matchOver) {
   io.to(room.code).emit('round_end', { winner: winnerId, winnerName, targetName, score: score(room), matchOver });
   if (matchOver) {
     room.finished = true;
+    // 在线追踪：比赛结束，双方回到浏览状态
+    for (const p of room.players.values()) {
+      const e = onlinePlayers.get(p.playerKey);
+      if (e && e.type === 'multi') { e.type = 'idle'; e.roomCode = null; }
+    }
     setTimeout(() => io.to(room.code).emit('match_end', { winner: winnerId, winnerName, score: score(room) }), 3000);
   } else {
     room._nextRound = setTimeout(() => startRound(room), 6000);
@@ -1340,11 +1417,34 @@ setInterval(() => {
       rooms.delete(code);
     }
   }
+  // 清理超时离线玩家
+  const _now = Date.now();
+  for (const [pk, entry] of onlinePlayers) {
+    const sockSet = onlineSockets.get(pk);
+    if ((!sockSet || sockSet.size === 0) && _now - entry.lastSeen > ONLINE_TIMEOUT) {
+      onlinePlayers.delete(pk);
+      onlineSockets.delete(pk);
+    }
+  }
 }, 60000);
 
 // ===== Socket 连接 =====
 io.on('connection', (socket) => {
   console.log(`[+] ${socket.id} pk=${socket.data.playerKey?.slice(0,10)}`);
+
+  // 在线追踪
+  const pk = socket.data.playerKey;
+  if (!onlineSockets.has(pk)) onlineSockets.set(pk, new Set());
+  onlineSockets.get(pk).add(socket.id);
+  onlinePlayers.set(pk, {
+    playerKey: pk,
+    displayName: socket.data.displayName || deriveGuestName(pk),
+    username: socket.data.username || null,
+    userId: socket.data.userId || null,
+    type: 'idle',
+    roomCode: null,
+    lastSeen: Date.now(),
+  });
 
   // === 自动恢复：连接时查旧房 ===
   const existing = findRoomByPlayerKey(socket.data.playerKey);
@@ -1453,6 +1553,9 @@ io.on('connection', (socket) => {
     rooms.set(code, { code, bestOf, winsNeeded: Math.ceil(bestOf / 2), difficulty, _createdAt: Date.now(), players: new Map([[socket.id, { name: data?.playerName || '玩家', wins: 0, dcTimer: null, lastSocketId: null, playerKey: socket.data.playerKey, identityKey: socket.data.identityKey, ready: false }]]), started: false, finished: false });
     socket.join(code);
     socket.data.roomCode = code;
+    // 在线追踪
+    const entry = onlinePlayers.get(socket.data.playerKey);
+    if (entry) { entry.type = 'multi'; entry.roomCode = code; }
     socket.emit('room_created', { code, bestOf, difficulty });
     console.log(`[房] ${code} BO${bestOf}`);
   });
@@ -1472,6 +1575,9 @@ io.on('connection', (socket) => {
           room.players.set(socket.id, p);
           socket.join(code);
           socket.data.roomCode = code;
+          // 在线追踪
+          const entry2 = onlinePlayers.get(socket.data.playerKey);
+          if (entry2) { entry2.type = 'multi'; entry2.roomCode = code; }
           socket.to(code).emit('opponent_reconnected', { playerName: p.name });
           socket.emit('existing_room', { code, bestOf: room.bestOf, difficulty: room.difficulty || 'hard', started: room.started, wins: p.wins });
           console.log(`[重连] ${socket.id} → ${code}`);
@@ -1484,6 +1590,9 @@ io.on('connection', (socket) => {
     room.players.set(socket.id, { name: data?.playerName || '玩家', wins: 0, dcTimer: null, lastSocketId: null, playerKey: socket.data.playerKey, identityKey: socket.data.identityKey, ready: false });
     socket.join(code);
     socket.data.roomCode = code;
+    // 在线追踪
+    const entry3 = onlinePlayers.get(socket.data.playerKey);
+    if (entry3) { entry3.type = 'multi'; entry3.roomCode = code; }
     room.started = true;
     startRound(room);
     console.log(`[房] ${code} 满员`);
@@ -1540,6 +1649,17 @@ io.on('connection', (socket) => {
 
   // === 断开 ===
   socket.on('disconnect', () => {
+    // 在线追踪
+    const pk = socket.data.playerKey;
+    const sockSet = onlineSockets.get(pk);
+    if (sockSet) {
+      sockSet.delete(socket.id);
+      if (sockSet.size === 0) {
+        const entry = onlinePlayers.get(pk);
+        if (entry) entry.lastSeen = Date.now();
+      }
+    }
+
     // 从匹配队列中移除
     matchmakingQueue.delete(socket.id);
 
@@ -1555,6 +1675,9 @@ io.on('connection', (socket) => {
       const other = Array.from(room.players.keys()).find(id => id !== socket.id);
       io.to(room.code).emit('match_end', { winner: other, winnerName: room.players.get(other)?.name || '对手', score: score(room), reason: 'disconnect' });
       room.finished = true;
+      // 更新在线状态
+      const pEntry = onlinePlayers.get(player.playerKey);
+      if (pEntry && pEntry.type === 'multi') { pEntry.type = 'idle'; pEntry.roomCode = null; }
     }, DISCONNECT);
   });
 

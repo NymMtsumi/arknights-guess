@@ -6,8 +6,9 @@ import { fetchMe, getUser, AuthError, clearAuth } from '@/lib/auth';
 import AdminAnnouncements from '@/components/admin/AdminAnnouncements';
 import AdminUsers from '@/components/admin/AdminUsers';
 import AdminGuests from '@/components/admin/AdminGuests';
+import AdminOnline from '@/components/admin/AdminOnline';
 
-type Tab = 'announcements' | 'users' | 'guests';
+type Tab = 'announcements' | 'users' | 'guests' | 'online';
 
 export default function AdminPage() {
   const [tab, setTab] = useState<Tab>('announcements');
@@ -165,11 +166,15 @@ export default function AdminPage() {
         <button style={tab === 'guests' ? tabBtnActive : tabBtnBase} onClick={() => setTab('guests')}>
           🎭 游客管理
         </button>
+        <button style={tab === 'online' ? tabBtnActive : tabBtnBase} onClick={() => setTab('online')}>
+          🟢 在线玩家
+        </button>
       </div>
 
       {tab === 'announcements' && <AdminAnnouncements />}
       {tab === 'users' && <AdminUsers />}
       {tab === 'guests' && <AdminGuests />}
+      {tab === 'online' && <AdminOnline />}
     </div>
   );
 }

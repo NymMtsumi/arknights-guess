@@ -11,6 +11,7 @@ import { Footer } from '@/components/Footer';
 import { useGameStore } from '@/stores/game-store';
 import { useI18n } from '@/lib/i18n';
 import { saveGameStats } from '@/lib/stats';
+import { getServerUrl, getPlayerKey } from '@/lib/auth';
 import type { Difficulty } from '@/types/character';
 
 export default function GamePage() {
@@ -32,6 +33,23 @@ export default function GamePage() {
     }
     prevStatus.current = status;
   }, [status, guesses.length, difficulty, target]);
+
+  // 心跳：告知服务器正在玩单人模式
+  useEffect(() => {
+    if (status !== 'playing') return;
+    const sendHeartbeat = () => {
+      const pk = getPlayerKey();
+      if (!pk) return;
+      fetch(`${getServerUrl()}/api/heartbeat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ playerKey: pk }),
+      }).catch(() => {});
+    };
+    sendHeartbeat();
+    const interval = setInterval(sendHeartbeat, 30_000);
+    return () => clearInterval(interval);
+  }, [status]);
 
   const handleStart = (diff: Difficulty) => {
     startGame(diff);

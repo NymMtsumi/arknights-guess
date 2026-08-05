@@ -1,0 +1,39 @@
+name: 自动部署到 VPS
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'server/**'        # 只在 server 目录有改动时触发
+      - 'package.json'     # 依赖变更也触发
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 部署到 VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "server/index.js,server/scripts/,package.json,package-lock.json"
+          target: "/opt/liyiba/"
+          strip_components: 0
+          overwrite: true
+
+      - name: 安装依赖 & 重启服务
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /opt/liyiba
+            export PATH=$PATH:/root/.nvm/versions/node/v18.20.4/bin
+            npm install --production
+            pm2 restart liyiba
+            echo "✅ 部署完成 $(date)"

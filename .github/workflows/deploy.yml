@@ -7,13 +7,18 @@ on:
       - 'server/**'
       - 'package.json'
 
+# 防止并发部署导致 git/npm 竞态
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - name: 触发 VPS 部署
         run: |
-          curl -s -X POST http://160.236.110.37:3001/api/deploy \
+          curl -s -X POST https://ws.arknights-guess.online/api/deploy \
             -H "Content-Type: application/json" \
             -d "{\"token\": \"${{ secrets.DEPLOY_TOKEN }}\"}"
           echo ""

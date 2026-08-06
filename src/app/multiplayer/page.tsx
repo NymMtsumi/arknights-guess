@@ -8,7 +8,7 @@ import { GuessTable } from '@/components/GuessTable';
 import { ScrollSlider } from '@/components/ScrollSlider';
 import { useGameStore } from '@/stores/game-store';
 import { saveMultiGameStats, type MultiRoundResult } from '@/lib/stats';
-import { getUser, getServerUrl } from '@/lib/auth';
+import { getUser, getServerUrl, getToken } from '@/lib/auth';
 import { findCharacterByName } from '@/lib/game-engine';
 import type { Character } from '@/types/character';
 import charactersData from '@/data/characters.json';
@@ -16,7 +16,12 @@ import charactersData from '@/data/characters.json';
 // 跨域传身份：Cookie只在pages.dev，WebSocket在arknights-guess.online
 function getWsUrl() {
   const base = process.env.NEXT_PUBLIC_WS_URL || 'https://ws.arknights-guess.online';
-  const key = typeof document !== 'undefined' ? document.cookie.split('; ').find(r => r.startsWith('player_key='))?.split('=')[1] : '';
+  let key = '';
+  try { key = localStorage.getItem('player_key') || ''; } catch {}
+  if (!key && typeof document !== 'undefined') {
+    // 兜底：尝试从 cookie 读取
+    key = document.cookie.split('; ').find(r => r.startsWith('player_key='))?.split('=')[1] || '';
+  }
   return key ? `${base}?pk=${encodeURIComponent(key)}` : base;
 }
 const SERVER_URL = getWsUrl();
@@ -134,12 +139,19 @@ export default function MultiplayerPage() {
       reconnectionDelayMax: 5000,
       reconnectionAttempts: 10,
       autoConnect: false,
+      auth: { token: getToken() || '' },
     });
 
     // 在连接前注册事件监听器（避免漏掉服务器自动恢复事件）
     s.on('connect_error', (err) => { clearConnecting(); setError('服务器连接失败：' + (err?.message || '')); s.disconnect(); });
     s.on('connect_timeout', () => { clearConnecting(); setError('连接超时，请检查网络'); });
     s.on('error_msg', (d: any) => { clearConnecting(); setError(d.message); s.disconnect(); });
+    s.on('room_expired', (d: any) => {
+      clearConnecting();
+      clearRoomCode();
+      setStage('menu');
+      setError(d?.message || '房间已过期');
+    });
     s.on('existing_room', (d: any) => {
       clearConnecting();
       setRoomCode(d.code); roomCodeRef.current = d.code; saveRoomCode(d.code);
@@ -165,7 +177,15 @@ export default function MultiplayerPage() {
       clearConnecting();
       setRoomCode(d.code); roomCodeRef.current = d.code; saveRoomCode(d.code);
       setBestOf(d.bestOf); if (d.difficulty) setDifficulty(d.difficulty);
-      setStage("playing"); setTimeLeft(120);
+      setStage("playing");
+      // 使用服务器提供的剩余时间，仅在有活跃回合时启动倒计时
+      const hasActiveRound = d.hasActiveRound !== false;
+      const remaining = typeof d.remainingTime === 'number' ? Math.max(0, d.remainingTime) : 120;
+      if (hasActiveRound && remaining > 0) {
+        setTimeLeft(remaining);
+      } else {
+        setTimeLeft(0); // 回合间隙，不显示倒计时
+      }
       setOppGuessCount(0); setOppGrid([]);
       setISurrendered(false); setOppSurrendered(false);
       setOppDisconnected(false);
@@ -177,18 +197,25 @@ export default function MultiplayerPage() {
       if (meP) setMyWins(meP.wins);
       const target = d.target?.name ? findCharacterByName(allChars, d.target.name) : null;
       if (target) {
-        useGameStore.setState({ status: "playing", target, guesses: [], remainingGuesses: 8, difficulty: "hard" });
+        // 保留当前猜测（不清空 guesses），防止 Socket.IO 自动重连时猜词记录消失
+        const existingGuesses = useGameStore.getState().guesses;
+        useGameStore.setState({ status: "playing", target, remainingGuesses: Math.max(0, 8 - existingGuesses.length), difficulty: "hard" });
       }
       if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
-      timerRef.current = setInterval(() => {
-        setTimeLeft(t => { if (t <= 1) { clearInterval(timerRef.current!); timerRef.current = null; return 0; } return t - 1; });
-      }, 1000);
+      if (hasActiveRound && remaining > 0) {
+        timerRef.current = setInterval(() => {
+          setTimeLeft(t => { if (t <= 1) { clearInterval(timerRef.current!); timerRef.current = null; return 0; } return t - 1; });
+        }, 1000);
+      }
     });
 
     s.on('round_start', (d) => {
       clearConnecting();
       if (d.difficulty) setDifficulty(d.difficulty);
-      setStage('playing'); setTimeLeft(120);
+      setStage('playing');
+      // 使用服务器提供的时间限制（毫秒→秒）
+      const roundSec = typeof d.timeLimit === 'number' ? Math.ceil(d.timeLimit / 1000) : 120;
+      setTimeLeft(roundSec);
       setOppGuessCount(0); setOppGrid([]);
       setISurrendered(false); setOppSurrendered(false);
       setOppDisconnected(false);
@@ -231,10 +258,12 @@ export default function MultiplayerPage() {
     s.on('match_end', (d) => {
       // 比赛结束时保存详细统计
       const mySid = s.id as string;
-      const scoreMap: Record<string, number> = d.score || {};
-      const myScore = scoreMap[mySid] || 0;
-      const oppId = Object.keys(scoreMap).find(k => k !== mySid) || '';
-      const oppScore = scoreMap[oppId] || 0;
+      // 使用服务器返回的结构化玩家数据计算得分
+      const players = d.players || [];
+      const me = players.find((p: { id: string }) => p.id === mySid);
+      const opp = players.find((p: { id: string }) => p.id !== mySid);
+      const myScore = me?.wins || 0;
+      const oppScore = opp?.wins || 0;
       saveMultiGameStats({
         won: d.winner === mySid,
         bestOf: bestOfRef.current || 1,
@@ -261,6 +290,12 @@ export default function MultiplayerPage() {
       setOppDisconnected(false); setRoundEndData(null);
       myColorsRef.current = [];
       useGameStore.setState({ status: 'idle', target: null, guesses: [], remainingGuesses: 8, difficulty: 'hard' });
+    });
+
+    // 对手取消再理一把
+    s.on('rematch_cancelled', (d: any) => {
+      setError(`${d?.playerName || '对手'} 取消了准备`);
+      setTimeout(() => setError(''), 3000);
     });
 
     // === 匹配队列事件 ===
@@ -335,7 +370,7 @@ export default function MultiplayerPage() {
     if (!playerName.trim() || playerName.trim().length > 4) { setError('昵称最多4个汉字'); return; }
     setError(''); saveNick(playerName.trim()); setConnecting('quickmatch');
     const s = connect();
-    s.emit('matchmaking:join', { playerName: playerName.trim(), difficulty });
+    s.emit('matchmaking:join', { playerName: playerName.trim(), difficulty, bestOf });
     s.emit('_log', { action: 'quickmatch' });
     connectTimer.current = setTimeout(() => { s.disconnect(); setConnecting(''); setError('匹配超时，请重试'); }, 60000);
   };
@@ -394,10 +429,21 @@ export default function MultiplayerPage() {
   const handleRematch = () => {
     setRematchReady(true);
     socketRef.current?.emit('rematch_ready');
-    // 60秒超时自动取消
+    // 60秒超时自动取消，通知服务器
     setTimeout(() => {
-      setRematchReady(prev => prev ? false : prev);
+      setRematchReady(prev => {
+        if (prev) {
+          socketRef.current?.emit('rematch_cancel');
+          return false;
+        }
+        return prev;
+      });
     }, 60000);
+  };
+
+  const handleCancelRematch = () => {
+    setRematchReady(false);
+    socketRef.current?.emit('rematch_cancel');
   };
 
   useEffect(() => { return () => { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; } if (socket) { socket.removeAllListeners(); socket.disconnect(); } }; }, [socket]);
@@ -502,7 +548,7 @@ export default function MultiplayerPage() {
               正在寻找对手...
             </h2>
             <p style={{ color: 'var(--text-light)', fontSize: '0.9rem', marginBottom: '8px' }}>
-              难度：{matchDifficulty === 'easy' ? '简单' : matchDifficulty === 'medium' ? '普通' : '困难'} · BO5
+              难度：{matchDifficulty === 'easy' ? '简单' : matchDifficulty === 'medium' ? '普通' : '困难'} · BO{bestOf}
             </p>
             {queuePosition > 0 && (
               <p style={{ color: 'var(--text-light)', fontSize: '0.85rem', marginBottom: '16px' }}>
@@ -597,6 +643,13 @@ export default function MultiplayerPage() {
               }}>
                 {rematchReady ? '⏳ 等待对手...' : '🔄 再理一把！'}
               </button>
+              {rematchReady && (
+                <button onClick={handleCancelRematch} style={{
+                  padding: '10px 24px', background: 'transparent', color: 'var(--text)',
+                  border: '1px solid var(--border)', borderRadius: 'var(--radius)',
+                  fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem',
+                }}>取消准备</button>
+              )}
               <a href="/multiplayer" style={{ padding: '10px 24px', background: 'transparent', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', fontWeight: 700, textDecoration: 'none' }}>退出</a>
             </div>
           </div>

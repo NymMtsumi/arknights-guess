@@ -76,7 +76,7 @@
   "rules.step2": "从下拉列表中选择一位干员作为你的猜测",
   "rules.step3": "查看对比结果表格，了解每个属性的匹配情况",
   "rules.step4": "根据颜色提示调整你的下一次猜测",
-  "rules.step5": "在 10 次机会内猜出正确答案！",
+  "rules.step5": "在 8 次机会内猜出正确答案！",
   "rules.colors": "颜色含义",
   "rules.correct": "绿色 — 完全匹配",
   "rules.correctDesc": "该属性与目标干员完全相同",

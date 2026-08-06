@@ -76,7 +76,7 @@
   "rules.step2": "Select an operator from the dropdown as your guess",
   "rules.step3": "Check the comparison table to see how each attribute matches",
   "rules.step4": "Use the color hints to adjust your next guess",
-  "rules.step5": "Find the correct answer within 10 guesses!",
+  "rules.step5": "Find the correct answer within 8 guesses!",
   "rules.colors": "Color Meanings",
   "rules.correct": "Green — Exact Match",
   "rules.correctDesc": "This attribute is exactly the same as the target operator",

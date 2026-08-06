@@ -35,8 +35,13 @@ export interface MeResponse {
 export function getServerUrl(): string {
   if (typeof window !== 'undefined') {
     const wsUrl = process.env.NEXT_PUBLIC_WS_URL;
-    if (wsUrl && wsUrl.startsWith('https://ws.')) {
-      return wsUrl.replace('wss://', 'https://').replace('ws://', 'http://');
+    if (wsUrl) {
+      // 支持 https://, http://, wss://, ws:// 前缀
+      if (wsUrl.startsWith('wss://')) return wsUrl.replace('wss://', 'https://');
+      if (wsUrl.startsWith('ws://')) return wsUrl.replace('ws://', 'http://');
+      if (wsUrl.startsWith('https://') || wsUrl.startsWith('http://')) return wsUrl;
+      // 无协议前缀，假定为生产域名
+      return 'https://' + wsUrl;
     }
     return 'http://localhost:3001';
   }
@@ -112,7 +117,13 @@ export async function apiCall(path: string, options: RequestInit = {}): Promise<
       : (fetchErr?.message || '网络错误'));
   }
 
-  const data = await res.json();
+  let data: any;
+  try {
+    data = await res.json();
+  } catch {
+    // 非 JSON 响应（如 502/504 网关错误 HTML）
+    throw new Error(`服务器错误 (${res.status})，请稍后再试`);
+  }
   if (!res.ok) {
     if (res.status === 401) {
       throw new AuthError(data.error || '登录已过期，请重新登录');
@@ -152,8 +163,9 @@ export async function login(username: string, password: string): Promise<{
     role: data.role,
   });
 
-  // 登录后迁移旧游客的本地游戏数据到账号 player_key
+  // 存储 player_key 到 localStorage（cookie 是 HttpOnly，JS 无法读取）
   if (data.player_key) {
+    try { localStorage.setItem('player_key', data.player_key); } catch {}
     await migrateGuestDataToAccount(data.player_key);
   }
 
@@ -292,8 +304,18 @@ export async function linkPlayerKey(playerKey: string): Promise<void> {
 }
 
 // ===== 获取 player_key =====
+// player_key cookie 是 HttpOnly，JS 无法读取，因此使用 localStorage
 export function getPlayerKey(): string | null {
-  if (typeof document === 'undefined') return null;
-  const match = document.cookie.split('; ').find(r => r.startsWith('player_key='));
-  return match ? match.split('=')[1] : null;
+  if (typeof window === 'undefined') return null;
+  try {
+    const stored = localStorage.getItem('player_key');
+    if (stored) return stored;
+  } catch {}
+  // 兜底：尝试从 cookie 读取（非 HttpOnly 场景，如旧版本或开发环境）
+  try {
+    const match = document.cookie.split('; ').find(r => r.startsWith('player_key='));
+    return match ? match.split('=')[1] : null;
+  } catch {
+    return null;
+  }
 }

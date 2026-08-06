@@ -3,16 +3,44 @@ import bcrypt from 'bcryptjs';
 import { createHash, randomBytes } from 'node:crypto';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createInterface } from 'node:readline';
+
+// ===== 危险操作保护 =====
+const forceFlag = process.argv.includes('--i-am-sure');
+if (!forceFlag) {
+  console.error('⚠️  此脚本将删除数据库中的所有用户和游戏数据！');
+  console.error('⚠️  这不可逆！');
+  console.error('');
+  console.error('如果确定要执行，请使用: node server/scripts/reset-and-create-admins.js --i-am-sure');
+  console.error('或者在生产环境设置环境变量: CONFIRM_RESET_DB=yes');
+  process.exit(1);
+}
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const DB_PATH = join(__dirname, '..', 'data.db');
+const DB_PATH = join(__dirname, '..', '..', 'data.db');
 
+console.log('正在连接数据库...');
 const db = new Database(DB_PATH);
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
 
-// ===== 第一步：清空所有用户数据 =====
-console.log('清空现有数据...');
+// 二次确认
+const userCount = db.prepare('SELECT COUNT(*) as cnt FROM users').get().cnt;
+const gameCount = db.prepare('SELECT COUNT(*) as cnt FROM games').get().cnt;
+console.log(`\n当前数据库状态：`);
+console.log(`  用户: ${userCount}`);
+console.log(`  对局: ${gameCount}`);
+console.log(`\n即将删除以上所有数据...\n`);
+
+const rl = createInterface({ input: process.stdin, output: process.stdout });
+const confirmed = await new Promise(resolve => {
+  rl.question('输入 "DELETE" 确认操作: ', answer => { rl.close(); resolve(answer === 'DELETE'); });
+});
+if (!confirmed) {
+  console.log('已取消。');
+  db.close();
+  process.exit(0);
+}
 db.exec('DELETE FROM games');
 db.exec('DELETE FROM email_verifications');
 db.exec('DELETE FROM pending_registrations');

@@ -56,11 +56,9 @@ cloudflared-linux-amd64
 .dev.vars*
 !.dev.vars.example
 
-# SQLite database (contains user data, do not commit)
-server/data.db
-server/data.db-shm
-server/data.db-wal
-data.db
-data.db-shm
-data.db-wal
+# SQLite databases — NEVER commit (catch-all)
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
 package-lock.json

@@ -1,0 +1,33 @@
+name: 禁止提交数据库文件
+
+on: [push, pull_request]
+
+jobs:
+  check-db:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 检查是否包含数据库文件
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="${{ github.event.pull_request.base.sha }}"
+          else
+            BASE="origin/main"
+          fi
+          git fetch origin main 2>/dev/null || true
+          FILES=$(git diff --name-only ${BASE}...HEAD -- '*.db' '*.db-shm' '*.db-wal' '*.db-journal' 2>/dev/null || true)
+          if [ -n "$FILES" ]; then
+            echo ""
+            echo "❌ 检测到数据库文件被提交！"
+            echo ""
+            echo "$FILES"
+            echo ""
+            echo "请从提交中移除这些文件："
+            echo "  git rm --cached <文件>"
+            echo "  git commit --amend"
+            exit 1
+          fi
+          echo "✅ 无数据库文件"

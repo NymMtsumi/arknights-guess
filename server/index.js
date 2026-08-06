@@ -1256,7 +1256,7 @@ const http = createServer(async (req, res) => {
     // detached 子进程避免被 PM2 重启影响
     setTimeout(() => {
       const child = spawn('bash', ['-c',
-        'cd /opt/liyiba && cp data.db data.db.bak-$(date +%Y%m%d-%H%M) 2>/dev/null; git fetch origin main && git reset --hard origin/main && export PATH=$PATH:/root/.nvm/versions/node/v18.20.4/bin && npm install --production && pm2 restart liyiba'
+        'cd /opt/liyiba && cp data.db data.db.bak-$(date +%Y%m%d-%H%M) 2>/dev/null; git pull --ff-only origin main; export PATH=$PATH:/root/.nvm/versions/node/v18.20.4/bin && npm install --production && pm2 restart liyiba && find /opt/liyiba -maxdepth 1 -name "data.db.bak-*" -mtime +7 -delete 2>/dev/null'
       ], { detached: true, stdio: 'ignore' });
       child.unref();
     }, 500);

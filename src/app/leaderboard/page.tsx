@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { useI18n } from '@/lib/i18n';
+import { getServerUrl } from '@/lib/auth';
 
 interface LeaderboardEntry {
   rank: number;
@@ -14,15 +15,6 @@ interface LeaderboardEntry {
   totalGames: number;
   totalGuesses: number;
   winRate: number; // 0-100
-}
-
-function getApiBaseUrl(): string {
-  if (typeof window === 'undefined') return 'http://localhost:3001';
-  const wsUrl = process.env.NEXT_PUBLIC_WS_URL;
-  if (wsUrl) {
-    return wsUrl.replace('wss://', 'https://').replace('ws://', 'http://');
-  }
-  return 'http://localhost:3001';
 }
 
 const DIFFICULTIES = [
@@ -58,7 +50,7 @@ export default function LeaderboardPage() {
     setLoading(true);
     setError(null);
     try {
-      const base = getApiBaseUrl();
+      const base = getServerUrl();
       const params = new URLSearchParams({ limit: String(MAX_ROWS), mode: m });
       if (diff) params.set('difficulty', diff);
       const res = await fetch(`${base}/api/leaderboard?${params.toString()}`);

@@ -1,9 +1,9 @@
-// WebSocket 代理到 ECS
+// WebSocket 代理到 VPS
 export default {
   async fetch(request) {
     const url = new URL(request.url);
-    // 直接转发到 ECS 的 80 端口（nginx → 3001）
-    const target = 'http://106.14.144.232' + url.pathname + url.search;
+    // 直接转发到 VPS 的 3001 端口
+    const target = 'http://160.236.110.37:3001' + url.pathname + url.search;
     return fetch(new Request(target, request));
   }
 };

@@ -51,6 +51,13 @@
   "game.viewResult": "View Result",
   "game.noMatch": "No matching operator found",
 
+  "selectDifficulty": "Select difficulty to start",
+  "guessCorrect": "Correct!",
+  "outOfGuesses": "Out of guesses",
+  "searchHint": "Enter operator name to start guessing",
+  "remainingGuesses": "You have {{count}} guesses",
+  "playAgain": "Play Again!",
+
   "table.name": "Name",
   "table.class": "Class",
   "table.subclass": "Subclass",

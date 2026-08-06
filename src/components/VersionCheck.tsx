@@ -1,17 +1,18 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getServerUrl } from '@/lib/auth';
 
 const VERSION_STORAGE_KEY = 'arknights-app-version';
 
 /**
  * 版本检测组件 — 每次页面加载时检查服务器版本，
- * 如果与本地存储的版本不同，说明浏览器缓存了旧代码，
- * 强制 hard reload 绕过缓存加载最新版本。
+ * 如果与本地存储的版本不同，显示更新提示 banner 而不是强制刷新，
+ * 避免中断用户正在进行的游戏。
  */
 export function VersionCheck() {
   const checkedRef = useRef(false);
+  const [showUpdate, setShowUpdate] = useState(false);
 
   useEffect(() => {
     // 只检查一次（React StrictMode 会 double-mount）
@@ -22,7 +23,7 @@ export function VersionCheck() {
       try {
         const base = getServerUrl();
         const res = await fetch(`${base}/api/version`, {
-          cache: 'no-store', // 强制跳过缓存
+          cache: 'no-store',
           headers: { 'Cache-Control': 'no-cache' },
         });
         if (!res.ok) return;
@@ -34,20 +35,17 @@ export function VersionCheck() {
         const storedVersion = localStorage.getItem(VERSION_STORAGE_KEY);
 
         if (!storedVersion) {
-          // 首次访问：记录版本号
           localStorage.setItem(VERSION_STORAGE_KEY, serverVersion);
           return;
         }
 
         if (storedVersion !== serverVersion) {
-          // 版本不匹配 → 旧缓存！更新版本号并强制刷新
-          console.log(`[VersionCheck] ${storedVersion} → ${serverVersion}, 强制刷新...`);
+          console.log(`[VersionCheck] ${storedVersion} → ${serverVersion}, 提示用户更新...`);
           localStorage.setItem(VERSION_STORAGE_KEY, serverVersion);
-          // 使用 location.reload() 并跳过浏览器缓存
-          window.location.reload();
+          setShowUpdate(true);
         }
       } catch {
-        // 服务器不可达 → 静默跳过，不影响正常使用
+        // 服务器不可达 → 静默跳过
       }
     };
 
@@ -56,6 +54,32 @@ export function VersionCheck() {
     return () => clearTimeout(timer);
   }, []);
 
-  // 不渲染任何 UI
-  return null;
+  if (!showUpdate) return null;
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 9999,
+        background: 'var(--primary)',
+        color: 'var(--bg)',
+        padding: '10px 20px',
+        textAlign: 'center',
+        fontWeight: 700,
+        fontSize: '0.9rem',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '8px',
+      }}
+      onClick={() => window.location.reload()}
+    >
+      <span>New version available! Click to refresh.</span>
+      <span style={{ fontSize: '0.8rem', opacity: 0.8 }}>新版本可用，点击刷新</span>
+    </div>
+  );
 }

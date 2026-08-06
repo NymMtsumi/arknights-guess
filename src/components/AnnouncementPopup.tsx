@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import DOMPurify from 'dompurify';
 import { apiCall } from '@/lib/auth';
 
 interface Announcement {
@@ -109,7 +110,7 @@ export function AnnouncementPopup() {
         {/* 内容 — 支持 HTML */}
         <div
           style={{ fontSize: '0.92rem', lineHeight: 1.7, color: 'var(--text-sec)' }}
-          dangerouslySetInnerHTML={{ __html: current.content }}
+          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(current.content) }}
         />
 
         {/* 底部 */}

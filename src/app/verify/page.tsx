@@ -1,19 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-
-function getApiBase(): string {
-  if (typeof window === 'undefined') return 'http://localhost:3001';
-  if (window.location.hostname === 'localhost') {
-    return 'http://localhost:3001';
-  }
-  // 用 NEXT_PUBLIC_WS_URL 推导 API 地址（与 auth.ts 中 getServerUrl 逻辑一致）
-  const wsUrl = process.env.NEXT_PUBLIC_WS_URL;
-  if (wsUrl && wsUrl.startsWith('https://ws.')) {
-    return wsUrl;
-  }
-  return `${window.location.protocol}//${window.location.hostname}`;
-}
+import { getServerUrl } from '@/lib/auth';
 
 export default function VerifyPage() {
   const [status, setStatus] = useState<'loading' | 'ok' | 'error'>('loading');
@@ -25,7 +13,7 @@ export default function VerifyPage() {
     const token = params.get('token');
     if (!token) { setStatus('error'); setMsg('缺少验证 token'); return; }
 
-    const apiBase = getApiBase();
+    const apiBase = getServerUrl();
     fetch(`${apiBase}/api/verify-email?token=${encodeURIComponent(token)}`)
       .then(r => r.json())
       .then(d => {

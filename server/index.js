@@ -30,10 +30,22 @@ try {
   console.log('[env] loaded .env file');
 } catch { /* .env 不存在则跳过 */ }
 
+// 全局错误处理：防止未捕获的异常导致进程崩溃
+process.on('uncaughtException', (err) => {
+  console.error('[FATAL] uncaughtException:', err.message, err.stack?.split('\n')[1] || '');
+  // 不要 process.exit()，让 PM2/Docker 决定是否重启
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('[FATAL] unhandledRejection:', reason?.message || reason, reason?.stack?.split('\n')[1] || '');
+});
+
 const PORT = process.env.PORT || 3001;
 const ROUND_TIME = 120_000;
 const DISCONNECT = 30_000;
-const JWT_SECRET = process.env.JWT_SECRET || 'arknights-guess-secret-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET || (() => {
+  console.warn('[WARN] ⚠️ JWT_SECRET is not set! Using a default value. This is insecure in production.');
+  return 'arknights-guess-secret-change-in-production';
+})();
 const APP_VERSION = '2026-08-05-001'; // 每次部署前递增此值，客户端将自动强制刷新
 const DB_PATH = join(__dirname, '..', 'data.db');
 
@@ -43,7 +55,7 @@ const SMTP_CONFIG = {
   port: 465,
   secure: true,
   auth: {
-    user: '3479083602@qq.com',
+    user: process.env.SMTP_USER || '3479083602@qq.com',
     pass: process.env.SMTP_PASS || '',
   },
 };
@@ -209,7 +221,17 @@ function parseCookies(str) {
 function parseBody(req) {
   return new Promise((resolve) => {
     let body = '';
-    req.on('data', chunk => { body += chunk; });
+    const MAX_SIZE = 1_048_576; // 1 MB
+    let size = 0;
+    req.on('data', chunk => {
+      size += chunk.length;
+      if (size > MAX_SIZE) {
+        req.destroy();
+        resolve({});
+        return;
+      }
+      body += chunk;
+    });
     req.on('end', () => {
       try { resolve(JSON.parse(body)); } catch { resolve({}); }
     });
@@ -398,7 +420,13 @@ const http = createServer(async (req, res) => {
     }
 
     // --- 哈希密码 ---
-    const password_hash = await bcrypt.hash(password, 10);
+    let password_hash;
+    try {
+      password_hash = await bcrypt.hash(password, 10);
+    } catch (err) {
+      console.error('[register] bcrypt.hash error:', err.message);
+      return jsonResponse(res, { error: '服务器内部错误，请稍后再试' }, 500);
+    }
 
     // --- 生成验证 token ---
     const verifyToken = randomBytes(32).toString('hex');
@@ -480,7 +508,13 @@ const http = createServer(async (req, res) => {
       return jsonResponse(res, { error: '用户名或密码错误' }, 401);
     }
 
-    const valid = await bcrypt.compare(password, user.password_hash);
+    let valid;
+    try {
+      valid = await bcrypt.compare(password, user.password_hash);
+    } catch (err) {
+      console.error('[login] bcrypt.compare error:', err.message);
+      return jsonResponse(res, { error: '服务器内部错误，请稍后再试' }, 500);
+    }
     if (!valid) {
       return jsonResponse(res, { error: '用户名或密码错误' }, 401);
     }
@@ -918,6 +952,7 @@ const http = createServer(async (req, res) => {
     const displayName = userRow?.nickname || userRow?.username || deriveGuestName(playerKey);
 
     const existing = onlinePlayers.get(playerKey);
+    // 心跳来自单人游戏页面，仅保留多人对战状态（优先级更高）
     const currentType = (existing && existing.type === 'multi') ? 'multi' : 'single';
 
     onlinePlayers.set(playerKey, {
@@ -1236,6 +1271,7 @@ const http = createServer(async (req, res) => {
 // auto-deploy: webhook (curl → /api/deploy → git pull → pm2 restart)
 const io = new Server(http, { cors: { origin: '*' }, pingInterval: 5000, pingTimeout: 15000 });
 const rooms = new Map();
+const roomPlayerIndex = new Map(); // playerKey → roomCode
 
 // ===== 在线玩家追踪 =====
 const onlinePlayers = new Map(); // playerKey → { playerKey, displayName, username, userId, type, roomCode, lastSeen }
@@ -1247,8 +1283,14 @@ const matchmakingQueue = new Map(); // socketId -> { socketId, playerKey, player
 
 function genMatchCode() {
   let code;
+  let attempts = 0;
   do {
     code = randomBytes(3).toString('hex').toUpperCase(); // 6 hex chars
+    if (++attempts > 100) {
+      // 回退到更大的码空间 (8 hex = 4.3B)
+      code = randomBytes(4).toString('hex').toUpperCase();
+      break;
+    }
   } while (rooms.has(code));
   return code;
 }
@@ -1294,6 +1336,8 @@ function tryMatch(difficulty) {
   sock2.data.roomCode = code;
 
   // 在线追踪：标记匹配成功的双方
+  roomPlayerIndex.set(p1.playerKey, code);
+  roomPlayerIndex.set(p2.playerKey, code);
   [sock1, sock2].forEach(s => {
     const entry = onlinePlayers.get(s.data.playerKey);
     if (entry) { entry.type = 'multi'; entry.roomCode = code; }
@@ -1310,7 +1354,21 @@ function tryMatch(difficulty) {
 }
 
 // ===== 游戏辅助函数 =====
-function genCode() { let c; do { c = String(Math.floor(1000 + Math.random() * 9000)); } while (rooms.has(c)); return c; }
+function genCode() {
+  let c;
+  let attempts = 0;
+  do {
+    c = String(Math.floor(1000 + Math.random() * 9000));
+    if (++attempts > 100) {
+      // 回退到更大的码空间
+      do {
+        c = randomBytes(2).toString('hex').toUpperCase();
+      } while (rooms.has(c));
+      break;
+    }
+  } while (rooms.has(c));
+  return c;
+}
 function score(room) {
   const arr = Array.from(room.players.values());
   return `${arr[0]?.name||'?'} ${arr[0]?.wins||0} - ${arr[1]?.wins||0} ${arr[1]?.name||'?'}`;
@@ -1371,8 +1429,10 @@ function endRound(room, winnerId, winnerName, targetName, matchOver) {
   io.to(room.code).emit('round_end', { winner: winnerId, winnerName, targetName, score: score(room), matchOver });
   if (matchOver) {
     room.finished = true;
+    room._finishedAt = Date.now();
     // 在线追踪：比赛结束，双方回到浏览状态
     for (const p of room.players.values()) {
+      roomPlayerIndex.delete(p.playerKey);
       const e = onlinePlayers.get(p.playerKey);
       if (e && e.type === 'multi') { e.type = 'idle'; e.roomCode = null; }
     }
@@ -1384,13 +1444,14 @@ function endRound(room, winnerId, winnerName, targetName, matchOver) {
 
 // 查找玩家已有的活跃房间
 function findRoomByPlayerKey(pk) {
-  for (const [code, r] of rooms) {
-    if (r.finished) continue;
-    for (const p of r.players.values()) {
-      if (p.playerKey === pk) return r;
-    }
+  const code = roomPlayerIndex.get(pk);
+  if (!code) return null;
+  const room = rooms.get(code);
+  if (!room || room.finished) {
+    roomPlayerIndex.delete(pk);
+    return null;
   }
-  return null;
+  return room;
 }
 
 function findRoomByIdentityKey(ik) {
@@ -1411,9 +1472,16 @@ setInterval(() => {
     if (cnt === 0) {
       if (room._roundTimer) clearTimeout(room._roundTimer);
       if (room._nextRound) clearTimeout(room._nextRound);
+      for (const p of room.players.values()) roomPlayerIndex.delete(p.playerKey);
       rooms.delete(code);
     }
     if (!room.started && !room.finished && room._createdAt && Date.now() - room._createdAt > 300_000) {
+      for (const p of room.players.values()) roomPlayerIndex.delete(p.playerKey);
+      rooms.delete(code);
+    }
+    // 清理已完成超过 5 分钟的房间
+    if (room.finished && room._finishedAt && Date.now() - room._finishedAt > 300_000) {
+      for (const p of room.players.values()) roomPlayerIndex.delete(p.playerKey);
       rooms.delete(code);
     }
   }
@@ -1426,6 +1494,18 @@ setInterval(() => {
       onlineSockets.delete(pk);
     }
   }
+  // 清理超时排队（5 分钟）
+  const _queueNow = Date.now();
+  for (const [sid, entry] of matchmakingQueue) {
+    if (_queueNow - entry.joinedAt > 300_000) {
+      matchmakingQueue.delete(sid);
+      const sock = io.sockets.sockets.get(sid);
+      if (sock) {
+        sock.emit('matchmaking:status', { queued: false, position: 0, difficulty: '' });
+      }
+    }
+  }
+  try { db.pragma('wal_checkpoint(PASSIVE)'); } catch {}
 }, 60000);
 
 // ===== Socket 连接 =====
@@ -1469,6 +1549,9 @@ io.on('connection', (socket) => {
             score: score(existing), target: existing.target, players: Array.from(existing.players.entries()).map(([id, p]) => ({ id, name: p.name, wins: p.wins })),
           });
         }
+        // 恢复在线追踪状态
+        const reEntry = onlinePlayers.get(socket.data.playerKey);
+        if (reEntry) { reEntry.type = 'multi'; reEntry.roomCode = existing.code; }
         console.log(`[恢复] ${socket.id} → ${existing.code}`);
         break;
       }
@@ -1553,6 +1636,7 @@ io.on('connection', (socket) => {
     rooms.set(code, { code, bestOf, winsNeeded: Math.ceil(bestOf / 2), difficulty, _createdAt: Date.now(), players: new Map([[socket.id, { name: data?.playerName || '玩家', wins: 0, dcTimer: null, lastSocketId: null, playerKey: socket.data.playerKey, identityKey: socket.data.identityKey, ready: false }]]), started: false, finished: false });
     socket.join(code);
     socket.data.roomCode = code;
+    roomPlayerIndex.set(socket.data.playerKey, code);
     // 在线追踪
     const entry = onlinePlayers.get(socket.data.playerKey);
     if (entry) { entry.type = 'multi'; entry.roomCode = code; }
@@ -1575,6 +1659,7 @@ io.on('connection', (socket) => {
           room.players.set(socket.id, p);
           socket.join(code);
           socket.data.roomCode = code;
+          roomPlayerIndex.set(socket.data.playerKey, code);
           // 在线追踪
           const entry2 = onlinePlayers.get(socket.data.playerKey);
           if (entry2) { entry2.type = 'multi'; entry2.roomCode = code; }
@@ -1590,6 +1675,7 @@ io.on('connection', (socket) => {
     room.players.set(socket.id, { name: data?.playerName || '玩家', wins: 0, dcTimer: null, lastSocketId: null, playerKey: socket.data.playerKey, identityKey: socket.data.identityKey, ready: false });
     socket.join(code);
     socket.data.roomCode = code;
+    roomPlayerIndex.set(socket.data.playerKey, code);
     // 在线追踪
     const entry3 = onlinePlayers.get(socket.data.playerKey);
     if (entry3) { entry3.type = 'multi'; entry3.roomCode = code; }
@@ -1598,7 +1684,10 @@ io.on('connection', (socket) => {
     console.log(`[房] ${code} 满员`);
   });
 
-  socket.on('_log', (d) => console.log(`[日志] ${d.action}`));
+  socket.on('_log', (d) => {
+    const action = typeof d?.action === 'string' ? d.action.replace(/\n/g, '\\n').slice(0, 200) : '[invalid]';
+    console.log(`[日志] ${action}`);
+  });
 
   // === 猜测 ===
   socket.on('guess_update', (data) => {
@@ -1642,6 +1731,13 @@ io.on('connection', (socket) => {
     if (Array.from(room.players.values()).every(p => p.ready) && room.players.size >= 2) {
       room.players.forEach(p => { p.wins = 0; p.ready = false; });
       room.finished = false; room.target = null;
+      // 重新索引：endRound 时删除了，rematch 后需要恢复
+      for (const p of room.players.values()) roomPlayerIndex.set(p.playerKey, room.code);
+      // 在线追踪：rematch 后双方回到多人状态
+      for (const p of room.players.values()) {
+        const entry = onlinePlayers.get(p.playerKey);
+        if (entry) { entry.type = 'multi'; entry.roomCode = room.code; }
+      }
       io.to(room.code).emit('rematch_start', { bestOf: room.bestOf, winsNeeded: room.winsNeeded });
       setTimeout(() => startRound(room), 1500);
     }
@@ -1675,9 +1771,13 @@ io.on('connection', (socket) => {
       const other = Array.from(room.players.keys()).find(id => id !== socket.id);
       io.to(room.code).emit('match_end', { winner: other, winnerName: room.players.get(other)?.name || '对手', score: score(room), reason: 'disconnect' });
       room.finished = true;
-      // 更新在线状态
-      const pEntry = onlinePlayers.get(player.playerKey);
-      if (pEntry && pEntry.type === 'multi') { pEntry.type = 'idle'; pEntry.roomCode = null; }
+      // 清理房间索引
+      for (const p of room.players.values()) roomPlayerIndex.delete(p.playerKey);
+      // 更新在线状态：双方都回到浏览状态
+      for (const p of room.players.values()) {
+        const entry = onlinePlayers.get(p.playerKey);
+        if (entry && entry.type === 'multi') { entry.type = 'idle'; entry.roomCode = null; }
+      }
     }, DISCONNECT);
   });
 
@@ -1699,8 +1799,29 @@ io.on('connection', (socket) => {
     if (room.started) {
       socket.emit('reconnect_state', { code, bestOf: room.bestOf, winsNeeded: room.winsNeeded, score: score(room), target: room.target, players: Array.from(room.players.entries()).map(([id, p]) => ({ id, name: p.name, wins: p.wins })) });
     }
+    // 恢复在线追踪状态
+    const reEntry = onlinePlayers.get(socket.data.playerKey);
+    if (reEntry) { reEntry.type = 'multi'; reEntry.roomCode = code; }
     console.log(`[重连] ${socket.id} → ${code}`);
 });
 });
 
 http.listen(PORT, () => console.log(`:${PORT}`));
+
+// 优雅关闭
+process.on('SIGTERM', () => {
+  console.log('[shutdown] SIGTERM received, closing...');
+  io.close();
+  http.close(() => {
+    db.close();
+    process.exit(0);
+  });
+});
+process.on('SIGINT', () => {
+  console.log('[shutdown] SIGINT received, closing...');
+  io.close();
+  http.close(() => {
+    db.close();
+    process.exit(0);
+  });
+});

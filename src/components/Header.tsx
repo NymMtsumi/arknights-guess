@@ -6,15 +6,7 @@ import { useI18n } from '@/lib/i18n';
 import { ThemeToggle } from './ThemeToggle';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { AuthDialog } from './AuthDialog';
-import { getUser } from '@/lib/auth';
-
-function getHttpBaseUrl(): string {
-  const wsUrl = process.env.NEXT_PUBLIC_WS_URL;
-  if (wsUrl && wsUrl.startsWith('https://ws.')) {
-    return wsUrl.replace('https://ws.', 'https://');
-  }
-  return 'http://localhost:3001';
-}
+import { getUser, getServerUrl } from '@/lib/auth';
 
 export function Header() {
   const { t } = useI18n();
@@ -24,7 +16,7 @@ export function Header() {
 
   useEffect(() => {
     if (user) return;
-    fetch(`${getHttpBaseUrl()}/api/guest-identity`)
+    fetch(`${getServerUrl()}/api/guest-identity`)
       .then(res => res.json())
       .then(data => {
         if (data.displayName) setGuestName(data.displayName);

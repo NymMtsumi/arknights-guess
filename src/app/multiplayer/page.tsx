@@ -8,7 +8,7 @@ import { GuessTable } from '@/components/GuessTable';
 import { ScrollSlider } from '@/components/ScrollSlider';
 import { useGameStore } from '@/stores/game-store';
 import { saveMultiGameStats, type MultiRoundResult } from '@/lib/stats';
-import { getUser } from '@/lib/auth';
+import { getUser, getServerUrl } from '@/lib/auth';
 import { findCharacterByName } from '@/lib/game-engine';
 import type { Character } from '@/types/character';
 import charactersData from '@/data/characters.json';
@@ -102,11 +102,7 @@ export default function MultiplayerPage() {
     }
 
     // Not logged in — fetch guest identity
-    const wsUrl = process.env.NEXT_PUBLIC_WS_URL;
-    const base = (wsUrl && wsUrl.startsWith('https://ws.'))
-      ? wsUrl.replace('https://ws.', 'https://')
-      : 'http://localhost:3001';
-    fetch(`${base}/api/guest-identity`)
+    fetch(`${getServerUrl()}/api/guest-identity`)
       .then(res => res.json())
       .then(data => {
         if (data.displayName) setPlayerName(data.displayName.slice(0, 4));

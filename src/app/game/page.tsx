@@ -25,11 +25,18 @@ export default function GamePage() {
 
   const guessedIds = useMemo(() => new Set(guesses.map(g => g.character.id)), [guesses]);
 
-  // 游戏结束时保存统计
+  // 游戏结束时保存统计（带 double-fire 保护）
   const prevStatus = useRef(status);
+  const savedRef = useRef(false);
   useEffect(() => {
     if (prevStatus.current === 'playing' && (status === 'won' || status === 'lost')) {
-      saveGameStats(status === 'won', guesses.length, difficulty, target?.name || '');
+      if (!savedRef.current) {
+        saveGameStats(status === 'won', guesses.length, difficulty, target?.name || '');
+        savedRef.current = true;
+      }
+    }
+    if (status === 'playing') {
+      savedRef.current = false;
     }
     prevStatus.current = status;
   }, [status, guesses.length, difficulty, target]);
@@ -37,6 +44,7 @@ export default function GamePage() {
   // 心跳：告知服务器正在玩单人模式
   useEffect(() => {
     if (status !== 'playing') return;
+    const abortController = new AbortController();
     const sendHeartbeat = () => {
       const pk = getPlayerKey();
       if (!pk) return;
@@ -44,11 +52,15 @@ export default function GamePage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ playerKey: pk }),
+        signal: abortController.signal,
       }).catch(() => {});
     };
     sendHeartbeat();
     const interval = setInterval(sendHeartbeat, 30_000);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      abortController.abort();
+    };
   }, [status]);
 
   const handleStart = (diff: Difficulty) => {
@@ -73,8 +85,6 @@ export default function GamePage() {
     router.push('/');
   };
 
-  const formatRarity = (r: number) => '★'.repeat(r) + '☆'.repeat(6 - r);
-
   // 难度选择界面
   if (status === 'idle') {
     return (
@@ -96,7 +106,7 @@ export default function GamePage() {
             {t('menu.classic')}
           </h1>
           <p style={{ color: 'var(--text-light)', marginBottom: 'clamp(24px, 4vw, 40px)', textAlign: 'center', fontSize: 'var(--fs-xs)' }}>
-            选择难度开始游戏
+            {t('selectDifficulty')}
           </p>
 
           {/* 难度卡片 */}
@@ -219,8 +229,8 @@ export default function GamePage() {
             )}
 
             {/* 结束状态提示 */}
-            {status === 'won' && <span style={{ color: 'var(--correct)', fontWeight: 700 }}>🎉 猜对了！</span>}
-            {status === 'lost' && <span style={{ color: 'var(--danger)', fontWeight: 700 }}>猜测次数用尽</span>}
+            {status === 'won' && <span style={{ color: 'var(--correct)', fontWeight: 700 }}>🎉 {t('guessCorrect')}</span>}
+            {status === 'lost' && <span style={{ color: 'var(--danger)', fontWeight: 700 }}>{t('outOfGuesses')}</span>}
 
             {/* 放弃 */}
             {status === 'playing' && (
@@ -260,10 +270,10 @@ export default function GamePage() {
           {guesses.length === 0 && (
             <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-light)' }}>
               <p style={{ fontSize: '1.1rem', marginBottom: '8px' }}>
-                输入干员名字开始猜测 👆
+                {t('searchHint')}
               </p>
               <p style={{ fontSize: '0.85rem' }}>
-                你有 {remainingGuesses} 次机会
+                {t('remainingGuesses', { count: remainingGuesses })}
               </p>
             </div>
           )}
@@ -276,7 +286,7 @@ export default function GamePage() {
               padding: '12px 32px', background: 'var(--primary)', color: 'var(--bg)',
               border: 'none', borderRadius: 'var(--radius)', fontSize: '1rem',
               fontWeight: 700, cursor: 'pointer',
-            }}>🔄 再理一把！</button>
+            }}>🔄 {t('playAgain')}</button>
           </div>
         )}
       </div>

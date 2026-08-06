@@ -113,13 +113,7 @@ export function GameSearch({ onGuess, disabled, guessedIds, target }: GameSearch
     } else if (e.key === 'Enter') {
       e.preventDefault();
       if (disabled) return;
-      const cheatTarget = target || useGameStore.getState().target;
-      if (query.trim() === 'KEYKEYKEY' && cheatTarget) {
-        onGuess(cheatTarget);
-        setQuery('');
-        setShowDropdown(false);
-        return;
-      }
+      // KEYKEYKEY cheat code removed for production
       if (showDropdown && results.length > 0) {
         const idx = selectedIndex >= 0 ? selectedIndex : 0;
         if (results[idx]) selectChar(results[idx]);

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import DOMPurify from 'dompurify';
 import { apiCall } from '@/lib/auth';
 
 interface ChangelogDialogProps {
@@ -146,7 +147,7 @@ export function ChangelogDialog({ open, onClose }: ChangelogDialogProps) {
               </div>
               <div
                 style={{ margin: 0, fontSize: '0.9rem', lineHeight: 1.7, color: 'var(--text-sec)' }}
-                dangerouslySetInnerHTML={{ __html: a.content }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(a.content) }}
               />
             </div>
           ))

@@ -51,6 +51,13 @@
   "game.viewResult": "查看战绩",
   "game.noMatch": "未找到匹配的干员",
 
+  "selectDifficulty": "选择难度开始游戏",
+  "guessCorrect": "猜对了！",
+  "outOfGuesses": "猜测次数用尽",
+  "searchHint": "输入干员名字开始猜测 👆",
+  "remainingGuesses": "你有 {{count}} 次机会",
+  "playAgain": "再理一把！",
+
   "table.name": "姓名",
   "table.class": "职业",
   "table.subclass": "子职业",

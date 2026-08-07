@@ -114,6 +114,35 @@ export default function AdminUsers() {
     }
   };
 
+  const toggleRole = async (userId: number, currentRole: string) => {
+    const newRole = currentRole === 'admin' ? 'user' : 'admin';
+    const action = newRole === 'admin' ? '提权为管理员' : '降级为普通用户';
+    if (!window.confirm(`确定将 #${userId} ${action}？`)) return;
+    setMsg(''); setError('');
+    try {
+      const token = getToken();
+      const res = await fetch(`${baseUrl}/api/admin/users/${userId}/role`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ role: newRole }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || '操作失败');
+      setMsg(`${action}成功`);
+      await load();
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const maskEmail = (email: string): string => {
+    if (!email || !email.includes('@')) return email || '—';
+    const [name, domain] = email.split('@');
+    if (!name || name.length === 0) return `***@${domain}`;
+    if (name.length <= 2) return `${name[0]}***@${domain}`;
+    return `${name[0]}***${name[name.length - 1]}@${domain}`;
+  };
+
   // ===== 样式 =====
   const cardStyle: React.CSSProperties = {
     background: 'var(--card)',
@@ -204,7 +233,7 @@ export default function AdminUsers() {
                     )}
                   </td>
                   <td style={tdStyle}>
-                    <span style={{ fontSize: '0.8rem' }}>{u.email || '-'}</span>
+                    <span style={{ fontSize: '0.8rem' }}>{u.email ? maskEmail(u.email) : '—'}</span>
                     {u.email && (
                       <span style={{ marginLeft: '4px', fontSize: '0.65rem', color: u.emailVerified ? 'var(--correct)' : '#f0ad4e' }}>
                         {u.emailVerified ? '✓' : '!'}
@@ -228,21 +257,38 @@ export default function AdminUsers() {
                     </span>
                   </td>
                   <td style={tdStyle}>
-                    <button
-                      onClick={() => toggleBan(u.id, u.banned)}
-                      style={{
-                        padding: '4px 10px',
-                        fontSize: '0.75rem',
-                        background: u.banned ? 'var(--correct)' : 'var(--danger)',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '3px',
-                        cursor: 'pointer',
-                        fontWeight: 600,
-                      }}
-                    >
-                      {u.banned ? '解封' : '封禁'}
-                    </button>
+                    <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                      <button
+                        onClick={() => toggleRole(u.id, u.role)}
+                        style={{
+                          padding: '4px 8px',
+                          fontSize: '0.7rem',
+                          background: u.role === 'admin' ? '#f0ad4e' : 'var(--primary)',
+                          color: u.role === 'admin' ? '#000' : '#fff',
+                          border: 'none',
+                          borderRadius: '3px',
+                          cursor: 'pointer',
+                          fontWeight: 600,
+                        }}
+                      >
+                        {u.role === 'admin' ? '降级' : '提权'}
+                      </button>
+                      <button
+                        onClick={() => toggleBan(u.id, u.banned)}
+                        style={{
+                          padding: '4px 8px',
+                          fontSize: '0.7rem',
+                          background: u.banned ? 'var(--correct)' : 'var(--danger)',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '3px',
+                          cursor: 'pointer',
+                          fontWeight: 600,
+                        }}
+                      >
+                        {u.banned ? '解封' : '封禁'}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

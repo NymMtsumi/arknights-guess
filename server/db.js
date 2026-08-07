@@ -1,8 +1,5 @@
-// 数据库初始化、Schema 迁移、定期清理
-import Database from 'better-sqlite3';
-
-export function initDB(dbPath) {
-  const db = new Database(dbPath);
+// 数据库 Schema 迁移、定期清理（Database 实例由 index.js 创建并传入）
+export function initSchema(db) {
   db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');
 
@@ -43,6 +40,27 @@ export function initDB(dbPath) {
       token_hash TEXT NOT NULL UNIQUE,
       expires_at TEXT NOT NULL,
       created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS admin_actions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      admin_id INTEGER NOT NULL,
+      action TEXT NOT NULL,
+      target_type TEXT,
+      target_id TEXT,
+      detail TEXT,
+      ip TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS api_tokens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      token_hash TEXT NOT NULL UNIQUE,
+      created_by INTEGER NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      last_used_at TEXT,
+      revoked_at TEXT
     );
 
     CREATE TABLE IF NOT EXISTS announcements (
@@ -99,6 +117,11 @@ export function initDB(dbPath) {
   // 性能索引
   try { db.exec('CREATE INDEX IF NOT EXISTS idx_games_mode_diff ON games(mode, difficulty)'); } catch {}
   try { db.exec('CREATE INDEX IF NOT EXISTS idx_games_player_mode ON games(player_key, mode)'); } catch {}
+  try { db.exec('CREATE INDEX IF NOT EXISTS idx_games_mode_player ON games(mode, player_key)'); } catch {}
+  try { db.exec('CREATE INDEX IF NOT EXISTS idx_games_player_ts ON games(player_key, timestamp DESC)'); } catch {}
+  try { db.exec('CREATE INDEX IF NOT EXISTS idx_admin_actions_action ON admin_actions(action, created_at)'); } catch {}
+  try { db.exec('CREATE INDEX IF NOT EXISTS idx_email_verifications_token ON email_verifications(token_hash)'); } catch {}
+  try { db.exec('CREATE INDEX IF NOT EXISTS idx_users_created ON users(created_at)'); } catch {}
 
   // ===== 定期清理 =====
   // 清理过期记录（每小时）

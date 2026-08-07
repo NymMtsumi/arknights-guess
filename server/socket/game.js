@@ -10,7 +10,7 @@ export function registerGameHandlers({
   findRoomByPlayerKey, findRoomByIdentityKey,
   genCode,
   onlinePlayers, onlineSockets, ONLINE_TIMEOUT,
-  matchmakingQueue, tryMatch,
+  matchmakingQueue,
   handleJoinQueue, handleLeaveQueue, removeFromQueue,
 }) {
 
@@ -58,7 +58,7 @@ export function registerGameHandlers({
         if (!room.finished) return;
         io.to(room.code).emit('match_end', {
           winner: winnerId, winnerName, score: score(room),
-          players: Array.from(room.players.entries()).map(([id, p]) => ({ id, name: p.name, wins: p.wins, playerKey: p.playerKey })),
+          players: Array.from(room.players.entries()).map(([id, p]) => ({ id, name: p.name, wins: p.wins })),
         });
         for (const p of room.players.values()) {
           roomPlayerIndex.delete(p.playerKey);
@@ -233,7 +233,7 @@ export function registerGameHandlers({
             if (room.started) {
               const hasActiveRound = !!room._roundStartAt;
               const remainingTime = hasActiveRound
-                ? Math.max(0, Math.ceil((120_000 - (Date.now() - room._roundStartAt)) / 1000))
+                ? Math.max(0, Math.ceil((ROUND_TIME - (Date.now() - room._roundStartAt)) / 1000))
                 : 0;
               socket.emit('reconnect_state', {
                 code, bestOf: room.bestOf, winsNeeded: room.winsNeeded,
@@ -302,6 +302,8 @@ export function registerGameHandlers({
       try {
       const room = rooms.get(socket.data.roomCode);
       if (!room || room.finished || room.roundSettled) return;
+      const player = room.players.get(socket.id);
+      if (!player) return; // 只允许房间内的真实玩家弃权，防止幽灵 socket 利用
       // 单人弃权 = 对方胜
       const otherId = Array.from(room.players.keys()).find(id => id !== socket.id);
       const otherPlayer = room.players.get(otherId);
@@ -410,7 +412,7 @@ export function registerGameHandlers({
             io.to(room.code).emit('match_end', {
               winner: other, winnerName: room.players.get(other)?.name || '对手',
               score: score(room), reason: 'disconnect',
-              players: Array.from(room.players.entries()).map(([id, p]) => ({ id, name: p.name, wins: p.wins, playerKey: p.playerKey })),
+              players: Array.from(room.players.entries()).map(([id, p]) => ({ id, name: p.name, wins: p.wins })),
             });
             room.finished = true;
             room._finishedAt = Date.now();
@@ -428,7 +430,7 @@ export function registerGameHandlers({
         io.to(room.code).emit('match_end', {
           winner: other, winnerName: room.players.get(other)?.name || '对手',
           score: score(room), reason: 'disconnect',
-          players: Array.from(room.players.entries()).map(([id, p]) => ({ id, name: p.name, wins: p.wins, playerKey: p.playerKey })),
+          players: Array.from(room.players.entries()).map(([id, p]) => ({ id, name: p.name, wins: p.wins })),
         });
         room.finished = true;
         room._finishedAt = Date.now();
@@ -472,10 +474,6 @@ export function registerGameHandlers({
       socket.join(code);
       socket.data.roomCode = code;
       socket.to(code).emit('opponent_reconnected', { playerName: player.name });
-
-      const remainingTime = room._roundStartAt
-        ? Math.max(0, Math.ceil((ROUND_TIME - (Date.now() - room._roundStartAt)) / 1000))
-        : 120;
 
       if (room.started) {
         const hasActiveRound = !!room._roundStartAt;

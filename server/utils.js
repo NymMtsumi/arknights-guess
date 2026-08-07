@@ -23,17 +23,17 @@ export function getClientIP(req) {
   const isLocalProxy = req.socket.remoteAddress === '127.0.0.1' || req.socket.remoteAddress === '::1' || req.socket.remoteAddress === '::ffff:127.0.0.1';
   if (!isLocalProxy) return req.socket.remoteAddress || 'unknown';
 
-  // nginx 设置了 CF-Connecting-IP（来自 Cloudflare 的真实 client IP）
-  const cf = req.headers['cf-connecting-ip'];
-  if (cf) {
-    const cfStr = String(cf).trim();
-    if (/^[\d.]+$/.test(cfStr) || /^[0-9a-fA-F:]+$/.test(cfStr)) return cfStr;
-  }
-  // fallback: nginx 设置了 X-Real-IP = $remote_addr（直连时使用）
+  // 优先 X-Real-IP（nginx 设为 $remote_addr，不可伪造）
   const realIp = req.headers['x-real-ip'];
   if (realIp) {
     const ripStr = String(realIp).trim();
     if (/^[\d.]+$/.test(ripStr) || /^[0-9a-fA-F:]+$/.test(ripStr)) return ripStr;
+  }
+  // 兜底：CF-Connecting-IP（nginx 已清空，仅旧版本兼容）
+  const cf = req.headers['cf-connecting-ip'];
+  if (cf) {
+    const cfStr = String(cf).trim();
+    if (/^[\d.]+$/.test(cfStr) || /^[0-9a-fA-F:]+$/.test(cfStr)) return cfStr;
   }
   return '127.0.0.1';
 }
@@ -44,18 +44,24 @@ export function parseBody(req) {
     let body = '';
     const MAX_SIZE = 1_048_576;
     let size = 0;
+    let settled = false;
+    const done = (result) => { if (!settled) { settled = true; resolve(result); } };
     req.on('data', chunk => {
+      if (settled) return;
       size += chunk.length;
       if (size > MAX_SIZE) {
         req.destroy();
-        resolve({});
+        done({});
         return;
       }
       body += chunk;
     });
     req.on('end', () => {
-      try { resolve(JSON.parse(body)); } catch { resolve({}); }
+      try { done(JSON.parse(body)); } catch { done({}); }
     });
+    // 防止客户端断开/异常导致请求挂起
+    req.on('error', () => done({}));
+    req.on('close', () => done({}));
   });
 }
 

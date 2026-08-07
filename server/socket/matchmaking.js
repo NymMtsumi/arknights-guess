@@ -67,8 +67,8 @@ export function createMatchmaking({ io, roomPlayerIndex, genMatchCode, createMat
 
     console.log(`[匹配] ${p1.playerName} vs ${p2.playerName} 房间 ${code} 难度 ${difficulty}`);
 
-    sock1.emit('matchmaking:matched', { roomCode: code, opponent: { name: p2.playerName, playerKey: p2.playerKey }, bestOf, difficulty });
-    sock2.emit('matchmaking:matched', { roomCode: code, opponent: { name: p1.playerName, playerKey: p1.playerKey }, bestOf, difficulty });
+    sock1.emit('matchmaking:matched', { roomCode: code, opponent: { name: p2.playerName }, bestOf, difficulty });
+    sock2.emit('matchmaking:matched', { roomCode: code, opponent: { name: p1.playerName }, bestOf, difficulty });
 
     if (_startRound) _startRound(room);
   }

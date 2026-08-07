@@ -165,8 +165,17 @@ export async function login(username: string, password: string): Promise<{
 
   // 存储 player_key 到 localStorage（cookie 是 HttpOnly，JS 无法读取）
   if (data.player_key) {
+    // 捕获旧游客 pk（可能在访问多人页面时被 socket set_cookie 写入过），
+    // 防止 socket-pk 标记的本地记录被 migrateGuestDataToAccount 跳过（它只迁移 ownerless 记录）
+    const oldGuestPk = getPlayerKey();
     try { localStorage.setItem('player_key', data.player_key); } catch {}
-    await migrateGuestDataToAccount(data.player_key);
+
+    // 如果旧游客 pk 存在且不同于账户 pk，先合并服务端孤儿游戏
+    if (oldGuestPk && oldGuestPk !== data.player_key) {
+      try { await linkPlayerKey(oldGuestPk); } catch {}
+    }
+
+    await migrateGuestDataToAccount(data.player_key, oldGuestPk || undefined);
   }
 
   return data;
@@ -174,10 +183,12 @@ export async function login(username: string, password: string): Promise<{
 
 /**
  * 登录后调用：把旧游客（无账号时）的本地战绩迁移到账号的 player_key 下。
- * 只迁移没有 pk 标签的旧数据（ownerless），绝不迁移已标记为其他 pk 的记录，
- * 防止多人共享设备时战绩串乱。
+ * 迁移两类记录：
+ *   1. ownerless（无 pk 标签）— 纯游客从未访问多人页面的情况
+ *   2. 标记为 oldGuestPk 的记录 — 游客访问多人页面后被 socket 写入了 pk
+ * 绝不迁移已标记为其他 pk 的记录，防止多人共享设备时战绩串乱。
  */
-export async function migrateGuestDataToAccount(accountPlayerKey: string): Promise<void> {
+export async function migrateGuestDataToAccount(accountPlayerKey: string, oldGuestPk?: string): Promise<void> {
   if (typeof window === 'undefined') return;
   try {
     const HISTORY_KEY = 'arknights-guess-history';
@@ -187,10 +198,27 @@ export async function migrateGuestDataToAccount(accountPlayerKey: string): Promi
     const history = JSON.parse(rawHistory);
     if (!Array.isArray(history) || history.length === 0) return;
 
-    // 只迁移无 pk 的旧数据（ownerless）。不碰带其他 pk 的记录——那些属于别的账号。
-    const ownerlessGames = history.filter((r: any) => r && !r.player_key);
+    // 迁移无 pk 的记录，以及标记为旧游客 pk 的记录（如 socket 写入的 pk）
+    const ownerlessGames = history.filter((r: any) =>
+      r && !r._migrating && (!r.player_key || (oldGuestPk && r.player_key === oldGuestPk))
+    );
 
     if (ownerlessGames.length === 0) return;
+
+    // 立即标记为"迁移中"，防止并发 tab 重复迁移
+    let updated = history.map((r: any) => {
+      if (!r || r.player_key || r._migrating) return r;
+      return { ...r, _migrating: accountPlayerKey };
+    });
+    try { localStorage.setItem(HISTORY_KEY, JSON.stringify(updated)); } catch {}
+
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    const token = getToken();
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    // 收集成功迁移的记录索引，逐条标记（不再 all-or-nothing）
+    const migratedIndices = new Set<number>();
+    const originalIndices: number[] = []; // ownerlessGames 在 history 中的原始索引
 
     // 提取单人战绩
     const singleGames = ownerlessGames
@@ -203,12 +231,7 @@ export async function migrateGuestDataToAccount(accountPlayerKey: string): Promi
         difficulty: String(r.difficulty || 'hard'),
       }));
 
-    let singleOk = false;
     if (singleGames.length > 0) {
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      const token = getToken();
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-
       const res = await fetch(`${getServerUrl()}/api/sync`, {
         method: 'POST',
         headers,
@@ -218,22 +241,19 @@ export async function migrateGuestDataToAccount(accountPlayerKey: string): Promi
       if (res.ok) {
         const data = await res.json();
         console.log(`[Auth] Migrated ${data.synced || singleGames.length} guest single game(s) to account`);
-        singleOk = true;
+        // 标记所有单人记录为已迁移
+        ownerlessGames.forEach((g, i) => {
+          if (g.mode !== 'multi' && typeof g.timestamp === 'number') migratedIndices.add(i);
+        });
       }
     }
 
-    // 多人战绩逐条保存
-    const multiGames = ownerlessGames
-      .filter((r: any) => r.mode === 'multi' && typeof r.timestamp === 'number');
-    let multiOk = multiGames.length === 0; // 没有多人记录 = 成功
+    // 多人战绩逐条保存，每条即刻标记（单条失败不中断其他保存）
+    for (let i = 0; i < ownerlessGames.length; i++) {
+      const g = ownerlessGames[i];
+      if (g.mode !== 'multi' || typeof g.timestamp !== 'number') continue;
 
-    if (multiGames.length > 0) {
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      const token = getToken();
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-
-      let successCount = 0;
-      for (const g of multiGames) {
+      try {
         const res = await fetch(`${getServerUrl()}/api/save-game`, {
           method: 'POST',
           headers,
@@ -247,21 +267,61 @@ export async function migrateGuestDataToAccount(accountPlayerKey: string): Promi
             timestamp: new Date(g.timestamp).toISOString(),
           }),
         });
-        if (res.ok) successCount++;
-      }
-      if (successCount > 0) {
-        console.log(`[Auth] Migrated ${successCount} guest multi-game(s) to account`);
-        multiOk = successCount === multiGames.length;
+
+        if (res.ok) {
+          migratedIndices.add(i);
+          console.log(`[Auth] Migrated multi-game #${i} to account`);
+        } else {
+          console.warn(`[Auth] Failed to migrate multi-game #${i}: HTTP ${res.status}`);
+        }
+      } catch (err) {
+        // 网络错误不中断循环，继续处理剩余游戏
+        console.warn(`[Auth] Network error migrating multi-game #${i}:`, (err as Error)?.message);
       }
     }
 
-    // 仅在迁移成功后将 ownerless 记录标记为账号 pk（防止下次登录重复迁移）
-    if (singleOk && multiOk) {
-      const updated = history.map((r: any) => {
-        if (!r || r.player_key) return r; // 已有 pk 的不碰
-        return { ...r, player_key: accountPlayerKey };
-      });
-      try { localStorage.setItem(HISTORY_KEY, JSON.stringify(updated)); } catch {}
+    // 逐条标记成功的记录（不再 all-or-nothing）
+    if (migratedIndices.size > 0) {
+      // 重新读取 localStorage（可能有其他 tab 写入）
+      const currentRaw = localStorage.getItem(HISTORY_KEY);
+      const currentHistory = currentRaw ? JSON.parse(currentRaw) : history;
+      if (Array.isArray(currentHistory)) {
+        // 通过内容匹配标记（用 timestamp + targetName + mode 作为唯一标识）
+        const migratedSet = new Set<string>();
+        for (const idx of migratedIndices) {
+          const g = ownerlessGames[idx];
+          migratedSet.add(`${g.timestamp}|${g.targetName}|${g.mode}`);
+        }
+        const finalHistory = currentHistory.map((r: any) => {
+          if (!r || r.player_key) return r;
+          const key = `${r.timestamp}|${r.targetName}|${r.mode}`;
+          if (migratedSet.has(key)) {
+            const { _migrating, ...rest } = r;
+            return { ...rest, player_key: accountPlayerKey };
+          }
+          // 清除 _migrating 标记（超时或失败的记录回退为可迁移状态）
+          if (r._migrating === accountPlayerKey) {
+            const { _migrating, ...rest } = r;
+            return rest;
+          }
+          return r;
+        });
+        try { localStorage.setItem(HISTORY_KEY, JSON.stringify(finalHistory)); } catch {}
+      }
+    } else {
+      // 完全失败：清除 _migrating 标记，恢复原状
+      const currentRaw = localStorage.getItem(HISTORY_KEY);
+      const currentHistory = currentRaw ? JSON.parse(currentRaw) : history;
+      if (Array.isArray(currentHistory)) {
+        const restored = currentHistory.map((r: any) => {
+          if (r?._migrating === accountPlayerKey) {
+            const { _migrating, ...rest } = r;
+            return rest;
+          }
+          return r;
+        });
+        try { localStorage.setItem(HISTORY_KEY, JSON.stringify(restored)); } catch {}
+      }
     }
   } catch (err) {
     console.warn('[Auth] Guest data migration failed (non-critical):', err);
@@ -269,10 +329,20 @@ export async function migrateGuestDataToAccount(accountPlayerKey: string): Promi
 }
 
 // ===== 退出登录 =====
-export function logout(): void {
+export async function logout(): Promise<void> {
+  // 通知服务器清除 HttpOnly cookies（token + player_key）
+  try {
+    const headers: Record<string, string> = {};
+    const token = getToken();
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    await fetch(`${getServerUrl()}/api/logout`, { method: 'POST', headers });
+  } catch {}
   clearAuth();
   // 清除 player_key，防止登出后新游戏仍用旧 pk（导致数据归属错误）
   try { localStorage.removeItem('player_key'); } catch {}
+  // 清除本地游戏历史，防止下一个登录用户同步到不属于他的记录
+  try { localStorage.removeItem('arknights-guess-history'); } catch {}
+  try { localStorage.removeItem('arknights-guess-stats'); } catch {}
 }
 
 // ===== 获取个人信息 =====
@@ -321,17 +391,12 @@ export async function linkPlayerKey(playerKey: string): Promise<void> {
 }
 
 // ===== 获取 player_key =====
-// player_key cookie 是 HttpOnly，JS 无法读取，因此使用 localStorage
+// player_key cookie 是 HttpOnly，JS 无法读取，因此唯一来源是 localStorage
+// （登录/注册/set_cookie 事件会写入 localStorage；不使用 document.cookie 兜底，防止读到过期的 socket cookie）
 export function getPlayerKey(): string | null {
   if (typeof window === 'undefined') return null;
   try {
-    const stored = localStorage.getItem('player_key');
-    if (stored) return stored;
-  } catch {}
-  // 兜底：尝试从 cookie 读取（非 HttpOnly 场景，如旧版本或开发环境）
-  try {
-    const match = document.cookie.split('; ').find(r => r.startsWith('player_key='));
-    return match ? match.split('=')[1] : null;
+    return localStorage.getItem('player_key');
   } catch {
     return null;
   }

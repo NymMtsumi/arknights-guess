@@ -8,23 +8,13 @@ import { GuessTable } from '@/components/GuessTable';
 import { ScrollSlider } from '@/components/ScrollSlider';
 import { useGameStore } from '@/stores/game-store';
 import { saveMultiGameStats, type MultiRoundResult } from '@/lib/stats';
-import { getUser, getServerUrl, getToken } from '@/lib/auth';
+import { getUser, getServerUrl, getToken, getPlayerKey } from '@/lib/auth';
 import { findCharacterByName } from '@/lib/game-engine';
 import type { Character } from '@/types/character';
 import charactersData from '@/data/characters.json';
 
-// 跨域传身份：Cookie只在pages.dev，WebSocket在arknights-guess.online
-function getWsUrl() {
-  const base = process.env.NEXT_PUBLIC_WS_URL || 'https://ws.arknights-guess.online';
-  let key = '';
-  try { key = localStorage.getItem('player_key') || ''; } catch {}
-  if (!key && typeof document !== 'undefined') {
-    // 兜底：尝试从 cookie 读取
-    key = document.cookie.split('; ').find(r => r.startsWith('player_key='))?.split('=')[1] || '';
-  }
-  return key ? `${base}?pk=${encodeURIComponent(key)}` : base;
-}
-const SERVER_URL = getWsUrl();
+// WebSocket 服务器地址
+const WS_BASE = process.env.NEXT_PUBLIC_WS_URL || 'https://ws.arknights-guess.online';
 const allChars = charactersData as Character[];
 const NICK_KEY = 'liyiba-nickname';
 const ROOM_KEY = 'liyiba-room';
@@ -132,14 +122,14 @@ export default function MultiplayerPage() {
       socketRef.current.removeAllListeners();
       socketRef.current.disconnect();
     }
-    const s = io(SERVER_URL, {
+    const s = io(WS_BASE, {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
       reconnectionAttempts: 10,
       autoConnect: false,
-      auth: { token: getToken() || '' },
+      auth: { token: getToken() || '', pk: getPlayerKey() || '' },
     });
 
     // 在连接前注册事件监听器（避免漏掉服务器自动恢复事件）
@@ -160,10 +150,10 @@ export default function MultiplayerPage() {
       else { setRoomExpireTime(Date.now() + 120_000); setStage('waiting'); }
     });
 
-    // 接收服务器 Cookie 设置指令
+    // 接收服务器 Cookie 设置指令（同步到 localStorage，作为客户端 pk 的唯一来源）
     s.on('set_cookie', (d: any) => {
       if (typeof document !== 'undefined') {
-        document.cookie = `${d.name}=${d.value}; path=/; max-age=${365*86400}; SameSite=None; Secure`;
+        try { localStorage.setItem('player_key', d.value); } catch {}
       }
     });
     s.io.on('reconnect', () => {

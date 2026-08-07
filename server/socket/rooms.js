@@ -1,7 +1,7 @@
 // 房间管理：创建、查找、代码生成
 import { randomBytes } from 'node:crypto';
 
-export function createRoomManager({ onlinePlayers }) {
+export function createRoomManager() {
   const rooms = new Map();
   const roomPlayerIndex = new Map(); // playerKey → roomCode
 
@@ -33,17 +33,6 @@ export function createRoomManager({ onlinePlayers }) {
     return code;
   }
 
-  function createRoom({ code, bestOf, winsNeeded, difficulty, playerEntry }) {
-    const room = {
-      code, bestOf, winsNeeded, difficulty, _createdAt: Date.now(),
-      players: new Map([[playerEntry.socketId, playerEntry]]),
-      started: false, finished: false,
-    };
-    rooms.set(code, room);
-    roomPlayerIndex.set(playerEntry.playerKey, code);
-    return room;
-  }
-
   function createMatchRoom({ code, bestOf, winsNeeded, difficulty, p1, p2 }) {
     const room = {
       code, bestOf, winsNeeded, difficulty, _createdAt: Date.now(),
@@ -57,18 +46,6 @@ export function createRoomManager({ onlinePlayers }) {
     roomPlayerIndex.set(p1.playerKey, code);
     roomPlayerIndex.set(p2.playerKey, code);
     return room;
-  }
-
-  function getRoom(code) {
-    return rooms.get(code);
-  }
-
-  function deleteRoom(code) {
-    const room = rooms.get(code);
-    if (room) {
-      for (const p of room.players.values()) roomPlayerIndex.delete(p.playerKey);
-      rooms.delete(code);
-    }
   }
 
   function findRoomByPlayerKey(pk) {
@@ -92,55 +69,16 @@ export function createRoomManager({ onlinePlayers }) {
     return null;
   }
 
-  function setPlayerIndex(pk, code) {
-    roomPlayerIndex.set(pk, code);
-  }
-
-  function deletePlayerIndex(pk) {
-    roomPlayerIndex.delete(pk);
-  }
-
-  // 周期清理
-  function cleanupRooms(io) {
-    for (const [code, room] of rooms) {
-      const socks = io.sockets.adapter.rooms.get(code);
-      const cnt = socks ? socks.size : 0;
-      if (cnt === 0) {
-        if (room._roundTimer) clearTimeout(room._roundTimer);
-        if (room._nextRound) clearTimeout(room._nextRound);
-        for (const p of room.players.values()) roomPlayerIndex.delete(p.playerKey);
-        rooms.delete(code);
-      }
-      if (!room.started && !room.finished && room._createdAt && Date.now() - room._createdAt > 300_000) {
-        for (const p of room.players.values()) roomPlayerIndex.delete(p.playerKey);
-        rooms.delete(code);
-      }
-      if (room.finished && room._finishedAt && Date.now() - room._finishedAt > 300_000) {
-        for (const p of room.players.values()) roomPlayerIndex.delete(p.playerKey);
-        rooms.delete(code);
-      }
-    }
-  }
-
-  function score(room) {
-    const arr = Array.from(room.players.values());
-    return `${arr[0]?.name || '?'} ${arr[0]?.wins || 0} - ${arr[1]?.wins || 0} ${arr[1]?.name || '?'}`;
-  }
+  // 注：createRoom, getRoom, deleteRoom, setPlayerIndex, deletePlayerIndex,
+  // cleanupRooms, score 已移除 — 均未被调用（实际逻辑在 socket/game.js 中）
 
   return {
     rooms,
     roomPlayerIndex,
     genCode,
     genMatchCode,
-    createRoom,
     createMatchRoom,
-    getRoom,
-    deleteRoom,
     findRoomByPlayerKey,
     findRoomByIdentityKey,
-    setPlayerIndex,
-    deletePlayerIndex,
-    cleanupRooms,
-    score,
   };
 }

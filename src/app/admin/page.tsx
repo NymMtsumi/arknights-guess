@@ -2,16 +2,20 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { fetchMe, getUser, AuthError, clearAuth } from '@/lib/auth';
+import { fetchMe, AuthError } from '@/lib/auth';
 import AdminAnnouncements from '@/components/admin/AdminAnnouncements';
 import AdminUsers from '@/components/admin/AdminUsers';
 import AdminGuests from '@/components/admin/AdminGuests';
 import AdminOnline from '@/components/admin/AdminOnline';
+import AdminDashboard from '@/components/admin/AdminDashboard';
+import AdminCharacters from '@/components/admin/AdminCharacters';
+import AdminTokens from '@/components/admin/AdminTokens';
+import AdminAuditLog from '@/components/admin/AdminAuditLog';
 
-type Tab = 'announcements' | 'users' | 'guests' | 'online';
+type Tab = 'dashboard' | 'characters' | 'announcements' | 'users' | 'guests' | 'online' | 'tokens' | 'auditLog';
 
 export default function AdminPage() {
-  const [tab, setTab] = useState<Tab>('announcements');
+  const [tab, setTab] = useState<Tab>('dashboard');
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [error, setError] = useState('');
@@ -157,6 +161,12 @@ export default function AdminPage() {
       </div>
 
       <div style={tabsStyle}>
+        <button style={tab === 'dashboard' ? tabBtnActive : tabBtnBase} onClick={() => setTab('dashboard')}>
+          📊 仪表盘
+        </button>
+        <button style={tab === 'characters' ? tabBtnActive : tabBtnBase} onClick={() => setTab('characters')}>
+          🎮 干员
+        </button>
         <button style={tab === 'announcements' ? tabBtnActive : tabBtnBase} onClick={() => setTab('announcements')}>
           📢 更新日志
         </button>
@@ -169,12 +179,22 @@ export default function AdminPage() {
         <button style={tab === 'online' ? tabBtnActive : tabBtnBase} onClick={() => setTab('online')}>
           🟢 在线玩家
         </button>
+        <button style={tab === 'tokens' ? tabBtnActive : tabBtnBase} onClick={() => setTab('tokens')}>
+          🔑 API 令牌
+        </button>
+        <button style={tab === 'auditLog' ? tabBtnActive : tabBtnBase} onClick={() => setTab('auditLog')}>
+          📋 操作日志
+        </button>
       </div>
 
+      {tab === 'dashboard' && <AdminDashboard />}
+      {tab === 'characters' && <AdminCharacters />}
       {tab === 'announcements' && <AdminAnnouncements />}
       {tab === 'users' && <AdminUsers />}
       {tab === 'guests' && <AdminGuests />}
       {tab === 'online' && <AdminOnline />}
+      {tab === 'tokens' && <AdminTokens />}
+      {tab === 'auditLog' && <AdminAuditLog />}
     </div>
   );
 }

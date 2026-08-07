@@ -9,6 +9,7 @@ interface OnlinePlayer {
   username: string | null;
   type: 'multi' | 'single' | 'idle';
   roomCode: string | null;
+  ip: string | null;
   lastSeen: string;
 }
 
@@ -149,6 +150,7 @@ export default function AdminOnline() {
                   <th style={thStyle}>用户名</th>
                   <th style={thStyle}>状态</th>
                   <th style={thStyle}>房间码</th>
+                  <th style={thStyle}>IP</th>
                   <th style={thStyle}>最后活跃</th>
                 </tr>
               </thead>
@@ -159,8 +161,9 @@ export default function AdminOnline() {
                     <td style={{ ...tdStyle, color: 'var(--text-light)' }}>{p.username || '-'}</td>
                     <td style={tdStyle}><span style={typeBadge(p.type)}>{typeLabel(p.type)}</span></td>
                     <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: '0.82rem' }}>{p.roomCode || '-'}</td>
+                    <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: '0.72rem', color: 'var(--text-light)' }}>{p.ip || '—'}</td>
                     <td style={{ ...tdStyle, color: 'var(--text-light)', fontSize: '0.78rem' }}>
-                      {new Date(p.lastSeen).toLocaleTimeString('zh-CN')}
+                      {p.lastSeen ? new Date(p.lastSeen).toLocaleTimeString('zh-CN') : '—'}
                     </td>
                   </tr>
                 ))}

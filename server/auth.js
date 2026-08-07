@@ -36,7 +36,7 @@ export function createAuth({ db, JWT_SECRET }) {
       jsonResponse(res, { error: '账号已被封禁' }, 403);
       return null;
     }
-    if (typeof decoded.tokenVersion === 'number' && decoded.tokenVersion !== (user.token_version || 0)) {
+    if ((decoded.tokenVersion || 0) !== (user.token_version || 0)) {
       jsonResponse(res, { error: '密码已更改，请重新登录' }, 401);
       return null;
     }

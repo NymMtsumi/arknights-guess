@@ -1,6 +1,9 @@
 // 游戏路由：save-game, leaderboard
 import { sanitizeString, parseCookies, parseBody, jsonResponse, generateKey } from '../utils.js';
 
+// 排行榜内存缓存（60s TTL，避免每次请求全表聚合扫描）
+const leaderboardCache = new Map();
+
 export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getClientIP }) {
 
   // ===== POST /api/save-game =====
@@ -61,30 +64,50 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
 
     const authHeader = req.headers.authorization || '';
     let userId = null;
-    if (authHeader.startsWith('Bearer ')) {
-      const decoded = verifyToken(authHeader.slice(7));
-      if (decoded) {
+    // 尝试解析 JWT（可能为 null、过期、或有效）
+    const decoded = authHeader.startsWith('Bearer ') ? verifyToken(authHeader.slice(7)) : null;
+
+    if (decoded) {
+      // 全面鉴权检查（与 requireAuth 一致：token_version + banned_at）
+      const user = db.prepare('SELECT player_key, banned_at, token_version FROM users WHERE id = ?').get(decoded.userId);
+      if (!user) {
+        // 用户已被删除 → 按未认证处理
+      } else if (user.banned_at) {
+        return jsonResponse(res, { error: '账号已被封禁' }, 403);
+      } else if ((decoded.tokenVersion || 0) !== (user.token_version || 0)) {
+        return jsonResponse(res, { error: '密码已更改，请重新登录' }, 401);
+      } else {
+        // 认证有效
         userId = decoded.userId;
-        const user = db.prepare('SELECT player_key FROM users WHERE id = ?').get(decoded.userId);
-        if (user && !user.player_key) {
-          // 始终生成新 key，不复用客户端提供的 pk（防止多用户共享设备时数据归属错误）
-          const newPk = generateKey();
-          if (player_key && player_key.startsWith('p_')) {
-            const pkConflict = db.prepare('SELECT id FROM users WHERE player_key = ? AND id != ?').get(player_key, decoded.userId);
-            if (!pkConflict) {
-              // 旧 pk 无人认领 → 迁移游戏记录
-              db.prepare('UPDATE games SET player_key = ? WHERE player_key = ?').run(newPk, player_key);
-            }
-          }
-          player_key = newPk;
-          newPlayerKey = player_key;
-          try { db.prepare('UPDATE users SET player_key = ? WHERE id = ?').run(player_key, decoded.userId); } catch {}
-        } else if (user && user.player_key) {
+        if (user.player_key) {
           player_key = user.player_key;
+        } else {
+          // 始终生成新 key，不复用客户端提供的 pk（防止多用户共享设备时数据归属错误）
+          // 使用条件 UPDATE 防并发：多请求同时 mint pk 时，只有一个成功
+          const newPk = generateKey();
+          const oldPk = player_key; // 保存旧 pk（用于迁移游戏记录）
+          const updRes = db.prepare('UPDATE users SET player_key = ? WHERE id = ? AND player_key IS NULL').run(newPk, decoded.userId);
+          if (updRes.changes > 0) {
+            // 成功获取 pk → 迁移旧游戏记录（在确认 pk 归属后再迁移，避免游戏落到未绑定的 pk）
+            player_key = newPk;
+            newPlayerKey = player_key;
+            if (oldPk && oldPk.startsWith('p_') && oldPk !== newPk) {
+              const pkConflict = db.prepare('SELECT id FROM users WHERE player_key = ? AND id != ?').get(oldPk, decoded.userId);
+              if (!pkConflict) {
+                db.prepare('UPDATE games SET player_key = ? WHERE player_key = ?').run(newPk, oldPk);
+              }
+            }
+          } else {
+            // 并发竞争失败：另一请求先绑定了 pk，使用账户已有的 pk
+            const refreshed = db.prepare('SELECT player_key FROM users WHERE id = ?').get(decoded.userId);
+            player_key = refreshed?.player_key || player_key;
+          }
         }
       }
-    } else {
-      // 未认证：拒绝写入已注册用户的 pk（防数据伪造）
+    }
+
+    // 未认证（无 token / token 无效 / 用户已删除）：拒绝写入已注册用户的 pk（防数据伪造）
+    if (!userId) {
       const pkOwner = db.prepare('SELECT id FROM users WHERE player_key = ?').get(player_key);
       if (pkOwner) {
         return jsonResponse(res, { error: '请先登录' }, 401);
@@ -97,7 +120,12 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
 
     const extraHeaders = {};
     if (newPlayerKey) {
-      extraHeaders['Set-Cookie'] = `player_key=${newPlayerKey}; SameSite=Lax; Path=/; Max-Age=94608000; HttpOnly`;
+      extraHeaders['Set-Cookie'] = `player_key=${newPlayerKey}; SameSite=Lax; Secure; Path=/; Max-Age=94608000; HttpOnly`;
+    }
+
+    // 清除排行榜缓存（新游戏可能影响排名）
+    for (const key of leaderboardCache.keys()) {
+      if (key.startsWith(mode + ':')) leaderboardCache.delete(key);
     }
 
     console.log(`[save-game] pk=${player_key.slice(0, 10)} won=${won} guesses=${guessCount} mode=${mode} diff=${difficulty}`);
@@ -114,6 +142,13 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
     if (limit < 1) limit = 1;
     if (limit > 100) limit = 100;
     if (!['single', 'multi'].includes(mode)) mode = 'single';
+
+    // 内存缓存（60s TTL），避免每次请求全表聚合扫描
+    const cacheKey = `${mode}:${difficulty || 'all'}:${limit}`;
+    const cached = leaderboardCache.get(cacheKey);
+    if (cached && Date.now() - cached.at < 60_000) {
+      return jsonResponse(res, { leaderboard: cached.data });
+    }
 
     let query, params;
     if (difficulty && ['easy', 'medium', 'hard'].includes(difficulty)) {
@@ -160,6 +195,13 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
       totalGuesses: row.totalGuesses || 0,
       winRate: row.winRate,
     }));
+
+    leaderboardCache.set(cacheKey, { data: leaderboard, at: Date.now() });
+    // 清理过期缓存（超过 90s 的条目）
+    if (leaderboardCache.size > 50) {
+      const cutoff = Date.now() - 90_000;
+      for (const [k, v] of leaderboardCache) { if (v.at < cutoff) leaderboardCache.delete(k); }
+    }
 
     console.log(`[leaderboard] returned ${leaderboard.length} entries mode=${mode} diff=${difficulty || 'all'}`);
     return jsonResponse(res, { leaderboard });

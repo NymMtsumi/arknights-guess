@@ -21,6 +21,12 @@ export default function AdminAnnouncements() {
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
 
+  // Edit state
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editContent, setEditContent] = useState('');
+  const [editIsPopup, setEditIsPopup] = useState(false);
+
   const baseUrl = getServerUrl();
 
   const load = useCallback(async () => {
@@ -90,6 +96,46 @@ export default function AdminAnnouncements() {
       } else {
         setError(msg || '删除失败');
       }
+    }
+  };
+
+  const startEdit = (item: Announcement) => {
+    setEditingId(item.id);
+    setEditTitle(item.title);
+    setEditContent(item.content);
+    setEditIsPopup(item.is_popup);
+    setMsg(''); setError('');
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditTitle('');
+    setEditContent('');
+    setEditIsPopup(false);
+  };
+
+  const saveEdit = async () => {
+    if (!editTitle.trim() || !editContent.trim()) {
+      setError('标题和内容不能为空');
+      return;
+    }
+    setPublishing(true); setMsg(''); setError('');
+    try {
+      const token = getToken();
+      const res = await fetch(`${baseUrl}/api/admin/announcements/${editingId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ title: editTitle.trim(), content: editContent.trim(), is_popup: editIsPopup }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || '更新失败');
+      setMsg('公告已更新');
+      setEditingId(null);
+      await load();
+    } catch (err: any) {
+      setError(err.message || '更新失败');
+    } finally {
+      setPublishing(false);
     }
   };
 
@@ -175,25 +221,64 @@ export default function AdminAnnouncements() {
             {items.map(item => (
               <div key={item.id} style={{
                 padding: '12px',
-                background: 'var(--input-bg)',
+                background: editingId === item.id ? 'var(--card)' : 'var(--input-bg)',
                 borderRadius: 'var(--radius)',
-                border: '1px solid var(--border)',
+                border: editingId === item.id ? '1px solid var(--primary)' : '1px solid var(--border)',
               }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                {editingId === item.id ? (
+                  /* 编辑模式 */
                   <div>
-                    <strong style={{ fontSize: '0.9rem' }}>{item.title}</strong>
-                    {item.is_popup && (
-                      <span style={{ marginLeft: '8px', fontSize: '0.7rem', background: '#f0ad4e', color: '#000', padding: '1px 5px', borderRadius: '3px' }}>弹窗</span>
-                    )}
-                    <span style={{ marginLeft: '8px', fontSize: '0.7rem', color: 'var(--text-light)' }}>
-                      {item.created_at?.slice(0, 16)?.replace('T', ' ')}
-                    </span>
+                    <input
+                      value={editTitle}
+                      onChange={e => setEditTitle(e.target.value)}
+                      placeholder="公告标题"
+                      maxLength={128}
+                      style={{ width: '100%', padding: '8px 12px', background: 'var(--input-bg)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', fontSize: '0.9rem', marginBottom: '8px' }}
+                    />
+                    <textarea
+                      value={editContent}
+                      onChange={e => setEditContent(e.target.value)}
+                      placeholder="公告内容（支持 HTML）"
+                      maxLength={10000}
+                      rows={4}
+                      style={{ width: '100%', padding: '8px 12px', background: 'var(--input-bg)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', fontSize: '0.9rem', resize: 'vertical', marginBottom: '8px' }}
+                    />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-light)' }}>
+                        <input type="checkbox" checked={editIsPopup} onChange={e => setEditIsPopup(e.target.checked)} />
+                        弹窗公告
+                      </label>
+                      <button onClick={saveEdit} style={btnStyle} disabled={publishing}>
+                        {publishing ? '保存中...' : '保存'}
+                      </button>
+                      <button onClick={cancelEdit} style={{ ...btnStyle, background: 'transparent', color: 'var(--text-light)', border: '1px solid var(--border)' }}>
+                        取消
+                      </button>
+                    </div>
                   </div>
-                  <button onClick={() => remove(item.id)} style={dangerBtn}>删除</button>
-                </div>
-                <p style={{ margin: '6px 0 0', fontSize: '0.8rem', color: 'var(--text-light)', wordBreak: 'break-all' }}>
-                  {item.content.length > 200 ? item.content.slice(0, 200) + '...' : item.content}
-                </p>
+                ) : (
+                  /* 展示模式 */
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                      <div>
+                        <strong style={{ fontSize: '0.9rem' }}>{item.title}</strong>
+                        {item.is_popup && (
+                          <span style={{ marginLeft: '8px', fontSize: '0.7rem', background: '#f0ad4e', color: '#000', padding: '1px 5px', borderRadius: '3px' }}>弹窗</span>
+                        )}
+                        <span style={{ marginLeft: '8px', fontSize: '0.7rem', color: 'var(--text-light)' }}>
+                          {item.created_at?.slice(0, 16)?.replace('T', ' ')}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <button onClick={() => startEdit(item)} style={{ ...dangerBtn, background: 'var(--primary)', padding: '4px 10px', fontSize: '0.75rem' }}>编辑</button>
+                        <button onClick={() => remove(item.id)} style={dangerBtn}>删除</button>
+                      </div>
+                    </div>
+                    <p style={{ margin: '6px 0 0', fontSize: '0.8rem', color: 'var(--text-light)', wordBreak: 'break-all' }}>
+                      {item.content.length > 200 ? item.content.slice(0, 200) + '...' : item.content}
+                    </p>
+                  </div>
+                )}
               </div>
             ))}
           </div>

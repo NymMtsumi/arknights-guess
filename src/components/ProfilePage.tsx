@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { fetchMe, updateProfile, AuthError, clearAuth } from '@/lib/auth';
+import { fetchMe, updateProfile, AuthError, clearAuth, logout } from '@/lib/auth';
 
 export function ProfilePage() {
   const [loading, setLoading] = useState(true);
@@ -245,7 +245,7 @@ export function ProfilePage() {
           <button onClick={() => setEditing(true)} style={btnStyle}>
             编辑资料
           </button>
-          <button onClick={() => { clearAuth(); window.location.reload(); }} style={{
+          <button onClick={() => { logout().finally(() => window.location.reload()); }} style={{
             ...btnStyle,
             background: 'transparent',
             color: 'var(--danger)',

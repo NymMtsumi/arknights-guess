@@ -6,13 +6,6 @@ import { sanitizeString, parseCookies, parseBody, jsonResponse, generateKey } fr
 export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAuth, checkRateLimit, transporter, SITE_URL, getClientIP }) {
 
   // ===== POST /api/register =====
-  if (!app._addRoute) app._addRoute = function(method, path, handler) {
-    // 在 index.js 中会通过包装函数注册路由
-    this._routes = this._routes || [];
-    this._routes.push({ method, path, handler });
-  };
-
-  // ===== POST /api/register =====
   async function handleRegister(req, res, ip) {
     if (!checkRateLimit(`reg:${ip}`, 5, 600_000)) {
       return jsonResponse(res, { error: '注册请求过于频繁，请10分钟后再试' }, 429);
@@ -141,27 +134,37 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
 
     const token = signToken({ userId: user.id, username: user.username, tokenVersion: user.token_version || 0 });
 
-    // 确保用户有 player_key（始终生成新 key，从不复用 cookie pk，防止多用户共享设备时数据归属错误）
+    // 确保用户有 player_key，并迁移 cookie 中的游客游戏数据到账户 pk
     let playerKey = user.player_key;
-    let setPlayerKeyCookie = '';
+    const cookies = parseCookies(req.headers.cookie || '');
+    const cookiePk = typeof cookies.player_key === 'string' && cookies.player_key.startsWith('p_') ? cookies.player_key : null;
+
     if (!playerKey) {
-      const cookies = parseCookies(req.headers.cookie || '');
-      const newPk = generateKey();
-      // 如果 cookie 中有旧的游客 pk，且该 pk 不属于其他注册用户 → 迁移旧游戏数据到新 pk
-      if (cookies.player_key && typeof cookies.player_key === 'string' && cookies.player_key.startsWith('p_')) {
-        const conflict = db.prepare('SELECT id FROM users WHERE player_key = ? AND id != ?').get(cookies.player_key, user.id);
-        if (!conflict) {
-          // 旧 pk 无人认领 → 迁移游戏记录到新 pk
-          const migrated = db.prepare('UPDATE games SET player_key = ? WHERE player_key = ?').run(newPk, cookies.player_key);
-          if (migrated.changes > 0) {
-            console.log(`[login] migrated ${migrated.changes} games from ${cookies.player_key.slice(0, 10)} → ${newPk.slice(0, 10)}`);
-          }
+      // 首次登录：生成新 pk（条件 UPDATE 防并发登录竞态）
+      playerKey = generateKey();
+      const updRes = db.prepare('UPDATE users SET player_key = ? WHERE id = ? AND player_key IS NULL').run(playerKey, user.id);
+      if (updRes.changes === 0) {
+        // 并发登录：另一请求先绑定了 pk，重新读取
+        const refreshed = db.prepare('SELECT player_key FROM users WHERE id = ?').get(user.id);
+        playerKey = refreshed?.player_key || playerKey;
+      }
+    }
+
+    // 始终检查 cookie pk 是否有孤儿游戏需要迁移（无论账户是否已有 pk）
+    // 解决：从其他设备/浏览器登录时，之前游客玩的游戏找不到
+    if (cookiePk && cookiePk !== playerKey) {
+      const conflict = db.prepare('SELECT id FROM users WHERE player_key = ? AND id != ?').get(cookiePk, user.id);
+      if (!conflict) {
+        // cookie pk 无人认领 → 迁移游戏记录到账户 pk
+        const migrated = db.prepare('UPDATE games SET player_key = ? WHERE player_key = ?').run(playerKey, cookiePk);
+        if (migrated.changes > 0) {
+          console.log(`[login] migrated ${migrated.changes} games from ${cookiePk.slice(0, 10)} → ${playerKey.slice(0, 10)}`);
         }
       }
-      playerKey = newPk;
-      db.prepare('UPDATE users SET player_key = ? WHERE id = ?').run(newPk, user.id);
-      setPlayerKeyCookie = `player_key=${newPk}; SameSite=Lax; Path=/; Max-Age=94608000; HttpOnly`;
     }
+
+    // 始终设置 player_key cookie 为账户 pk（收敛多设备身份，覆盖旧的游客/其他账户 cookie）
+    const setPlayerKeyCookie = `player_key=${playerKey}; SameSite=Lax; Secure; Path=/; Max-Age=94608000; HttpOnly`;
 
     const cookieHeaders = [`token=${token}; SameSite=None; Secure; HttpOnly; Path=/; Max-Age=2592000`];
     if (setPlayerKeyCookie) cookieHeaders.push(setPlayerKeyCookie);
@@ -362,6 +365,15 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
     return jsonResponse(res, { ok: true, message: '密码重置成功，请使用新密码登录' });
   }
 
+  // ===== POST /api/logout =====
+  async function handleLogout(req, res) {
+    const clearCookies = [
+      'token=; SameSite=None; Secure; HttpOnly; Path=/; Max-Age=0',
+      'player_key=; SameSite=Lax; Secure; Path=/; Max-Age=0; HttpOnly',
+    ];
+    return jsonResponse(res, { ok: true }, 200, { 'Set-Cookie': clearCookies });
+  }
+
   // ===== 导出路由处理器 =====
   return {
     handleRegister,
@@ -370,5 +382,6 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
     handleVerifyEmail,
     handleForgotPassword,
     handleResetPassword,
+    handleLogout,
   };
 }

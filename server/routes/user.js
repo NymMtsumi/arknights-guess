@@ -2,7 +2,7 @@
 import { randomBytes, createHash } from 'node:crypto';
 import { sanitizeString, parseCookies, parseBody, jsonResponse, deriveGuestName, generateKey } from '../utils.js';
 
-export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNicknameProfanity, transporter, SITE_URL, onlinePlayers, onlineSockets, ONLINE_TIMEOUT }) {
+export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNicknameProfanity, transporter, SITE_URL, onlinePlayers, onlineSockets, ONLINE_TIMEOUT, checkRateLimit, getClientIP }) {
 
   // ===== GET /api/me =====
   async function handleMe(req, res) {
@@ -66,16 +66,44 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
     let finalPk = player_key;
     if (user && !user.player_key) {
       // 始终生成新 key，不复用客户端提供的 pk（防止多用户共享设备时数据归属错误）
+      // 使用事务包裹：绑定 pk + 迁移游戏，防止迁移后绑定失败导致游戏孤立
       const newPk = generateKey();
       if (player_key && player_key.startsWith('p_')) {
-        const pkConflict = db.prepare('SELECT id FROM users WHERE player_key = ? AND id != ?').get(player_key, auth.userId);
-        if (!pkConflict) {
-          // 旧 pk 无人认领 → 迁移游戏记录到新 pk
-          db.prepare('UPDATE games SET player_key = ? WHERE player_key = ?').run(newPk, player_key);
+        // 有旧游客 pk → 事务中原子完成：检查冲突 + 迁移 + 绑定
+        try {
+          const doSync = db.transaction(() => {
+            const pkConflict = db.prepare('SELECT id FROM users WHERE player_key = ? AND id != ?').get(player_key, auth.userId);
+            if (pkConflict) return null; // 旧 pk 已被其他用户认领，不迁移
+            const updRes = db.prepare('UPDATE users SET player_key = ? WHERE id = ? AND player_key IS NULL').run(newPk, auth.userId);
+            if (updRes.changes > 0) {
+              db.prepare('UPDATE games SET player_key = ? WHERE player_key = ?').run(newPk, player_key);
+              return newPk;
+            }
+            return null; // 并发竞争失败
+          });
+          const result = doSync();
+          if (result) {
+            finalPk = result;
+          } else {
+            // 事务返回 null：冲突或竞争失败，重新读取
+            const refreshed = db.prepare('SELECT player_key FROM users WHERE id = ?').get(auth.userId);
+            finalPk = refreshed?.player_key || player_key;
+          }
+        } catch (err) {
+          console.error('[sync] transaction failed:', err.message);
+          const refreshed = db.prepare('SELECT player_key FROM users WHERE id = ?').get(auth.userId);
+          finalPk = refreshed?.player_key || player_key;
+        }
+      } else {
+        // 无旧游客 pk → 简单绑定
+        const updateResult = db.prepare('UPDATE users SET player_key = ? WHERE id = ? AND player_key IS NULL').run(newPk, auth.userId);
+        if (updateResult.changes > 0) {
+          finalPk = newPk;
+        } else {
+          const refreshed = db.prepare('SELECT player_key FROM users WHERE id = ?').get(auth.userId);
+          finalPk = refreshed?.player_key || player_key;
         }
       }
-      finalPk = newPk;
-      try { db.prepare('UPDATE users SET player_key = ? WHERE id = ?').run(finalPk, auth.userId); } catch {}
     } else if (user && user.player_key) {
       finalPk = user.player_key;
     }
@@ -92,8 +120,8 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
       insertMany(games);
       const extraHeaders = {};
       // 如果生成了新的 pk，用 cookie 告知客户端
-      if (finalPk !== player_key && !user?.player_key) {
-        extraHeaders['Set-Cookie'] = `player_key=${finalPk}; SameSite=Lax; Path=/; Max-Age=94608000; HttpOnly`;
+      if (finalPk !== player_key) {
+        extraHeaders['Set-Cookie'] = `player_key=${finalPk}; SameSite=Lax; Secure; Path=/; Max-Age=94608000; HttpOnly`;
       }
       return jsonResponse(res, { synced: games.length, player_key: finalPk }, 200, extraHeaders);
     } catch (err) {
@@ -114,9 +142,25 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
     }
 
     const currentUser = db.prepare('SELECT player_key FROM users WHERE id = ?').get(auth.userId);
-    if (currentUser && currentUser.player_key) {
-      return jsonResponse(res, { error: '账户已绑定游戏数据，无需重复绑定' }, 400);
+
+    // 已绑定且 oldPk 与账户 pk 一致 → 幂等返回成功（客户端登录流程依赖此调用）
+    if (currentUser && currentUser.player_key === oldPk) {
+      return jsonResponse(res, { success: true, player_key: currentUser.player_key });
     }
+
+    if (currentUser && currentUser.player_key && currentUser.player_key !== oldPk) {
+      // 账户已有不同的 pk，但客户端仍拿着旧游客 pk → 迁移孤儿游戏
+      const conflict = db.prepare('SELECT id FROM users WHERE player_key = ? AND id != ?').get(oldPk, auth.userId);
+      if (conflict) {
+        return jsonResponse(res, { error: '该游戏数据已绑定其他账户' }, 409);
+      }
+      const migrated = db.prepare('UPDATE games SET player_key = ? WHERE player_key = ?').run(currentUser.player_key, oldPk);
+      console.log(`[link-pk] user=${auth.userId} merge ${oldPk.slice(0, 10)} → ${currentUser.player_key.slice(0, 10)} migrated=${migrated.changes}`);
+      return jsonResponse(res, { success: true, player_key: currentUser.player_key });
+    }
+
+    // 账户无 pk → 生成新 key 并迁移
+    // 使用事务包裹迁移 + 绑定（防止迁移成功后绑定失败导致游戏孤立）
 
     // 检查旧 pk 是否已被其他注册用户认领
     const existing = db.prepare('SELECT id FROM users WHERE player_key = ? AND id != ?').get(oldPk, auth.userId);
@@ -126,10 +170,24 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
 
     // 始终生成新 key，迁移旧 pk 的游戏记录（防止多用户共享设备时数据归属错误）
     const newPk = generateKey();
-    const migrated = db.prepare('UPDATE games SET player_key = ? WHERE player_key = ?').run(newPk, oldPk);
-    db.prepare('UPDATE users SET player_key = ? WHERE id = ?').run(newPk, auth.userId);
-    console.log(`[link-pk] user=${auth.userId} ${oldPk.slice(0, 10)} → ${newPk.slice(0, 10)} migrated=${migrated.changes}`);
-    return jsonResponse(res, { success: true, player_key: newPk });
+    try {
+      const doLink = db.transaction(() => {
+        db.prepare('UPDATE games SET player_key = ? WHERE player_key = ?').run(newPk, oldPk);
+        const res = db.prepare('UPDATE users SET player_key = ? WHERE id = ? AND player_key IS NULL').run(newPk, auth.userId);
+        if (res.changes === 0) {
+          // 并发竞争：另一请求先绑定了 pk，重新读取
+          const cur = db.prepare('SELECT player_key FROM users WHERE id = ?').get(auth.userId);
+          return cur?.player_key || newPk;
+        }
+        return newPk;
+      });
+      const finalPk = doLink();
+      console.log(`[link-pk] user=${auth.userId} ${oldPk.slice(0, 10)} → ${finalPk.slice(0, 10)}`);
+      return jsonResponse(res, { success: true, player_key: finalPk });
+    } catch (err) {
+      console.error(`[link-pk] transaction failed user=${auth.userId}:`, err.message);
+      return jsonResponse(res, { error: '绑定失败，请稍后重试' }, 500);
+    }
   }
 
   // ===== PATCH /api/me — 修改个人信息 =====
@@ -228,7 +286,7 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
 
     guestKey = 'g_' + randomBytes(12).toString('base64url');
     const displayName = deriveGuestName(guestKey);
-    const cookieHeader = `guest_id=${guestKey}; SameSite=Lax; Path=/; Max-Age=94608000; HttpOnly`;
+    const cookieHeader = `guest_id=${guestKey}; SameSite=Lax; Secure; Path=/; Max-Age=94608000; HttpOnly`;
     console.log(`[guest] new key=${guestKey.slice(0, 10)} name=${displayName}`);
     return jsonResponse(res, { key: guestKey, displayName }, 200, {
       'Set-Cookie': cookieHeader,
@@ -237,22 +295,37 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
 
   // ===== POST /api/heartbeat =====
   async function handleHeartbeat(req, res) {
+    const ip = getClientIP(req);
+    if (!checkRateLimit('hb:' + ip, 30, 60_000)) {
+      return jsonResponse(res, { error: '请求过于频繁' }, 429);
+    }
     const body = await parseBody(req);
     const playerKey = sanitizeString(body.playerKey || '', 64);
     if (!playerKey) return jsonResponse(res, { error: '需要 playerKey' }, 400);
 
-    const userRow = db.prepare('SELECT id, username, nickname, banned_at FROM users WHERE player_key = ?').get(playerKey);
-    if (userRow?.banned_at) return jsonResponse(res, { ok: true }); // 静默忽略被封禁用户
-    const displayName = userRow?.nickname || userRow?.username || deriveGuestName(playerKey);
-
+    // 优先从内存读取（心跳是最频繁的请求，减少 DB 查询）
     const existing = onlinePlayers.get(playerKey);
-    const currentType = (existing && existing.type === 'multi') ? 'multi' : 'single';
+    const isFresh = existing && Date.now() - (existing.lastSeen || 0) < 30_000;
+    let displayName, username, userId;
+    if (isFresh) {
+      displayName = existing.displayName;
+      username = existing.username;
+      userId = existing.userId;
+    } else {
+      const userRow = db.prepare('SELECT id, username, nickname, banned_at FROM users WHERE player_key = ?').get(playerKey);
+      if (userRow?.banned_at) return jsonResponse(res, { ok: true }); // 静默忽略被封禁用户
+      displayName = userRow?.nickname || userRow?.username || deriveGuestName(playerKey);
+      username = userRow?.username || null;
+      userId = userRow?.id || null;
+    }
+
+    const currentType = existing?.type || 'idle';
 
     onlinePlayers.set(playerKey, {
       playerKey,
       displayName,
-      username: userRow?.username || null,
-      userId: userRow?.id || null,
+      username,
+      userId,
       type: currentType,
       roomCode: existing?.roomCode || null,
       lastSeen: Date.now(),

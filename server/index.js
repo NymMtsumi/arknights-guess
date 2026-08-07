@@ -5,8 +5,9 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createTransport } from 'nodemailer';
+import Database from 'better-sqlite3';
 import { generateKey, getClientIP, jsonResponse, checkNicknameProfanity } from './utils.js';
-import { initDB } from './db.js';
+import { initSchema } from './db.js';
 import { createAuth } from './auth.js';
 import { loadCharacters } from './characters.js';
 import { registerAuthRoutes } from './routes/auth.js';
@@ -41,6 +42,8 @@ try {
 // ===== 全局错误处理 =====
 process.on('uncaughtException', (err) => {
   console.error('[FATAL] uncaughtException:', err.message, err.stack?.split('\n')[1] || '');
+  console.error('[FATAL] exiting to avoid corrupted in-memory state');
+  process.exit(1);
 });
 process.on('unhandledRejection', (reason) => {
   console.error('[FATAL] unhandledRejection:', reason?.message || reason, reason?.stack?.split('\n')[1] || '');
@@ -48,15 +51,18 @@ process.on('unhandledRejection', (reason) => {
 
 // ===== 配置 =====
 const PORT = process.env.PORT || 3001;
-const JWT_SECRET = process.env.JWT_SECRET || (() => {
-  if (process.env.SMTP_PASS || process.env.DEPLOY_TOKEN) {
+if (!process.env.JWT_SECRET) {
+  if (process.env.NODE_ENV === 'development' || (!process.env.SMTP_PASS && !process.env.DEPLOY_TOKEN)) {
+    // 本地开发：无 SMTP/DEPLOY 也无 JWT_SECRET → 使用 dev 密钥
+    console.warn('[WARN] ⚠️ JWT_SECRET is not set — using dev default (local testing only)');
+    process.env.JWT_SECRET = 'arknights-guess-dev-secret-local-only';
+  } else {
+    // 生产环境：SMTP_PASS 或 DEPLOY_TOKEN 已设置 → JWT_SECRET 必须设置
     console.error('[FATAL] ⚠️ JWT_SECRET is not set in production!');
-    console.error('[FATAL] Please set JWT_SECRET in .env to a random string (e.g., openssl rand -hex 32)');
+    console.error('[FATAL] Please set JWT_SECRET in .env: openssl rand -hex 32');
     process.exit(1);
   }
-  console.warn('[WARN] ⚠️ JWT_SECRET is not set — using dev default (OK for local testing, NOT for production)');
-  return 'arknights-guess-dev-secret-local-only';
-})();
+}
 const APP_VERSION = '2026-08-06-002';
 const DB_PATH = join(__dirname, '..', 'data.db');
 
@@ -74,17 +80,24 @@ const SITE_URL = process.env.SITE_URL || 'http://localhost:3000';
 
 // ===== 初始化数据库 & 认证 =====
 loadCharacters();
-const db = initDB(DB_PATH);
-const auth = createAuth({ db, JWT_SECRET });
+console.log('[init] step 1: characters loaded');
+// 必须在 index.js 顶层创建 Database（better-sqlite3 在此 VPS 上跨文件调用会 segfault）
+const db = new Database(DB_PATH);
+initSchema(db);
+console.log('[init] step 2: db initialized');
+const auth = createAuth({ db, JWT_SECRET: process.env.JWT_SECRET });
+console.log('[init] step 3: auth created');
 const { signToken, verifyToken, requireAuth, requireAdmin, checkRateLimit } = auth;
 
 // ===== 初始化 Socket.IO（先创建，路由需要引用 onlinePlayers） =====
+console.log('[init] step 4: creating HTTP server...');
 const http = createServer((req, res) => handleRequest(req, res));
+console.log('[init] step 5: creating socket server...');
 const socketServer = createSocketServer(http, { db, verifyToken, generateKey });
 const { io, onlinePlayers, onlineSockets, socketIps, getUserIps, ONLINE_TIMEOUT } = socketServer;
 
 // ===== 初始化房间管理 & 匹配 & 游戏 =====
-const roomManager = createRoomManager({ onlinePlayers });
+const roomManager = createRoomManager();
 
 const matchmaking = createMatchmaking({
   io,
@@ -103,7 +116,6 @@ const gameHandlers = registerGameHandlers({
   genCode: roomManager.genCode,
   onlinePlayers, onlineSockets, ONLINE_TIMEOUT,
   matchmakingQueue: matchmaking.matchmakingQueue,
-  tryMatch: matchmaking.tryMatch,
   handleJoinQueue: matchmaking.handleJoinQueue,
   handleLeaveQueue: matchmaking.handleLeaveQueue,
   removeFromQueue: matchmaking.removeFromQueue,
@@ -122,6 +134,7 @@ const userRoutes = registerUserRoutes({
   app: {}, db, verifyToken, requireAuth,
   checkNicknameProfanity, transporter, SITE_URL,
   onlinePlayers, onlineSockets, ONLINE_TIMEOUT,
+  checkRateLimit, getClientIP,
 });
 
 const gameRoutes = registerGameRoutes({
@@ -131,6 +144,7 @@ const gameRoutes = registerGameRoutes({
 const adminRoutes = registerAdminRoutes({
   app: {}, db, requireAdmin, checkNicknameProfanity,
   onlinePlayers, onlineSockets, socketIps, getUserIps, ONLINE_TIMEOUT, APP_VERSION,
+  reloadCharacters: loadCharacters,
 });
 
 // ===== HTTP 请求处理 =====
@@ -163,60 +177,87 @@ async function handleRequest(req, res) {
 
   // ===== 路由分发（统一 try/catch 防止 handler 抛异常导致请求挂起） =====
   try {
-  // Auth
-  if (req.method === 'POST' && path === '/api/register') return await authRoutes.handleRegister(req, res, ip);
-  if (req.method === 'POST' && path === '/api/login') return await authRoutes.handleLogin(req, res, ip);
-  if (req.method === 'POST' && path === '/api/auth-cookie') return await authRoutes.handleAuthCookie(req, res);
-  if (req.method === 'GET' && path.startsWith('/api/verify-email')) return await authRoutes.handleVerifyEmail(req, res);
-  if (req.method === 'POST' && path === '/api/forgot-password') return await authRoutes.handleForgotPassword(req, res, ip);
-  if (req.method === 'POST' && path === '/api/reset-password') return await authRoutes.handleResetPassword(req, res, ip);
+    // Auth
+    if (req.method === 'POST' && path === '/api/register') return await authRoutes.handleRegister(req, res, ip);
+    if (req.method === 'POST' && path === '/api/login') return await authRoutes.handleLogin(req, res, ip);
+    if (req.method === 'POST' && path === '/api/auth-cookie') return await authRoutes.handleAuthCookie(req, res);
+    if (req.method === 'GET' && path.startsWith('/api/verify-email')) return await authRoutes.handleVerifyEmail(req, res);
+    if (req.method === 'POST' && path === '/api/forgot-password') return await authRoutes.handleForgotPassword(req, res, ip);
+    if (req.method === 'POST' && path === '/api/reset-password') return await authRoutes.handleResetPassword(req, res, ip);
+    if (req.method === 'POST' && path === '/api/logout') return await authRoutes.handleLogout(req, res);
 
-  // User
-  if (req.method === 'GET' && path === '/api/me') return await userRoutes.handleMe(req, res);
-  if (req.method === 'POST' && path === '/api/sync') return await userRoutes.handleSync(req, res);
-  if (req.method === 'POST' && path === '/api/link-player-key') return await userRoutes.handleLinkPlayerKey(req, res);
-  if (req.method === 'PATCH' && path === '/api/me') return await userRoutes.handleUpdateProfile(req, res);
-  if (req.method === 'POST' && path === '/api/send-verification') return await userRoutes.handleSendVerification(req, res);
-  if (req.method === 'GET' && path === '/api/guest-identity') return await userRoutes.handleGuestIdentity(req, res);
-  if (req.method === 'POST' && path === '/api/heartbeat') return await userRoutes.handleHeartbeat(req, res);
-  if (req.method === 'GET' && path.startsWith('/api/history')) return await userRoutes.handleHistory(req, res);
+    // User
+    if (req.method === 'GET' && path === '/api/me') return await userRoutes.handleMe(req, res);
+    if (req.method === 'POST' && path === '/api/sync') return await userRoutes.handleSync(req, res);
+    if (req.method === 'POST' && path === '/api/link-player-key') return await userRoutes.handleLinkPlayerKey(req, res);
+    if (req.method === 'PATCH' && path === '/api/me') return await userRoutes.handleUpdateProfile(req, res);
+    if (req.method === 'POST' && path === '/api/send-verification') return await userRoutes.handleSendVerification(req, res);
+    if (req.method === 'GET' && path === '/api/guest-identity') return await userRoutes.handleGuestIdentity(req, res);
+    if (req.method === 'POST' && path === '/api/heartbeat') return await userRoutes.handleHeartbeat(req, res);
+    if (req.method === 'GET' && path.startsWith('/api/history')) return await userRoutes.handleHistory(req, res);
 
-  // Game
-  if (req.method === 'POST' && path === '/api/save-game') return await gameRoutes.handleSaveGame(req, res);
-  if (req.method === 'GET' && path.startsWith('/api/leaderboard')) return await gameRoutes.handleLeaderboard(req, res);
+    // Game
+    if (req.method === 'POST' && path === '/api/save-game') return await gameRoutes.handleSaveGame(req, res);
+    if (req.method === 'GET' && path.startsWith('/api/leaderboard')) return await gameRoutes.handleLeaderboard(req, res);
 
-  // Admin (public)
-  if (req.method === 'GET' && path === '/api/announcements') return await adminRoutes.handleGetAnnouncements(req, res);
-  if (req.method === 'GET' && path === '/api/version') return await adminRoutes.handleVersion(req, res);
+    // Admin (public)
+    if (req.method === 'GET' && path === '/api/announcements') return await adminRoutes.handleGetAnnouncements(req, res);
+    if (req.method === 'GET' && path === '/api/version') return await adminRoutes.handleVersion(req, res);
 
-  // Admin (protected)
-  if (req.method === 'POST' && path === '/api/admin/announcements') return await adminRoutes.handleCreateAnnouncement(req, res);
-  if (req.method === 'DELETE' && path.startsWith('/api/admin/announcements/')) {
-    const id = parseInt(path.split('/').pop(), 10);
-    return await adminRoutes.handleDeleteAnnouncement(req, res, id);
-  }
-  if (req.method === 'GET' && path.startsWith('/api/admin/users')) return await adminRoutes.handleAdminUsers(req, res);
+    // Admin (protected)
+    if (req.method === 'GET' && path === '/api/admin/dashboard') return await adminRoutes.handleDashboard(req, res);
+    if (req.method === 'POST' && path === '/api/admin/characters/import') return await adminRoutes.handleImportCharacters(req, res);
+    if (req.method === 'GET' && path === '/api/admin/characters/export') return await adminRoutes.handleExportCharacters(req, res);
 
-  const banMatch = path.match(/^\/api\/admin\/users\/(\d+)\/ban$/);
-  if (req.method === 'PATCH' && banMatch) {
-    return await adminRoutes.handleBanUser(req, res, parseInt(banMatch[1], 10), io);
-  }
-  const nickMatch = path.match(/^\/api\/admin\/users\/(\d+)\/nickname$/);
-  if (req.method === 'PATCH' && nickMatch) {
-    return await adminRoutes.handleAdminNickname(req, res, parseInt(nickMatch[1], 10));
-  }
+    const charMatch = path.match(/^\/api\/admin\/characters\/(.+)$/);
+    if (charMatch) {
+      if (req.method === 'PUT') return await adminRoutes.handleUpdateCharacter(req, res, charMatch[1]);
+      if (req.method === 'DELETE') return await adminRoutes.handleDeleteCharacter(req, res, charMatch[1]);
+    }
 
-  if (req.method === 'GET' && path.startsWith('/api/admin/guests')) return await adminRoutes.handleAdminGuests(req, res);
-  if (req.method === 'GET' && path === '/api/admin/online') return await adminRoutes.handleAdminOnline(req, res);
-  if (req.method === 'POST' && path === '/api/deploy') return await adminRoutes.handleDeploy(req, res);
+    if (req.method === 'GET' && path === '/api/admin/characters') return await adminRoutes.handleAdminCharacters(req, res);
+    if (req.method === 'POST' && path === '/api/admin/characters') return await adminRoutes.handleCreateCharacter(req, res);
+    if (req.method === 'GET' && path === '/api/admin/audit-log') return await adminRoutes.handleAuditLog(req, res);
+    if (req.method === 'POST' && path === '/api/admin/tokens') return await adminRoutes.handleCreateToken(req, res);
+    if (req.method === 'GET' && path === '/api/admin/tokens') return await adminRoutes.handleListTokens(req, res);
+    if (req.method === 'DELETE' && path.startsWith('/api/admin/tokens/')) {
+      const tid = parseInt(path.split('/').pop(), 10);
+      return await adminRoutes.handleRevokeToken(req, res, tid);
+    }
+    if (req.method === 'POST' && path === '/api/admin/announcements') return await adminRoutes.handleCreateAnnouncement(req, res);
+    if (req.method === 'PUT' && path.startsWith('/api/admin/announcements/')) {
+      const id = parseInt(path.split('/').pop(), 10);
+      return await adminRoutes.handleUpdateAnnouncement(req, res, id);
+    }
+    if (req.method === 'DELETE' && path.startsWith('/api/admin/announcements/')) {
+      const id = parseInt(path.split('/').pop(), 10);
+      return await adminRoutes.handleDeleteAnnouncement(req, res, id);
+    }
+    if (req.method === 'GET' && path.startsWith('/api/admin/users')) return await adminRoutes.handleAdminUsers(req, res);
+
+    const banMatch = path.match(/^\/api\/admin\/users\/(\d+)\/ban$/);
+    if (req.method === 'PATCH' && banMatch) {
+      return await adminRoutes.handleBanUser(req, res, parseInt(banMatch[1], 10), io);
+    }
+    const roleMatch = path.match(/^\/api\/admin\/users\/(\d+)\/role$/);
+    if (req.method === 'PATCH' && roleMatch) {
+      return await adminRoutes.handleAdminRole(req, res, parseInt(roleMatch[1], 10));
+    }
+    const nickMatch = path.match(/^\/api\/admin\/users\/(\d+)\/nickname$/);
+    if (req.method === 'PATCH' && nickMatch) {
+      return await adminRoutes.handleAdminNickname(req, res, parseInt(nickMatch[1], 10));
+    }
+
+    if (req.method === 'GET' && path.startsWith('/api/admin/guests')) return await adminRoutes.handleAdminGuests(req, res);
+    if (req.method === 'GET' && path === '/api/admin/online') return await adminRoutes.handleAdminOnline(req, res);
+    if (req.method === 'POST' && path === '/api/deploy') return await adminRoutes.handleDeploy(req, res);
   } catch (err) {
     console.error('[route] handler error:', err.message, err.stack?.split('\n')[1] || '');
     return jsonResponse(res, { error: '服务器内部错误' }, 500);
   }
 
   // 未匹配的路由
-  res.writeHead(200, { 'Content-Type': 'text/plain' });
-  res.end('OK');
+  return jsonResponse(res, { error: 'Not found' }, 404);
 }
 
 // ===== 统一周期清理（每分钟） =====

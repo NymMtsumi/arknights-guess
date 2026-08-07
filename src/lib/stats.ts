@@ -347,8 +347,10 @@ export function saveGameStats(won: boolean, guessCount: number, difficulty: stri
     player_key: getPlayerKey() || undefined,
   });
 
-  // Fire-and-forget server sync
-  saveGameToServer(won, guessCount, difficulty, targetName).catch(() => {});
+  // 仅登录用户同步到服务器（游客纯本地存储）
+  if (getToken()) {
+    saveGameToServer(won, guessCount, difficulty, targetName).catch(() => {});
+  }
 }
 
 /** 多人比赛存档 */
@@ -382,8 +384,10 @@ export function saveMultiGameStats(result: {
     player_key: getPlayerKey() || undefined,
   });
 
-  // 同步到服务器
-  saveMultiToServer(result).catch(() => {});
+  // 仅登录用户同步到服务器（游客纯本地存储）
+  if (getToken()) {
+    saveMultiToServer(result).catch(() => {});
+  }
 }
 
 /** 从服务器获取游戏历史 */

@@ -14,6 +14,7 @@ export interface GameRecord {
   won: boolean;
   guessCount: number;
   difficulty: string;
+  player_key?: string; // 游戏时的 pk，用于迁移过滤，防止数据串乱
 }
 
 export interface MultiRoundResult {
@@ -31,6 +32,7 @@ export interface MultiGameRecord {
   opponentScore: number;
   opponentName: string;
   rounds: MultiRoundResult[];
+  player_key?: string; // 游戏时的 pk，用于迁移过滤，防止数据串乱
 }
 
 export type HistoryRecord = GameRecord | MultiGameRecord;
@@ -342,6 +344,7 @@ export function saveGameStats(won: boolean, guessCount: number, difficulty: stri
     won,
     guessCount,
     difficulty,
+    player_key: getPlayerKey() || undefined,
   });
 
   // Fire-and-forget server sync
@@ -376,6 +379,7 @@ export function saveMultiGameStats(result: {
     opponentScore: result.opponentScore,
     opponentName: result.opponentName,
     rounds: result.rounds,
+    player_key: getPlayerKey() || undefined,
   });
 
   // 同步到服务器

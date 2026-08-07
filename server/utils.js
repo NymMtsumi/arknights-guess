@@ -65,7 +65,7 @@ export function jsonResponse(res, data, status = 200, extraHeaders = {}) {
   const headers = {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, PATCH, DELETE',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Credentials': 'false',
     'Content-Length': Buffer.byteLength(body),

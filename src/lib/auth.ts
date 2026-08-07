@@ -174,7 +174,8 @@ export async function login(username: string, password: string): Promise<{
 
 /**
  * 登录后调用：把旧游客（无账号时）的本地战绩迁移到账号的 player_key 下。
- * 直接读取 localStorage 原始数据，通过 /api/sync 批量上传，避免引入循环依赖。
+ * 只迁移没有 pk 标签的旧数据（ownerless），绝不迁移已标记为其他 pk 的记录，
+ * 防止多人共享设备时战绩串乱。
  */
 export async function migrateGuestDataToAccount(accountPlayerKey: string): Promise<void> {
   if (typeof window === 'undefined') return;
@@ -186,9 +187,14 @@ export async function migrateGuestDataToAccount(accountPlayerKey: string): Promi
     const history = JSON.parse(rawHistory);
     if (!Array.isArray(history) || history.length === 0) return;
 
-    // 提取所有单人战绩（mode !== 'multi'），转换为服务器格式
-    const singleGames = history
-      .filter((r: any) => r && r.mode !== 'multi' && typeof r.timestamp === 'number')
+    // 只迁移无 pk 的旧数据（ownerless）。不碰带其他 pk 的记录——那些属于别的账号。
+    const ownerlessGames = history.filter((r: any) => r && !r.player_key);
+
+    if (ownerlessGames.length === 0) return;
+
+    // 提取单人战绩
+    const singleGames = ownerlessGames
+      .filter((r: any) => r.mode !== 'multi' && typeof r.timestamp === 'number')
       .map((r: any) => ({
         timestamp: new Date(r.timestamp).toISOString(),
         targetName: String(r.targetName || ''),
@@ -197,6 +203,7 @@ export async function migrateGuestDataToAccount(accountPlayerKey: string): Promi
         difficulty: String(r.difficulty || 'hard'),
       }));
 
+    let singleOk = false;
     if (singleGames.length > 0) {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       const token = getToken();
@@ -210,43 +217,51 @@ export async function migrateGuestDataToAccount(accountPlayerKey: string): Promi
 
       if (res.ok) {
         const data = await res.json();
-        console.log(`[Auth] Migrated ${data.synced || singleGames.length} guest game(s) to account`);
+        console.log(`[Auth] Migrated ${data.synced || singleGames.length} guest single game(s) to account`);
+        singleOk = true;
       }
     }
 
-    // 多人战绩也同步
-    const multiGames = history
-      .filter((r: any) => r && r.mode === 'multi' && typeof r.timestamp === 'number')
-      .map((r: any) => ({
-        timestamp: new Date(r.timestamp).toISOString(),
-        targetName: String(r.opponentName || ''),
-        won: Boolean(r.won),
-        guessCount: (Array.isArray(r.rounds) ? r.rounds.reduce((sum: number, rd: any) => sum + (Number(rd.guessCount) || 0), 0) : 0),
-        difficulty: 'multi',
-      }));
+    // 多人战绩逐条保存
+    const multiGames = ownerlessGames
+      .filter((r: any) => r.mode === 'multi' && typeof r.timestamp === 'number');
+    let multiOk = multiGames.length === 0; // 没有多人记录 = 成功
 
     if (multiGames.length > 0) {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       const token = getToken();
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      // 多人战绩逐条保存（/api/save-game 对模式有单独校验）
+      let successCount = 0;
       for (const g of multiGames) {
-        await fetch(`${getServerUrl()}/api/save-game`, {
+        const res = await fetch(`${getServerUrl()}/api/save-game`, {
           method: 'POST',
           headers,
           body: JSON.stringify({
             player_key: accountPlayerKey,
-            won: g.won,
-            guessCount: g.guessCount,
+            won: Boolean(g.won),
+            guessCount: Array.isArray(g.rounds) ? g.rounds.reduce((sum: number, rd: any) => sum + (Number(rd.guessCount) || 0), 0) : 0,
             difficulty: 'multi',
-            targetName: g.targetName,
+            targetName: String(g.opponentName || ''),
             mode: 'multi',
-            timestamp: g.timestamp,
+            timestamp: new Date(g.timestamp).toISOString(),
           }),
         });
+        if (res.ok) successCount++;
       }
-      console.log(`[Auth] Migrated ${multiGames.length} guest multi-game(s) to account`);
+      if (successCount > 0) {
+        console.log(`[Auth] Migrated ${successCount} guest multi-game(s) to account`);
+        multiOk = successCount === multiGames.length;
+      }
+    }
+
+    // 仅在迁移成功后将 ownerless 记录标记为账号 pk（防止下次登录重复迁移）
+    if (singleOk && multiOk) {
+      const updated = history.map((r: any) => {
+        if (!r || r.player_key) return r; // 已有 pk 的不碰
+        return { ...r, player_key: accountPlayerKey };
+      });
+      try { localStorage.setItem(HISTORY_KEY, JSON.stringify(updated)); } catch {}
     }
   } catch (err) {
     console.warn('[Auth] Guest data migration failed (non-critical):', err);
@@ -256,6 +271,8 @@ export async function migrateGuestDataToAccount(accountPlayerKey: string): Promi
 // ===== 退出登录 =====
 export function logout(): void {
   clearAuth();
+  // 清除 player_key，防止登出后新游戏仍用旧 pk（导致数据归属错误）
+  try { localStorage.removeItem('player_key'); } catch {}
 }
 
 // ===== 获取个人信息 =====

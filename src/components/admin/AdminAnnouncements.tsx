@@ -66,15 +66,30 @@ export default function AdminAnnouncements() {
     if (!window.confirm('确定删除此公告？')) return;
     try {
       const token = getToken();
+      if (!token) {
+        setError('未登录或登录已过期，请刷新页面重新登录');
+        return;
+      }
       const res = await fetch(`${baseUrl}/api/admin/announcements/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error('删除失败');
+      if (!res.ok) {
+        // 尝试解析服务器错误消息
+        let serverMsg = '';
+        try { const d = await res.json(); serverMsg = d.error || ''; } catch {}
+        throw new Error(serverMsg || `删除失败 (HTTP ${res.status})`);
+      }
       setMsg('公告已删除');
       await load();
     } catch (err: any) {
-      setError(err.message || '删除失败');
+      // 区分网络错误和服务器错误
+      const msg = err.message || '';
+      if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
+        setError('网络连接失败，请检查网络后重试');
+      } else {
+        setError(msg || '删除失败');
+      }
     }
   };
 

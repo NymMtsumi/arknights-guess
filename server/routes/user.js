@@ -57,6 +57,10 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
     if (!Array.isArray(games)) {
       return jsonResponse(res, { error: '需要 games 数组' }, 400);
     }
+    // 防御：限制单次同步数量，防止客户端批量 dump 他人数据
+    if (games.length > 500) {
+      return jsonResponse(res, { error: '单次最多同步 500 条记录' }, 400);
+    }
 
     const user = db.prepare('SELECT player_key FROM users WHERE id = ?').get(auth.userId);
     let finalPk = player_key;

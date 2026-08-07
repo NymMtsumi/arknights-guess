@@ -142,6 +142,7 @@ async function handleRequest(req, res) {
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, PATCH, DELETE',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       'Access-Control-Allow-Credentials': 'false',
+      'Access-Control-Max-Age': '600',
     });
     return res.end();
   }

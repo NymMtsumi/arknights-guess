@@ -2,3 +2,7 @@
 # https://opennext.js.org/cloudflare/caching#static-assets-caching
 /_next/static/*
   Cache-Control: public,max-age=31536000,immutable
+
+# HTML 页面每次访问都向服务器验证，确保用户尽快拿到新版 JS
+/*.html
+  Cache-Control: no-cache, must-revalidate

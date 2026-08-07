@@ -99,8 +99,53 @@ export function initSchema(db) {
     ['users', 'banned_at', 'TEXT'],
     ['users', 'token_version', "INTEGER DEFAULT 0"],
     ['games', 'mode', "TEXT DEFAULT 'single'"],
+    ['games', 'user_id', "INTEGER REFERENCES users(id)"],
   ]) {
     try { db.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${type}`); } catch {}
+  }
+
+  // 创建 user_id 索引（用于按用户查询战绩）
+  try { db.exec('CREATE INDEX IF NOT EXISTS idx_games_user_id ON games(user_id)'); } catch {}
+
+  // 清理可能的测试数据
+  try {
+    const cleanResult = db.prepare("DELETE FROM games WHERE target_name = 'test' OR player_key = 'test'").run();
+    if (cleanResult.changes > 0) {
+      console.log(`[DB] Cleaned ${cleanResult.changes} test records from games`);
+    }
+  } catch {}
+
+  // ===== 1. 先清理重复的 pk（确保 users 表 pk 唯一后再回填） =====
+  // 保留最早注册的账号（MIN(id)），删除重复 pk 的后续注册
+  try {
+    const dupResult = db.prepare(`
+      DELETE FROM users WHERE id IN (
+        SELECT id FROM users WHERE player_key IS NOT NULL AND id NOT IN (
+          SELECT MIN(id) FROM users WHERE player_key IS NOT NULL GROUP BY player_key
+        )
+      )
+    `).run();
+    if (dupResult.changes > 0) {
+      console.log(`[DB] Cleaned ${dupResult.changes} duplicate player_key user records`);
+    }
+  } catch (e) {
+    console.warn('[DB] Duplicate pk cleanup failed:', e.message);
+  }
+
+  // ===== 2. 回填历史数据的 user_id（在去重之后执行，确保引用完整性） =====
+  try {
+    const backfillResult = db.prepare(`
+      UPDATE games SET user_id = (
+        SELECT u.id FROM users u WHERE u.player_key = games.player_key AND u.player_key IS NOT NULL ORDER BY u.id LIMIT 1
+      ) WHERE games.user_id IS NULL AND EXISTS (
+        SELECT 1 FROM users u WHERE u.player_key = games.player_key AND u.player_key IS NOT NULL
+      )
+    `).run();
+    if (backfillResult.changes > 0) {
+      console.log(`[DB] Backfilled user_id for ${backfillResult.changes} existing game records`);
+    }
+  } catch (e) {
+    console.error('[DB] Backfill user_id FAILED — pre-migration games will be invisible to /api/me and /api/history:', e.message);
   }
 
   // UNIQUE 索引（兼容旧数据）

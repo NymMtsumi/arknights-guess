@@ -16,6 +16,7 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
       return jsonResponse(res, { error: '用户不存在' }, 404);
     }
 
+    // 按 user_id 查询（一级归属），player_key 仅作兜底
     const stats = db.prepare(`
       SELECT
         COUNT(*) as totalGames,
@@ -23,8 +24,8 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
         COUNT(*) - SUM(won) as losses,
         SUM(guess_count) as totalGuesses,
         MIN(CASE WHEN won = 1 THEN guess_count ELSE NULL END) as bestScore
-      FROM games WHERE player_key = ?
-    `).get(user.player_key || '');
+      FROM games WHERE user_id = ?
+    `).get(auth.userId);
 
     return jsonResponse(res, {
       username: user.username,
@@ -64,55 +65,37 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
 
     const user = db.prepare('SELECT player_key FROM users WHERE id = ?').get(auth.userId);
     let finalPk = player_key;
+
+    // 确保用户有 pk（生成新的，不迁移旧 pk 的游戏！）
     if (user && !user.player_key) {
-      // 始终生成新 key，不复用客户端提供的 pk（防止多用户共享设备时数据归属错误）
-      // 使用事务包裹：绑定 pk + 迁移游戏，防止迁移后绑定失败导致游戏孤立
       const newPk = generateKey();
-      if (player_key && player_key.startsWith('p_')) {
-        // 有旧游客 pk → 事务中原子完成：检查冲突 + 迁移 + 绑定
-        try {
-          const doSync = db.transaction(() => {
-            const pkConflict = db.prepare('SELECT id FROM users WHERE player_key = ? AND id != ?').get(player_key, auth.userId);
-            if (pkConflict) return null; // 旧 pk 已被其他用户认领，不迁移
-            const updRes = db.prepare('UPDATE users SET player_key = ? WHERE id = ? AND player_key IS NULL').run(newPk, auth.userId);
-            if (updRes.changes > 0) {
-              db.prepare('UPDATE games SET player_key = ? WHERE player_key = ?').run(newPk, player_key);
-              return newPk;
+      const updRes = db.prepare('UPDATE users SET player_key = ? WHERE id = ? AND player_key IS NULL').run(newPk, auth.userId);
+      if (updRes.changes > 0) {
+        finalPk = newPk;
+        if (player_key && player_key.startsWith('p_') && player_key !== newPk) {
+          // 回填旧 pk 的 ownerless 游戏的 user_id（不迁移 player_key！）
+          // 只有当前用户能认领且没有其他用户绑定了这个 pk
+          const pkConflict = db.prepare('SELECT id FROM users WHERE player_key = ? AND id != ?').get(player_key, auth.userId);
+          if (!pkConflict) {
+            const backfilled = db.prepare('UPDATE games SET user_id = ? WHERE player_key = ? AND user_id IS NULL').run(auth.userId, player_key);
+            if (backfilled.changes > 0) {
+              console.log(`[sync] backfilled user_id=${auth.userId} for ${backfilled.changes} games from pk=${player_key.slice(0, 10)}`);
             }
-            return null; // 并发竞争失败
-          });
-          const result = doSync();
-          if (result) {
-            finalPk = result;
-          } else {
-            // 事务返回 null：冲突或竞争失败，重新读取
-            const refreshed = db.prepare('SELECT player_key FROM users WHERE id = ?').get(auth.userId);
-            finalPk = refreshed?.player_key || player_key;
           }
-        } catch (err) {
-          console.error('[sync] transaction failed:', err.message);
-          const refreshed = db.prepare('SELECT player_key FROM users WHERE id = ?').get(auth.userId);
-          finalPk = refreshed?.player_key || player_key;
         }
       } else {
-        // 无旧游客 pk → 简单绑定
-        const updateResult = db.prepare('UPDATE users SET player_key = ? WHERE id = ? AND player_key IS NULL').run(newPk, auth.userId);
-        if (updateResult.changes > 0) {
-          finalPk = newPk;
-        } else {
-          const refreshed = db.prepare('SELECT player_key FROM users WHERE id = ?').get(auth.userId);
-          finalPk = refreshed?.player_key || player_key;
-        }
+        const refreshed = db.prepare('SELECT player_key FROM users WHERE id = ?').get(auth.userId);
+        finalPk = refreshed?.player_key || player_key;
       }
     } else if (user && user.player_key) {
       finalPk = user.player_key;
     }
 
-    const insert = db.prepare('INSERT INTO games (player_key, won, guess_count, difficulty, target_name, timestamp, mode) VALUES (?, ?, ?, ?, ?, ?, ?)');
+    const insert = db.prepare('INSERT INTO games (player_key, user_id, won, guess_count, difficulty, target_name, timestamp, mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
     const insertMany = db.transaction((rows) => {
       for (const g of rows) {
         const mode = g.mode === 'multi' ? 'multi' : 'single';
-        insert.run(finalPk, g.won ? 1 : 0, g.guessCount || 0, g.difficulty || 'hard', sanitizeString(g.targetName || '', 100), g.timestamp || new Date().toISOString(), mode);
+        insert.run(finalPk, auth.userId, g.won ? 1 : 0, g.guessCount || 0, g.difficulty || 'hard', sanitizeString(g.targetName || '', 100), g.timestamp || new Date().toISOString(), mode);
       }
     });
 
@@ -131,6 +114,7 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
   }
 
   // ===== POST /api/link-player-key =====
+  // 将旧游客 pk 的 ownerless 游戏回填 user_id（不迁移 player_key，防止战绩串乱）
   async function handleLinkPlayerKey(req, res) {
     const auth = requireAuth(req, res);
     if (!auth) return;
@@ -143,51 +127,42 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
 
     const currentUser = db.prepare('SELECT player_key FROM users WHERE id = ?').get(auth.userId);
 
-    // 已绑定且 oldPk 与账户 pk 一致 → 幂等返回成功（客户端登录流程依赖此调用）
+    // 已绑定且 oldPk 与账户 pk 一致 → 幂等返回成功
     if (currentUser && currentUser.player_key === oldPk) {
       return jsonResponse(res, { success: true, player_key: currentUser.player_key });
     }
 
+    // 确保用户有 pk
+    if (currentUser && !currentUser.player_key) {
+      const newPk = generateKey();
+      db.prepare('UPDATE users SET player_key = ? WHERE id = ? AND player_key IS NULL').run(newPk, auth.userId);
+      const refreshed = db.prepare('SELECT player_key FROM users WHERE id = ?').get(auth.userId);
+      const finalPk = refreshed?.player_key || newPk;
+
+      // 回填旧 pk 的 ownerless 游戏的 user_id（不改 player_key！）
+      const pkConflict = db.prepare('SELECT id FROM users WHERE player_key = ? AND id != ?').get(oldPk, auth.userId);
+      if (!pkConflict) {
+        const backfilled = db.prepare('UPDATE games SET user_id = ? WHERE player_key = ? AND user_id IS NULL').run(auth.userId, oldPk);
+        if (backfilled.changes > 0) {
+          console.log(`[link-pk] backfilled user_id=${auth.userId} for ${backfilled.changes} games from pk=${oldPk.slice(0, 10)}`);
+        }
+      }
+      return jsonResponse(res, { success: true, player_key: finalPk });
+    }
+
+    // 账户已有 pk 且不同于 oldPk
     if (currentUser && currentUser.player_key && currentUser.player_key !== oldPk) {
-      // 账户已有不同的 pk，但客户端仍拿着旧游客 pk → 迁移孤儿游戏
+      // 回填 oldPk 的 ownerless 游戏（如果 oldPk 未被其他用户认领）
       const conflict = db.prepare('SELECT id FROM users WHERE player_key = ? AND id != ?').get(oldPk, auth.userId);
       if (conflict) {
         return jsonResponse(res, { error: '该游戏数据已绑定其他账户' }, 409);
       }
-      const migrated = db.prepare('UPDATE games SET player_key = ? WHERE player_key = ?').run(currentUser.player_key, oldPk);
-      console.log(`[link-pk] user=${auth.userId} merge ${oldPk.slice(0, 10)} → ${currentUser.player_key.slice(0, 10)} migrated=${migrated.changes}`);
+      const backfilled = db.prepare('UPDATE games SET user_id = ? WHERE player_key = ? AND user_id IS NULL').run(auth.userId, oldPk);
+      console.log(`[link-pk] user=${auth.userId} backfilled ${backfilled.changes} ownerless games from pk=${oldPk.slice(0, 10)}`);
       return jsonResponse(res, { success: true, player_key: currentUser.player_key });
     }
 
-    // 账户无 pk → 生成新 key 并迁移
-    // 使用事务包裹迁移 + 绑定（防止迁移成功后绑定失败导致游戏孤立）
-
-    // 检查旧 pk 是否已被其他注册用户认领
-    const existing = db.prepare('SELECT id FROM users WHERE player_key = ? AND id != ?').get(oldPk, auth.userId);
-    if (existing) {
-      return jsonResponse(res, { error: '该游戏数据已绑定其他账户' }, 409);
-    }
-
-    // 始终生成新 key，迁移旧 pk 的游戏记录（防止多用户共享设备时数据归属错误）
-    const newPk = generateKey();
-    try {
-      const doLink = db.transaction(() => {
-        db.prepare('UPDATE games SET player_key = ? WHERE player_key = ?').run(newPk, oldPk);
-        const res = db.prepare('UPDATE users SET player_key = ? WHERE id = ? AND player_key IS NULL').run(newPk, auth.userId);
-        if (res.changes === 0) {
-          // 并发竞争：另一请求先绑定了 pk，重新读取
-          const cur = db.prepare('SELECT player_key FROM users WHERE id = ?').get(auth.userId);
-          return cur?.player_key || newPk;
-        }
-        return newPk;
-      });
-      const finalPk = doLink();
-      console.log(`[link-pk] user=${auth.userId} ${oldPk.slice(0, 10)} → ${finalPk.slice(0, 10)}`);
-      return jsonResponse(res, { success: true, player_key: finalPk });
-    } catch (err) {
-      console.error(`[link-pk] transaction failed user=${auth.userId}:`, err.message);
-      return jsonResponse(res, { error: '绑定失败，请稍后重试' }, 500);
-    }
+    return jsonResponse(res, { success: true, player_key: currentUser?.player_key || '' });
   }
 
   // ===== PATCH /api/me — 修改个人信息 =====
@@ -344,12 +319,10 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
     if (limit < 1) limit = 1;
     if (limit > 200) limit = 200;
 
-    const user = db.prepare('SELECT player_key FROM users WHERE id = ?').get(auth.userId);
-    const pk = user?.player_key || '';
-
+    // 按 user_id 查询（一级归属），不再仅靠 player_key
     const rows = db.prepare(
-      'SELECT won, guess_count, difficulty, target_name, timestamp, mode FROM games WHERE player_key = ? ORDER BY timestamp DESC LIMIT ?'
-    ).all(pk, limit);
+      'SELECT won, guess_count, difficulty, target_name, timestamp, mode FROM games WHERE user_id = ? ORDER BY timestamp DESC LIMIT ?'
+    ).all(auth.userId, limit);
 
     const history = rows.map(r => ({
       timestamp: new Date(r.timestamp).getTime(),

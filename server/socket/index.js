@@ -43,13 +43,13 @@ export function createSocketServer(http, { db, verifyToken, generateKey }) {
             }
           }
 
-          // 迁移 cookie 中的游客游戏到账户 pk（与 login 保持一致）
+          // 回填 cookie 游客 pk 的 ownerless 游戏 user_id（不改 player_key！防止战绩串乱）
           if (cookiePk && cookiePk !== socket.data.playerKey) {
             const conflict = db.prepare('SELECT id FROM users WHERE player_key = ? AND id != ?').get(cookiePk, user.id);
             if (!conflict) {
-              const migrated = db.prepare('UPDATE games SET player_key = ? WHERE player_key = ?').run(socket.data.playerKey, cookiePk);
-              if (migrated.changes > 0) {
-                console.log(`[socket] migrated ${migrated.changes} games from ${cookiePk.slice(0, 10)} → ${socket.data.playerKey.slice(0, 10)}`);
+              const backfilled = db.prepare('UPDATE games SET user_id = ? WHERE player_key = ? AND user_id IS NULL').run(user.id, cookiePk);
+              if (backfilled.changes > 0) {
+                console.log(`[socket] backfilled user_id=${user.id} for ${backfilled.changes} games from cookie pk=${cookiePk.slice(0, 10)}`);
               }
             }
           }

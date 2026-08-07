@@ -93,11 +93,11 @@ export function registerAdminRoutes({ app, db, requireAdmin, checkNicknameProfan
       id: u.id, username: u.username, displayId: u.display_id || '', createdAt: u.created_at,
     }));
 
-    // 最近游戏
+    // 最近游戏（按 user_id 关联用户，不再依赖 player_key）
     const recentGames = db.prepare(`
       SELECT g.id, g.player_key, g.won, g.guess_count, g.difficulty, g.target_name, g.mode, g.timestamp,
              COALESCE(u.nickname, u.username) as playerName
-      FROM games g LEFT JOIN users u ON u.player_key = g.player_key
+      FROM games g LEFT JOIN users u ON u.id = g.user_id
       ORDER BY g.id DESC LIMIT 10
     `).all().map(g => ({
       id: g.id, playerKey: g.player_key?.slice(0, 10), playerName: g.playerName,
@@ -312,12 +312,11 @@ export function registerAdminRoutes({ app, db, requireAdmin, checkNicknameProfan
     const whereClause = search ? "AND (g.player_key LIKE ? OR g.target_name LIKE ?)" : '';
     const searchParams = search ? [`%${search}%`, `%${search}%`] : [];
 
-    // 单次查询：COUNT(DISTINCT) 比子查询 GROUP BY 再 COUNT(*) 高效得多
+    // 匿名用户 = user_id IS NULL（不再用 LEFT JOIN 技巧）
     const countQuery = `
       SELECT COUNT(DISTINCT g.player_key) as total
       FROM games g
-      LEFT JOIN users u ON u.player_key = g.player_key
-      WHERE u.player_key IS NULL
+      WHERE g.user_id IS NULL
       ${whereClause}
     `;
     const total = db.prepare(countQuery).get(...searchParams)?.total || 0;
@@ -327,8 +326,7 @@ export function registerAdminRoutes({ app, db, requireAdmin, checkNicknameProfan
     const dataQuery = `
       SELECT g.player_key, COUNT(*) as totalGames, SUM(g.won) as wins, MAX(g.timestamp) as lastSeen
       FROM games g
-      LEFT JOIN users u ON u.player_key = g.player_key
-      WHERE u.player_key IS NULL
+      WHERE g.user_id IS NULL
       ${whereClause}
       GROUP BY g.player_key ORDER BY lastSeen DESC
       LIMIT ? OFFSET ?

@@ -77,28 +77,19 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
       } else if ((decoded.tokenVersion || 0) !== (user.token_version || 0)) {
         return jsonResponse(res, { error: '密码已更改，请重新登录' }, 401);
       } else {
-        // 认证有效
+        // 认证有效 → 使用 user_id 作为一级归属
         userId = decoded.userId;
+        // 确保用户有 pk（生成或使用已有的）
         if (user.player_key) {
           player_key = user.player_key;
         } else {
-          // 始终生成新 key，不复用客户端提供的 pk（防止多用户共享设备时数据归属错误）
-          // 使用条件 UPDATE 防并发：多请求同时 mint pk 时，只有一个成功
+          // 生成新 pk 并绑定到用户（不迁移旧 pk 的游戏！避免战绩串乱）
           const newPk = generateKey();
-          const oldPk = player_key; // 保存旧 pk（用于迁移游戏记录）
           const updRes = db.prepare('UPDATE users SET player_key = ? WHERE id = ? AND player_key IS NULL').run(newPk, decoded.userId);
           if (updRes.changes > 0) {
-            // 成功获取 pk → 迁移旧游戏记录（在确认 pk 归属后再迁移，避免游戏落到未绑定的 pk）
             player_key = newPk;
             newPlayerKey = player_key;
-            if (oldPk && oldPk.startsWith('p_') && oldPk !== newPk) {
-              const pkConflict = db.prepare('SELECT id FROM users WHERE player_key = ? AND id != ?').get(oldPk, decoded.userId);
-              if (!pkConflict) {
-                db.prepare('UPDATE games SET player_key = ? WHERE player_key = ?').run(newPk, oldPk);
-              }
-            }
           } else {
-            // 并发竞争失败：另一请求先绑定了 pk，使用账户已有的 pk
             const refreshed = db.prepare('SELECT player_key FROM users WHERE id = ?').get(decoded.userId);
             player_key = refreshed?.player_key || player_key;
           }
@@ -115,8 +106,8 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
     }
 
     const result = db.prepare(
-      'INSERT INTO games (player_key, won, guess_count, difficulty, target_name, timestamp, mode) VALUES (?, ?, ?, ?, ?, ?, ?)'
-    ).run(player_key, won ? 1 : 0, guessCount, difficulty, targetName, timestamp, mode);
+      'INSERT INTO games (player_key, user_id, won, guess_count, difficulty, target_name, timestamp, mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+    ).run(player_key, userId || null, won ? 1 : 0, guessCount, difficulty, targetName, timestamp, mode);
 
     const extraHeaders = {};
     if (newPlayerKey) {
@@ -153,30 +144,30 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
     let query, params;
     if (difficulty && ['easy', 'medium', 'hard'].includes(difficulty)) {
       query = `
-        SELECT g.player_key, u.username, u.display_id, u.nickname,
+        SELECT u.username, u.display_id, u.nickname,
                SUM(g.won) as wins,
                COUNT(*) as totalGames,
                SUM(g.guess_count) as totalGuesses,
                ROUND(CAST(SUM(g.won) AS REAL) / CAST(COUNT(*) AS REAL) * 100, 1) as winRate
         FROM games g
-        INNER JOIN users u ON u.player_key = g.player_key
+        INNER JOIN users u ON u.id = g.user_id
         WHERE g.difficulty = ? AND g.mode = ?
-        GROUP BY g.player_key
+        GROUP BY g.user_id
         ORDER BY wins DESC, winRate DESC
         LIMIT ?
       `;
       params = [difficulty, mode, limit];
     } else {
       query = `
-        SELECT g.player_key, u.username, u.display_id, u.nickname,
+        SELECT u.username, u.display_id, u.nickname,
                SUM(g.won) as wins,
                COUNT(*) as totalGames,
                SUM(g.guess_count) as totalGuesses,
                ROUND(CAST(SUM(g.won) AS REAL) / CAST(COUNT(*) AS REAL) * 100, 1) as winRate
         FROM games g
-        INNER JOIN users u ON u.player_key = g.player_key
+        INNER JOIN users u ON u.id = g.user_id
         WHERE g.mode = ?
-        GROUP BY g.player_key
+        GROUP BY g.user_id
         ORDER BY wins DESC, winRate DESC
         LIMIT ?
       `;

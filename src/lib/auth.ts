@@ -165,16 +165,15 @@ export async function login(username: string, password: string): Promise<{
 
   // 存储 player_key 到 localStorage（cookie 是 HttpOnly，JS 无法读取）
   if (data.player_key) {
-    // 捕获旧游客 pk（可能在访问多人页面时被 socket set_cookie 写入过），
-    // 防止 socket-pk 标记的本地记录被 migrateGuestDataToAccount 跳过（它只迁移 ownerless 记录）
     const oldGuestPk = getPlayerKey();
     try { localStorage.setItem('player_key', data.player_key); } catch {}
 
-    // 如果旧游客 pk 存在且不同于账户 pk，先合并服务端孤儿游戏
+    // 回填旧游客 pk 的 ownerless 游戏（仅回填 user_id，不迁移 player_key！）
     if (oldGuestPk && oldGuestPk !== data.player_key) {
       try { await linkPlayerKey(oldGuestPk); } catch {}
     }
 
+    // 上传本地未同步的单人游戏（以 user_id 写入）
     await migrateGuestDataToAccount(data.player_key, oldGuestPk || undefined);
   }
 
@@ -182,11 +181,11 @@ export async function login(username: string, password: string): Promise<{
 }
 
 /**
- * 登录后调用：把旧游客（无账号时）的本地战绩迁移到账号的 player_key 下。
+ * 登录后调用：把旧游客（无账号时）的本地战绩上传到服务器。
+ * 服务端按 user_id（JWT 认证）写入，不再依赖 player_key 迁移，防止战绩串乱。
  * 迁移两类记录：
  *   1. ownerless（无 pk 标签）— 纯游客从未访问多人页面的情况
  *   2. 标记为 oldGuestPk 的记录 — 游客访问多人页面后被 socket 写入了 pk
- * 绝不迁移已标记为其他 pk 的记录，防止多人共享设备时战绩串乱。
  */
 export async function migrateGuestDataToAccount(accountPlayerKey: string, oldGuestPk?: string): Promise<void> {
   if (typeof window === 'undefined') return;

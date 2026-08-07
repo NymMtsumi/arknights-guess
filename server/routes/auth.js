@@ -134,7 +134,7 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
 
     const token = signToken({ userId: user.id, username: user.username, tokenVersion: user.token_version || 0 });
 
-    // 确保用户有 player_key，并迁移 cookie 中的游客游戏数据到账户 pk
+    // 确保用户有 player_key，并回填 cookie 中的游客游戏数据 user_id（不改 player_key！）
     let playerKey = user.player_key;
     const cookies = parseCookies(req.headers.cookie || '');
     const cookiePk = typeof cookies.player_key === 'string' && cookies.player_key.startsWith('p_') ? cookies.player_key : null;
@@ -150,15 +150,15 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
       }
     }
 
-    // 始终检查 cookie pk 是否有孤儿游戏需要迁移（无论账户是否已有 pk）
-    // 解决：从其他设备/浏览器登录时，之前游客玩的游戏找不到
+    // 回填 cookie pk 的 ownerless 游戏 user_id（不改 player_key！防止战绩串乱）
+    // 解决：从其他设备/浏览器登录时，之前游客玩的游戏查询 /api/me 和 /api/history 找不到
     if (cookiePk && cookiePk !== playerKey) {
       const conflict = db.prepare('SELECT id FROM users WHERE player_key = ? AND id != ?').get(cookiePk, user.id);
       if (!conflict) {
-        // cookie pk 无人认领 → 迁移游戏记录到账户 pk
-        const migrated = db.prepare('UPDATE games SET player_key = ? WHERE player_key = ?').run(playerKey, cookiePk);
-        if (migrated.changes > 0) {
-          console.log(`[login] migrated ${migrated.changes} games from ${cookiePk.slice(0, 10)} → ${playerKey.slice(0, 10)}`);
+        // cookie pk 无人认领 → 回填 user_id（不再迁移 player_key！）
+        const backfilled = db.prepare('UPDATE games SET user_id = ? WHERE player_key = ? AND user_id IS NULL').run(user.id, cookiePk);
+        if (backfilled.changes > 0) {
+          console.log(`[login] backfilled user_id=${user.id} for ${backfilled.changes} games from cookie pk=${cookiePk.slice(0, 10)}`);
         }
       }
     }

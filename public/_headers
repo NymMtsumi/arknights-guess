@@ -6,3 +6,7 @@
 # HTML 页面每次访问都向服务器验证，确保用户尽快拿到新版 JS
 /*.html
   Cache-Control: no-cache, must-revalidate
+
+# 重置密码页面：防止 token 通过 Referer 泄露到日志
+/reset-password
+  Referrer-Policy: no-referrer

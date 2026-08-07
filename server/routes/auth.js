@@ -42,15 +42,16 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
       return jsonResponse(res, { error: '该邮箱或用户名不可用' }, 409);
     }
 
-    const existingEmail = db.prepare("SELECT id FROM users WHERE email = ? AND email_verified_at IS NOT NULL").get(email);
+    const normalizedEmail = email.toLowerCase();
+    const existingEmail = db.prepare("SELECT id FROM users WHERE LOWER(email) = ? AND email_verified_at IS NOT NULL").get(normalizedEmail);
     if (existingEmail) {
       // P2 fix: 不透露邮箱是否已注册，返回统一消息
       return jsonResponse(res, { error: '该邮箱或用户名不可用' }, 409);
     }
 
     const existingPending = db.prepare(
-      "SELECT id FROM pending_registrations WHERE (username = ? OR email = ?) AND datetime(expires_at) > datetime('now')"
-    ).get(username, email);
+      "SELECT id FROM pending_registrations WHERE (username = ? OR LOWER(email) = ?) AND datetime(expires_at) > datetime('now')"
+    ).get(username, normalizedEmail);
     if (existingPending) {
       return jsonResponse(res, { error: '该邮箱或用户名不可用' }, 409);
     }
@@ -69,7 +70,7 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
 
     db.prepare(
       'INSERT INTO pending_registrations (username, password_hash, email, token_hash, expires_at) VALUES (?, ?, ?, ?, ?)'
-    ).run(username, password_hash, email, tokenHash, expiresAt);
+    ).run(username, password_hash, normalizedEmail, tokenHash, expiresAt);
 
     const verifyLink = `${SITE_URL}/verify?token=${verifyTokenRaw}`;
     const isDev = !process.env.SMTP_PASS || SITE_URL === 'http://localhost:3000';
@@ -105,16 +106,26 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
     }
 
     const body = await parseBody(req);
-    const username = sanitizeString(body.username, 20);
+    const rawIdentifier = sanitizeString(body.username, 320);
     const password = typeof body.password === 'string' ? body.password : '';
 
-    if (!username || !password) {
-      return jsonResponse(res, { error: '用户名和密码不能为空' }, 400);
+    if (!rawIdentifier || !password) {
+      return jsonResponse(res, { error: '用户名/邮箱和密码不能为空' }, 400);
     }
 
-    const user = db.prepare('SELECT id, username, display_id, nickname, role, password_hash, player_key, email, email_verified_at, banned_at, token_version FROM users WHERE username = ?').get(username);
+    // 双路径登录：含 @ 视为邮箱登录，否则用户名登录
+    // 邮箱大小写不敏感：统一 lower 后匹配
+    const isEmail = rawIdentifier.includes('@');
+    let user;
+    if (isEmail) {
+      user = db.prepare('SELECT id, username, display_id, nickname, role, password_hash, player_key, email, email_verified_at, banned_at, token_version FROM users WHERE LOWER(email) = ?').get(rawIdentifier.toLowerCase());
+    } else {
+      user = db.prepare('SELECT id, username, display_id, nickname, role, password_hash, player_key, email, email_verified_at, banned_at, token_version FROM users WHERE username = ?').get(rawIdentifier);
+    }
     if (!user) {
-      return jsonResponse(res, { error: '用户名或密码错误' }, 401);
+      // 时序防御：即使未找到用户也执行 bcrypt.compare，防止通过响应时间枚举账号
+      try { await bcrypt.compare('timing-defense', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'); } catch {}
+      return jsonResponse(res, { error: '账号或密码错误' }, 401);
     }
 
     if (user.banned_at) {
@@ -129,7 +140,7 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
       return jsonResponse(res, { error: '服务器内部错误，请稍后再试' }, 500);
     }
     if (!valid) {
-      return jsonResponse(res, { error: '用户名或密码错误' }, 401);
+      return jsonResponse(res, { error: '账号或密码错误' }, 401);
     }
 
     const token = signToken({ userId: user.id, username: user.username, tokenVersion: user.token_version || 0 });
@@ -218,7 +229,7 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
         return jsonResponse(res, { error: '用户名已被注册' }, 409);
       }
 
-      const emailTaken = db.prepare("SELECT id FROM users WHERE email = ? AND email_verified_at IS NOT NULL").get(pending.email);
+      const emailTaken = db.prepare("SELECT id FROM users WHERE LOWER(email) = LOWER(?) AND email_verified_at IS NOT NULL").get(pending.email);
       if (emailTaken) {
         db.prepare('DELETE FROM pending_registrations WHERE id = ?').run(pending.id);
         return jsonResponse(res, { error: '该邮箱已被注册' }, 409);
@@ -275,7 +286,7 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
     }
 
     const body = await parseBody(req);
-    const email = sanitizeString(body.email, 320);
+    const email = sanitizeString(body.email, 320).toLowerCase();
     if (!email || !email.includes('@')) {
       return jsonResponse(res, { error: '请输入有效的邮箱地址' }, 400);
     }
@@ -285,8 +296,10 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
       return jsonResponse(res, { ok: true, message: '如果该邮箱已注册，重置邮件已发送' });
     }
 
-    const user = db.prepare('SELECT id, username, email FROM users WHERE email = ? AND email_verified_at IS NOT NULL').get(email);
+    const user = db.prepare('SELECT id, username, email FROM users WHERE LOWER(email) = ? AND email_verified_at IS NOT NULL').get(email);
     if (!user) {
+      // 时序防御：即使未找到也执行 bcrypt（与登录路径一致的防御策略）
+      try { await bcrypt.compare('timing-defense', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'); } catch {}
       return jsonResponse(res, { ok: true, message: '如果该邮箱已注册，重置邮件已发送' });
     }
 
@@ -306,6 +319,12 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
     }
 
     const resetLink = `${SITE_URL}/reset-password?token=${resetToken}`;
+    const isDev = !process.env.SMTP_PASS || SITE_URL === 'http://localhost:3000';
+
+    if (isDev) {
+      console.log('[DEV] 重置密码链接:', resetLink);
+      return jsonResponse(res, { ok: true, message: `[DEV] 重置链接已打印到控制台` });
+    }
 
     try {
       await transporter.sendMail({

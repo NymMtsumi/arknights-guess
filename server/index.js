@@ -130,21 +130,23 @@ const authRoutes = registerAuthRoutes({
   transporter, SITE_URL, getClientIP,
 });
 
+const gameRoutes = registerGameRoutes({
+  app: {}, db, verifyToken, checkRateLimit, getClientIP,
+});
+
 const userRoutes = registerUserRoutes({
   app: {}, db, verifyToken, requireAuth,
   checkNicknameProfanity, transporter, SITE_URL,
   onlinePlayers, onlineSockets, ONLINE_TIMEOUT,
   checkRateLimit, getClientIP,
-});
-
-const gameRoutes = registerGameRoutes({
-  app: {}, db, verifyToken, checkRateLimit, getClientIP,
+  invalidateLeaderboardCache: gameRoutes.invalidateLeaderboardCache,
 });
 
 const adminRoutes = registerAdminRoutes({
   app: {}, db, requireAdmin, checkNicknameProfanity,
   onlinePlayers, onlineSockets, socketIps, getUserIps, ONLINE_TIMEOUT, APP_VERSION,
   reloadCharacters: loadCharacters,
+  invalidateLeaderboardCache: gameRoutes.invalidateLeaderboardCache,
 });
 
 // ===== HTTP 请求处理 =====

@@ -180,6 +180,8 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
       username: row.username,
       displayId: row.display_id || null,
       nickname: row.nickname || null,
+      // displayName 优先级：用户设置的昵称 > 注册用户名
+      // 客户端 getDisplayName 使用相同优先级二次兜底
       displayName: row.nickname || row.username,
       wins: row.wins,
       totalGames: row.totalGames,
@@ -201,5 +203,7 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
   return {
     handleSaveGame,
     handleLeaderboard,
+    // 昵称变更时清除排行榜缓存（避免改名后最多 60s 显示旧名）
+    invalidateLeaderboardCache: () => leaderboardCache.clear(),
   };
 }

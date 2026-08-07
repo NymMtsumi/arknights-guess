@@ -143,15 +143,34 @@ export async function register(username: string, password: string, email: string
   return data;
 }
 
+// ===== 忘记密码 =====
+export async function forgotPassword(email: string): Promise<{ ok: boolean; message: string }> {
+  const data = await apiCall('/api/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+  return data;
+}
+
+// ===== 重置密码 =====
+export async function resetPassword(token: string, password: string): Promise<{ ok: boolean; message: string }> {
+  const data = await apiCall('/api/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ token, password }),
+  });
+  return data;
+}
+
 // ===== 登录 =====
-export async function login(username: string, password: string): Promise<{
+// identifier 支持用户名或邮箱（含 @ 视为邮箱登录）
+export async function login(identifier: string, password: string): Promise<{
   token: string; username: string; userId: number; role: string;
   nickname: string | null;
   player_key: string | null; email: string | null; email_verified: boolean;
 }> {
   const data = await apiCall('/api/login', {
     method: 'POST',
-    body: JSON.stringify({ username, password }),
+    body: JSON.stringify({ username: identifier, password }),
   });
   setToken(data.token);
   setUser({

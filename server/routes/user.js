@@ -2,7 +2,7 @@
 import { randomBytes, createHash } from 'node:crypto';
 import { sanitizeString, parseCookies, parseBody, jsonResponse, deriveGuestName, generateKey } from '../utils.js';
 
-export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNicknameProfanity, transporter, SITE_URL, onlinePlayers, onlineSockets, ONLINE_TIMEOUT, checkRateLimit, getClientIP }) {
+export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNicknameProfanity, transporter, SITE_URL, onlinePlayers, onlineSockets, ONLINE_TIMEOUT, checkRateLimit, getClientIP, invalidateLeaderboardCache }) {
 
   // ===== GET /api/me =====
   async function handleMe(req, res) {
@@ -187,7 +187,39 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
       return jsonResponse(res, { error: '没有需要修改的字段' }, 400);
     }
 
+    // 取旧昵称，无变化则跳过（避免无意义的写操作和审计噪音）
+    const oldUser = db.prepare('SELECT nickname FROM users WHERE id = ?').get(auth.userId);
+    if (oldUser && (oldUser.nickname || null) === nickname) {
+      // 无变化，直接返回当前用户信息
+      const user = db.prepare(
+        'SELECT id, username, display_id, nickname, email, email_verified_at, created_at FROM users WHERE id = ?'
+      ).get(auth.userId);
+      return jsonResponse(res, {
+        username: user.username,
+        displayId: user.display_id || null,
+        nickname: user.nickname || null,
+        email: user.email || null,
+        email_verified: !!user.email_verified_at,
+        created_at: user.created_at,
+      });
+    }
+
+    const oldNickname = oldUser?.nickname || '';
+
     db.prepare('UPDATE users SET nickname = ? WHERE id = ?').run(nickname, auth.userId);
+
+    // 审计日志：记录旧→新（方便排查"昵称被动修改"问题）
+    try {
+      db.prepare(
+        'INSERT INTO admin_actions (admin_id, action, target_type, target_id, detail, ip) VALUES (?, ?, ?, ?, ?, ?)'
+      ).run(auth.userId, 'self_change_nickname', 'user', auth.userId, `${oldNickname} → ${nickname}`, getClientIP(req) || '');
+    } catch (auditErr) {
+      console.error('[update-profile] audit insert failed:', auditErr.message);
+      // 不阻塞用户操作：昵称已更新，仅审计记录丢失
+    }
+
+    // 昵称变更后清除排行榜缓存
+    if (invalidateLeaderboardCache) invalidateLeaderboardCache();
 
     const user = db.prepare(
       'SELECT id, username, display_id, nickname, email, email_verified_at, created_at FROM users WHERE id = ?'
@@ -209,7 +241,7 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
     if (!auth) return;
 
     const body = await parseBody(req);
-    const email = sanitizeString(body.email, 320);
+    const email = sanitizeString(body.email, 320).toLowerCase();
 
     if (!email || !email.includes('@')) {
       return jsonResponse(res, { error: '请输入有效的邮箱地址' }, 400);

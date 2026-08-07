@@ -23,7 +23,7 @@ function checkDeployRate(ip) {
   return true;
 }
 
-export function registerAdminRoutes({ app, db, requireAdmin, checkNicknameProfanity, onlinePlayers, onlineSockets, socketIps, getUserIps, ONLINE_TIMEOUT, APP_VERSION, reloadCharacters }) {
+export function registerAdminRoutes({ app, db, requireAdmin, checkNicknameProfanity, onlinePlayers, onlineSockets, socketIps, getUserIps, ONLINE_TIMEOUT, APP_VERSION, reloadCharacters, invalidateLeaderboardCache }) {
 
   const SERVER_START_TIME = Date.now();
   let _charactersCache = null; // 内存缓存，避免每次请求都读盘+JSON.parse
@@ -272,11 +272,17 @@ export function registerAdminRoutes({ app, db, requireAdmin, checkNicknameProfan
     const badWord = checkNicknameProfanity(newNickname);
     if (badWord) return jsonResponse(res, { error: `昵称包含违禁内容: ${badWord}` }, 400);
 
-    const user = db.prepare('SELECT id FROM users WHERE id = ?').get(userId);
-    if (!user) return jsonResponse(res, { error: '用户不存在' }, 404);
+    const oldUser = db.prepare('SELECT id, nickname FROM users WHERE id = ?').get(userId);
+    if (!oldUser) return jsonResponse(res, { error: '用户不存在' }, 404);
+    const oldNickname = oldUser.nickname || '';
 
     db.prepare('UPDATE users SET nickname = ? WHERE id = ?').run(newNickname, userId);
-    logAdminAction(admin.userId, 'change_nickname', 'user', userId, newNickname, getClientIP(req));
+    // 审计日志：记录旧昵称→新昵称（便于排查问题）
+    logAdminAction(admin.userId, 'change_nickname', 'user', userId, `${oldNickname} → ${newNickname}`, getClientIP(req));
+
+    // 昵称变更后清除排行榜缓存
+    if (invalidateLeaderboardCache) invalidateLeaderboardCache();
+
     return jsonResponse(res, { ok: true, id: userId, nickname: newNickname });
   }
 

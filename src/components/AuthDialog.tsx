@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { register, login, syncGames, linkPlayerKey, getUser, getPlayerKey, logout, apiCall } from '@/lib/auth';
+import { useState, useEffect } from 'react';
+import { register, login, forgotPassword, syncGames, linkPlayerKey, getUser, getPlayerKey, logout, apiCall } from '@/lib/auth';
 import { loadHistory } from '@/lib/stats';
 
 interface AuthDialogProps {
@@ -10,7 +10,7 @@ interface AuthDialogProps {
 }
 
 export function AuthDialog({ open, onClose }: AuthDialogProps) {
-  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [mode, setMode] = useState<'login' | 'register' | 'forgot'>('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
@@ -24,19 +24,22 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
   const [loginEmailVerified, setLoginEmailVerified] = useState<boolean | null>(null);
   // 检测验证成功跳转回来的标记
   const [verifySuccessMsg, setVerifySuccessMsg] = useState('');
-  if (open && typeof window !== 'undefined' && !currentUser) {
-    try {
-      const raw = localStorage.getItem('arknights-verify-success');
-      if (raw) {
-        const data = JSON.parse(raw);
-        if (Date.now() - data.ts < 600_000 && data.username) { // 10分钟内有效
-          setVerifySuccessMsg(`✅ 邮箱 ${data.email || ''} 验证成功！请用账号 ${data.username} 登录`);
-          setMode('login');
+  // 检测验证成功跳转回来的标记（在 useEffect 中执行，避免 render 期内副作用）
+  useEffect(() => {
+    if (open && !currentUser) {
+      try {
+        const raw = localStorage.getItem('arknights-verify-success');
+        if (raw) {
+          const data = JSON.parse(raw);
+          if (Date.now() - data.ts < 600_000 && data.username) { // 10分钟内有效
+            setVerifySuccessMsg(`✅ 邮箱 ${data.email || ''} 验证成功！请用账号 ${data.username} 登录`);
+            setMode('login');
+          }
+          localStorage.removeItem('arknights-verify-success');
         }
-        localStorage.removeItem('arknights-verify-success');
-      }
-    } catch {}
-  }
+      } catch {}
+    }
+  }, [open]);
 
   if (!open) return null;
 
@@ -66,8 +69,8 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
     e.preventDefault();
     setError(''); setMsg('');
 
-    if (!username.trim() || !password) {
-      setError('请填写用户名和密码');
+    if (!username.trim() || (!password && mode !== 'forgot')) {
+      setError(mode === 'forgot' ? '请填写邮箱' : '请填写用户名/邮箱和密码');
       return;
     }
     if (mode === 'register' && !email.trim()) {
@@ -83,6 +86,11 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
         setMsg(result.message || '验证邮件已发送，请查收邮件并点击链接完成注册。如未收到请检查垃圾邮件箱');
         setLoading(false);
         return; // 不关闭弹窗，不自动登录
+      } else if (mode === 'forgot') {
+        const result = await forgotPassword(username.trim());
+        setMsg(result.message || '如果该邮箱已注册，重置邮件已发送，请查收。如未收到请检查垃圾邮件箱');
+        setLoading(false);
+        return;
       } else {
         const loginData = await login(username.trim(), password);
         handleLoginSuccess(loginData);
@@ -169,7 +177,7 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
             fontWeight: 900,
             margin: 0,
           }}>
-            {currentUser ? `你好, ${currentUser.username}` : (mode === 'login' ? '登录' : '注册')}
+            {currentUser ? `你好, ${currentUser.username}` : (mode === 'login' ? '登录' : mode === 'register' ? '注册' : '忘记密码')}
           </h2>
           <button
             onClick={onClose}
@@ -297,6 +305,58 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
               </button>
             </div>
 
+            {mode === 'forgot' ? (
+              // ===== 忘记密码模式 =====
+              <>
+                <p style={{ color: 'var(--text-light)', fontSize: '0.85rem', marginBottom: '16px', textAlign: 'center' }}>
+                  输入注册邮箱，我们将发送密码重置链接
+                </p>
+                <input
+                  value={username}
+                  onChange={e => setUsername(e.target.value)}
+                  placeholder="注册邮箱"
+                  style={inpStyle}
+                  maxLength={320}
+                  autoComplete="email"
+                  type="email"
+                  autoFocus
+                />
+
+                {error && (
+                  <p style={{ color: 'var(--danger)', fontSize: '0.85rem', marginBottom: '10px' }}>{error}</p>
+                )}
+                {msg && (
+                  <p style={{ color: 'var(--correct)', fontSize: '0.85rem', marginBottom: '10px', textAlign: 'center' }}>
+                    {msg}
+                  </p>
+                )}
+
+                <button type="submit" style={btnStyle} disabled={loading}>
+                  {loading ? '发送中...' : '发送重置邮件'}
+                </button>
+
+                <p style={{ color: 'var(--text-light)', fontSize: '0.75rem', marginTop: '12px', textAlign: 'center' }}>
+                  记起来了？
+                  <button
+                    type="button"
+                    onClick={() => { setMode('login'); setError(''); setMsg(''); }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--primary)',
+                      cursor: 'pointer',
+                      fontWeight: 700,
+                      padding: '0 4px',
+                      fontSize: '0.75rem',
+                    }}
+                  >
+                    返回登录
+                  </button>
+                </p>
+              </>
+            ) : (
+              // ===== 登录/注册模式 =====
+              <>
             {mode === 'register' && (
               <input
                 value={email}
@@ -310,10 +370,10 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
             <input
               value={username}
               onChange={e => setUsername(e.target.value)}
-              placeholder="用户名 (2-20个字符)"
+              placeholder={mode === 'login' ? '用户名或邮箱' : '用户名 (2-20个字符)'}
               style={inpStyle}
-              maxLength={20}
-              autoComplete="username"
+              maxLength={mode === 'login' ? 320 : 20}
+              autoComplete={mode === 'login' ? 'username email' : 'username'}
             />
             <input
               type="password"
@@ -363,6 +423,28 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
                 {mode === 'login' ? '立即注册' : '去登录'}
               </button>
             </p>
+
+            {mode === 'login' && (
+              <p style={{ textAlign: 'center', marginTop: '6px' }}>
+                <button
+                  type="button"
+                  onClick={() => { setMode('forgot'); setError(''); setMsg(''); }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--text-light)',
+                    cursor: 'pointer',
+                    fontSize: '0.75rem',
+                    textDecoration: 'underline',
+                    padding: 0,
+                  }}
+                >
+                  忘记密码？
+                </button>
+              </p>
+            )}
+            </>
+            )}
           </form>
         )}
       </div>

@@ -173,7 +173,9 @@ export default function AdminDashboard() {
                     <td style={{ ...tdStyle, color: g.won ? 'var(--correct)' : 'var(--danger)', fontWeight: 700 }}>
                       {g.won ? '✓' : '✗'} {g.guessCount}次
                     </td>
-                    <td style={{ ...tdStyle, color: 'var(--text-light)', fontSize: '0.78rem' }}>{g.targetName}</td>
+                    <td style={{ ...tdStyle, color: 'var(--text-light)', fontSize: '0.78rem' }}>
+                        {g.mode === 'multi' ? `vs ${g.targetName}` : g.targetName}
+                      </td>
                     <td style={{ ...tdStyle, textAlign: 'right' }}>
                       <span style={{
                         fontSize: '0.68rem', padding: '2px 5px', borderRadius: '3px',

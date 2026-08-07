@@ -71,6 +71,9 @@ export default function AdminPage() {
     gap: '4px',
     marginBottom: '24px',
     borderBottom: '2px solid var(--border)',
+    overflowX: 'auto',
+    flexWrap: 'nowrap',
+    WebkitOverflowScrolling: 'touch',
   };
 
   const tabBtnBase: React.CSSProperties = {

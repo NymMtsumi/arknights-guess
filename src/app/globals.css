@@ -408,6 +408,63 @@ html:not([data-theme="blast"]) .scroll-slider-thumb:active {
   50% { opacity: 0.72; text-shadow: 0 0 18px rgba(255, 101, 120, 0.7); }
 }
 
+/* 猜对干员 — 金色光效闪烁 */
+@keyframes golden-flash {
+  0% { box-shadow: inset 0 0 0 rgba(255, 215, 0, 0); }
+  15% { box-shadow: inset 0 0 60px rgba(255, 215, 0, 0.55); }
+  40% { box-shadow: inset 0 0 30px rgba(255, 215, 0, 0.25); }
+  70% { box-shadow: inset 0 0 12px rgba(255, 215, 0, 0.1); }
+  100% { box-shadow: inset 0 0 0 rgba(255, 215, 0, 0); }
+}
+
+.guess-row-winner {
+  animation: golden-flash 1.2s ease-out both;
+}
+
+.guess-row-winner td:first-child {
+  animation: golden-flash-name 1.2s ease-out both;
+}
+
+@keyframes golden-flash-name {
+  0% { background: var(--correct); }
+  30% { background: #ffd700; color: #000; }
+  70% { background: var(--correct); }
+  100% { background: var(--correct); }
+}
+
+/* 次数告急 — 搜索框红色脉冲 */
+@keyframes danger-border-pulse {
+  0%, 100% {
+    border-color: var(--danger);
+    box-shadow: 0 0 0 rgba(255, 101, 120, 0);
+  }
+  50% {
+    border-color: var(--danger);
+    box-shadow: 0 0 12px rgba(255, 101, 120, 0.35);
+  }
+}
+
+.game-search-input.low-guesses:focus {
+  border-color: var(--danger) !important;
+  box-shadow: 0 0 14px rgba(255, 101, 120, 0.3) !important;
+}
+
+html[data-theme="blast"] .game-search-input.low-guesses:focus {
+  box-shadow: 0 0 16px rgba(255, 101, 120, 0.35) !important;
+}
+
+/* 连胜提示动画 */
+@keyframes streak-pop {
+  0% { transform: scale(0.5); opacity: 0; }
+  60% { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.streak-badge {
+  display: inline-block;
+  animation: streak-pop 0.4s 0.2s cubic-bezier(0.2, 0.72, 0.25, 1) both;
+}
+
 /* ============================================
    工具类
    ============================================ */

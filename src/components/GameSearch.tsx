@@ -60,9 +60,10 @@ interface GameSearchProps {
   disabled: boolean;
   guessedIds: Set<string>;
   target?: Character | null; // 开发者 cheat
+  remainingGuesses?: number; // 剩余猜测次数，≤3 时输入框红色预警
 }
 
-export function GameSearch({ onGuess, disabled, guessedIds, target }: GameSearchProps) {
+export function GameSearch({ onGuess, disabled, guessedIds, target, remainingGuesses }: GameSearchProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Character[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -141,12 +142,14 @@ export function GameSearch({ onGuess, disabled, guessedIds, target }: GameSearch
         onFocus={() => { if (query.trim() && results.length > 0) setShowDropdown(true); }}
         placeholder="输入干员名字或拼音..."
         disabled={disabled}
+        className={`game-search-input${remainingGuesses !== undefined && remainingGuesses <= 3 ? ' low-guesses' : ''}`}
         style={{
           width: '100%', padding: '12px 16px', background: 'var(--input-bg)', color: 'var(--text)',
-          border: '1px solid var(--border)', borderRadius: 'var(--radius)', fontSize: '1rem', outline: 'none',
+          border: remainingGuesses !== undefined && remainingGuesses <= 3 ? '1px solid var(--danger)' : '1px solid var(--border)',
+          borderRadius: 'var(--radius)', fontSize: '1rem', outline: 'none',
           transition: 'border-color 0.2s',
+          ...(remainingGuesses !== undefined && remainingGuesses <= 3 ? { animation: 'danger-border-pulse 1.6s ease-in-out infinite' } : {}),
         }}
-        className="game-search-input"
       />
       <style>{`
         .game-search-input:focus { border-color: var(--primary) !important; box-shadow: 0 0 0 3px var(--primary-soft); }

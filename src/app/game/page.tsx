@@ -260,6 +260,7 @@ export default function GamePage() {
               disabled={status !== 'playing'}
               guessedIds={guessedIds}
               target={target}
+              remainingGuesses={remainingGuesses}
             />
           </div>
 

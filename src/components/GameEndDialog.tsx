@@ -1,6 +1,7 @@
 'use client';
 
 import { useI18n } from '@/lib/i18n';
+import { loadHistory } from '@/lib/stats';
 import type { Character, GameStatus } from '@/types/character';
 
 interface GameEndDialogProps {
@@ -11,6 +12,28 @@ interface GameEndDialogProps {
   onNewGame: () => void;
 }
 
+/** 从历史记录计算当前连胜/连败数（最近连续同结果数） */
+function computeStreak(): { type: 'win' | 'loss' | null; count: number } {
+  try {
+    const history = loadHistory();
+    if (!history.length) return { type: null, count: 0 };
+    // 按时间戳降序排列（最新在前）
+    const sorted = [...history].sort((a, b) => b.timestamp - a.timestamp);
+    const first = sorted[0];
+    // 多人模式也计入 streak
+    const firstWon = 'won' in first ? first.won : false;
+    let count = 0;
+    for (const r of sorted) {
+      const rWon = 'won' in r ? r.won : false;
+      if (rWon === firstWon) count++;
+      else break;
+    }
+    return { type: firstWon ? 'win' : 'loss', count };
+  } catch {
+    return { type: null, count: 0 };
+  }
+}
+
 export function GameEndDialog({ status, target, guessCount, onClose, onNewGame }: GameEndDialogProps) {
   const { t } = useI18n();
 
@@ -18,6 +41,7 @@ export function GameEndDialog({ status, target, guessCount, onClose, onNewGame }
   if (!target) return null;
 
   const won = status === 'won';
+  const streak = computeStreak();
 
   return (
     <div
@@ -63,6 +87,27 @@ export function GameEndDialog({ status, target, guessCount, onClose, onNewGame }
             : t('game.lostDesc', { name: target.name })
           }
         </p>
+
+        {/* 连胜/连败提示 */}
+        {streak.count >= 2 && (
+          <div className="streak-badge" style={{
+            marginBottom: '16px',
+            padding: '8px 18px',
+            borderRadius: 'var(--radius)',
+            fontSize: '0.95rem',
+            fontWeight: 700,
+            background: streak.type === 'win'
+              ? 'rgba(255, 215, 0, 0.15)'
+              : 'rgba(255, 101, 120, 0.12)',
+            color: streak.type === 'win' ? '#b8860b' : 'var(--danger)',
+            border: `1px solid ${streak.type === 'win' ? 'rgba(255, 215, 0, 0.35)' : 'rgba(255, 101, 120, 0.3)'}`,
+          }}>
+            {streak.type === 'win'
+              ? `🔥 连胜 ${streak.count} 局！`
+              : `💪 连败 ${streak.count} 局，下次一定！`
+            }
+          </div>
+        )}
 
         {/* 目标角色信息 */}
         <div style={{

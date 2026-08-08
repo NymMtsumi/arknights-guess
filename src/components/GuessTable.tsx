@@ -78,10 +78,12 @@ export function GuessTable({ guesses, target, hideRarity }: GuessTableProps) {
         <tbody>
           {[...guesses].reverse().map((guess, i) => {
             const alterMatch = target && isAlterRelation(target, guess.character);
+            const isWinner = target && guess.character.id === target.id;
             return (
               <tr
                 key={guess.timestamp}
-                style={i === 0 ? {
+                className={isWinner ? 'guess-row-winner' : ''}
+                style={i === 0 && !isWinner ? {
                   animation: 'surface-enter 0.4s 0s cubic-bezier(0.2, 0.72, 0.25, 1) both',
                 } : {}}
               >

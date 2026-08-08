@@ -20,6 +20,9 @@ export default function GamePage() {
   const store = useGameStore();
   const [rulesOpen, setRulesOpen] = useState(false);
   const [dialogClosed, setDialogClosed] = useState(false);
+  const [dialogReady, setDialogReady] = useState(false);
+  const [flashTrigger, setFlashTrigger] = useState(0);
+  const dialogTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { status, target, guesses, remainingGuesses, difficulty, startGame, submitGuess, giveUp, resetGame } = store;
 
@@ -34,11 +37,21 @@ export default function GamePage() {
         saveGameStats(status === 'won', guesses.length, difficulty, target?.name || '');
         savedRef.current = true;
       }
+      // 猜对：延迟 800ms 再弹出结算窗口，让用户看到金色闪烁
+      if (status === 'won') {
+        setDialogReady(false);
+        dialogTimer.current = setTimeout(() => setDialogReady(true), 800);
+      } else {
+        setDialogReady(true);
+      }
     }
     if (status === 'playing') {
       savedRef.current = false;
+      setDialogReady(false);
+      if (dialogTimer.current) { clearTimeout(dialogTimer.current); dialogTimer.current = null; }
     }
     prevStatus.current = status;
+    return () => { if (dialogTimer.current) { clearTimeout(dialogTimer.current); dialogTimer.current = null; } };
   }, [status, guesses.length, difficulty, target]);
 
   // 心跳：告知服务器正在玩单人模式
@@ -73,6 +86,8 @@ export default function GamePage() {
 
   const handleClose = () => {
     setDialogClosed(true);
+    // 关闭弹窗时重新触发猜对行的金色闪烁动画
+    setFlashTrigger(t => t + 1);
   };
 
   const handleNewGame = () => {
@@ -265,7 +280,7 @@ export default function GamePage() {
           </div>
 
           {/* 猜测表格 */}
-          <GuessTable guesses={guesses} target={target} hideRarity={difficulty === 'hard'} />
+          <GuessTable guesses={guesses} target={target} hideRarity={difficulty === 'hard'} flashTrigger={flashTrigger} staggerKey={guesses.length} />
 
           {/* 空状态提示 */}
           {guesses.length === 0 && (
@@ -283,7 +298,7 @@ export default function GamePage() {
         {/* 查看战绩模式：再来一把 */}
         {dialogClosed && (status === 'won' || status === 'lost') && (
           <div style={{ textAlign: 'center', marginTop: '20px' }}>
-            <button onClick={handleNewGame} style={{
+            <button onClick={handleNewGame} className="btn-shine" style={{
               padding: '12px 32px', background: 'var(--primary)', color: 'var(--bg)',
               border: 'none', borderRadius: 'var(--radius)', fontSize: '1rem',
               fontWeight: 700, cursor: 'pointer',
@@ -292,8 +307,8 @@ export default function GamePage() {
         )}
       </div>
 
-      {/* 胜利/失败弹窗 */}
-      {!dialogClosed && (
+      {/* 胜利/失败弹窗（猜对延迟 800ms，失败立即弹出） */}
+      {!dialogClosed && dialogReady && (
         <GameEndDialog
           status={status}
           target={target}

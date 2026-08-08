@@ -10,12 +10,17 @@ interface GuessTableProps {
   guesses: GuessResult[];
   target: Character | null;
   hideRarity?: boolean;
+  /** 每次递增强制猜对行重新挂载，重新播放闪烁动画 */
+  flashTrigger?: number;
+  /** 每次猜中递增，强制最新非胜行重新挂载以重播逐格揭示 */
+  staggerKey?: number;
 }
 
-function StatusCell({ status, children }: { status: GuessStatus; children: React.ReactNode }) {
+function StatusCell({ status, children, colWidth, extraStyle }: { status: GuessStatus; children: React.ReactNode; colWidth?: number; extraStyle?: React.CSSProperties }) {
   return (
     <td
       style={{
+        width: colWidth ? `${colWidth}px` : undefined,
         background: `var(--${status})`,
         color: status === 'wrong' ? 'var(--text-light)' : '#fff',
         fontWeight: status !== 'wrong' ? 700 : 400,
@@ -23,7 +28,10 @@ function StatusCell({ status, children }: { status: GuessStatus; children: React
         textAlign: 'center',
         fontSize: '0.9rem',
         whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
         transition: 'background 0.25s',
+        ...extraStyle,
       }}
     >
       {children}
@@ -31,7 +39,7 @@ function StatusCell({ status, children }: { status: GuessStatus; children: React
   );
 }
 
-export function GuessTable({ guesses, target, hideRarity }: GuessTableProps) {
+export function GuessTable({ guesses, target, hideRarity, flashTrigger, staggerKey }: GuessTableProps) {
   const { t } = useI18n();
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -50,6 +58,12 @@ export function GuessTable({ guesses, target, hideRarity }: GuessTableProps) {
     { key: 'tags', label: t('table.tags'), render: (g: GuessResult) => (g.character.tags || []).join(' ') || '-', statusKey: 'tags' as const },
   ];
 
+  // 列宽：名字和 tags 留足空间，其余窄列均分
+  // 使用固定像素 min-width 防止 table-layout:fixed 下百分比因容器宽度不确定而漂移
+  const colWidths = hideRarity
+    ? [120, 72, 72, 80, 72, 56, 72, 72, 110]   // 9 列 (px)
+    : [110, 70, 64, 78, 60, 70, 56, 70, 70, 110]; // 10 列 (px)
+
   return (
     <div>
       <div
@@ -61,11 +75,12 @@ export function GuessTable({ guesses, target, hideRarity }: GuessTableProps) {
         }}
         className="scroll-slider-container"
       >
-      <table className="game-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+      <table className="game-table" style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse', fontSize: '0.9rem', minWidth: `${colWidths.reduce((a, b) => a + b, 0)}px` }}>
         <thead>
           <tr>
-            {columns.map(col => (
+            {columns.map((col, i) => (
               <th key={col.key} style={{
+                width: `${colWidths[i] || 70}px`,
                 padding: '10px 12px', textAlign: 'center', fontWeight: 700,
                 fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.05em',
                 color: 'var(--text-light)', borderBottom: '2px solid var(--border)', whiteSpace: 'nowrap',
@@ -78,53 +93,55 @@ export function GuessTable({ guesses, target, hideRarity }: GuessTableProps) {
         <tbody>
           {[...guesses].reverse().map((guess, i) => {
             const alterMatch = target && isAlterRelation(target, guess.character);
-            const isWinner = target && guess.character.id === target.id;
+            const isWinner = target ? guess.character.id === target.id : false;
+            const isNewest = i === 0;
+            // 胜行 + 最新行需要交错动画延迟
+            const needsStagger = isWinner || isNewest;
+            const rowClass = isWinner ? 'guess-row-winner' : isNewest ? 'guess-row-newest' : '';
+            const rowKey = isWinner
+              ? `winner-${guess.timestamp}-${flashTrigger ?? 0}`
+              : isNewest
+                ? `newest-${guess.timestamp}-${staggerKey ?? 0}`
+                : String(guess.timestamp);
             return (
-              <tr
-                key={guess.timestamp}
-                className={isWinner ? 'guess-row-winner' : ''}
-                style={i === 0 && !isWinner ? {
-                  animation: 'surface-enter 0.4s 0s cubic-bezier(0.2, 0.72, 0.25, 1) both',
-                } : {}}
-              >
-                {columns.map(col => {
-                  // 名字列：猜对=绿，异格=黄
+              <tr key={rowKey} className={rowClass}>
+                {columns.map((col, colIdx) => {
+                  const cellStyle: React.CSSProperties = needsStagger
+                    ? { animationDelay: `${colIdx * 0.06}s` }
+                    : {};
+                  // 名字列：猜对=绿，异格=黄；固定宽度 + 溢出省略
+                  const nameCellBase: React.CSSProperties = {
+                    width: `${colWidths[0] || 110}px`,
+                    padding: '10px 12px', textAlign: 'center', fontWeight: 700,
+                    fontSize: '0.9rem', whiteSpace: 'nowrap',
+                    overflow: 'hidden', textOverflow: 'ellipsis',
+                    ...cellStyle,
+                  };
                   if (col.key === 'name') {
                     const isCorrect = target && guess.character.id === target.id;
                     if (isCorrect) {
                       return (
-                        <td key={col.key} style={{
-                          padding: '10px 12px', textAlign: 'center', fontWeight: 700,
-                          fontSize: '0.9rem', whiteSpace: 'nowrap',
-                          color: '#fff', background: 'var(--correct)',
-                        }}>
+                        <td key={col.key} style={{ ...nameCellBase, color: '#fff', background: 'var(--correct)' }}>
                           {col.render(guess)}
                         </td>
                       );
                     }
                     if (alterMatch) {
                       return (
-                        <td key={col.key} style={{
-                          padding: '10px 12px', textAlign: 'center', fontWeight: 700,
-                          fontSize: '0.9rem', whiteSpace: 'nowrap',
-                          color: '#fff', background: 'var(--close)',
-                        }}>
+                        <td key={col.key} style={{ ...nameCellBase, color: '#fff', background: 'var(--close)' }}>
                           {col.render(guess)}
                         </td>
                       );
                     }
                     return (
-                      <td key={col.key} style={{
-                        padding: '10px 12px', textAlign: 'center', fontWeight: 700,
-                        color: 'var(--text)', fontSize: '0.9rem', whiteSpace: 'nowrap',
-                      }}>
+                      <td key={col.key} style={{ ...nameCellBase, color: 'var(--text)' }}>
                         {col.render(guess)}
                       </td>
                     );
                   }
                   if (col.statusKey) {
                     return (
-                      <StatusCell key={col.key} status={guess.comparisons[col.statusKey]}>
+                      <StatusCell key={col.key} status={guess.comparisons[col.statusKey]} colWidth={colWidths[colIdx]} extraStyle={cellStyle}>
                         {col.render(guess)}
                       </StatusCell>
                     );

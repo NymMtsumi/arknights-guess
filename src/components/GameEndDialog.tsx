@@ -168,6 +168,7 @@ export function GameEndDialog({ status, target, guessCount, onClose, onNewGame }
           </button>
           <button
             onClick={onNewGame}
+            className="btn-shine"
             style={{
               padding: '12px 28px',
               background: 'var(--primary)',

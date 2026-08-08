@@ -192,8 +192,20 @@ export default function LeaderboardPage() {
         {/* 排行榜卡片 */}
         <div className="leaderboard-card">
           {loading ? (
-            <div className="leaderboard-empty">
-              <p style={{ fontSize: '1.1rem' }}>加载中...</p>
+            <div style={{ padding: '12px 0' }}>
+              {Array.from({ length: VISIBLE_ROWS }).map((_, i) => (
+                <div
+                  key={i}
+                  className="skeleton"
+                  style={{
+                    height: `${ROW_HEIGHT - 4}px`,
+                    marginBottom: '4px',
+                    width: '100%',
+                    opacity: 1 - i * 0.08, // 越往下越淡
+                    animationDelay: `${i * 0.08}s`,
+                  }}
+                />
+              ))}
             </div>
           ) : error ? (
             <div className="leaderboard-empty">

@@ -387,6 +387,8 @@ html:not([data-theme="blast"]) .scroll-slider-thumb:active {
 
 /* ============================================
    关键帧动画
+   游戏反馈类动画包裹在 prefers-reduced-motion 中（无障碍）
+   纯装饰类动画（ambient-drift / surface-enter）不影响可用性，不包裹
    ============================================ */
 @keyframes ambient-drift {
   0% { transform: translate3d(-2%, -1%, 0) rotate(-2deg) scale(1); }
@@ -403,47 +405,219 @@ html:not([data-theme="blast"]) .scroll-slider-thumb:active {
   50% { opacity: 1; filter: brightness(1.18); }
 }
 
-@keyframes urgent-pulse {
-  0%, 100% { opacity: 1; text-shadow: 0 0 0 rgba(255, 101, 120, 0); }
-  50% { opacity: 0.72; text-shadow: 0 0 18px rgba(255, 101, 120, 0.7); }
-}
+/* ============================================
+   游戏反馈类动画 — 全部包裹在 prefers-reduced-motion 中
+   ============================================ */
+@media (prefers-reduced-motion: no-preference) {
 
-/* 猜对干员 — 金色光效闪烁 */
-@keyframes golden-flash {
-  0% { box-shadow: inset 0 0 0 rgba(255, 215, 0, 0); }
-  15% { box-shadow: inset 0 0 60px rgba(255, 215, 0, 0.55); }
-  40% { box-shadow: inset 0 0 30px rgba(255, 215, 0, 0.25); }
-  70% { box-shadow: inset 0 0 12px rgba(255, 215, 0, 0.1); }
-  100% { box-shadow: inset 0 0 0 rgba(255, 215, 0, 0); }
-}
-
-.guess-row-winner {
-  animation: golden-flash 1.2s ease-out both;
-}
-
-.guess-row-winner td:first-child {
-  animation: golden-flash-name 1.2s ease-out both;
-}
-
-@keyframes golden-flash-name {
-  0% { background: var(--correct); }
-  30% { background: #ffd700; color: #000; }
-  70% { background: var(--correct); }
-  100% { background: var(--correct); }
-}
-
-/* 次数告急 — 搜索框红色脉冲 */
-@keyframes danger-border-pulse {
-  0%, 100% {
-    border-color: var(--danger);
-    box-shadow: 0 0 0 rgba(255, 101, 120, 0);
+  /* --- 次数告急文字脉冲 --- */
+  @keyframes urgent-pulse {
+    0%, 100% { opacity: 1; text-shadow: 0 0 0 rgba(255, 101, 120, 0); }
+    50% { opacity: 0.72; text-shadow: 0 0 18px rgba(255, 101, 120, 0.7); }
   }
-  50% {
-    border-color: var(--danger);
-    box-shadow: 0 0 12px rgba(255, 101, 120, 0.35);
+
+  /* --- 猜对干员 — 金色光效闪烁 --- */
+  @keyframes golden-flash {
+    0%   { box-shadow: inset 0 0 0 rgba(255, 215, 0, 0); }
+    20%  { box-shadow: inset 0 0 60px rgba(255, 215, 0, 0.65); }
+    45%  { box-shadow: inset 0 0 20px rgba(255, 215, 0, 0.2); }
+    70%  { box-shadow: inset 0 0 50px rgba(255, 215, 0, 0.5); }
+    100% { box-shadow: inset 0 0 0 rgba(255, 215, 0, 0); }
+  }
+
+  .guess-row-winner {
+    animation: golden-flash 0.6s ease-out 3 both;
+  }
+
+  .guess-row-winner td:first-child {
+    animation: golden-flash-name 1.2s ease-out both;
+  }
+
+  @keyframes golden-flash-name {
+    0%   { background: var(--correct); }
+    30%  { background: #ffd700; color: #000; }
+    70%  { background: var(--correct); }
+    100% { background: var(--correct); }
+  }
+
+  /* --- 胜利波浪：猜对行每格依次弹跳（来自 Wordle dance） --- */
+  @keyframes cell-dance {
+    0%   { transform: translateY(0); }
+    20%  { transform: translateY(-55%); }
+    40%  { transform: translateY(5%); }
+    60%  { transform: translateY(-25%); }
+    80%  { transform: translateY(2.5%); }
+    90%  { transform: translateY(-5%); }
+    100% { transform: translateY(0); }
+  }
+
+  .guess-row-winner td {
+    animation: cell-dance 0.55s ease-in-out both;
+    /* delay 由 inline style 按列递增设置 */
+  }
+
+  /* --- 逐格交错揭示：新行每格依次淡入+缩放（来自 csgofriberg cell-reveal） --- */
+  @keyframes cell-reveal {
+    from { opacity: 0; transform: scale(0.94); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  .guess-row-newest td {
+    animation: cell-reveal 0.28s ease-out both;
+    /* delay 由 inline style 按列递增设置 */
+  }
+
+  /* --- 搜索框抖动：无效猜测反馈（来自 Wordle shake） --- */
+  @keyframes shake-input {
+    10%  { transform: translateX(-5%); }
+    30%  { transform: translateX(5%); }
+    50%  { transform: translateX(-7.5%); }
+    70%  { transform: translateX(7.5%); }
+    90%  { transform: translateX(-5%); }
+    100% { transform: translateX(0); }
+  }
+
+  .game-search-input.shake {
+    animation: shake-input 0.28s ease-in-out;
+  }
+
+  /* --- 次数告急 — 搜索框红色脉冲 --- */
+  @keyframes danger-border-pulse {
+    0%, 100% {
+      border-color: var(--danger);
+      box-shadow: 0 0 0 rgba(255, 101, 120, 0);
+    }
+    50% {
+      border-color: var(--danger);
+      box-shadow: 0 0 12px rgba(255, 101, 120, 0.35);
+    }
+  }
+
+  .game-search-input.low-guesses {
+    animation: danger-border-pulse 1.6s ease-in-out infinite;
+  }
+
+  /* --- 连胜提示弹入 --- */
+  @keyframes streak-pop {
+    0%   { transform: scale(0.5); opacity: 0; }
+    60%  { transform: scale(1.15); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .streak-badge {
+    display: inline-block;
+    animation: streak-pop 0.4s 0.2s cubic-bezier(0.2, 0.72, 0.25, 1) both;
+  }
+
+  /* --- 骨架屏 shimmer 加载态 --- */
+  @keyframes shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--border) 25%,
+      var(--card-soft) 50%,
+      var(--border) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+    border-radius: var(--radius-sm);
+    cursor: default;
+    pointer-events: none;
+  }
+
+  /* --- 按钮光线扫过（hover 触发） --- */
+  .btn-shine {
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-shine::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.25),
+      transparent
+    );
+    transform: skewX(-25deg);
+    transition: left 0.55s ease;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .btn-shine:hover::before {
+    left: 150%;
+  }
+
+  /* --- 标题霓虹呼吸（含在 no-preference 中） --- */
+  @keyframes title-glow {
+    0%, 100% {
+      text-shadow: 5px 5px 0 rgba(217, 255, 63, 0.2), 10px 10px 34px rgba(0, 0, 0, 0.42);
+    }
+    50% {
+      text-shadow:
+        5px 5px 0 rgba(217, 255, 63, 0.5),
+        0 0 40px rgba(217, 255, 63, 0.35),
+        0 0 80px rgba(217, 255, 63, 0.15),
+        10px 10px 34px rgba(0, 0, 0, 0.42);
+    }
+  }
+
+  @keyframes title-glow-light {
+    0%, 100% {
+      text-shadow: 2px 2px 0 rgba(201, 234, 22, 0.15);
+    }
+    50% {
+      text-shadow:
+        2px 2px 0 rgba(201, 234, 22, 0.35),
+        0 0 30px rgba(201, 234, 22, 0.2),
+        0 0 60px rgba(201, 234, 22, 0.08);
+    }
+  }
+
+} /* end prefers-reduced-motion: no-preference */
+
+/* 无障碍降级：减少动效偏好时关闭所有动画与过渡 */
+@media (prefers-reduced-motion: reduce) {
+  .guess-row-winner,
+  .guess-row-winner td,
+  .guess-row-newest td,
+  .game-search-input.shake,
+  .game-search-input.low-guesses,
+  .skeleton,
+  .btn-shine::before {
+    animation: none !important;
+  }
+  .streak-badge {
+    animation: none !important;
+    opacity: 1;
+    transform: scale(1);
+  }
+  .guess-row-newest td {
+    opacity: 1;
+    transform: scale(1);
+  }
+  /* 关闭菜单卡片光线扫过 */
+  .menu-card::after {
+    transition: none !important;
+  }
+  .menu-card:hover::after {
+    left: -65%;
+  }
+  /* 关闭标题霓虹呼吸 — 恢复静态 text-shadow */
+  .home-hero h1 {
+    animation: title-enter 0.62s 0.12s cubic-bezier(0.18, 0.8, 0.24, 1) both !important;
   }
 }
 
+/* low-guesses focus 样式保持在外面（不受动效影响）*/
 .game-search-input.low-guesses:focus {
   border-color: var(--danger) !important;
   box-shadow: 0 0 14px rgba(255, 101, 120, 0.3) !important;
@@ -451,18 +625,6 @@ html:not([data-theme="blast"]) .scroll-slider-thumb:active {
 
 html[data-theme="blast"] .game-search-input.low-guesses:focus {
   box-shadow: 0 0 16px rgba(255, 101, 120, 0.35) !important;
-}
-
-/* 连胜提示动画 */
-@keyframes streak-pop {
-  0% { transform: scale(0.5); opacity: 0; }
-  60% { transform: scale(1.15); }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-.streak-badge {
-  display: inline-block;
-  animation: streak-pop 0.4s 0.2s cubic-bezier(0.2, 0.72, 0.25, 1) both;
 }
 
 /* ============================================
@@ -601,12 +763,18 @@ html[data-theme="blast"] .home-hero h1 {
   color: #fff;
   text-shadow: 5px 5px 0 rgba(217, 255, 63, 0.2), 10px 10px 34px rgba(0, 0, 0, 0.42);
   transform: skewX(-4deg);
+  animation:
+    title-enter 0.62s 0.12s cubic-bezier(0.18, 0.8, 0.24, 1) both,
+    title-glow 3s 1.8s ease-in-out infinite;
 }
 
 html:not([data-theme="blast"]) .home-hero h1 {
   color: var(--text);
   text-shadow: 2px 2px 0 rgba(201, 234, 22, 0.15);
   transform: skewX(-2deg);
+  animation:
+    title-enter 0.62s 0.12s cubic-bezier(0.18, 0.8, 0.24, 1) both,
+    title-glow-light 4s 2s ease-in-out infinite;
 }
 
 @keyframes hero-orbit {
@@ -682,16 +850,40 @@ html[data-theme="blast"] .menu-card::after {
   pointer-events: none;
 }
 
+/* 非 Blast 主题也加上光线扫过 */
+html:not([data-theme="blast"]) .menu-card::after {
+  content: '';
+  position: absolute;
+  inset: -60% auto -60% -65%;
+  width: 34%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent);
+  transform: skewX(-18deg);
+  transition: left 0.62s cubic-bezier(0.2, 0.72, 0.25, 1);
+  pointer-events: none;
+}
+
+/* hover 时光线扫过 */
+html[data-theme="blast"] .menu-card:hover::after,
+html:not([data-theme="blast"]) .menu-card:hover::after {
+  left: 100%;
+}
+
 html[data-theme="blast"] .menu-card:hover {
   border-color: color-mix(in srgb, var(--menu-color, var(--primary)) 60%, transparent);
   background: linear-gradient(145deg, rgba(62, 32, 52, 0.98), rgba(36, 16, 30, 0.98));
-  box-shadow: 0 22px 48px rgba(0, 0, 0, 0.34);
+  box-shadow:
+    0 0 25px color-mix(in srgb, var(--menu-color, var(--primary)) 35%, transparent),
+    0 0 55px color-mix(in srgb, var(--menu-color, var(--primary)) 15%, transparent),
+    0 22px 48px rgba(0, 0, 0, 0.34);
   transform: translateY(-4px);
 }
 
 html:not([data-theme="blast"]) .menu-card:hover {
   border-color: var(--border-strong);
-  box-shadow: var(--shadow-lg);
+  box-shadow:
+    0 0 18px color-mix(in srgb, var(--menu-color, var(--primary)) 22%, transparent),
+    0 0 40px color-mix(in srgb, var(--menu-color, var(--primary)) 8%, transparent),
+    var(--shadow-lg);
   transform: translateY(-2px);
 }
 
@@ -782,6 +974,61 @@ html[data-theme="blast"] .menu-arrow { color: var(--primary); }
   padding-left: 2px;
 }
 
+/* 底部快捷链接栏 — 紧凑按钮行（参考弗一把设计） */
+.bottom-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 0 0 clamp(28px, 4vw, 48px);
+}
+
+.bottom-bar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 8px 16px;
+  font-size: 0.92rem;
+  font-family: inherit;
+  background: var(--card);
+  color: #28C8CC;
+  border: 1px solid #28C8CC;
+  border-radius: var(--radius);
+  cursor: pointer;
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.3s;
+}
+
+/* 光线扫过 */
+.bottom-bar-btn::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  bottom: -50%;
+  left: -65%;
+  width: 34%;
+  background: linear-gradient(90deg, transparent, rgba(40, 200, 204, 0.22), transparent);
+  transform: skewX(-18deg);
+  transition: left 0.55s cubic-bezier(0.2, 0.72, 0.25, 1);
+  pointer-events: none;
+}
+
+.bottom-bar-btn:hover::after {
+  left: 130%;
+}
+
+/* 悬停光晕 */
+.bottom-bar-btn:hover {
+  background: #28C8CC;
+  color: #fff;
+  box-shadow: 0 0 12px rgba(40, 200, 204, 0.35), 0 0 28px rgba(40, 200, 204, 0.15);
+}
+
 @media (max-width: 640px) {
   .home-hero { min-height: 275px; }
   html[data-theme="blast"] .home-hero {
@@ -800,6 +1047,8 @@ html[data-theme="blast"] .menu-arrow { color: var(--primary); }
   .menu-label { font-size: 1.02rem; }
   .menu-description { font-size: var(--fs-2xs); }
   .menu-arrow { right: 12px; bottom: 11px; width: 15px; height: 15px; }
+  .bottom-bar { gap: 8px; }
+  .bottom-bar-btn { padding: 6px 12px; font-size: 0.85rem; }
 }
 
 @media (max-width: 520px) {

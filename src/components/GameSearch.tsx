@@ -69,6 +69,7 @@ export function GameSearch({ onGuess, disabled, guessedIds, target, remainingGue
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [isComposing, setIsComposing] = useState(false);
+  const [shaking, setShaking] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -114,13 +115,22 @@ export function GameSearch({ onGuess, disabled, guessedIds, target, remainingGue
     } else if (e.key === 'Enter') {
       e.preventDefault();
       if (disabled) return;
-      // KEYKEYKEY cheat code removed for production
       if (showDropdown && results.length > 0) {
         const idx = selectedIndex >= 0 ? selectedIndex : 0;
         if (results[idx]) selectChar(results[idx]);
       } else if (query.trim()) {
         const char = findCharacterByName(allCharacters, query.trim());
-        if (char && !guessedIds.has(char.id)) selectChar(char);
+        if (char) {
+          if (guessedIds.has(char.id)) {
+            // 已猜过 → 抖动反馈
+            setShaking(true);
+          } else {
+            selectChar(char);
+          }
+        } else {
+          // 名字无效 → 抖动反馈
+          setShaking(true);
+        }
       }
     } else if (e.key === 'Escape') {
       setShowDropdown(false);
@@ -142,13 +152,13 @@ export function GameSearch({ onGuess, disabled, guessedIds, target, remainingGue
         onFocus={() => { if (query.trim() && results.length > 0) setShowDropdown(true); }}
         placeholder="输入干员名字或拼音..."
         disabled={disabled}
-        className={`game-search-input${remainingGuesses !== undefined && remainingGuesses <= 3 ? ' low-guesses' : ''}`}
+        className={`game-search-input${remainingGuesses !== undefined && remainingGuesses <= 3 ? ' low-guesses' : ''}${shaking ? ' shake' : ''}`}
+        onAnimationEnd={() => setShaking(false)}
         style={{
           width: '100%', padding: '12px 16px', background: 'var(--input-bg)', color: 'var(--text)',
           border: remainingGuesses !== undefined && remainingGuesses <= 3 ? '1px solid var(--danger)' : '1px solid var(--border)',
           borderRadius: 'var(--radius)', fontSize: '1rem', outline: 'none',
           transition: 'border-color 0.2s',
-          ...(remainingGuesses !== undefined && remainingGuesses <= 3 ? { animation: 'danger-border-pulse 1.6s ease-in-out infinite' } : {}),
         }}
       />
       <style>{`

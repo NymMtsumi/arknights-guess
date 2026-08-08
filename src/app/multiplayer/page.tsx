@@ -577,7 +577,7 @@ export default function MultiplayerPage() {
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
               <div style={{ flex: '1 1 48%', minWidth: '280px' }}>
                 <div style={{ fontWeight: 700, marginBottom: '4px', fontSize: '0.85rem', color: 'var(--primary)' }}>你的猜测</div>
-                <div ref={myBoardScrollRef} style={{ overflowX: 'auto', scrollBehavior: 'smooth' }} className="scroll-slider-container"><GuessTable guesses={store.guesses} target={store.target} hideRarity={difficulty === 'hard'} /></div>
+                <div ref={myBoardScrollRef} style={{ overflowX: 'auto', scrollBehavior: 'smooth' }} className="scroll-slider-container"><GuessTable guesses={store.guesses} target={store.target} hideRarity={difficulty === 'hard'} staggerKey={store.guesses.length} /></div>
                 <ScrollSlider containerRef={myBoardScrollRef} />
               </div>
               <div style={{ flex: '1 1 48%', minWidth: '280px' }}>

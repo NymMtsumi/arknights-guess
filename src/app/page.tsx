@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
+import Link from 'next/link';
 import { Header } from '@/components/Header';
 import { HeroSection } from '@/components/HeroSection';
 import { MenuCard } from '@/components/MenuCard';
@@ -63,73 +64,51 @@ export default function HomePage() {
           />
         </div>
 
-        {/* 小卡片 — 信息与链接 */}
-        <p className="menu-grid-title" style={{ textAlign: 'center', marginBottom: '10px' }}>
-          {t('hero.kicker')}
-        </p>
-        <div className="menu-grid" style={{ marginBottom: '24px' }}>
-          <MenuCard
-            href="/leaderboard"
-            icon="🏆"
-            label={t('menu.leaderboard')}
-            description={t('menu.leaderboardDesc')}
-            color="#ffb347"
-            small
-          />
-          <MenuCard
-            href="#"
-            icon="📋"
-            label={t('menu.changelog')}
-            description={t('menu.changelogDesc')}
-            color="#f0a040"
-            small
-            onClick={makeClickHandler(changelogTimer, setChangelogOpen)}
-          />
-          <MenuCard
-            href="#"
-            icon="📖"
-            label={t('menu.rules')}
-            description={t('menu.rulesDesc')}
-            color="var(--accent)"
-            small
+        {/* 底部快捷链接 — 紧凑按钮行，参考弗一把设计 */}
+        <div className="bottom-bar">
+          <Link href="/leaderboard" className="bottom-bar-btn">
+            🏆 {t('menu.leaderboard')}
+          </Link>
+          <button
+            className="bottom-bar-btn"
             onClick={makeClickHandler(rulesTimer, setRulesOpen)}
-          />
-          <MenuCard
-            href="#"
-            icon="👨‍💻"
-            label={t('menu.developers')}
-            description={t('menu.developersDesc')}
-            color="#6a48d7"
-            small
+          >
+            📋 {t('menu.rules')}
+          </button>
+          <button
+            className="bottom-bar-btn"
+            onClick={makeClickHandler(changelogTimer, setChangelogOpen)}
+          >
+            📝 {t('menu.changelog')}
+          </button>
+          <button
+            className="bottom-bar-btn"
             onClick={makeClickHandler(devTimer, setDevCreditsOpen)}
-          />
-          <MenuCard
-            href="#"
-            icon="💚"
-            label={t('menu.acknowledgements')}
-            description={t('menu.acknowledgementsDesc')}
-            color="#e040a0"
-            small
+          >
+            👨‍💻 {t('menu.developers')}
+          </button>
+          <button
+            className="bottom-bar-btn"
             onClick={makeClickHandler(thanksTimer, setThanksOpen)}
-          />
-          <MenuCard
+          >
+            💚 {t('menu.acknowledgements')}
+          </button>
+          <a
             href="https://github.com/NymMtsumi/arknights-guess"
-            icon="🐙"
-            label={t('menu.github')}
-            description={t('menu.githubDesc')}
-            color="#888888"
-            small
-            external
-          />
-          <MenuCard
+            className="bottom-bar-btn"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            🐙 GitHub
+          </a>
+          <a
             href="https://space.bilibili.com/1327884464"
-            icon="📺"
-            label={t('menu.bilibili')}
-            description={t('menu.bilibiliDesc')}
-            color="#00a1d6"
-            small
-            external
-          />
+            className="bottom-bar-btn"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            📺 B站
+          </a>
         </div>
       </div>
 

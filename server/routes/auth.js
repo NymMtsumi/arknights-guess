@@ -1,7 +1,27 @@
 // 认证路由：register, login, verify-email, forgot-password, reset-password, auth-cookie
 import { randomBytes, createHash } from 'node:crypto';
+import { promises as dns } from 'node:dns';
 import bcrypt from 'bcryptjs';
 import { sanitizeString, parseCookies, parseBody, jsonResponse, generateKey } from '../utils.js';
+
+// ===== 邮箱 MX 记录验证 =====
+async function checkEmailMX(email) {
+  const domain = email.split('@')[1];
+  if (!domain) return false;
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000);
+    // Node.js dns.promises 不支持 AbortController，用 Promise.race 实现超时
+    const records = await Promise.race([
+      dns.resolveMx(domain),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000))
+    ]);
+    clearTimeout(timeout);
+    return Array.isArray(records) && records.length > 0;
+  } catch {
+    return false;
+  }
+}
 
 export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAuth, checkRateLimit, transporter, SITE_URL, getClientIP }) {
 
@@ -35,6 +55,12 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
     }
     if (!email.includes('@') || email.length > 320) {
       return jsonResponse(res, { error: '请输入有效的邮箱地址' }, 400);
+    }
+
+    // 验证邮箱域名 MX 记录（防止虚假邮箱）
+    const mxValid = await checkEmailMX(email);
+    if (!mxValid) {
+      return jsonResponse(res, { error: '邮箱域名无效，请使用真实邮箱' }, 400);
     }
 
     const existingUser = db.prepare('SELECT id FROM users WHERE username = ?').get(username);
@@ -251,7 +277,17 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
         return jsonResponse(res, { error: '注册失败，请稍后重试' }, 500);
       }
 
-      return jsonResponse(res, { ok: true, email: pending.email, username: pending.username, displayId: result.displayId });
+      // 自动登录：生成 player_key 和 JWT token
+      const playerKey = generateKey();
+      db.prepare('UPDATE users SET player_key = ? WHERE id = ?').run(playerKey, result.userId);
+      const token = signToken({ userId: result.userId, username: pending.username, tokenVersion: 0 });
+
+      return jsonResponse(res, {
+        ok: true, token, userId: result.userId, username: pending.username,
+        nickname: null, role: 'user',
+        email: pending.email, displayId: result.displayId, player_key: playerKey,
+        email_verified: true,
+      });
     }
 
     // 情况2：已注册用户补验证邮箱

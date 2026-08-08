@@ -70,7 +70,7 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
     setError(''); setMsg('');
 
     if (!username.trim() || (!password && mode !== 'forgot')) {
-      setError(mode === 'forgot' ? '请填写邮箱' : '请填写用户名/邮箱和密码');
+      setError(mode === 'forgot' ? '请填写邮箱' : '请填写邮箱和密码');
       return;
     }
     if (mode === 'register' && !email.trim()) {
@@ -370,10 +370,10 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
             <input
               value={username}
               onChange={e => setUsername(e.target.value)}
-              placeholder={mode === 'login' ? '用户名或邮箱' : '用户名 (2-20个字符)'}
+              placeholder={mode === 'register' ? '用户名 (2-20个字符)' : '邮箱'}
               style={inpStyle}
-              maxLength={mode === 'login' ? 320 : 20}
-              autoComplete={mode === 'login' ? 'username email' : 'username'}
+              maxLength={mode === 'register' ? 20 : 320}
+              autoComplete={mode === 'register' ? 'username' : 'email'}
             />
             <input
               type="password"

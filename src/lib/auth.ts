@@ -162,7 +162,7 @@ export async function resetPassword(token: string, password: string): Promise<{ 
 }
 
 // ===== 登录 =====
-// identifier 支持用户名或邮箱（含 @ 视为邮箱登录）
+// 仅支持邮箱登录
 export async function login(identifier: string, password: string): Promise<{
   token: string; username: string; userId: number; role: string;
   nickname: string | null;

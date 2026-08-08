@@ -106,22 +106,19 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
     }
 
     const body = await parseBody(req);
-    const rawIdentifier = sanitizeString(body.username, 320);
+    const email = sanitizeString(body.username, 320).toLowerCase();
     const password = typeof body.password === 'string' ? body.password : '';
 
-    if (!rawIdentifier || !password) {
-      return jsonResponse(res, { error: '用户名/邮箱和密码不能为空' }, 400);
+    if (!email || !password) {
+      return jsonResponse(res, { error: '邮箱和密码不能为空' }, 400);
     }
 
-    // 双路径登录：含 @ 视为邮箱登录，否则用户名登录
-    // 邮箱大小写不敏感：统一 lower 后匹配
-    const isEmail = rawIdentifier.includes('@');
-    let user;
-    if (isEmail) {
-      user = db.prepare('SELECT id, username, display_id, nickname, role, password_hash, player_key, email, email_verified_at, banned_at, token_version FROM users WHERE LOWER(email) = ?').get(rawIdentifier.toLowerCase());
-    } else {
-      user = db.prepare('SELECT id, username, display_id, nickname, role, password_hash, player_key, email, email_verified_at, banned_at, token_version FROM users WHERE username = ?').get(rawIdentifier);
+    if (!email.includes('@')) {
+      return jsonResponse(res, { error: '请使用邮箱登录' }, 400);
     }
+
+    // 邮箱登录（大小写不敏感）
+    const user = db.prepare('SELECT id, username, display_id, nickname, role, password_hash, player_key, email, email_verified_at, banned_at, token_version FROM users WHERE LOWER(email) = ?').get(email);
     if (!user) {
       // 时序防御：即使未找到用户也执行 bcrypt.compare，防止通过响应时间枚举账号
       try { await bcrypt.compare('timing-defense', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'); } catch {}

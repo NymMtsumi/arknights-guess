@@ -62,19 +62,15 @@ export default function HomePage() {
             description={t('menu.multiplayerDesc')}
             color="#ff6b6b"
           />
-          <MenuCard
-            href="/stats"
-            icon="📊"
-            label={t('menu.stats')}
-            description={t('menu.statsDesc')}
-            color="#4d94ff"
-          />
         </div>
 
         {/* 底部快捷链接 — 紧凑按钮行，参考弗一把设计 */}
         <div className="bottom-bar">
           <Link href="/leaderboard" className="bottom-bar-btn">
             🏆 {t('menu.leaderboard')}
+          </Link>
+          <Link href="/stats" className="bottom-bar-btn">
+            📊 {t('menu.stats')}
           </Link>
           <button
             className="bottom-bar-btn"

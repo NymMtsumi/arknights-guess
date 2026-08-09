@@ -63,6 +63,9 @@ cloudflared-linux-amd64
 *.db-journal
 package-lock.json
 
+# session exports (too large, not code)
+session-user-messages.md
+
 # external demo repos (avoid accidental gitlink commits)
 card-hover/
 css-effects/

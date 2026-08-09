@@ -62,3 +62,8 @@ cloudflared-linux-amd64
 *.db-wal
 *.db-journal
 package-lock.json
+
+# external demo repos (avoid accidental gitlink commits)
+card-hover/
+css-effects/
+cyberpunk-lp/

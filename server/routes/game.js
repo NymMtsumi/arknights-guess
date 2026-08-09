@@ -118,7 +118,6 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
       // 验证目标干员与服务器每日目标一致
       const expectedTarget = pickDailyTarget('hard');
       if (targetName !== expectedTarget.name) {
-        console.log(`[daily-mismatch] raw.body.targetName=${JSON.stringify(body.targetName)} sanitized=${JSON.stringify(targetName)} len=${targetName.length} hex=${Buffer.from(targetName, 'utf8').toString('hex')} expected=${JSON.stringify(expectedTarget.name)} elen=${expectedTarget.name.length} ehex=${Buffer.from(expectedTarget.name, 'utf8').toString('hex')}`);
         return jsonResponse(res, { error: '每日目标不匹配，可能已跨日，请刷新重试' }, 400);
       }
 

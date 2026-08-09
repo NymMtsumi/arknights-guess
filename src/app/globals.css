@@ -452,8 +452,8 @@ html:not([data-theme="blast"]) .scroll-slider-thumb:active {
   }
 
   .guess-row-winner td {
-    animation: cell-dance 0.55s ease-in-out both;
-    /* delay 由 inline style 按列递增设置 */
+    animation: cell-dance 0.55s ease-in-out backwards;
+    /* backwards: 避免 translateY(0) 持久化 GPU 层导致渲染偏移 */
   }
 
   /* --- 逐格交错揭示：新行每格依次淡入+缩放（来自 csgofriberg cell-reveal） --- */
@@ -463,8 +463,9 @@ html:not([data-theme="blast"]) .scroll-slider-thumb:active {
   }
 
   .guess-row-newest td {
-    animation: cell-reveal 0.28s ease-out both;
-    /* delay 由 inline style 按列递增设置 */
+    animation: cell-reveal 0.28s ease-out backwards;
+    /* backwards: 延迟期保持 from 状态，动画结束后释放（不持久化 scale）
+       避免 GPU 合成层导致 border-collapse 下 1px 渲染偏移 */
   }
 
   /* --- 搜索框抖动：无效猜测反馈（来自 Wordle shake） --- */

@@ -22,6 +22,11 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
     let difficulty = sanitizeString(body.difficulty || 'hard', 20);
     const targetName = sanitizeString(body.targetName || '', 100);
 
+    // 验证 mode 合法性
+    if (!['single', 'multi', 'daily'].includes(mode)) {
+      return jsonResponse(res, { error: 'mode 必须是 single、multi 或 daily' }, 400);
+    }
+
     let timestamp = body.timestamp;
     if (typeof timestamp === 'number') {
       if (timestamp <= 0 || !Number.isFinite(timestamp)) {
@@ -114,6 +119,8 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
       // 计算当天 UTC 日期
       const now = new Date();
       dailyDate = now.toISOString().slice(0, 10); // 'YYYY-MM-DD'
+      // 每日模式使用服务端时间做公平 tiebreak，不信任客户端时间戳
+      timestamp = now.toISOString();
 
       // 验证目标干员与服务器每日目标一致
       const expectedTarget = pickDailyTarget('hard');
@@ -138,11 +145,25 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
           return jsonResponse(res, { error: '今日已挑战' }, 409);
         }
       }
+
+      // 验证猜测次数在合理范围内（1-8）
+      if (guessCount < 1 || guessCount > 8) {
+        return jsonResponse(res, { error: 'guessCount 必须在 1-8 之间' }, 400);
+      }
     }
 
-    const result = db.prepare(
-      'INSERT INTO games (player_key, user_id, won, guess_count, difficulty, target_name, timestamp, mode, daily_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
-    ).run(player_key, userId || null, won ? 1 : 0, guessCount, difficulty, targetName, timestamp, mode, dailyDate);
+    let result;
+    try {
+      result = db.prepare(
+        'INSERT INTO games (player_key, user_id, won, guess_count, difficulty, target_name, timestamp, mode, daily_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+      ).run(player_key, userId || null, won ? 1 : 0, guessCount, difficulty, targetName, timestamp, mode, dailyDate);
+    } catch (e) {
+      // UNIQUE constraint — 并发去重命中
+      if (e.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+        return jsonResponse(res, { error: '今日已挑战' }, 409);
+      }
+      throw e;
+    }
 
     const extraHeaders = {};
     if (newPlayerKey) {
@@ -263,6 +284,19 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
       if (row) {
         played = true;
         result = { won: row.won === 1, guessCount: row.guess_count, timestamp: row.timestamp };
+      }
+    } else {
+      // 游客：通过 player_key cookie 查询
+      const cookies = parseCookies(req.headers.cookie || '');
+      const pk = cookies.player_key || sanitizeString(req.headers['x-player-key'] || '', 64);
+      if (pk) {
+        const row = db.prepare(
+          'SELECT won, guess_count, timestamp FROM games WHERE player_key = ? AND daily_date = ? AND user_id IS NULL'
+        ).get(pk, dailyDate);
+        if (row) {
+          played = true;
+          result = { won: row.won === 1, guessCount: row.guess_count, timestamp: row.timestamp };
+        }
       }
     }
 

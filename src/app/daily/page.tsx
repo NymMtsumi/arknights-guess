@@ -58,7 +58,7 @@ export default function DailyPage() {
       if (!savedRef.current) {
         const won = status === 'won';
         // 本地统计
-        saveGameStats(won, guesses.length, 'hard', target?.name || '');
+        saveGameStats(won, guesses.length, 'hard', target?.name || '', 'daily');
 
         // 提交到服务端（mode='daily'）
         const base = getServerUrl();

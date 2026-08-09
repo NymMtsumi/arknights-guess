@@ -27,6 +27,7 @@ FILES=(
   "auth.js"
   "utils.js"
   "characters.js"
+  "characters.json"
   "routes/auth.js"
   "routes/user.js"
   "routes/game.js"

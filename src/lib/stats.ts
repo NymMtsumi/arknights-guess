@@ -324,7 +324,7 @@ export async function saveGameToServer(won: boolean, guessCount: number, difficu
 }
 
 /** 单人游戏存档 */
-export function saveGameStats(won: boolean, guessCount: number, difficulty: string, targetName: string) {
+export function saveGameStats(won: boolean, guessCount: number, difficulty: string, targetName: string, mode: 'single' | 'daily' = 'single') {
   const stats = loadStats();
   stats.totalGames++;
   if (won) {
@@ -348,7 +348,8 @@ export function saveGameStats(won: boolean, guessCount: number, difficulty: stri
   });
 
   // 仅登录用户同步到服务器（游客纯本地存储）
-  if (getToken()) {
+  // 每日模式单独提交，不在此处重复写入
+  if (mode !== 'daily' && getToken()) {
     saveGameToServer(won, guessCount, difficulty, targetName).catch(() => {});
   }
 }

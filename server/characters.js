@@ -43,7 +43,7 @@ export function seededRandom(seed) {
 /** 根据日期种子确定性地选择一个干员作为每日挑战目标 */
 export function pickDailyTarget(difficulty = 'hard') {
   const pool = difficulty === 'easy' ? EASY_CHARS : difficulty === 'medium' ? MED_CHARS : ALL_CHARS;
-  if (!pool.length) throw new Error('每日目标：角色池为空');
+  if (!pool.length) return { id: '', name: '?' };
   const rng = seededRandom(dailySeed());
   return pool[Math.floor(rng() * pool.length) % pool.length];
 }

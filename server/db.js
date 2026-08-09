@@ -171,6 +171,8 @@ export function initSchema(db) {
 
   // 每日挑战去重：每个用户每天只能有一条记录
   try { db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_games_daily_unique ON games(user_id, daily_date) WHERE user_id IS NOT NULL AND daily_date IS NOT NULL'); } catch {}
+  try { db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_games_daily_guest_unique ON games(player_key, daily_date) WHERE user_id IS NULL AND daily_date IS NOT NULL'); } catch {}
+  try { db.exec('CREATE INDEX IF NOT EXISTS idx_games_daily_lb ON games(mode, daily_date, won)'); } catch {}
 
   // ===== 定期清理 =====
   // 清理过期记录（每小时）

@@ -52,12 +52,12 @@ process.on('unhandledRejection', (reason) => {
 // ===== 配置 =====
 const PORT = process.env.PORT || 3001;
 if (!process.env.JWT_SECRET) {
-  if (process.env.NODE_ENV === 'development' || (!process.env.SMTP_PASS && !process.env.DEPLOY_TOKEN)) {
-    // 本地开发：无 SMTP/DEPLOY 也无 JWT_SECRET → 使用 dev 密钥
+  if (process.env.NODE_ENV === 'development') {
+    // 仅本地开发允许使用 dev 密钥
     console.warn('[WARN] ⚠️ JWT_SECRET is not set — using dev default (local testing only)');
     process.env.JWT_SECRET = 'arknights-guess-dev-secret-local-only';
   } else {
-    // 生产环境：SMTP_PASS 或 DEPLOY_TOKEN 已设置 → JWT_SECRET 必须设置
+    // 生产环境必须设置 JWT_SECRET
     console.error('[FATAL] ⚠️ JWT_SECRET is not set in production!');
     console.error('[FATAL] Please set JWT_SECRET in .env: openssl rand -hex 32');
     process.exit(1);

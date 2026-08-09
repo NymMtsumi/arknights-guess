@@ -42,6 +42,13 @@ export default function HomePage() {
         {/* 大卡片 — 主要游戏入口 */}
         <div className="menu-grid" style={{ marginBottom: '36px' }}>
           <MenuCard
+            href="/daily"
+            icon="📅"
+            label={t('menu.daily')}
+            description={t('menu.dailyDesc')}
+            color="#ff9500"
+          />
+          <MenuCard
             href="/game"
             icon="🎯"
             label={t('menu.classic')}

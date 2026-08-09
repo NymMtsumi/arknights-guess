@@ -100,6 +100,7 @@ export function initSchema(db) {
     ['users', 'token_version', "INTEGER DEFAULT 0"],
     ['games', 'mode', "TEXT DEFAULT 'single'"],
     ['games', 'user_id', "INTEGER REFERENCES users(id)"],
+    ['games', 'daily_date', 'TEXT'],
   ]) {
     try { db.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${type}`); } catch {}
   }
@@ -167,6 +168,9 @@ export function initSchema(db) {
   try { db.exec('CREATE INDEX IF NOT EXISTS idx_admin_actions_action ON admin_actions(action, created_at)'); } catch {}
   try { db.exec('CREATE INDEX IF NOT EXISTS idx_email_verifications_token ON email_verifications(token_hash)'); } catch {}
   try { db.exec('CREATE INDEX IF NOT EXISTS idx_users_created ON users(created_at)'); } catch {}
+
+  // 每日挑战去重：每个用户每天只能有一条记录
+  try { db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_games_daily_unique ON games(user_id, daily_date) WHERE user_id IS NOT NULL AND daily_date IS NOT NULL'); } catch {}
 
   // ===== 定期清理 =====
   // 清理过期记录（每小时）

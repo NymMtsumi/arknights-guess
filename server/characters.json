@@ -10,10 +10,11 @@
     "faction": "罗德岛",
     "factionEn": "Rhodes Island",
     "rarity": 1,
-    "race": "机械",
-    "raceEn": "Robot",
+    "race": "未知",
+    "raceEn": "Unknown",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "cold",
     "releaseYear": 2019,
     "tags": [
       "支援机械",
@@ -21,8 +22,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "cold"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_286_cast3",
@@ -35,10 +35,11 @@
     "faction": "罗德岛",
     "factionEn": "Rhodes Island",
     "rarity": 1,
-    "race": "机械",
-    "raceEn": "Robot",
+    "race": "未知",
+    "raceEn": "Unknown",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "cold",
     "releaseYear": 2019,
     "tags": [
       "支援机械",
@@ -46,8 +47,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "cold"
+    "positionEn": "Melee"
   },
   {
     "id": "char_376_therex",
@@ -60,10 +60,11 @@
     "faction": "罗德岛",
     "factionEn": "Rhodes Island",
     "rarity": 1,
-    "race": "机械",
-    "raceEn": "Robot",
+    "race": "未知",
+    "raceEn": "Unknown",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "cold",
     "releaseYear": 2020,
     "tags": [
       "支援机械",
@@ -71,13 +72,12 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "cold"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4000_jnight",
     "name": "正义骑士号",
-    "nameEn": "Justice Knight",
+    "nameEn": "\"Justice Knight\"",
     "class": "狙击",
     "classEn": "Sniper",
     "subclass": "速射手",
@@ -85,10 +85,11 @@
     "faction": "卡西米尔,红松骑士团",
     "factionEn": "卡西米尔,红松骑士团",
     "rarity": 1,
-    "race": "机械",
-    "raceEn": "Robot",
+    "race": "未知",
+    "raceEn": "Unknown",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "cold",
     "releaseYear": 2021,
     "tags": [
       "支援机械",
@@ -96,8 +97,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "cold"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4077_palico",
@@ -111,17 +111,17 @@
     "factionEn": "Rhodes Island",
     "rarity": 1,
     "race": "未公开",
-    "raceEn": "Undisclosed",
+    "raceEn": "未公开",
     "gender": "未知",
     "genderEn": "Unknown",
+    "popularity": "cold",
     "releaseYear": 2023,
     "tags": [
       "控场"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "cold"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4091_ulika",
@@ -138,14 +138,14 @@
     "raceEn": "札拉克",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "cold",
     "releaseYear": 2023,
     "tags": [
       "控场"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "cold"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4093_frston",
@@ -158,10 +158,11 @@
     "faction": "罗德岛",
     "factionEn": "Rhodes Island",
     "rarity": 1,
-    "race": "机械",
-    "raceEn": "Robot",
+    "race": "未知",
+    "raceEn": "Unknown",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "cold",
     "releaseYear": 2023,
     "tags": [
       "支援机械",
@@ -169,8 +170,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "cold"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4136_phonor",
@@ -183,10 +183,11 @@
     "faction": "罗德岛",
     "factionEn": "Rhodes Island",
     "rarity": 1,
-    "race": "机械",
-    "raceEn": "Robot",
+    "race": "未知",
+    "raceEn": "Unknown",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "cold",
     "releaseYear": 2024,
     "tags": [
       "支援机械",
@@ -194,8 +195,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "cold"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4188_confes",
@@ -208,10 +208,11 @@
     "faction": "拉特兰",
     "factionEn": "Laterano",
     "rarity": 1,
-    "race": "机械",
-    "raceEn": "Robot",
-    "gender": "男",
-    "genderEn": "Male",
+    "race": "未知",
+    "raceEn": "Unknown",
+    "gender": "未知",
+    "genderEn": "Unknown",
+    "popularity": "cold",
     "releaseYear": 2025,
     "tags": [
       "支援机械",
@@ -219,8 +220,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "cold"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4227_gallus",
@@ -233,10 +233,11 @@
     "faction": "罗德岛",
     "factionEn": "Rhodes Island",
     "rarity": 1,
-    "race": "机械",
-    "raceEn": "Robot",
-    "gender": "女",
-    "genderEn": "Female",
+    "race": "未知",
+    "raceEn": "Unknown",
+    "gender": "未知",
+    "genderEn": "Unknown",
+    "popularity": "cold",
     "releaseYear": 2026,
     "tags": [
       "支援机械",
@@ -244,8 +245,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "cold"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4215_buddy",
@@ -259,9 +259,10 @@
     "factionEn": "Rhodes Island",
     "rarity": 1,
     "race": "未公开",
-    "raceEn": "Undisclosed",
+    "raceEn": "未公开",
     "gender": "未知",
     "genderEn": "Unknown",
+    "popularity": "cold",
     "releaseYear": 2026,
     "tags": [
       "费用回复",
@@ -269,8 +270,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "cold"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_502_nblade",
@@ -287,15 +287,14 @@
     "raceEn": "鬼",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "cold",
     "releaseYear": 2019,
     "tags": [
       "新手"
     ],
     "alterBase": "",
-    "_alters": "麒麟R夜刀",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "cold"
+    "positionEn": "Melee"
   },
   {
     "id": "char_500_noirc",
@@ -312,15 +311,14 @@
     "raceEn": "鬼",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "cold",
     "releaseYear": 2019,
     "tags": [
       "新手"
     ],
     "alterBase": "",
-    "_alters": "火龙S黑角",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "cold"
+    "positionEn": "Melee"
   },
   {
     "id": "char_503_rang",
@@ -337,14 +335,14 @@
     "raceEn": "萨弗拉",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "cold",
     "releaseYear": 2019,
     "tags": [
       "新手"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "cold"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_501_durin",
@@ -361,14 +359,14 @@
     "raceEn": "杜林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "cold",
     "releaseYear": 2019,
     "tags": [
       "新手"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "cold"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_009_12fce",
@@ -385,14 +383,14 @@
     "raceEn": "萨弗拉",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "cold",
     "releaseYear": 2019,
     "tags": [
       "新手"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "cold"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_123_fang",
@@ -409,15 +407,14 @@
     "raceEn": "Kuranta",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "cold",
     "releaseYear": 2019,
     "tags": [
       "费用回复"
     ],
     "alterBase": "",
-    "_alters": "历阵锐枪芬",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "cold"
+    "positionEn": "Melee"
   },
   {
     "id": "char_240_wyvern",
@@ -434,14 +431,14 @@
     "raceEn": "瓦伊凡",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "cold",
     "releaseYear": 2019,
     "tags": [
       "费用回复"
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "cold"
+    "positionEn": "Melee"
   },
   {
     "id": "char_192_falco",
@@ -458,6 +455,7 @@
     "raceEn": "Liberi",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "cold",
     "releaseYear": 2019,
     "tags": [
       "输出",
@@ -465,8 +463,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "cold"
+    "positionEn": "Melee"
   },
   {
     "id": "char_208_melan",
@@ -483,6 +480,7 @@
     "raceEn": "菲林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "cold",
     "releaseYear": 2019,
     "tags": [
       "输出",
@@ -490,8 +488,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "cold"
+    "positionEn": "Melee"
   },
   {
     "id": "char_281_popka",
@@ -508,6 +505,7 @@
     "raceEn": "卡特斯",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "cold",
     "releaseYear": 2019,
     "tags": [
       "群攻",
@@ -515,8 +513,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "cold"
+    "positionEn": "Melee"
   },
   {
     "id": "char_209_ardign",
@@ -533,14 +530,14 @@
     "raceEn": "佩洛",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "cold",
     "releaseYear": 2019,
     "tags": [
       "防护"
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "cold"
+    "positionEn": "Melee"
   },
   {
     "id": "char_122_beagle",
@@ -557,14 +554,14 @@
     "raceEn": "Perro",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "cold",
     "releaseYear": 2019,
     "tags": [
       "防护"
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "cold"
+    "positionEn": "Melee"
   },
   {
     "id": "char_284_spot",
@@ -581,6 +578,7 @@
     "raceEn": "瑞柏巴",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "cold",
     "releaseYear": 2019,
     "tags": [
       "防护",
@@ -588,8 +586,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "cold"
+    "positionEn": "Melee"
   },
   {
     "id": "char_124_kroos",
@@ -606,15 +603,14 @@
     "raceEn": "Cautus",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "cold",
     "releaseYear": 2019,
     "tags": [
       "输出"
     ],
-    "alterBase": "",
-    "_alters": "寒芒克洛丝",
+    "alterBase": "寒芒克洛丝",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "cold"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_211_adnach",
@@ -631,14 +627,14 @@
     "raceEn": "Sankta",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "cold",
     "releaseYear": 2019,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "cold"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_121_lava",
@@ -655,15 +651,14 @@
     "raceEn": "Sarkaz",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "cold",
     "releaseYear": 2019,
     "tags": [
       "群攻"
     ],
-    "alterBase": "",
-    "_alters": "炎狱炎熔",
+    "alterBase": "炎狱炎熔",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "cold"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_120_hibisc",
@@ -680,15 +675,14 @@
     "raceEn": "Sarkaz",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "cold",
     "releaseYear": 2019,
     "tags": [
       "治疗"
     ],
-    "alterBase": "",
-    "_alters": "濯尘芙蓉",
+    "alterBase": "濯尘芙蓉",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "cold"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_212_ansel",
@@ -705,14 +699,14 @@
     "raceEn": "卡特斯",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "cold",
     "releaseYear": 2019,
     "tags": [
       "治疗"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "cold"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_210_stward",
@@ -729,14 +723,14 @@
     "raceEn": "Vulpo",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "cold",
     "releaseYear": 2019,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "cold"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_278_orchid",
@@ -753,15 +747,14 @@
     "raceEn": "黎博利",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "cold",
     "releaseYear": 2019,
     "tags": [
       "减速"
     ],
     "alterBase": "",
-    "_alters": "焰狐龙梓兰",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "cold"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_141_nights",
@@ -778,6 +771,7 @@
     "raceEn": "菲林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "输出",
@@ -785,8 +779,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_109_fmout",
@@ -803,14 +796,14 @@
     "raceEn": "埃拉菲亚",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "群攻"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_253_greyy",
@@ -827,16 +820,15 @@
     "raceEn": "佩洛",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "群攻",
       "减速"
     ],
-    "alterBase": "",
-    "_alters": "承曦格雷伊",
+    "alterBase": "承曦格雷伊",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4051_akkord",
@@ -853,6 +845,7 @@
     "raceEn": "卡普里尼",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "群攻",
@@ -860,8 +853,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_328_cammou",
@@ -878,6 +870,7 @@
     "raceEn": "札拉克",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "输出",
@@ -885,8 +878,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_469_indigo",
@@ -903,6 +895,7 @@
     "raceEn": "斐迪亚",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2021,
     "tags": [
       "输出",
@@ -910,8 +903,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4004_pudd",
@@ -928,14 +920,14 @@
     "raceEn": "阿戈尔",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2021,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_235_jesica",
@@ -952,16 +944,15 @@
     "raceEn": "菲林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "输出",
       "生存"
     ],
     "alterBase": "",
-    "_alters": "涤火杰西卡",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_126_shotst",
@@ -978,6 +969,7 @@
     "raceEn": "库兰塔",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "输出",
@@ -985,8 +977,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_190_clour",
@@ -1003,14 +994,14 @@
     "raceEn": "沃尔珀",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_133_mm",
@@ -1027,6 +1018,7 @@
     "raceEn": "Liberi",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "输出",
@@ -1034,8 +1026,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_118_yuki",
@@ -1045,13 +1036,14 @@
     "classEn": "Sniper",
     "subclass": "炮手",
     "subclassEn": "Artilleryman",
-    "faction": "东国",
-    "factionEn": "Higashi",
+    "faction": "东",
+    "factionEn": "东",
     "rarity": 4,
     "race": "阿纳缇",
     "raceEn": "Anaty",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "群攻",
@@ -1059,8 +1051,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_440_pinecn",
@@ -1077,6 +1068,7 @@
     "raceEn": "黎博利",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "群攻",
@@ -1084,8 +1076,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_302_glaze",
@@ -1102,6 +1093,7 @@
     "raceEn": "萨科塔",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "输出",
@@ -1109,8 +1101,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_366_acdrop",
@@ -1127,14 +1118,14 @@
     "raceEn": "黎博利",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4062_totter",
@@ -1151,14 +1142,14 @@
     "raceEn": "黎博利",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2022,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4100_caper",
@@ -1175,14 +1166,14 @@
     "raceEn": "卡特斯",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2023,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_198_blackd",
@@ -1199,6 +1190,7 @@
     "raceEn": "依特拉",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "费用回复",
@@ -1206,8 +1198,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_149_scave",
@@ -1224,6 +1215,7 @@
     "raceEn": "Zalak",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "费用回复",
@@ -1231,8 +1223,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_290_vigna",
@@ -1249,6 +1240,7 @@
     "raceEn": "萨卡兹",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "输出",
@@ -1256,8 +1248,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_151_myrtle",
@@ -1274,6 +1265,7 @@
     "raceEn": "杜林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2019,
     "tags": [
       "费用回复",
@@ -1281,8 +1273,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_452_bstalk",
@@ -1299,6 +1290,7 @@
     "raceEn": "瑞柏巴",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2021,
     "tags": [
       "费用回复",
@@ -1306,8 +1298,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4208_wintim",
@@ -1324,6 +1315,7 @@
     "raceEn": "黎博利",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "费用回复",
@@ -1331,8 +1323,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_130_doberm",
@@ -1349,6 +1340,7 @@
     "raceEn": "佩洛",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "输出",
@@ -1356,8 +1348,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_289_gyuki",
@@ -1367,13 +1358,14 @@
     "classEn": "Guard",
     "subclass": "无畏者",
     "subclassEn": "Dreadnought",
-    "faction": "东国",
-    "factionEn": "Higashi",
+    "faction": "东",
+    "factionEn": "东",
     "rarity": 4,
     "race": "鬼",
     "raceEn": "鬼",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "生存",
@@ -1381,8 +1373,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_159_peacok",
@@ -1399,6 +1390,7 @@
     "raceEn": "未知（疑似黎博利）",
     "gender": "断罪",
     "genderEn": "断罪",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "输出",
@@ -1408,8 +1400,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_193_frostl",
@@ -1426,6 +1417,7 @@
     "raceEn": "沃尔珀",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "减速",
@@ -1433,8 +1425,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_127_estell",
@@ -1451,6 +1442,7 @@
     "raceEn": "阿达克利斯",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "群攻",
@@ -1458,8 +1450,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_185_frncat",
@@ -1476,14 +1467,14 @@
     "raceEn": "菲林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_301_cutter",
@@ -1500,6 +1491,7 @@
     "raceEn": "沃尔珀",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "爆发",
@@ -1507,8 +1499,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_337_utage",
@@ -1518,13 +1509,14 @@
     "classEn": "Guard",
     "subclass": "武者",
     "subclassEn": "Soloblade",
-    "faction": "东国",
-    "factionEn": "Higashi",
+    "faction": "东",
+    "factionEn": "东",
     "rarity": 4,
     "race": "不明",
     "raceEn": "不明",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "输出",
@@ -1532,8 +1524,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_271_spikes",
@@ -1550,14 +1541,14 @@
     "raceEn": "萨科塔",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4067_lolxh",
@@ -1574,14 +1565,14 @@
     "raceEn": "菲林",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2022,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4063_quartz",
@@ -1598,14 +1589,14 @@
     "raceEn": "鲁珀",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2022,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_491_humus",
@@ -1622,6 +1613,7 @@
     "raceEn": "丰蹄",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2023,
     "tags": [
       "输出",
@@ -1629,8 +1621,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_445_wscoot",
@@ -1647,14 +1638,14 @@
     "raceEn": "菲林",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "爆发"
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_237_gravel",
@@ -1671,6 +1662,7 @@
     "raceEn": "札拉克",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "快速复活",
@@ -1678,8 +1670,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_272_strong",
@@ -1689,13 +1680,14 @@
     "classEn": "Specialist",
     "subclass": "行商",
     "subclassEn": "Merchant",
-    "faction": "龙门",
-    "factionEn": "Lungmen",
+    "faction": "炎,龙门",
+    "factionEn": "炎-龙门",
     "rarity": 4,
     "race": "乌萨斯",
     "raceEn": "乌萨斯",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "快速复活",
@@ -1703,8 +1695,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_236_rope",
@@ -1714,21 +1705,21 @@
     "classEn": "Specialist",
     "subclass": "钩索师",
     "subclassEn": "Hookmaster",
-    "faction": "龙门",
-    "factionEn": "Lungmen",
+    "faction": "炎,龙门",
+    "factionEn": "炎-龙门",
     "rarity": 4,
     "race": "卡特斯",
     "raceEn": "卡特斯",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "位移"
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_117_myrrh",
@@ -1745,14 +1736,14 @@
     "raceEn": "Vulpo",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "治疗"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_187_ccheal",
@@ -1769,15 +1760,14 @@
     "raceEn": "阿达克利斯",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "治疗"
     ],
-    "alterBase": "",
-    "_alters": "百炼嘉维尔",
+    "alterBase": "百炼嘉维尔",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_298_susuro",
@@ -1794,14 +1784,14 @@
     "raceEn": "沃尔珀",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "治疗"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_181_flower",
@@ -1818,15 +1808,14 @@
     "raceEn": "沃尔珀",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "治疗"
     ],
     "alterBase": "",
-    "_alters": "撷英调香师",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_385_finlpp",
@@ -1843,6 +1832,7 @@
     "raceEn": "阿戈尔",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "治疗",
@@ -1850,8 +1840,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4041_chnut",
@@ -1868,14 +1857,14 @@
     "raceEn": "杜林",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2022,
     "tags": [
       "治疗"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_199_yak",
@@ -1892,14 +1881,14 @@
     "raceEn": "丰蹄",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "防护"
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_150_snakek",
@@ -1916,14 +1905,14 @@
     "raceEn": "Petram",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "防护"
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_381_bubble",
@@ -1940,14 +1929,14 @@
     "raceEn": "塞拉托",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "防护"
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4130_luton",
@@ -1964,6 +1953,7 @@
     "raceEn": "札拉克",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "生存",
@@ -1971,8 +1961,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_196_sunbr",
@@ -1989,6 +1978,7 @@
     "raceEn": "乌萨斯",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "防护",
@@ -1996,8 +1986,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_260_durnar",
@@ -2014,6 +2003,7 @@
     "raceEn": "沃尔珀",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "防护",
@@ -2021,8 +2011,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_110_deepcl",
@@ -2039,14 +2028,14 @@
     "raceEn": "未公开",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "召唤"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_183_skgoat",
@@ -2063,14 +2052,14 @@
     "raceEn": "卡普里尼",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "减速"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_258_podego",
@@ -2087,6 +2076,7 @@
     "raceEn": "佩洛",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "减速",
@@ -2094,8 +2084,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_484_robrta",
@@ -2112,6 +2101,7 @@
     "raceEn": "阿纳缇",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2021,
     "tags": [
       "防护",
@@ -2119,8 +2109,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_355_ethan",
@@ -2137,6 +2126,7 @@
     "raceEn": "萨弗拉",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "输出",
@@ -2144,8 +2134,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_277_sqrrel",
@@ -2155,21 +2144,21 @@
     "classEn": "Specialist",
     "subclass": "推击手",
     "subclassEn": "Push Stroker",
-    "faction": "龙门",
-    "factionEn": "Lungmen",
+    "faction": "炎,龙门",
+    "factionEn": "炎-龙门",
     "rarity": 4,
     "race": "札拉克",
     "raceEn": "札拉克",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "位移"
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4107_vrdant",
@@ -2186,6 +2175,7 @@
     "raceEn": "斐迪亚",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2023,
     "tags": [
       "生存",
@@ -2193,8 +2183,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4165_ctrail",
@@ -2211,6 +2200,7 @@
     "raceEn": "札拉克",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "高空",
@@ -2218,8 +2208,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_128_plosis",
@@ -2236,6 +2225,7 @@
     "raceEn": "Liberi",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2019,
     "tags": [
       "治疗",
@@ -2243,8 +2233,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_275_breeze",
@@ -2261,6 +2250,7 @@
     "raceEn": "沃尔珀",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "治疗",
@@ -2268,8 +2258,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4163_rosesa",
@@ -2286,6 +2275,7 @@
     "raceEn": "斐迪亚",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "治疗",
@@ -2293,8 +2283,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_115_headbr",
@@ -2311,16 +2300,15 @@
     "raceEn": "Ursus",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "费用回复",
       "支援"
     ],
     "alterBase": "",
-    "_alters": "怒潮凛冬",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_102_texas",
@@ -2331,22 +2319,21 @@
     "subclass": "尖兵",
     "subclassEn": "Pioneer",
     "faction": "炎,龙门,企鹅物流",
-    "factionEn": "炎,龙门,企鹅物流",
+    "factionEn": "炎-龙门,企鹅物流",
     "rarity": 5,
     "race": "鲁珀",
     "raceEn": "Lupo",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2019,
     "tags": [
       "费用回复",
       "控场"
     ],
-    "alterBase": "",
-    "_alters": "缄默德克萨斯",
+    "alterBase": "缄默德克萨斯",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_349_chiave",
@@ -2363,6 +2350,7 @@
     "raceEn": "沃尔珀",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "费用回复",
@@ -2370,8 +2358,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_488_buildr",
@@ -2388,6 +2375,7 @@
     "raceEn": "黎博利",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2023,
     "tags": [
       "费用回复",
@@ -2395,8 +2383,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4023_rfalcn",
@@ -2413,6 +2400,7 @@
     "raceEn": "黎博利",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "费用回复",
@@ -2420,8 +2408,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4199_makiri",
@@ -2431,13 +2418,14 @@
     "classEn": "Vanguard",
     "subclass": "策士",
     "subclassEn": "Counsellor",
-    "faction": "东国",
-    "factionEn": "Higashi",
+    "faction": "东",
+    "factionEn": "东",
     "rarity": 5,
     "race": "鲁珀",
     "raceEn": "鲁珀",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "费用回复",
@@ -2445,8 +2433,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_261_sddrag",
@@ -2463,16 +2450,15 @@
     "raceEn": "德拉克",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "费用回复",
       "输出"
     ],
     "alterBase": "",
-    "_alters": "焰影苇草",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_496_wildmn",
@@ -2489,6 +2475,7 @@
     "raceEn": "库兰塔",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2021,
     "tags": [
       "费用回复",
@@ -2496,8 +2483,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_1036_fang2",
@@ -2514,6 +2500,7 @@
     "raceEn": "库兰塔",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "费用回复",
@@ -2521,8 +2508,7 @@
     ],
     "alterBase": "芬",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_401_elysm",
@@ -2539,6 +2525,7 @@
     "raceEn": "黎博利",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "hot",
     "releaseYear": 2020,
     "tags": [
       "费用回复",
@@ -2546,8 +2533,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4119_wanqin",
@@ -2564,6 +2550,7 @@
     "raceEn": "丰蹄",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "费用回复",
@@ -2571,8 +2558,32 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
+  },
+  {
+    "id": "char_4237_jcinta",
+    "name": "嘉辛塔",
+    "nameEn": "Jacinta",
+    "class": "先锋",
+    "classEn": "Vanguard",
+    "subclass": "执旗手",
+    "subclassEn": "Standard Bearer",
+    "faction": "雷姆必拓",
+    "factionEn": "Rim Billiton",
+    "rarity": 5,
+    "race": "卡特斯",
+    "raceEn": "卡特斯",
+    "gender": "女",
+    "genderEn": "Female",
+    "popularity": "normal",
+    "releaseYear": 2026,
+    "tags": [
+      "费用回复",
+      "防护"
+    ],
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_476_blkngt",
@@ -2589,6 +2600,7 @@
     "raceEn": "萨弗拉",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2022,
     "tags": [
       "费用回复",
@@ -2596,8 +2608,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4147_mitm",
@@ -2614,6 +2625,7 @@
     "raceEn": "萨卡兹",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "费用回复",
@@ -2621,8 +2633,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_497_ctable",
@@ -2639,6 +2650,7 @@
     "raceEn": "黎博利",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2022,
     "tags": [
       "费用回复",
@@ -2646,8 +2658,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4017_puzzle",
@@ -2664,6 +2675,7 @@
     "raceEn": "瓦伊凡",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2022,
     "tags": [
       "费用回复",
@@ -2671,8 +2683,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4144_chilc",
@@ -2689,6 +2700,7 @@
     "raceEn": "半身人（自称）",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "费用回复",
@@ -2696,8 +2708,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4052_surfer",
@@ -2714,6 +2725,7 @@
     "raceEn": "札拉克",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "费用回复",
@@ -2721,8 +2733,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_308_swire",
@@ -2733,22 +2744,21 @@
     "subclass": "教官",
     "subclassEn": "Instructor",
     "faction": "炎,龙门,龙门近卫局",
-    "factionEn": "炎,龙门,龙门近卫局",
+    "factionEn": "炎-龙门,龙门近卫局",
     "rarity": 5,
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "输出",
       "支援"
     ],
     "alterBase": "",
-    "_alters": "琳琅诗怀雅",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_265_sophia",
@@ -2765,6 +2775,7 @@
     "raceEn": "库兰塔",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "输出",
@@ -2772,8 +2783,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4106_bryota",
@@ -2790,6 +2800,7 @@
     "raceEn": "黎博利",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2023,
     "tags": [
       "输出",
@@ -2797,8 +2808,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4125_rdoc",
@@ -2812,9 +2822,10 @@
     "factionEn": "彩虹小队",
     "rarity": 5,
     "race": "未知",
-    "raceEn": "未知",
+    "raceEn": "Unknown",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "治疗",
@@ -2822,8 +2833,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_106_franka",
@@ -2840,6 +2850,7 @@
     "raceEn": "Vulpo",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "输出",
@@ -2847,8 +2858,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_131_flameb",
@@ -2865,6 +2875,7 @@
     "raceEn": "萨卡兹",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "输出",
@@ -2872,8 +2883,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_154_morgan",
@@ -2890,14 +2900,14 @@
     "raceEn": "菲林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2023,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4142_laios",
@@ -2914,6 +2924,7 @@
     "raceEn": "长身人（自称）",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "输出",
@@ -2921,8 +2932,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_155_tiger",
@@ -2939,6 +2949,7 @@
     "raceEn": "菲林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "输出",
@@ -2946,8 +2957,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_415_flint",
@@ -2964,14 +2974,14 @@
     "raceEn": "黎博利",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_157_dagda",
@@ -2988,6 +2998,7 @@
     "raceEn": "菲林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2022,
     "tags": [
       "输出",
@@ -2995,8 +3006,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_140_whitew",
@@ -3013,16 +3023,15 @@
     "raceEn": "Lupo",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2019,
     "tags": [
       "输出",
       "削弱"
     ],
     "alterBase": "",
-    "_alters": "荒芜拉普兰德",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_294_ayer",
@@ -3039,6 +3048,7 @@
     "raceEn": "卡特斯",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "输出",
@@ -3046,8 +3056,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_194_leto",
@@ -3064,6 +3073,7 @@
     "raceEn": "乌萨斯",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2023,
     "tags": [
       "输出",
@@ -3071,8 +3081,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4083_chimes",
@@ -3089,14 +3098,14 @@
     "raceEn": "丰蹄",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2023,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_252_bibeak",
@@ -3113,6 +3122,7 @@
     "raceEn": "黎博利",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "爆发",
@@ -3120,8 +3130,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_459_tachak",
@@ -3135,9 +3144,10 @@
     "factionEn": "彩虹小队",
     "rarity": 5,
     "race": "未知",
-    "raceEn": "未知",
+    "raceEn": "Unknown",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2021,
     "tags": [
       "爆发",
@@ -3145,8 +3155,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_143_ghost",
@@ -3163,16 +3172,15 @@
     "raceEn": "未公开",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2019,
     "tags": [
       "群攻",
       "生存"
     ],
-    "alterBase": "",
-    "_alters": "归溟幽灵鲨",
+    "alterBase": "归溟幽灵鲨",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_356_broca",
@@ -3189,6 +3197,7 @@
     "raceEn": "菲林",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "群攻",
@@ -3196,8 +3205,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4126_fuze",
@@ -3211,9 +3219,10 @@
     "factionEn": "彩虹小队",
     "rarity": 5,
     "race": "未知",
-    "raceEn": "未知",
+    "raceEn": "Unknown",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "群攻",
@@ -3221,8 +3230,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4166_varkis",
@@ -3239,6 +3247,7 @@
     "raceEn": "丰蹄",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2026,
     "tags": [
       "群攻",
@@ -3246,8 +3255,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_274_astesi",
@@ -3264,6 +3272,7 @@
     "raceEn": "Liberi",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "输出",
@@ -3271,8 +3280,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_333_sidero",
@@ -3289,6 +3297,7 @@
     "raceEn": "丰蹄",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "生存",
@@ -3296,8 +3305,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_475_akafyu",
@@ -3307,13 +3315,14 @@
     "classEn": "Guard",
     "subclass": "武者",
     "subclassEn": "Soloblade",
-    "faction": "东国",
-    "factionEn": "Higashi",
+    "faction": "东",
+    "factionEn": "东",
     "rarity": 5,
     "race": "阿戈尔",
     "raceEn": "阿戈尔",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2021,
     "tags": [
       "生存",
@@ -3321,8 +3330,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_1030_noirc2",
@@ -3339,6 +3347,7 @@
     "raceEn": "鬼",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2023,
     "tags": [
       "生存",
@@ -3346,8 +3355,7 @@
     ],
     "alterBase": "黑角",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_421_crow",
@@ -3364,14 +3372,14 @@
     "raceEn": "黎博利",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2021,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4066_highmo",
@@ -3388,14 +3396,14 @@
     "raceEn": "阿戈尔",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2022,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_486_takila",
@@ -3412,14 +3420,14 @@
     "raceEn": "佩洛",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2021,
     "tags": [
       "爆发"
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4131_odda",
@@ -3436,6 +3444,7 @@
     "raceEn": "萨卡兹",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "群攻",
@@ -3443,8 +3452,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4187_graceb",
@@ -3461,6 +3469,7 @@
     "raceEn": "未公开",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "爆发",
@@ -3468,8 +3477,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4185_amoris",
@@ -3483,9 +3491,10 @@
     "factionEn": "Ave Mujica",
     "rarity": 5,
     "race": "未知",
-    "raceEn": "未知",
+    "raceEn": "Unknown",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "群攻",
@@ -3494,8 +3503,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_394_hadiya",
@@ -3512,6 +3520,7 @@
     "raceEn": "卡普里尼",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "输出",
@@ -3519,8 +3528,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_1049_catap2",
@@ -3537,6 +3545,7 @@
     "raceEn": "库兰塔",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2026,
     "tags": [
       "群攻",
@@ -3545,8 +3554,7 @@
     ],
     "alterBase": "空爆",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_129_bluep",
@@ -3563,14 +3571,14 @@
     "raceEn": "Anura",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2019,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_204_platnm",
@@ -3587,14 +3595,14 @@
     "raceEn": "库兰塔",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_367_swllow",
@@ -3611,14 +3619,14 @@
     "raceEn": "黎博利",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_365_aprl",
@@ -3635,14 +3643,14 @@
     "raceEn": "卡特斯",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1021_kroos2",
@@ -3659,14 +3667,14 @@
     "raceEn": "卡特斯",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2022,
     "tags": [
       "输出"
     ],
     "alterBase": "克洛丝",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_498_inside",
@@ -3683,14 +3691,14 @@
     "raceEn": "萨科塔",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2023,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_219_meteo",
@@ -3707,6 +3715,7 @@
     "raceEn": "萨卡兹",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2019,
     "tags": [
       "群攻",
@@ -3714,8 +3723,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_379_sesa",
@@ -3732,6 +3740,7 @@
     "raceEn": "瓦伊凡",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "群攻",
@@ -3739,8 +3748,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4078_bdhkgt",
@@ -3757,6 +3765,7 @@
     "raceEn": "阿纳萨",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2023,
     "tags": [
       "群攻",
@@ -3764,8 +3773,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_279_excu",
@@ -3782,15 +3790,14 @@
     "raceEn": "Sankta",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "hot",
     "releaseYear": 2019,
     "tags": [
       "群攻"
     ],
     "alterBase": "",
-    "_alters": "圣约送葬人",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_346_aosta",
@@ -3807,14 +3814,14 @@
     "raceEn": "鲁珀",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "群攻"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4203_kichi",
@@ -3824,21 +3831,21 @@
     "classEn": "Sniper",
     "subclass": "散射手",
     "subclassEn": "Flinger",
-    "faction": "东国",
-    "factionEn": "Higashi",
+    "faction": "东",
+    "factionEn": "东",
     "rarity": 5,
     "race": "佩洛",
     "raceEn": "佩洛",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "群攻"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4213_skybx",
@@ -3855,14 +3862,14 @@
     "raceEn": "萨弗拉",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "群攻"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_002_amiya",
@@ -3879,15 +3886,14 @@
     "raceEn": "Cautus/Chimera",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2019,
     "tags": [
       "输出"
     ],
     "alterBase": "",
-    "_alters": "升变阿米娅",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_405_absin",
@@ -3904,14 +3910,14 @@
     "raceEn": "乌萨斯",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_411_tomimi",
@@ -3928,6 +3934,7 @@
     "raceEn": "阿达克利斯",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "输出",
@@ -3935,8 +3942,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_466_qanik",
@@ -3953,6 +3959,7 @@
     "raceEn": "沃尔珀",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2022,
     "tags": [
       "输出",
@@ -3960,8 +3967,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_166_skfire",
@@ -3978,6 +3984,7 @@
     "raceEn": "菲林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "群攻",
@@ -3985,8 +3992,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_306_leizi",
@@ -4003,15 +4009,14 @@
     "raceEn": "麒麟",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "输出"
     ],
     "alterBase": "",
-    "_alters": "司霆惊蛰",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_135_halo",
@@ -4028,15 +4033,14 @@
     "raceEn": "黎博利",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2022,
     "tags": [
       "输出"
     ],
     "alterBase": "",
-    "_alters": "溯光星源",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_344_beewax",
@@ -4053,6 +4057,7 @@
     "raceEn": "卡普里尼",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "群攻",
@@ -4060,8 +4065,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_373_lionhd",
@@ -4078,6 +4082,7 @@
     "raceEn": "卡特斯",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "群攻",
@@ -4085,8 +4090,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_341_sntlla",
@@ -4103,6 +4107,7 @@
     "raceEn": "菲林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2023,
     "tags": [
       "群攻",
@@ -4110,8 +4115,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4031_liesel",
@@ -4128,6 +4132,7 @@
     "raceEn": "卡普里尼",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2026,
     "tags": [
       "群攻",
@@ -4135,8 +4140,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_388_mint",
@@ -4153,6 +4157,7 @@
     "raceEn": "菲林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "群攻",
@@ -4160,8 +4165,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_338_iris",
@@ -4178,14 +4182,14 @@
     "raceEn": "菲林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2021,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_297_hamoni",
@@ -4202,14 +4206,14 @@
     "raceEn": "菲林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2022,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4110_delphn",
@@ -4226,14 +4230,14 @@
     "raceEn": "菲林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2023,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1011_lava2",
@@ -4250,14 +4254,14 @@
     "raceEn": "萨卡兹",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2021,
     "tags": [
       "输出"
     ],
     "alterBase": "炎熔",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_489_serum",
@@ -4274,6 +4278,7 @@
     "raceEn": "斐迪亚",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2021,
     "tags": [
       "群攻",
@@ -4281,8 +4286,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_446_aroma",
@@ -4299,6 +4303,7 @@
     "raceEn": "鲁珀",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "群攻",
@@ -4306,8 +4311,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4013_kjera",
@@ -4324,6 +4328,7 @@
     "raceEn": "未公开",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2021,
     "tags": [
       "输出",
@@ -4331,8 +4336,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4040_rockr",
@@ -4349,14 +4353,14 @@
     "raceEn": "菲林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2022,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4054_malist",
@@ -4373,14 +4377,38 @@
     "raceEn": "杜林",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2022,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
+  },
+  {
+    "id": "char_4236_tmslot",
+    "name": "时隙",
+    "nameEn": "Timeslot",
+    "class": "术师",
+    "classEn": "Caster",
+    "subclass": "驭械术师",
+    "subclassEn": "Mech-Accord Caster",
+    "faction": "雷姆必拓",
+    "factionEn": "Rim Billiton",
+    "rarity": 5,
+    "race": "阿纳缇",
+    "raceEn": "阿纳缇",
+    "gender": "女",
+    "genderEn": "Female",
+    "popularity": "normal",
+    "releaseYear": 2026,
+    "tags": [
+      "输出"
+    ],
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged"
   },
   {
     "id": "char_499_kaitou",
@@ -4397,6 +4425,7 @@
     "raceEn": "卡普里尼",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2023,
     "tags": [
       "元素",
@@ -4404,8 +4433,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4081_warmy",
@@ -4422,6 +4450,7 @@
     "raceEn": "卡特斯",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "元素",
@@ -4429,8 +4458,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4198_christ",
@@ -4447,6 +4475,7 @@
     "raceEn": "未公开",
     "gender": "女士",
     "genderEn": "女士",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "元素",
@@ -4454,8 +4483,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4164_tecno",
@@ -4472,14 +4500,14 @@
     "raceEn": "杜林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "召唤"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_242_otter",
@@ -4496,6 +4524,7 @@
     "raceEn": "阿纳缇",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "召唤",
@@ -4503,8 +4532,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_336_folivo",
@@ -4521,6 +4549,7 @@
     "raceEn": "皮洛萨",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "召唤",
@@ -4528,8 +4557,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4140_lasher",
@@ -4546,6 +4574,7 @@
     "raceEn": "黎博利",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "召唤",
@@ -4553,8 +4582,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_108_silent",
@@ -4571,15 +4599,14 @@
     "raceEn": "Liberi",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "治疗"
     ],
     "alterBase": "",
-    "_alters": "淬羽赫默",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_171_bldsk",
@@ -4596,6 +4623,7 @@
     "raceEn": "Sarkaz",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2019,
     "tags": [
       "治疗",
@@ -4603,8 +4631,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_345_folnic",
@@ -4621,6 +4648,7 @@
     "raceEn": "菲林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "治疗",
@@ -4628,8 +4656,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4196_reckpr",
@@ -4646,14 +4673,14 @@
     "raceEn": "佩洛",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "治疗"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_348_ceylon",
@@ -4670,14 +4697,14 @@
     "raceEn": "黎博利",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "治疗"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_436_whispr",
@@ -4694,14 +4721,14 @@
     "raceEn": "阿戈尔",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "治疗"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4173_nowell",
@@ -4718,14 +4745,14 @@
     "raceEn": "沃尔珀",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "治疗"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_402_tuye",
@@ -4742,14 +4769,14 @@
     "raceEn": "丰蹄",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2021,
     "tags": [
       "治疗"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_473_mberry",
@@ -4766,14 +4793,14 @@
     "raceEn": "黎博利",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2021,
     "tags": [
       "治疗"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_449_glider",
@@ -4790,14 +4817,14 @@
     "raceEn": "札拉克",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2021,
     "tags": [
       "治疗"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4114_harold",
@@ -4814,14 +4841,14 @@
     "raceEn": "菲林",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2023,
     "tags": [
       "治疗"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1024_hbisc2",
@@ -4838,14 +4865,14 @@
     "raceEn": "萨卡兹",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2022,
     "tags": [
       "治疗"
     ],
     "alterBase": "芙蓉",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_494_vendla",
@@ -4862,14 +4889,14 @@
     "raceEn": "菲林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2023,
     "tags": [
       "治疗"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4071_peper",
@@ -4886,14 +4913,14 @@
     "raceEn": "萨卡兹",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2022,
     "tags": [
       "治疗"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4139_papyrs",
@@ -4910,14 +4937,14 @@
     "raceEn": "菲林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "治疗"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4224_turdus",
@@ -4934,14 +4961,14 @@
     "raceEn": "黎博利",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2026,
     "tags": [
       "治疗"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4222_taraxa",
@@ -4958,14 +4985,14 @@
     "raceEn": "库兰塔",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2026,
     "tags": [
       "治疗"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_148_nearl",
@@ -4982,16 +5009,15 @@
     "raceEn": "Kuranta",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2019,
     "tags": [
       "防护",
       "治疗"
     ],
-    "alterBase": "",
-    "_alters": "耀骑士临光",
+    "alterBase": "耀骑士临光",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_226_hmau",
@@ -5002,12 +5028,13 @@
     "subclass": "守护者",
     "subclassEn": "Guardian",
     "faction": "炎,龙门,鲤氏侦探事务所",
-    "factionEn": "炎,龙门,鲤氏侦探事务所",
+    "factionEn": "炎-龙门,鲤氏侦探事务所",
     "rarity": 5,
     "race": "佩洛",
     "raceEn": "佩洛",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "防护",
@@ -5015,8 +5042,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4109_baslin",
@@ -5033,6 +5059,7 @@
     "raceEn": "鲁珀",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2023,
     "tags": [
       "防护",
@@ -5040,8 +5067,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4143_sensi",
@@ -5058,6 +5084,7 @@
     "raceEn": "矮人（自称）",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "防护",
@@ -5065,8 +5092,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_144_red",
@@ -5083,6 +5109,7 @@
     "raceEn": "Lupo",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2019,
     "tags": [
       "快速复活",
@@ -5090,8 +5117,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_243_waaifu",
@@ -5102,12 +5128,13 @@
     "subclass": "处决者",
     "subclassEn": "Executor",
     "faction": "炎,龙门,鲤氏侦探事务所",
-    "factionEn": "炎,龙门,鲤氏侦探事务所",
+    "factionEn": "炎-龙门,鲤氏侦探事务所",
     "rarity": 5,
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "快速复活",
@@ -5115,8 +5142,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_214_kafka",
@@ -5133,6 +5159,7 @@
     "raceEn": "黎博利",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "快速复活",
@@ -5140,8 +5167,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_455_nothin",
@@ -5158,6 +5184,7 @@
     "raceEn": "黎博利",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2021,
     "tags": [
       "快速复活",
@@ -5165,8 +5192,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4155_talr",
@@ -5183,6 +5209,7 @@
     "raceEn": "鲁珀",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "快速复活",
@@ -5190,8 +5217,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_107_liskam",
@@ -5208,6 +5234,7 @@
     "raceEn": "Vouivre",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2019,
     "tags": [
       "防护",
@@ -5215,8 +5242,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4137_udflow",
@@ -5233,6 +5259,7 @@
     "raceEn": "阿戈尔",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "防护",
@@ -5241,8 +5268,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_201_moeshd",
@@ -5253,12 +5279,13 @@
     "subclass": "铁卫",
     "subclassEn": "Protector",
     "faction": "炎,龙门,企鹅物流",
-    "factionEn": "炎,龙门,企鹅物流",
+    "factionEn": "炎-龙门,企鹅物流",
     "rarity": 5,
     "race": "丰蹄",
     "raceEn": "丰蹄",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "防护",
@@ -5266,8 +5293,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_325_bison",
@@ -5277,21 +5303,21 @@
     "classEn": "Defender",
     "subclass": "铁卫",
     "subclassEn": "Protector",
-    "faction": "龙门",
-    "factionEn": "Lungmen",
+    "faction": "炎,龙门",
+    "factionEn": "炎-龙门",
     "rarity": 5,
     "race": "丰蹄",
     "raceEn": "丰蹄",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "防护"
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_163_hpsts",
@@ -5308,6 +5334,7 @@
     "raceEn": "丰蹄",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "生存",
@@ -5316,8 +5343,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4207_branch",
@@ -5334,6 +5360,7 @@
     "raceEn": "乌萨斯",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "防护",
@@ -5341,8 +5368,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_378_asbest",
@@ -5359,6 +5385,7 @@
     "raceEn": "萨弗拉",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "防护",
@@ -5366,8 +5393,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_512_aprot",
@@ -5384,6 +5410,7 @@
     "raceEn": "斐迪亚",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2022,
     "tags": [
       "输出",
@@ -5391,8 +5418,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4047_pianst",
@@ -5409,6 +5435,7 @@
     "raceEn": "埃拉菲亚",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2022,
     "tags": [
       "防护",
@@ -5416,8 +5443,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_457_blitz",
@@ -5431,9 +5457,10 @@
     "factionEn": "彩虹小队",
     "rarity": 5,
     "race": "未知",
-    "raceEn": "未知",
+    "raceEn": "Unknown",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2021,
     "tags": [
       "防护",
@@ -5441,8 +5468,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_304_zebra",
@@ -5459,6 +5485,7 @@
     "raceEn": "库兰塔",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2021,
     "tags": [
       "防护",
@@ -5466,8 +5493,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_431_ashlok",
@@ -5484,6 +5510,7 @@
     "raceEn": "札拉克",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2021,
     "tags": [
       "输出",
@@ -5491,8 +5518,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_493_firwhl",
@@ -5509,6 +5535,7 @@
     "raceEn": "黎博利",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2023,
     "tags": [
       "输出",
@@ -5516,8 +5543,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_422_aurora",
@@ -5534,6 +5560,7 @@
     "raceEn": "乌萨斯",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2021,
     "tags": [
       "输出",
@@ -5541,8 +5568,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_464_cement",
@@ -5559,14 +5585,14 @@
     "raceEn": "札拉克",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2023,
     "tags": [
       "防护"
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4148_philae",
@@ -5583,6 +5609,7 @@
     "raceEn": "萨卡兹",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "元素",
@@ -5590,8 +5617,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4225_tanya",
@@ -5608,6 +5634,7 @@
     "raceEn": "乌萨斯",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2026,
     "tags": [
       "元素",
@@ -5615,8 +5642,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_145_prove",
@@ -5633,14 +5659,14 @@
     "raceEn": "Lupo",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2019,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4006_melnte",
@@ -5657,6 +5683,7 @@
     "raceEn": "斐迪亚",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2023,
     "tags": [
       "输出",
@@ -5664,8 +5691,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_158_milu",
@@ -5682,6 +5708,7 @@
     "raceEn": "Elafia",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2019,
     "tags": [
       "输出",
@@ -5689,8 +5716,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_218_cuttle",
@@ -5707,6 +5733,7 @@
     "raceEn": "阿戈尔",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "输出",
@@ -5714,8 +5741,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4014_lunacu",
@@ -5732,6 +5758,7 @@
     "raceEn": "鲁珀",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2022,
     "tags": [
       "输出",
@@ -5739,8 +5766,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_363_toddi",
@@ -5757,14 +5783,14 @@
     "raceEn": "瓦伊凡",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2021,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4043_erato",
@@ -5781,6 +5807,7 @@
     "raceEn": "黎博利",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2022,
     "tags": [
       "输出",
@@ -5788,8 +5815,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4221_ju",
@@ -5806,14 +5832,14 @@
     "raceEn": "未公开",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2026,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1027_greyy2",
@@ -5830,6 +5856,7 @@
     "raceEn": "佩洛",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2022,
     "tags": [
       "输出",
@@ -5837,8 +5864,7 @@
     ],
     "alterBase": "格雷伊",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4104_coldst",
@@ -5855,14 +5881,14 @@
     "raceEn": "埃拉菲亚",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2023,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4211_snhunt",
@@ -5879,6 +5905,7 @@
     "raceEn": "乌萨斯",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "爆发",
@@ -5886,8 +5913,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4177_brigid",
@@ -5904,14 +5930,14 @@
     "raceEn": "佩洛",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4015_spuria",
@@ -5928,6 +5954,7 @@
     "raceEn": "萨科塔",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2023,
     "tags": [
       "支援",
@@ -5935,8 +5962,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_173_slchan",
@@ -5953,6 +5979,7 @@
     "raceEn": "菲林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "位移",
@@ -5960,8 +5987,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_383_snsant",
@@ -5971,13 +5997,14 @@
     "classEn": "Specialist",
     "subclass": "钩索师",
     "subclassEn": "Hookmaster",
-    "faction": "龙门",
-    "factionEn": "Lungmen",
+    "faction": "炎,龙门",
+    "factionEn": "炎-龙门",
     "rarity": 5,
     "race": "黎博利",
     "raceEn": "黎博利",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "位移",
@@ -5985,8 +6012,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4105_almond",
@@ -6003,14 +6029,14 @@
     "raceEn": "佩洛",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2023,
     "tags": [
       "位移"
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_174_slbell",
@@ -6027,15 +6053,14 @@
     "raceEn": "菲林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "削弱"
     ],
     "alterBase": "",
-    "_alters": "圣聆初雪",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_254_vodfox",
@@ -6052,14 +6077,14 @@
     "raceEn": "沃尔珀",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "削弱"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4079_haini",
@@ -6076,14 +6101,14 @@
     "raceEn": "阿戈尔",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "削弱"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_195_glassb",
@@ -6100,6 +6125,7 @@
     "raceEn": "乌萨斯",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "减速",
@@ -6107,8 +6133,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_326_glacus",
@@ -6125,6 +6150,7 @@
     "raceEn": "未公开",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "减速",
@@ -6132,8 +6158,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4032_provs",
@@ -6150,6 +6175,7 @@
     "raceEn": "库兰塔",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2022,
     "tags": [
       "削弱",
@@ -6157,8 +6183,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4122_grabds",
@@ -6175,6 +6200,7 @@
     "raceEn": "黎博利",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "减速",
@@ -6182,8 +6208,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_433_windft",
@@ -6200,6 +6225,7 @@
     "raceEn": "佩洛",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2022,
     "tags": [
       "输出",
@@ -6207,8 +6233,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4162_cathy",
@@ -6225,6 +6250,7 @@
     "raceEn": "菲林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "防护",
@@ -6232,8 +6258,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4178_alanna",
@@ -6250,6 +6275,7 @@
     "raceEn": "萨弗拉",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "输出",
@@ -6257,8 +6283,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_101_sora",
@@ -6269,12 +6294,13 @@
     "subclass": "吟游者",
     "subclassEn": "Bard",
     "faction": "炎,龙门,企鹅物流",
-    "factionEn": "炎,龙门,企鹅物流",
+    "factionEn": "炎-龙门,企鹅物流",
     "rarity": 5,
     "race": "因经纪公司要求不公开",
     "raceEn": "因经纪公司要求不公开",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "支援",
@@ -6282,8 +6308,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4045_heidi",
@@ -6300,6 +6325,7 @@
     "raceEn": "菲林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2022,
     "tags": [
       "支援",
@@ -6307,8 +6333,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4184_dolris",
@@ -6322,9 +6347,10 @@
     "factionEn": "Ave Mujica",
     "rarity": 5,
     "race": "未知",
-    "raceEn": "未知",
+    "raceEn": "Unknown",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "支援",
@@ -6332,8 +6358,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_343_tknogi",
@@ -6343,13 +6368,14 @@
     "classEn": "Supporter",
     "subclass": "护佑者",
     "subclassEn": "Abjurer",
-    "faction": "东国",
-    "factionEn": "Higashi",
+    "faction": "东",
+    "factionEn": "东",
     "rarity": 5,
     "race": "埃拉菲亚",
     "raceEn": "埃拉菲亚",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "支援",
@@ -6357,8 +6383,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4019_ncdeer",
@@ -6375,6 +6400,7 @@
     "raceEn": "埃拉菲亚",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2022,
     "tags": [
       "支援",
@@ -6382,8 +6408,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_492_quercu",
@@ -6400,6 +6425,7 @@
     "raceEn": "菲林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2022,
     "tags": [
       "支援",
@@ -6407,8 +6433,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4172_xingzh",
@@ -6425,6 +6450,7 @@
     "raceEn": "菲林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "支援",
@@ -6432,8 +6458,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1022_flwr2",
@@ -6450,6 +6475,7 @@
     "raceEn": "沃尔珀",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2026,
     "tags": [
       "支援",
@@ -6457,8 +6483,7 @@
     ],
     "alterBase": "调香师",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4102_threye",
@@ -6475,14 +6500,14 @@
     "raceEn": "萨卡兹",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2023,
     "tags": [
       "元素"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_487_bobb",
@@ -6499,14 +6524,14 @@
     "raceEn": "佩洛",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "元素"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4223_botany",
@@ -6523,14 +6548,14 @@
     "raceEn": "埃拉菲亚",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2026,
     "tags": [
       "元素"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4234_pedro",
@@ -6547,6 +6572,7 @@
     "raceEn": "佩洛",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2026,
     "tags": [
       "输出",
@@ -6554,8 +6580,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_215_mantic",
@@ -6572,6 +6597,7 @@
     "raceEn": "曼提柯",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "输出",
@@ -6579,8 +6605,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_478_kirara",
@@ -6590,13 +6615,14 @@
     "classEn": "Specialist",
     "subclass": "伏击客",
     "subclassEn": "Ambusher",
-    "faction": "东国",
-    "factionEn": "Higashi",
+    "faction": "东",
+    "factionEn": "东",
     "rarity": 5,
     "race": "阿戈尔",
     "raceEn": "阿戈尔",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2021,
     "tags": [
       "输出",
@@ -6604,8 +6630,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4186_tmoris",
@@ -6619,9 +6644,10 @@
     "factionEn": "Ave Mujica",
     "rarity": 5,
     "race": "未知",
-    "raceEn": "未知",
+    "raceEn": "Unknown",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "输出",
@@ -6629,8 +6655,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_241_panda",
@@ -6640,13 +6665,14 @@
     "classEn": "Specialist",
     "subclass": "推击手",
     "subclassEn": "Push Stroker",
-    "faction": "龙门",
-    "factionEn": "Lungmen",
+    "faction": "炎,龙门",
+    "factionEn": "炎-龙门",
     "rarity": 5,
     "race": "乌萨斯",
     "raceEn": "乌萨斯",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "位移",
@@ -6654,8 +6680,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4036_forcer",
@@ -6672,6 +6697,7 @@
     "raceEn": "萨科塔",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2022,
     "tags": [
       "位移",
@@ -6679,8 +6705,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_451_robin",
@@ -6697,6 +6722,7 @@
     "raceEn": "阿纳缇",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "召唤",
@@ -6704,8 +6730,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_458_rfrost",
@@ -6719,9 +6744,10 @@
     "factionEn": "彩虹小队",
     "rarity": 5,
     "race": "未知",
-    "raceEn": "未知",
+    "raceEn": "Unknown",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2021,
     "tags": [
       "召唤",
@@ -6729,8 +6755,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4171_wulfen",
@@ -6747,6 +6772,7 @@
     "raceEn": "斐迪亚",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "召唤",
@@ -6754,8 +6780,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_369_bena",
@@ -6772,6 +6797,7 @@
     "raceEn": "卡普里尼",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2021,
     "tags": [
       "输出",
@@ -6779,8 +6805,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4016_kazema",
@@ -6790,13 +6815,14 @@
     "classEn": "Specialist",
     "subclass": "傀儡师",
     "subclassEn": "Dollkeeper",
-    "faction": "东国",
-    "factionEn": "Higashi",
+    "faction": "东",
+    "factionEn": "东",
     "rarity": 5,
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2022,
     "tags": [
       "输出",
@@ -6804,8 +6830,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4124_iana",
@@ -6819,9 +6844,10 @@
     "factionEn": "彩虹小队",
     "rarity": 5,
     "race": "未知",
-    "raceEn": "未知",
+    "raceEn": "Unknown",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "削弱",
@@ -6829,8 +6855,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4183_mortis",
@@ -6844,9 +6869,10 @@
     "factionEn": "Ave Mujica",
     "rarity": 5,
     "race": "未知",
-    "raceEn": "未知",
+    "raceEn": "Unknown",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "防护",
@@ -6854,8 +6880,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4151_tinman",
@@ -6872,6 +6897,7 @@
     "raceEn": "未公开",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "削弱",
@@ -6879,8 +6905,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4191_tippi",
@@ -6897,6 +6922,7 @@
     "raceEn": "黎博利",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "高空",
@@ -6904,8 +6930,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_103_angel",
@@ -6916,21 +6941,20 @@
     "subclass": "速射手",
     "subclassEn": "Marksman",
     "faction": "炎,龙门,企鹅物流",
-    "factionEn": "炎,龙门,企鹅物流",
+    "factionEn": "炎-龙门,企鹅物流",
     "rarity": 6,
     "race": "萨科塔",
     "raceEn": "Sankta",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2019,
     "tags": [
       "输出"
     ],
     "alterBase": "",
-    "_alters": "新约能天使",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_332_archet",
@@ -6947,14 +6971,14 @@
     "raceEn": "黎博利",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2021,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_456_ash",
@@ -6968,17 +6992,17 @@
     "factionEn": "彩虹小队",
     "rarity": 6,
     "race": "未知",
-    "raceEn": "未知",
+    "raceEn": "Unknown",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2021,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_340_shwaz",
@@ -6995,14 +7019,14 @@
     "raceEn": "Feline",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2019,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4055_bgsnow",
@@ -7019,14 +7043,14 @@
     "raceEn": "鲁珀",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2022,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1048_orchd2",
@@ -7043,6 +7067,7 @@
     "raceEn": "黎博利",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2026,
     "tags": [
       "输出",
@@ -7050,8 +7075,7 @@
     ],
     "alterBase": "梓兰",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_430_fartth",
@@ -7068,14 +7092,14 @@
     "raceEn": "黎博利",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2021,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4193_lemuen",
@@ -7092,6 +7116,7 @@
     "raceEn": "萨科塔",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "输出",
@@ -7099,8 +7124,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_113_cqbw",
@@ -7117,16 +7141,15 @@
     "raceEn": "Sarkaz",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2020,
     "tags": [
       "输出",
       "控场"
     ],
     "alterBase": "",
-    "_alters": "维什戴尔",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_300_phenxi",
@@ -7143,14 +7166,14 @@
     "raceEn": "黎博利",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2022,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_197_poca",
@@ -7167,6 +7190,7 @@
     "raceEn": "乌萨斯",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2020,
     "tags": [
       "输出",
@@ -7174,8 +7198,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_2012_typhon",
@@ -7192,14 +7215,14 @@
     "raceEn": "萨卡兹",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2023,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_391_rosmon",
@@ -7216,14 +7239,14 @@
     "raceEn": "Feline",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2020,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1035_wisdel",
@@ -7240,14 +7263,14 @@
     "raceEn": "萨卡兹",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2024,
     "tags": [
       "输出"
     ],
     "alterBase": "W",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1013_chen2",
@@ -7264,6 +7287,7 @@
     "raceEn": "龙",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2021,
     "tags": [
       "输出",
@@ -7271,8 +7295,7 @@
     ],
     "alterBase": "陈",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4117_ray",
@@ -7289,14 +7312,14 @@
     "raceEn": "卡特斯",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4138_narant",
@@ -7313,14 +7336,14 @@
     "raceEn": "库兰塔",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_112_siege",
@@ -7337,16 +7360,15 @@
     "raceEn": "Aslan",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2019,
     "tags": [
       "费用回复",
       "输出"
     ],
     "alterBase": "",
-    "_alters": "维娜·维多利亚",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_222_bpipe",
@@ -7363,6 +7385,7 @@
     "raceEn": "瓦伊凡",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2020,
     "tags": [
       "费用回复",
@@ -7370,8 +7393,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_362_saga",
@@ -7381,13 +7403,14 @@
     "classEn": "Vanguard",
     "subclass": "尖兵",
     "subclassEn": "Pioneer",
-    "faction": "东国",
-    "factionEn": "Higashi",
+    "faction": "东",
+    "factionEn": "东",
     "rarity": 6,
     "race": "佩洛",
     "raceEn": "佩洛",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2021,
     "tags": [
       "费用回复",
@@ -7395,8 +7418,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4026_vulpis",
@@ -7413,6 +7435,7 @@
     "raceEn": "沃尔珀",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "费用回复",
@@ -7420,8 +7443,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_479_sleach",
@@ -7438,6 +7460,7 @@
     "raceEn": "瓦伊凡",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2021,
     "tags": [
       "费用回复",
@@ -7445,8 +7468,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_420_flamtl",
@@ -7463,6 +7485,7 @@
     "raceEn": "札拉克",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2021,
     "tags": [
       "费用回复",
@@ -7470,8 +7493,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_427_vigil",
@@ -7488,6 +7510,7 @@
     "raceEn": "鲁珀",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2022,
     "tags": [
       "费用回复",
@@ -7495,8 +7518,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_249_mlyss",
@@ -7513,6 +7535,7 @@
     "raceEn": "精灵",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2023,
     "tags": [
       "费用回复",
@@ -7520,8 +7543,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4228_closur",
@@ -7538,6 +7560,7 @@
     "raceEn": "萨卡兹",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2026,
     "tags": [
       "费用回复",
@@ -7545,8 +7568,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1045_svash2",
@@ -7563,6 +7585,7 @@
     "raceEn": "菲林",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "hot",
     "releaseYear": 2025,
     "tags": [
       "费用回复",
@@ -7570,8 +7593,7 @@
     ],
     "alterBase": "银灰",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4087_ines",
@@ -7588,6 +7610,7 @@
     "raceEn": "未公开",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2023,
     "tags": [
       "费用回复",
@@ -7595,8 +7618,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_134_ifrit",
@@ -7613,6 +7635,7 @@
     "raceEn": "Sarkaz",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2019,
     "tags": [
       "群攻",
@@ -7620,8 +7643,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4229_aphris",
@@ -7638,6 +7660,7 @@
     "raceEn": "菲林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2026,
     "tags": [
       "群攻",
@@ -7645,8 +7668,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_213_mostma",
@@ -7663,6 +7685,7 @@
     "raceEn": "未公开",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2019,
     "tags": [
       "群攻",
@@ -7671,8 +7694,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_180_amgoat",
@@ -7689,16 +7711,15 @@
     "raceEn": "Caprinae",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2019,
     "tags": [
       "输出",
       "削弱"
     ],
     "alterBase": "",
-    "_alters": "纯烬艾雅法拉",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_2013_cerber",
@@ -7715,6 +7736,7 @@
     "raceEn": "佩洛",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2020,
     "tags": [
       "输出",
@@ -7722,8 +7744,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4027_heyak",
@@ -7740,6 +7761,7 @@
     "raceEn": "未公开",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2023,
     "tags": [
       "输出",
@@ -7747,8 +7769,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4133_logos",
@@ -7765,14 +7786,14 @@
     "raceEn": "萨卡兹",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "hot",
     "releaseYear": 2024,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_2015_dusk",
@@ -7783,12 +7804,13 @@
     "subclass": "扩散术师",
     "subclassEn": "Splash Caster",
     "faction": "炎,岁",
-    "factionEn": "炎,岁",
+    "factionEn": "炎,炎-岁",
     "rarity": 6,
     "race": "未公开",
     "raceEn": "未公开",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2021,
     "tags": [
       "群攻",
@@ -7797,8 +7819,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4141_marcil",
@@ -7815,6 +7836,7 @@
     "raceEn": "精灵",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "群攻",
@@ -7823,8 +7845,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_472_pasngr",
@@ -7841,14 +7862,14 @@
     "raceEn": "黎博利",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2021,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_426_billro",
@@ -7865,6 +7886,7 @@
     "raceEn": "卡普里尼",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2021,
     "tags": [
       "群攻",
@@ -7872,8 +7894,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4080_lin",
@@ -7883,13 +7904,14 @@
     "classEn": "Caster",
     "subclass": "阵法术师",
     "subclassEn": "Phalanx Caster",
-    "faction": "龙门",
-    "factionEn": "Lungmen",
+    "faction": "炎,龙门",
+    "factionEn": "炎-龙门",
     "rarity": 6,
     "race": "札拉克",
     "raceEn": "札拉克",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2023,
     "tags": [
       "群攻",
@@ -7897,8 +7919,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1046_sbell2",
@@ -7915,6 +7936,7 @@
     "raceEn": "菲林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2025,
     "tags": [
       "群攻",
@@ -7922,8 +7944,7 @@
     ],
     "alterBase": "初雪",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_377_gdglow",
@@ -7940,14 +7961,14 @@
     "raceEn": "菲林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2022,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1038_whitw2",
@@ -7964,6 +7985,7 @@
     "raceEn": "鲁珀",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2024,
     "tags": [
       "输出",
@@ -7971,8 +7993,7 @@
     ],
     "alterBase": "拉普兰德",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4046_ebnhlz",
@@ -7989,14 +8010,14 @@
     "raceEn": "卡普里尼",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "hot",
     "releaseYear": 2022,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4226_veen",
@@ -8013,14 +8034,14 @@
     "raceEn": "库兰塔",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2026,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4146_nymph",
@@ -8037,6 +8058,7 @@
     "raceEn": "萨卡兹",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "元素",
@@ -8045,8 +8067,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1040_blaze2",
@@ -8063,6 +8084,7 @@
     "raceEn": "菲林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "元素",
@@ -8071,8 +8093,7 @@
     ],
     "alterBase": "煌",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4204_mantra",
@@ -8089,6 +8110,7 @@
     "raceEn": "斐迪亚",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "元素",
@@ -8097,8 +8119,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_450_necras",
@@ -8115,6 +8136,7 @@
     "raceEn": "德拉克",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "召唤",
@@ -8122,8 +8144,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_206_gnosis",
@@ -8140,14 +8161,14 @@
     "raceEn": "黎博利",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2021,
     "tags": [
       "削弱"
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_291_aglina",
@@ -8164,6 +8185,7 @@
     "raceEn": "Vulpo",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2019,
     "tags": [
       "减速",
@@ -8172,8 +8194,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_358_lisa",
@@ -8190,6 +8211,7 @@
     "raceEn": "Vulpo",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2020,
     "tags": [
       "减速",
@@ -8198,8 +8220,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1047_halo2",
@@ -8216,6 +8237,7 @@
     "raceEn": "黎博利",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "减速",
@@ -8224,8 +8246,7 @@
     ],
     "alterBase": "星源",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_248_mgllan",
@@ -8242,6 +8263,7 @@
     "raceEn": "黎博利",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2019,
     "tags": [
       "支援",
@@ -8250,8 +8272,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4195_radian",
@@ -8268,6 +8289,7 @@
     "raceEn": "黎博利",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "召唤",
@@ -8276,8 +8298,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1012_skadi2",
@@ -8294,6 +8315,7 @@
     "raceEn": "未公开",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2021,
     "tags": [
       "支援",
@@ -8302,8 +8324,7 @@
     ],
     "alterBase": "斯卡蒂",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4134_cetsyr",
@@ -8320,6 +8341,7 @@
     "raceEn": "未公开",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "支援",
@@ -8328,8 +8350,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1031_slent2",
@@ -8346,6 +8367,7 @@
     "raceEn": "黎博利",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2023,
     "tags": [
       "支援",
@@ -8354,8 +8376,7 @@
     ],
     "alterBase": "赫默",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4202_haruka",
@@ -8365,13 +8386,14 @@
     "classEn": "Supporter",
     "subclass": "护佑者",
     "subclassEn": "Abjurer",
-    "faction": "东国",
-    "factionEn": "Higashi",
+    "faction": "东",
+    "factionEn": "东",
     "rarity": 6,
     "race": "阿戈尔",
     "raceEn": "阿戈尔",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "支援",
@@ -8380,8 +8402,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_2023_ling",
@@ -8392,12 +8413,13 @@
     "subclass": "召唤师",
     "subclassEn": "Summoner",
     "faction": "炎,岁",
-    "factionEn": "炎,岁",
+    "factionEn": "炎,炎-岁",
     "rarity": 6,
     "race": "未公开",
     "raceEn": "未公开",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2022,
     "tags": [
       "召唤",
@@ -8406,8 +8428,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4072_ironmn",
@@ -8424,6 +8445,7 @@
     "raceEn": "菲林",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2022,
     "tags": [
       "支援",
@@ -8431,8 +8453,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4212_nasti",
@@ -8449,6 +8470,7 @@
     "raceEn": "萨卡兹",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "支援",
@@ -8456,8 +8478,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_245_cello",
@@ -8474,6 +8495,7 @@
     "raceEn": "萨科塔",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2023,
     "tags": [
       "元素",
@@ -8481,8 +8503,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1042_phatm2",
@@ -8499,6 +8520,7 @@
     "raceEn": "菲林",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "hot",
     "releaseYear": 2025,
     "tags": [
       "元素",
@@ -8506,8 +8528,7 @@
     ],
     "alterBase": "傀影",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_250_phatom",
@@ -8524,6 +8545,7 @@
     "raceEn": "菲林",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "hot",
     "releaseYear": 2020,
     "tags": [
       "快速复活",
@@ -8531,10 +8553,8 @@
       "输出"
     ],
     "alterBase": "",
-    "_alters": "酒神",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_1028_texas2",
@@ -8545,12 +8565,13 @@
     "subclass": "处决者",
     "subclassEn": "Executor",
     "faction": "炎,龙门,企鹅物流",
-    "factionEn": "炎,龙门,企鹅物流",
+    "factionEn": "炎-龙门,企鹅物流",
     "rarity": 6,
     "race": "鲁珀",
     "raceEn": "鲁珀",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2022,
     "tags": [
       "快速复活",
@@ -8558,8 +8579,7 @@
     ],
     "alterBase": "德克萨斯",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_1029_yato2",
@@ -8576,6 +8596,7 @@
     "raceEn": "鬼",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2023,
     "tags": [
       "快速复活",
@@ -8583,8 +8604,7 @@
     ],
     "alterBase": "夜刀",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_1502_crosly",
@@ -8601,14 +8621,14 @@
     "raceEn": "瑞柏巴",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "快速复活"
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_322_lmlee",
@@ -8619,12 +8639,13 @@
     "subclass": "行商",
     "subclassEn": "Merchant",
     "faction": "炎,龙门,鲤氏侦探事务所",
-    "factionEn": "炎,龙门,鲤氏侦探事务所",
+    "factionEn": "炎-龙门,鲤氏侦探事务所",
     "rarity": 6,
     "race": "龙",
     "raceEn": "龙",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2022,
     "tags": [
       "快速复活",
@@ -8633,8 +8654,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_1033_swire2",
@@ -8644,13 +8664,14 @@
     "classEn": "Specialist",
     "subclass": "行商",
     "subclassEn": "Merchant",
-    "faction": "龙门",
-    "factionEn": "Lungmen",
+    "faction": "炎,龙门",
+    "factionEn": "炎-龙门",
     "rarity": 6,
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2023,
     "tags": [
       "快速复活",
@@ -8658,8 +8679,7 @@
     ],
     "alterBase": "诗怀雅",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_400_weedy",
@@ -8676,6 +8696,7 @@
     "raceEn": "阿戈尔",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2020,
     "tags": [
       "位移",
@@ -8684,8 +8705,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_225_haak",
@@ -8696,12 +8716,13 @@
     "subclass": "怪杰",
     "subclassEn": "Geek",
     "faction": "炎,龙门,鲤氏侦探事务所",
-    "factionEn": "炎,龙门,鲤氏侦探事务所",
+    "factionEn": "炎-龙门,鲤氏侦探事务所",
     "rarity": 6,
     "race": "菲林",
     "raceEn": "菲林",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "支援",
@@ -8709,8 +8730,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1041_angel2",
@@ -8721,12 +8741,13 @@
     "subclass": "怪杰",
     "subclassEn": "Geek",
     "faction": "炎,龙门,企鹅物流",
-    "factionEn": "炎,龙门,企鹅物流",
+    "factionEn": "炎-龙门,企鹅物流",
     "rarity": 6,
     "race": "萨科塔",
     "raceEn": "萨科塔",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2025,
     "tags": [
       "输出",
@@ -8734,8 +8755,7 @@
     ],
     "alterBase": "能天使",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_474_glady",
@@ -8752,6 +8772,7 @@
     "raceEn": "未公开",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2021,
     "tags": [
       "位移",
@@ -8760,8 +8781,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_437_mizuki",
@@ -8771,13 +8791,14 @@
     "classEn": "Specialist",
     "subclass": "伏击客",
     "subclassEn": "Ambusher",
-    "faction": "东国",
-    "factionEn": "Higashi",
+    "faction": "东",
+    "factionEn": "东",
     "rarity": 6,
     "race": "阿戈尔",
     "raceEn": "阿戈尔",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2021,
     "tags": [
       "输出",
@@ -8785,8 +8806,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4132_ascln",
@@ -8803,6 +8823,7 @@
     "raceEn": "萨卡兹",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "减速",
@@ -8810,8 +8831,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_1023_ghost2",
@@ -8828,6 +8848,7 @@
     "raceEn": "阿戈尔",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2022,
     "tags": [
       "输出",
@@ -8835,8 +8856,7 @@
     ],
     "alterBase": "幽灵鲨",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4048_doroth",
@@ -8853,6 +8873,7 @@
     "raceEn": "札拉克",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2022,
     "tags": [
       "召唤",
@@ -8860,8 +8881,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4123_ela",
@@ -8875,9 +8895,10 @@
     "factionEn": "彩虹小队",
     "rarity": 6,
     "race": "未知",
-    "raceEn": "未知",
+    "raceEn": "Unknown",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "召唤",
@@ -8886,8 +8907,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_2027_wang",
@@ -8898,12 +8918,13 @@
     "subclass": "陷阱师",
     "subclassEn": "Trapmaster",
     "faction": "炎,岁",
-    "factionEn": "炎,岁",
+    "factionEn": "炎,炎-岁",
     "rarity": 6,
     "race": "未公开",
     "raceEn": "未公开",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2026,
     "tags": [
       "召唤",
@@ -8911,8 +8932,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1039_thorn2",
@@ -8929,6 +8949,7 @@
     "raceEn": "阿戈尔",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "输出",
@@ -8937,8 +8958,33 @@
     ],
     "alterBase": "棘刺",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
+  },
+  {
+    "id": "char_1015_aglna2",
+    "name": "予愿安洁莉娜",
+    "nameEn": "Angelina the Mellow Wish",
+    "class": "特种",
+    "classEn": "Specialist",
+    "subclass": "巡空者",
+    "subclassEn": "Skywalker",
+    "faction": "罗德岛",
+    "factionEn": "Rhodes Island",
+    "rarity": 6,
+    "race": "沃尔珀",
+    "raceEn": "沃尔珀",
+    "gender": "女",
+    "genderEn": "Female",
+    "popularity": "hot",
+    "releaseYear": 2026,
+    "tags": [
+      "高空",
+      "输出",
+      "控场"
+    ],
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_147_shining",
@@ -8955,6 +9001,7 @@
     "raceEn": "Sarkaz",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2019,
     "tags": [
       "治疗",
@@ -8962,8 +9009,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_179_cgbird",
@@ -8980,6 +9026,7 @@
     "raceEn": "Sarkaz",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2019,
     "tags": [
       "治疗",
@@ -8987,8 +9034,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_003_kalts",
@@ -9005,16 +9051,15 @@
     "raceEn": "Feline",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2021,
     "tags": [
       "召唤",
       "治疗"
     ],
     "alterBase": "",
-    "_alters": "凯尔希·思衡托",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4042_lumen",
@@ -9031,6 +9076,7 @@
     "raceEn": "阿戈尔",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "hot",
     "releaseYear": 2022,
     "tags": [
       "治疗",
@@ -9038,8 +9084,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1016_agoat2",
@@ -9056,14 +9101,14 @@
     "raceEn": "卡普里尼",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2023,
     "tags": [
       "治疗"
     ],
     "alterBase": "艾雅法拉",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1020_reed2",
@@ -9080,6 +9125,7 @@
     "raceEn": "德拉克",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2022,
     "tags": [
       "治疗",
@@ -9088,8 +9134,7 @@
     ],
     "alterBase": "苇草",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "hot"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4056_titi",
@@ -9106,6 +9151,7 @@
     "raceEn": "菲林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2026,
     "tags": [
       "治疗",
@@ -9114,8 +9160,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_4179_monstr",
@@ -9132,6 +9177,7 @@
     "raceEn": "未公开",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "治疗",
@@ -9140,8 +9186,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_1052_kalts2",
@@ -9158,6 +9203,7 @@
     "raceEn": "菲林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2026,
     "tags": [
       "高空",
@@ -9166,8 +9212,7 @@
     ],
     "alterBase": "凯尔希",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_136_hsguma",
@@ -9178,22 +9223,21 @@
     "subclass": "铁卫",
     "subclassEn": "Protector",
     "faction": "炎,龙门,龙门近卫局",
-    "factionEn": "炎,龙门,龙门近卫局",
+    "factionEn": "炎-龙门,龙门近卫局",
     "rarity": 6,
     "race": "鬼",
     "raceEn": "Oni",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2019,
     "tags": [
       "防护",
       "输出"
     ],
     "alterBase": "",
-    "_alters": "斩业星熊",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_202_demkni",
@@ -9210,6 +9254,7 @@
     "raceEn": "Vouivre",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2019,
     "tags": [
       "防护",
@@ -9218,8 +9263,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_423_blemsh",
@@ -9236,6 +9280,7 @@
     "raceEn": "库兰塔",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "防护",
@@ -9244,8 +9289,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_2025_shu",
@@ -9256,12 +9300,13 @@
     "subclass": "守护者",
     "subclassEn": "Guardian",
     "faction": "炎,岁",
-    "factionEn": "炎,岁",
+    "factionEn": "炎,炎-岁",
     "rarity": 6,
     "race": "未公开",
     "raceEn": "未公开",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2024,
     "tags": [
       "防护",
@@ -9270,8 +9315,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_2014_nian",
@@ -9282,12 +9326,13 @@
     "subclass": "铁卫",
     "subclassEn": "Protector",
     "faction": "炎,岁",
-    "factionEn": "炎,岁",
+    "factionEn": "炎,炎-岁",
     "rarity": 6,
     "race": "未公开",
     "raceEn": "未公开",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2020,
     "tags": [
       "防护",
@@ -9295,8 +9340,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_311_mudrok",
@@ -9313,6 +9357,7 @@
     "raceEn": "Sarkaz",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2020,
     "tags": [
       "生存",
@@ -9321,8 +9366,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4065_judge",
@@ -9339,6 +9383,7 @@
     "raceEn": "鲁珀",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2022,
     "tags": [
       "生存",
@@ -9346,8 +9391,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_416_zumama",
@@ -9364,6 +9408,7 @@
     "raceEn": "斐迪亚",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "输出",
@@ -9372,8 +9417,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4039_horn",
@@ -9390,6 +9434,7 @@
     "raceEn": "鲁珀",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2022,
     "tags": [
       "输出",
@@ -9397,8 +9442,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_1034_jesca2",
@@ -9415,6 +9459,7 @@
     "raceEn": "菲林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2023,
     "tags": [
       "防护",
@@ -9423,8 +9468,7 @@
     ],
     "alterBase": "杰西卡",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4194_rmixer",
@@ -9441,6 +9485,7 @@
     "raceEn": "萨科塔",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "防护",
@@ -9449,8 +9494,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4230_mcnist",
@@ -9467,6 +9511,7 @@
     "raceEn": "埃拉菲亚",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2026,
     "tags": [
       "生存",
@@ -9475,8 +9520,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_2026_yu",
@@ -9487,12 +9531,13 @@
     "subclass": "本源铁卫",
     "subclassEn": "Primal Protector",
     "faction": "炎,岁",
-    "factionEn": "炎,岁",
+    "factionEn": "炎,炎-岁",
     "rarity": 6,
     "race": "未公开",
     "raceEn": "未公开",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "元素",
@@ -9500,8 +9545,32 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
+  },
+  {
+    "id": "char_4235_thumpy",
+    "name": "珊比",
+    "nameEn": "Thumpy",
+    "class": "重装",
+    "classEn": "Defender",
+    "subclass": "本源铁卫",
+    "subclassEn": "Primal Protector",
+    "faction": "雷姆必拓",
+    "factionEn": "Rim Billiton",
+    "rarity": 6,
+    "race": "卡特斯",
+    "raceEn": "卡特斯",
+    "gender": "女",
+    "genderEn": "Female",
+    "popularity": "normal",
+    "releaseYear": 2026,
+    "tags": [
+      "元素",
+      "防护"
+    ],
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee"
   },
   {
     "id": "char_1044_hsgma2",
@@ -9512,12 +9581,13 @@
     "subclass": "驭法铁卫",
     "subclassEn": "Arts Protector",
     "faction": "炎,龙门,龙门近卫局",
-    "factionEn": "炎,龙门,龙门近卫局",
+    "factionEn": "炎-龙门,龙门近卫局",
     "rarity": 6,
     "race": "鬼",
     "raceEn": "鬼",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "输出",
@@ -9525,8 +9595,7 @@
     ],
     "alterBase": "星熊",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_264_f12yin",
@@ -9543,6 +9612,7 @@
     "raceEn": "Feline",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "hot",
     "releaseYear": 2020,
     "tags": [
       "输出",
@@ -9550,8 +9620,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_2024_chyue",
@@ -9562,20 +9631,20 @@
     "subclass": "斗士",
     "subclassEn": "Brawler",
     "faction": "炎,岁",
-    "factionEn": "炎,岁",
+    "factionEn": "炎,炎-岁",
     "rarity": 6,
     "race": "未公开",
     "raceEn": "未公开",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "hot",
     "releaseYear": 2023,
     "tags": [
       "爆发"
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4037_demetr",
@@ -9592,6 +9661,7 @@
     "raceEn": "鲁珀",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2026,
     "tags": [
       "输出",
@@ -9599,8 +9669,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_172_svrash",
@@ -9617,16 +9686,15 @@
     "raceEn": "Feline",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "hot",
     "releaseYear": 2019,
     "tags": [
       "输出",
       "支援"
     ],
     "alterBase": "",
-    "_alters": "凛御银灰",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_293_thorns",
@@ -9643,16 +9711,15 @@
     "raceEn": "Aegir",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "hot",
     "releaseYear": 2020,
     "tags": [
       "输出",
       "防护"
     ],
     "alterBase": "",
-    "_alters": "引星棘刺",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4082_qiubai",
@@ -9669,6 +9736,7 @@
     "raceEn": "埃拉菲亚",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2023,
     "tags": [
       "输出",
@@ -9676,8 +9744,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4182_oblvns",
@@ -9691,17 +9758,17 @@
     "factionEn": "Ave Mujica",
     "rarity": 6,
     "race": "未知",
-    "raceEn": "未知",
+    "raceEn": "Unknown",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2025,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4088_hodrer",
@@ -9718,14 +9785,14 @@
     "raceEn": "萨卡兹",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2023,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4145_ulpia",
@@ -9742,6 +9809,7 @@
     "raceEn": "阿戈尔",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "hot",
     "releaseYear": 2024,
     "tags": [
       "输出",
@@ -9749,8 +9817,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4058_pepe",
@@ -9767,6 +9834,7 @@
     "raceEn": "菲林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "输出",
@@ -9774,8 +9842,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_1051_headb2",
@@ -9792,6 +9859,7 @@
     "raceEn": "乌萨斯",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2026,
     "tags": [
       "输出",
@@ -9799,8 +9867,7 @@
     ],
     "alterBase": "凛冬",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_010_chen",
@@ -9811,22 +9878,21 @@
     "subclass": "剑豪",
     "subclassEn": "Swordmaster",
     "faction": "炎,龙门,龙门近卫局",
-    "factionEn": "炎,龙门,龙门近卫局",
+    "factionEn": "炎-龙门,龙门近卫局",
     "rarity": 6,
     "race": "龙",
     "raceEn": "Lung",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2019,
     "tags": [
       "爆发",
       "输出"
     ],
-    "alterBase": "",
-    "_alters": "假日威龙陈,赤刃明霄陈",
+    "alterBase": "假日威龙陈",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4009_irene",
@@ -9843,6 +9909,7 @@
     "raceEn": "黎博利",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2022,
     "tags": [
       "爆发",
@@ -9851,8 +9918,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4116_blkkgt",
@@ -9869,6 +9935,7 @@
     "raceEn": "卡普里尼",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2023,
     "tags": [
       "爆发",
@@ -9877,8 +9944,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_017_huang",
@@ -9895,16 +9961,15 @@
     "raceEn": "Feline",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2019,
     "tags": [
       "输出",
       "生存"
     ],
     "alterBase": "",
-    "_alters": "烛煌",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_1026_gvial2",
@@ -9921,6 +9986,7 @@
     "raceEn": "阿达克利斯",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2022,
     "tags": [
       "爆发",
@@ -9929,8 +9995,7 @@
     ],
     "alterBase": "嘉维尔",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_350_surtr",
@@ -9947,14 +10012,14 @@
     "raceEn": "萨卡兹",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2020,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4098_vvana",
@@ -9971,6 +10036,7 @@
     "raceEn": "埃拉菲亚",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2023,
     "tags": [
       "输出",
@@ -9978,8 +10044,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_1019_siege2",
@@ -9996,6 +10061,7 @@
     "raceEn": "阿斯兰",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "输出",
@@ -10003,8 +10069,7 @@
     ],
     "alterBase": "推进之王",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_1050_chen3",
@@ -10021,6 +10086,7 @@
     "raceEn": "龙",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2026,
     "tags": [
       "爆发",
@@ -10028,8 +10094,7 @@
     ],
     "alterBase": "陈",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_188_helage",
@@ -10046,6 +10111,7 @@
     "raceEn": "Liberi",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "hot",
     "releaseYear": 2019,
     "tags": [
       "输出",
@@ -10053,8 +10119,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4121_zuole",
@@ -10071,6 +10136,7 @@
     "raceEn": "斐迪亚",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2024,
     "tags": [
       "输出",
@@ -10078,8 +10144,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_485_pallas",
@@ -10096,6 +10161,7 @@
     "raceEn": "丰蹄",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2021,
     "tags": [
       "输出",
@@ -10103,8 +10169,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_1014_nearl2",
@@ -10121,14 +10186,14 @@
     "raceEn": "库兰塔",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2021,
     "tags": [
       "输出"
     ],
     "alterBase": "临光",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4011_lessng",
@@ -10145,14 +10210,14 @@
     "raceEn": "卡普里尼",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "normal",
     "releaseYear": 2023,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_1032_excu2",
@@ -10169,14 +10234,14 @@
     "raceEn": "萨科塔",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "hot",
     "releaseYear": 2023,
     "tags": [
       "输出"
     ],
     "alterBase": "送葬人",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4010_etlchi",
@@ -10193,6 +10258,7 @@
     "raceEn": "萨卡兹",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "输出",
@@ -10200,8 +10266,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4064_mlynar",
@@ -10218,6 +10283,7 @@
     "raceEn": "库兰塔",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "hot",
     "releaseYear": 2022,
     "tags": [
       "输出",
@@ -10225,8 +10291,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   },
   {
     "id": "char_1043_leizi2",
@@ -10243,6 +10308,7 @@
     "raceEn": "麒麟",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "输出",
@@ -10250,8 +10316,7 @@
     ],
     "alterBase": "惊蛰",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_4214_cairn",
@@ -10268,6 +10333,7 @@
     "raceEn": "菲林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2025,
     "tags": [
       "元素",
@@ -10275,8 +10341,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_230_savage",
@@ -10293,6 +10358,7 @@
     "raceEn": "Cautus",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "群攻",
@@ -10300,8 +10366,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_282_catap",
@@ -10318,15 +10383,14 @@
     "raceEn": "库兰塔",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "cold",
     "releaseYear": 2019,
     "tags": [
       "群攻"
     ],
     "alterBase": "",
-    "_alters": "雷狼龙S空爆",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "cold"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_283_midn",
@@ -10343,14 +10407,14 @@
     "raceEn": "萨卡兹",
     "gender": "男",
     "genderEn": "Male",
+    "popularity": "cold",
     "releaseYear": 2019,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "cold"
+    "positionEn": "Melee"
   },
   {
     "id": "char_137_brownb",
@@ -10367,14 +10431,14 @@
     "raceEn": "乌萨斯",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_347_jaksel",
@@ -10391,14 +10455,14 @@
     "raceEn": "佩洛",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2020,
     "tags": [
       "输出"
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_164_nightm",
@@ -10415,6 +10479,7 @@
     "raceEn": "菲林",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "输出",
@@ -10423,8 +10488,7 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged",
-    "popularity": "normal"
+    "positionEn": "Ranged"
   },
   {
     "id": "char_220_grani",
@@ -10441,6 +10505,7 @@
     "raceEn": "库兰塔",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "normal",
     "releaseYear": 2019,
     "tags": [
       "费用回复",
@@ -10448,8 +10513,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "normal"
+    "positionEn": "Melee"
   },
   {
     "id": "char_263_skadi",
@@ -10466,15 +10530,14 @@
     "raceEn": "未公开",
     "gender": "女",
     "genderEn": "Female",
+    "popularity": "hot",
     "releaseYear": 2019,
     "tags": [
       "输出",
       "生存"
     ],
-    "alterBase": "",
-    "_alters": "浊心斯卡蒂",
+    "alterBase": "浊心斯卡蒂",
     "position": "地面",
-    "positionEn": "Melee",
-    "popularity": "hot"
+    "positionEn": "Melee"
   }
 ]

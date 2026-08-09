@@ -20,9 +20,8 @@ export function pickRandom<T>(arr: T[]): T {
  * 每日固定种子（基于日期字符串）
  */
 export function dailySeed(): number {
-  const today = new Date();
-  const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
-  return seed;
+  const now = new Date();
+  return now.getUTCFullYear() * 10000 + (now.getUTCMonth() + 1) * 100 + now.getUTCDate();
 }
 
 /**

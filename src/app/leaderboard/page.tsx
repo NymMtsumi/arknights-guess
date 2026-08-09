@@ -17,6 +17,14 @@ interface LeaderboardEntry {
   winRate: number; // 0-100
 }
 
+interface DailyEntry {
+  rank: number;
+  username: string;
+  displayName: string;
+  guessCount: number;
+  timestamp: string;
+}
+
 const DIFFICULTIES = [
   { key: '', label: '全部' },
   { key: 'easy', label: '简单' },
@@ -27,6 +35,7 @@ const DIFFICULTIES = [
 const MODES = [
   { key: 'single', label: '单人' },
   { key: 'multi', label: '多人' },
+  { key: 'daily', label: '每日' },
 ] as const;
 
 /** 单行高度（px），与 CSS 中 --lb-row-height 保持一致 */
@@ -41,28 +50,48 @@ const MAX_ROWS = 50;
 export default function LeaderboardPage() {
   const { t } = useI18n();
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
+  const [dailyEntries, setDailyEntries] = useState<DailyEntry[]>([]);
+  const [dailyDate, setDailyDate] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [difficulty, setDifficulty] = useState('');
   const [mode, setMode] = useState('single');
+
+  // 支持 URL 参数 ?mode=daily 直接跳转到每日排行榜
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const modeParam = params.get('mode');
+      if (modeParam === 'daily') setMode('daily');
+    }
+  }, []);
 
   const fetchLeaderboard = useCallback(async (diff: string, m: string) => {
     setLoading(true);
     setError(null);
     try {
       const base = getServerUrl();
-      const params = new URLSearchParams({ limit: String(MAX_ROWS), mode: m });
-      if (diff) params.set('difficulty', diff);
-      const res = await fetch(`${base}/api/leaderboard?${params.toString()}`);
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`);
+
+      if (m === 'daily') {
+        const res = await fetch(`${base}/api/daily/leaderboard?limit=${MAX_ROWS}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        setDailyEntries((data.leaderboard || []).slice(0, MAX_ROWS));
+        setDailyDate(data.date || '');
+        setEntries([]);
+      } else {
+        const params = new URLSearchParams({ limit: String(MAX_ROWS), mode: m });
+        if (diff) params.set('difficulty', diff);
+        const res = await fetch(`${base}/api/leaderboard?${params.toString()}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        setEntries((data.leaderboard || []).slice(0, MAX_ROWS));
+        setDailyEntries([]);
       }
-      const data = await res.json();
-      // 前端二次截断确保最多 50 条
-      setEntries((data.leaderboard || []).slice(0, MAX_ROWS));
     } catch (err: any) {
       setError(err?.message || 'Failed to fetch leaderboard');
       setEntries([]);
+      setDailyEntries([]);
     } finally {
       setLoading(false);
     }
@@ -118,6 +147,15 @@ export default function LeaderboardPage() {
 
   // 是否显示 avgGuesses 列（仅单人模式）
   const showAvgGuesses = mode === 'single';
+  const isDaily = mode === 'daily';
+
+  // 格式化时间戳
+  const formatTime = (ts: string): string => {
+    try {
+      const d = new Date(ts);
+      return d.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    } catch { return '--'; }
+  };
 
   // 列宽分配（百分比）
   const colWidths = useMemo(() => {
@@ -174,8 +212,8 @@ export default function LeaderboardPage() {
           ))}
         </div>
 
-        {/* 难度筛选 — 多人模式不显示 */}
-        {mode !== 'multi' && (
+        {/* 难度筛选 — 多人和每日模式不显示 */}
+        {mode !== 'multi' && mode !== 'daily' && (
           <div className="leaderboard-difficulty-bar">
             {DIFFICULTIES.map((d) => (
               <button
@@ -228,10 +266,70 @@ export default function LeaderboardPage() {
                 重试
               </button>
             </div>
-          ) : entries.length === 0 ? (
+          ) : (isDaily ? dailyEntries.length === 0 : entries.length === 0) ? (
             <div className="leaderboard-empty">
               <p style={{ fontSize: '3rem', marginBottom: '16px' }}>📭</p>
-              <p style={{ fontSize: '1.1rem' }}>暂无排行数据</p>
+              <p style={{ fontSize: '1.1rem' }}>{isDaily ? '今日暂无排行数据' : '暂无排行数据'}</p>
+            </div>
+          ) : isDaily ? (
+            <div className="leaderboard-table-wrap">
+              {/* 粘性表头 — daily */}
+              <div className="leaderboard-table-header">
+                <table>
+                  <colgroup>
+                    <col style={{ width: '10%' }} />
+                    <col />
+                    <col style={{ width: '18%' }} />
+                    <col style={{ width: '22%' }} />
+                  </colgroup>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th className="lb-th-left">玩家</th>
+                      <th>猜测次数</th>
+                      <th>提交时间</th>
+                    </tr>
+                  </thead>
+                </table>
+              </div>
+
+              <div className="leaderboard-table-body" style={{ maxHeight: `${viewportHeight}px` }}>
+                <table>
+                  <colgroup>
+                    <col style={{ width: '10%' }} />
+                    <col />
+                    <col style={{ width: '18%' }} />
+                    <col style={{ width: '22%' }} />
+                  </colgroup>
+                  <tbody>
+                    {dailyEntries.map((entry, index) => (
+                      <tr
+                        key={entry.rank}
+                        className={entry.rank <= 3 ? `lb-row lb-row-top${entry.rank}` : 'lb-row'}
+                        style={{
+                          backgroundColor: getRowBackground(entry.rank, index),
+                          animationDelay: `${Math.min(index * 30, 600)}ms`,
+                        }}
+                      >
+                        <td className="lb-rank">
+                          <span style={getRankStyle(entry.rank)}>
+                            {getRankEmoji(entry.rank)} {entry.rank}
+                          </span>
+                        </td>
+                        <td className="lb-player">{entry.displayName}</td>
+                        <td className="lb-stat">{entry.guessCount}</td>
+                        <td className="lb-stat">{formatTime(entry.timestamp)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="leaderboard-footer">
+                {dailyDate && <span>{dailyDate} · </span>}
+                共 {dailyEntries.length} 条记录
+                {dailyEntries.length >= MAX_ROWS ? '（仅显示前 50 名）' : ''}
+              </div>
             </div>
           ) : (
             <div className="leaderboard-table-wrap">
@@ -320,8 +418,8 @@ export default function LeaderboardPage() {
         /* ===== 模式切换标签 ===== */
         .leaderboard-mode-tabs {
           display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          width: min(320px, 100%);
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          width: min(400px, 100%);
           margin: 0 auto 14px;
           padding: 3px;
           border: 1px solid var(--border);

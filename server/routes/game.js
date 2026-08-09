@@ -1,5 +1,6 @@
 // 游戏路由：save-game, leaderboard
 import { sanitizeString, parseCookies, parseBody, jsonResponse, generateKey } from '../utils.js';
+import { pickDailyTarget } from '../characters.js';
 
 // 排行榜内存缓存（60s TTL，避免每次请求全表聚合扫描）
 const leaderboardCache = new Map();
@@ -40,6 +41,9 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
 
     if (mode === 'multi') {
       if (difficulty !== 'multi') difficulty = 'multi';
+    } else if (mode === 'daily') {
+      // 每日挑战：固定 hard 难度
+      difficulty = 'hard';
     } else if (!['easy', 'medium', 'hard'].includes(difficulty)) {
       return jsonResponse(res, { error: 'difficulty 必须是 easy、medium 或 hard' }, 400);
     }
@@ -105,9 +109,40 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
       }
     }
 
+    let dailyDate = null;
+    if (mode === 'daily') {
+      // 计算当天 UTC 日期
+      const now = new Date();
+      dailyDate = now.toISOString().slice(0, 10); // 'YYYY-MM-DD'
+
+      // 验证目标干员与服务器每日目标一致
+      const expectedTarget = pickDailyTarget('hard');
+      if (targetName !== expectedTarget.name) {
+        return jsonResponse(res, { error: '每日目标不匹配，可能已跨日，请刷新重试' }, 400);
+      }
+
+      // 去重：每人每天只能提交一次
+      if (userId) {
+        const existing = db.prepare(
+          'SELECT id FROM games WHERE user_id = ? AND daily_date = ?'
+        ).get(userId, dailyDate);
+        if (existing) {
+          return jsonResponse(res, { error: '今日已挑战' }, 409);
+        }
+      } else {
+        // 游客：按 player_key 去重
+        const existing = db.prepare(
+          'SELECT id FROM games WHERE player_key = ? AND daily_date = ? AND user_id IS NULL'
+        ).get(player_key, dailyDate);
+        if (existing) {
+          return jsonResponse(res, { error: '今日已挑战' }, 409);
+        }
+      }
+    }
+
     const result = db.prepare(
-      'INSERT INTO games (player_key, user_id, won, guess_count, difficulty, target_name, timestamp, mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-    ).run(player_key, userId || null, won ? 1 : 0, guessCount, difficulty, targetName, timestamp, mode);
+      'INSERT INTO games (player_key, user_id, won, guess_count, difficulty, target_name, timestamp, mode, daily_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).run(player_key, userId || null, won ? 1 : 0, guessCount, difficulty, targetName, timestamp, mode, dailyDate);
 
     const extraHeaders = {};
     if (newPlayerKey) {
@@ -116,7 +151,7 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
 
     // 清除排行榜缓存（新游戏可能影响排名）
     for (const key of leaderboardCache.keys()) {
-      if (key.startsWith(mode + ':')) leaderboardCache.delete(key);
+      if (key.startsWith(mode + ':') || (mode === 'daily' && key.startsWith('daily:'))) leaderboardCache.delete(key);
     }
 
     console.log(`[save-game] pk=${player_key.slice(0, 10)} won=${won} guesses=${guessCount} mode=${mode} diff=${difficulty}`);
@@ -200,9 +235,96 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
     return jsonResponse(res, { leaderboard });
   }
 
+  // ===== GET /api/daily/status =====
+  async function handleDailyStatus(req, res) {
+    // 计算当天每日目标
+    const target = pickDailyTarget('hard');
+    const now = new Date();
+    const dailyDate = now.toISOString().slice(0, 10);
+
+    // 尝试解析用户身份
+    const authHeader = req.headers.authorization || '';
+    let userId = null;
+    const decoded = authHeader.startsWith('Bearer ') ? verifyToken(authHeader.slice(7)) : null;
+    if (decoded) {
+      const user = db.prepare('SELECT id, banned_at, token_version FROM users WHERE id = ?').get(decoded.userId);
+      if (user && !user.banned_at && (decoded.tokenVersion || 0) === (user.token_version || 0)) {
+        userId = decoded.userId;
+      }
+    }
+
+    // 查询今天是否已挑战
+    let played = false;
+    let result = null;
+    if (userId) {
+      const row = db.prepare(
+        'SELECT won, guess_count, timestamp FROM games WHERE user_id = ? AND daily_date = ?'
+      ).get(userId, dailyDate);
+      if (row) {
+        played = true;
+        result = { won: row.won === 1, guessCount: row.guess_count, timestamp: row.timestamp };
+      }
+    }
+
+    return jsonResponse(res, {
+      date: dailyDate,
+      targetId: target.id,
+      targetName: target.name,
+      played,
+      result,
+    });
+  }
+
+  // ===== GET /api/daily/leaderboard =====
+  async function handleDailyLeaderboard(req, res) {
+    const urlObj = new URL(req.url, 'http://localhost');
+    let limit = parseInt(urlObj.searchParams.get('limit')) || 50;
+    if (limit < 1) limit = 1;
+    if (limit > 100) limit = 100;
+
+    const now = new Date();
+    const dailyDate = now.toISOString().slice(0, 10);
+
+    // 内存缓存（60s TTL）
+    const cacheKey = `daily:${dailyDate}:${limit}`;
+    const cached = leaderboardCache.get(cacheKey);
+    if (cached && Date.now() - cached.at < 60_000) {
+      return jsonResponse(res, { date: dailyDate, leaderboard: cached.data });
+    }
+
+    const rows = db.prepare(`
+      SELECT u.username, u.nickname, g.guess_count, g.timestamp
+      FROM games g
+      INNER JOIN users u ON u.id = g.user_id
+      WHERE g.mode = 'daily' AND g.daily_date = ? AND g.won = 1
+      ORDER BY g.guess_count ASC, g.timestamp ASC
+      LIMIT ?
+    `).all(dailyDate, limit);
+
+    const leaderboard = rows.map((row, idx) => ({
+      rank: idx + 1,
+      username: row.username,
+      displayName: row.nickname || row.username,
+      guessCount: row.guess_count,
+      timestamp: row.timestamp,
+    }));
+
+    leaderboardCache.set(cacheKey, { data: leaderboard, at: Date.now() });
+    // 定期清理过期缓存
+    if (leaderboardCache.size > 50) {
+      const cutoff = Date.now() - 90_000;
+      for (const [k, v] of leaderboardCache) { if (v.at < cutoff) leaderboardCache.delete(k); }
+    }
+
+    console.log(`[daily-leaderboard] returned ${leaderboard.length} entries for ${dailyDate}`);
+    return jsonResponse(res, { date: dailyDate, leaderboard });
+  }
+
   return {
     handleSaveGame,
     handleLeaderboard,
+    handleDailyStatus,
+    handleDailyLeaderboard,
     // 昵称变更时清除排行榜缓存（避免改名后最多 60s 显示旧名）
     invalidateLeaderboardCache: () => leaderboardCache.clear(),
   };

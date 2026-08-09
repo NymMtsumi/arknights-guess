@@ -201,6 +201,8 @@ async function handleRequest(req, res) {
     // Game
     if (req.method === 'POST' && path === '/api/save-game') return await gameRoutes.handleSaveGame(req, res);
     if (req.method === 'GET' && path.startsWith('/api/leaderboard')) return await gameRoutes.handleLeaderboard(req, res);
+    if (req.method === 'GET' && path === '/api/daily/status') return await gameRoutes.handleDailyStatus(req, res);
+    if (req.method === 'GET' && path.startsWith('/api/daily/leaderboard')) return await gameRoutes.handleDailyLeaderboard(req, res);
 
     // Admin (public)
     if (req.method === 'GET' && path === '/api/announcements') return await adminRoutes.handleGetAnnouncements(req, res);

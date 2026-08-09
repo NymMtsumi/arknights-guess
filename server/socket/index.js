@@ -3,8 +3,12 @@ import { Server } from 'socket.io';
 import { parseCookies, deriveGuestName } from '../utils.js';
 
 export function createSocketServer(http, { db, verifyToken, generateKey }) {
+  const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map(s => s.trim())
+    : ['https://www.arknights-guess.online', 'https://arknights-guess.pages.dev', 'http://localhost:3000'];
+
   const io = new Server(http, {
-    cors: { origin: '*' },
+    cors: { origin: allowedOrigins },
     pingInterval: 5000,
     pingTimeout: 15000,
   });
@@ -17,7 +21,8 @@ export function createSocketServer(http, { db, verifyToken, generateKey }) {
     const cookiePk = typeof cookies.player_key === 'string' && cookies.player_key.startsWith('p_') ? cookies.player_key : null;
 
     if (authToken && typeof authToken === 'string') {
-      const decoded = verifyToken(authToken);
+      try {
+        const decoded = verifyToken(authToken);
       if (decoded) {
         const user = db.prepare('SELECT id, username, nickname, player_key, banned_at, token_version FROM users WHERE id = ?').get(decoded.userId);
         if (user) {
@@ -57,6 +62,10 @@ export function createSocketServer(http, { db, verifyToken, generateKey }) {
           socket.data.identityKey = socket.data.playerKey;
           return next();
         }
+      }
+      } catch (err) {
+        console.error('[socket] auth middleware JWT error:', err.message);
+        // Fall through to cookie-based auth
       }
     }
 
@@ -108,12 +117,11 @@ export function createSocketServer(http, { db, verifyToken, generateKey }) {
     if (isLocalProxy) {
       ip = headers['x-real-ip'] || headers['cf-connecting-ip'] || headers['x-forwarded-for']?.split(',')[0]?.trim();
     }
-    if (ip) {
-      // 规范化 IPv6-mapped IPv4
-      ip = ip.replace(/^::ffff:/, '');
-    } else {
+    if (!ip) {
       ip = remoteAddr;
     }
+    // 规范化 IPv6-mapped IPv4（无论来源都执行）
+    ip = ip.replace(/^::ffff:/, '');
     socketIps.set(socket.id, ip);
     socket.on('disconnect', () => socketIps.delete(socket.id));
   });

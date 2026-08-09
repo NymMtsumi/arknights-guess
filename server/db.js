@@ -102,7 +102,11 @@ export function initSchema(db) {
     ['games', 'user_id', "INTEGER REFERENCES users(id)"],
     ['games', 'daily_date', 'TEXT'],
   ]) {
-    try { db.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${type}`); } catch {}
+    try { db.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${type}`); } catch (e) {
+      if (!e.message.includes('duplicate column')) {
+        console.warn(`[DB] ALTER TABLE ${table} ADD COLUMN ${col} failed:`, e.message);
+      }
+    }
   }
 
   // 创建 user_id 索引（用于按用户查询战绩）
@@ -175,8 +179,8 @@ export function initSchema(db) {
   try { db.exec('CREATE INDEX IF NOT EXISTS idx_games_daily_lb ON games(mode, daily_date, won)'); } catch {}
 
   // ===== 定期清理 =====
-  // 清理过期记录（每小时）
-  setInterval(() => {
+  // 清理过期记录（每小时）, 句柄存储在 db 对象上供 gracefulShutdown 清理
+  db._cleanupInterval = setInterval(() => {
     db.prepare("DELETE FROM pending_registrations WHERE datetime(expires_at) < datetime('now')").run();
     db.prepare("DELETE FROM password_resets WHERE datetime(expires_at) < datetime('now')").run();
     // email_verifications 过期清理

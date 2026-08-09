@@ -9,6 +9,11 @@ import { sanitizeString, parseBody, jsonResponse, deriveGuestName, getClientIP }
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const CHARACTERS_PATH = join(__dirname, '..', 'characters.json');
 
+// 转义 LIKE 通配符（防 % 和 _ 注入，使搜索按字面量匹配）
+function escapeLike(str) {
+  return str.replace(/[%_]/g, '\\$&');
+}
+
 // deploy 内存频率限制（简单防重放）
 const deployRateMap = new Map();
 function checkDeployRate(ip) {
@@ -100,7 +105,9 @@ export function registerAdminRoutes({ app, db, requireAdmin, checkNicknameProfan
       FROM games g LEFT JOIN users u ON u.id = g.user_id
       ORDER BY g.id DESC LIMIT 10
     `).all().map(g => ({
-      id: g.id, playerKey: g.player_key?.slice(0, 10), playerName: g.playerName,
+      id: g.id, playerKey: g.player_key?.slice(0, 10),
+      // 未关联用户的游戏回退到游客名（而非 null）
+      playerName: g.playerName || deriveGuestName(g.player_key || ''),
       won: !!g.won, guessCount: g.guess_count, difficulty: g.difficulty,
       targetName: g.target_name, mode: g.mode || 'single', timestamp: g.timestamp,
     }));
@@ -193,8 +200,9 @@ export function registerAdminRoutes({ app, db, requireAdmin, checkNicknameProfan
     let query = 'SELECT id, username, display_id, nickname, email, email_verified_at, role, banned_at, created_at FROM users WHERE 1=1';
     const params = [];
     if (search) {
-      query += ' AND (username LIKE ? OR display_id LIKE ? OR email LIKE ?)';
-      params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+      const escapedSearch = escapeLike(search);
+      query += " AND (username LIKE ? ESCAPE '\\' OR display_id LIKE ? ESCAPE '\\' OR email LIKE ? ESCAPE '\\')";
+      params.push(`%${escapedSearch}%`, `%${escapedSearch}%`, `%${escapedSearch}%`);
     }
 
     const countRow = db.prepare(`SELECT COUNT(*) as total FROM (${query})`).get(...params);
@@ -315,8 +323,9 @@ export function registerAdminRoutes({ app, db, requireAdmin, checkNicknameProfan
     const page = Math.max(1, parseInt(urlObj.searchParams.get('page')) || 1);
     const pageSize = Math.min(100, Math.max(10, parseInt(urlObj.searchParams.get('pageSize')) || 50));
 
-    const whereClause = search ? "AND (g.player_key LIKE ? OR g.target_name LIKE ?)" : '';
-    const searchParams = search ? [`%${search}%`, `%${search}%`] : [];
+    const escapedSearch = search ? escapeLike(search) : '';
+    const whereClause = search ? "AND (g.player_key LIKE ? ESCAPE '\\' OR g.target_name LIKE ? ESCAPE '\\')" : '';
+    const searchParams = search ? [`%${escapedSearch}%`, `%${escapedSearch}%`] : [];
 
     // 匿名用户 = user_id IS NULL（不再用 LEFT JOIN 技巧）
     const countQuery = `
@@ -420,11 +429,46 @@ export function registerAdminRoutes({ app, db, requireAdmin, checkNicknameProfan
     }
 
     jsonResponse(res, { ok: true, message: 'deploy triggered' });
-    logAdminAction(null, 'deploy', 'system', null, 'webhook triggered', ip);
+    // admin_id = 0 表示系统操作（users 表 id 从 1 开始，0 不会冲突）
+    logAdminAction(0, 'deploy', 'system', null, 'webhook triggered', ip);
+
+    // 注意：当前部署流程缺乏自动回滚机制。如果新代码有运行时错误，
+    // 服务器将保持故障状态，需手动 SSH 到 VPS 执行 git revert + pm2 restart。
     setTimeout(() => {
+      const projectPath = process.cwd();
+      const nodeDir = process.execPath.replace(/[/\\][^/\\]+$/, '');
+      const pm2Name = process.env.PM2_APP_NAME || 'liyiba';
+      // 使用 node + better-sqlite3 备份数据库（避免依赖 sqlite3 CLI）
+      const backupCmd = `node -e "const db=require('better-sqlite3')('data.db');const ts=new Date().toISOString().replace(/[:T]/g,'').slice(0,12);db.backup('data.db.bak-'+ts);db.close();console.log('data.db.bak-'+ts)"`;
       spawn('bash', ['-c',
-        'cd /opt/liyiba && echo "=== Deploy $(date -Iseconds) ===" >> deploy.log && BACKUP_FILE="data.db.bak-$(date +%Y%m%d-%H%M)" && sqlite3 data.db ".backup $BACKUP_FILE" && echo " Backup: $BACKUP_FILE" >> deploy.log && git fetch origin main >> deploy.log 2>&1 && git pull --ff-only origin main >> deploy.log 2>&1 && export PATH=$PATH:/root/.nvm/versions/node/v18.20.4/bin && npm install --production >> deploy.log 2>&1 && pm2 restart liyiba >> deploy.log 2>&1 && find /opt/liyiba -maxdepth 1 -name "data.db.bak-*" -mtime +7 -delete 2>/dev/null && echo "=== Deploy OK ===" >> deploy.log || echo "=== Deploy FAILED ===" >> deploy.log'
+        `cd ${projectPath} && echo "=== Deploy $(date -Iseconds) ===" >> deploy.log && BACKUP_FILE=$(${backupCmd} 2>> deploy.log) && echo " Backup: $BACKUP_FILE" >> deploy.log && git fetch origin main >> deploy.log 2>&1 && git stash push -m "auto-stash-before-deploy" >> deploy.log 2>&1; git pull --ff-only origin main >> deploy.log 2>&1 && export PATH=$PATH:${nodeDir} && npm install --production >> deploy.log 2>&1 && pm2 restart ${pm2Name} --update-env >> deploy.log 2>&1 && find ${projectPath} -maxdepth 1 -name "data.db.bak-*" -mtime +7 -delete 2>/dev/null && echo "=== Deploy OK ===" >> deploy.log || echo "=== Deploy FAILED ===" >> deploy.log`
       ], { detached: true, stdio: 'ignore' }).unref();
+
+      // 部署后健康检查：等待 PM2 重启完成后探测 /api/version
+      // 这是尽最大努力的检查，不是完整的回滚——仅记录失败以便人工介入
+      setTimeout(() => {
+        const PORT = process.env.PORT || 3001;
+        const url = `http://127.0.0.1:${PORT}/api/version`;
+        const http = url.startsWith('https') ? require('node:https') : require('node:http');
+        const checkReq = http.get(url, { timeout: 5000 }, (checkRes) => {
+          let data = '';
+          checkRes.on('data', chunk => data += chunk);
+          checkRes.on('end', () => {
+            if (checkRes.statusCode === 200) {
+              console.log('[deploy] health check PASSED:', data.slice(0, 100));
+            } else {
+              console.error('[deploy] health check FAILED: HTTP', checkRes.statusCode, data.slice(0, 200));
+            }
+          });
+        });
+        checkReq.on('error', (e) => {
+          console.error('[deploy] health check ERROR:', e.message, '(server may be down after deploy)');
+        });
+        checkReq.on('timeout', () => {
+          checkReq.destroy();
+          console.error('[deploy] health check TIMEOUT: server not responding after deploy');
+        });
+      }, 8000); // 500ms deploy delay + ~5s PM2 restart + 2.5s buffer
     }, 500);
   }
 
@@ -477,7 +521,7 @@ export function registerAdminRoutes({ app, db, requireAdmin, checkNicknameProfan
     }
 
     const newChar = {
-      id: body.id || `char_custom_${Date.now()}`,
+      id: sanitizeString(body.id, 64) || `char_custom_${Date.now()}`,
       name,
       nameEn: sanitizeString(body.nameEn, 64) || name,
       class: sanitizeString(body.class, 32) || '未知',
@@ -744,7 +788,7 @@ export function registerAdminRoutes({ app, db, requireAdmin, checkNicknameProfan
     return jsonResponse(res, {
       logs: rows.map(r => ({
         id: r.id,
-        adminName: r.admin_name,
+        adminName: r.admin_name || 'System',
         action: r.action,
         targetType: r.target_type,
         targetId: r.target_id,

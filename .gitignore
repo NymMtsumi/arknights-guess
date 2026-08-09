@@ -33,6 +33,8 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+!server/.env.example
 
 # sensitive project info
 PROJECT_CREDENTIALS.md
@@ -61,7 +63,7 @@ cloudflared-linux-amd64
 *.db-shm
 *.db-wal
 *.db-journal
-package-lock.json
+data.db.bak-*
 
 # session exports (too large, not code)
 session-user-messages.md

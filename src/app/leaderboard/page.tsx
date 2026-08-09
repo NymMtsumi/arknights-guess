@@ -26,16 +26,16 @@ interface DailyEntry {
 }
 
 const DIFFICULTIES = [
-  { key: '', label: '全部' },
-  { key: 'easy', label: '简单' },
-  { key: 'medium', label: '普通' },
-  { key: 'hard', label: '困难' },
+  { key: '', labelKey: 'leaderboard.difficultyAll' },
+  { key: 'easy', labelKey: 'leaderboard.difficultyEasy' },
+  { key: 'medium', labelKey: 'leaderboard.difficultyMedium' },
+  { key: 'hard', labelKey: 'leaderboard.difficultyHard' },
 ] as const;
 
 const MODES = [
-  { key: 'single', label: '单人' },
-  { key: 'multi', label: '多人' },
-  { key: 'daily', label: '每日' },
+  { key: 'single', labelKey: 'leaderboard.modeSingle' },
+  { key: 'multi', labelKey: 'leaderboard.modeMulti' },
+  { key: 'daily', labelKey: 'leaderboard.modeDaily' },
 ] as const;
 
 /** 单行高度（px），与 CSS 中 --lb-row-height 保持一致 */
@@ -48,7 +48,7 @@ const VISIBLE_ROWS = 7;
 const MAX_ROWS = 50;
 
 export default function LeaderboardPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [dailyEntries, setDailyEntries] = useState<DailyEntry[]>([]);
   const [dailyDate, setDailyDate] = useState('');
@@ -66,14 +66,14 @@ export default function LeaderboardPage() {
     }
   }, []);
 
-  const fetchLeaderboard = useCallback(async (diff: string, m: string) => {
+  const fetchLeaderboard = useCallback(async (diff: string, m: string, signal?: AbortSignal) => {
     setLoading(true);
     setError(null);
     try {
       const base = getServerUrl();
 
       if (m === 'daily') {
-        const res = await fetch(`${base}/api/daily/leaderboard?limit=${MAX_ROWS}`);
+        const res = await fetch(`${base}/api/daily/leaderboard?limit=${MAX_ROWS}`, { signal });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         setDailyEntries((data.leaderboard || []).slice(0, MAX_ROWS));
@@ -82,13 +82,14 @@ export default function LeaderboardPage() {
       } else {
         const params = new URLSearchParams({ limit: String(MAX_ROWS), mode: m });
         if (diff) params.set('difficulty', diff);
-        const res = await fetch(`${base}/api/leaderboard?${params.toString()}`);
+        const res = await fetch(`${base}/api/leaderboard?${params.toString()}`, { signal });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         setEntries((data.leaderboard || []).slice(0, MAX_ROWS));
         setDailyEntries([]);
       }
     } catch (err: any) {
+      if (err?.name === 'AbortError') return; // ignore aborted requests
       setError(err?.message || 'Failed to fetch leaderboard');
       setEntries([]);
       setDailyEntries([]);
@@ -98,7 +99,9 @@ export default function LeaderboardPage() {
   }, []);
 
   useEffect(() => {
-    fetchLeaderboard(difficulty, mode);
+    const controller = new AbortController();
+    fetchLeaderboard(difficulty, mode, controller.signal);
+    return () => controller.abort();
   }, [difficulty, mode, fetchLeaderboard]);
 
   const handleDifficultyChange = (diff: string) => {
@@ -153,7 +156,7 @@ export default function LeaderboardPage() {
   const formatTime = (ts: string): string => {
     try {
       const d = new Date(ts);
-      return d.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      return d.toLocaleTimeString(locale === 'zh-CN' ? 'zh-CN' : 'en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     } catch { return '--'; }
   };
 
@@ -193,7 +196,7 @@ export default function LeaderboardPage() {
             textAlign: 'center',
           }}
         >
-          🏆 排行榜
+          🏆 {t('leaderboard.title')}
         </h1>
 
         {/* 模式切换 */}
@@ -207,7 +210,7 @@ export default function LeaderboardPage() {
               onClick={() => handleModeChange(m.key)}
               className={mode === m.key ? 'active' : ''}
             >
-              {m.label}
+              {t(m.labelKey)}
             </button>
           ))}
         </div>
@@ -221,7 +224,7 @@ export default function LeaderboardPage() {
                 onClick={() => handleDifficultyChange(d.key)}
                 className={difficulty === d.key ? 'active' : ''}
               >
-                {d.label}
+                {t(d.labelKey)}
               </button>
             ))}
           </div>
@@ -248,7 +251,7 @@ export default function LeaderboardPage() {
           ) : error ? (
             <div className="leaderboard-empty">
               <p style={{ color: 'var(--danger)', fontSize: '1rem', marginBottom: '16px' }}>
-                加载失败：{error}
+                {t('leaderboard.loadError')}：{error}
               </p>
               <button
                 onClick={() => fetchLeaderboard(difficulty, mode)}
@@ -263,13 +266,13 @@ export default function LeaderboardPage() {
                   fontSize: '0.9rem',
                 }}
               >
-                重试
+                {t('common.retry')}
               </button>
             </div>
           ) : (isDaily ? dailyEntries.length === 0 : entries.length === 0) ? (
             <div className="leaderboard-empty">
               <p style={{ fontSize: '3rem', marginBottom: '16px' }}>📭</p>
-              <p style={{ fontSize: '1.1rem' }}>{isDaily ? '今日暂无排行数据' : '暂无排行数据'}</p>
+              <p style={{ fontSize: '1.1rem' }}>{isDaily ? t('leaderboard.noDataToday') : t('leaderboard.noData')}</p>
             </div>
           ) : isDaily ? (
             <div className="leaderboard-table-wrap">
@@ -285,9 +288,9 @@ export default function LeaderboardPage() {
                   <thead>
                     <tr>
                       <th>#</th>
-                      <th className="lb-th-left">玩家</th>
-                      <th>猜测次数</th>
-                      <th>提交时间</th>
+                      <th className="lb-th-left">{t('leaderboard.player')}</th>
+                      <th>{t('leaderboard.guessCount')}</th>
+                      <th>{t('leaderboard.submitTime')}</th>
                     </tr>
                   </thead>
                 </table>
@@ -327,8 +330,8 @@ export default function LeaderboardPage() {
 
               <div className="leaderboard-footer">
                 {dailyDate && <span>{dailyDate} · </span>}
-                共 {dailyEntries.length} 条记录
-                {dailyEntries.length >= MAX_ROWS ? '（仅显示前 50 名）' : ''}
+                {t('leaderboard.footer', { count: dailyEntries.length })}
+                {dailyEntries.length >= MAX_ROWS ? t('leaderboard.footerLimit', { count: MAX_ROWS }) : ''}
               </div>
             </div>
           ) : (
@@ -347,11 +350,11 @@ export default function LeaderboardPage() {
                   <thead>
                     <tr>
                       <th>#</th>
-                      <th className="lb-th-left">玩家</th>
-                      <th>胜场</th>
-                      <th>总局数</th>
-                      <th>胜率</th>
-                      {showAvgGuesses && <th>平均猜测</th>}
+                      <th className="lb-th-left">{t('leaderboard.player')}</th>
+                      <th>{t('leaderboard.wins')}</th>
+                      <th>{t('leaderboard.totalGames')}</th>
+                      <th>{t('leaderboard.winRate')}</th>
+                      {showAvgGuesses && <th>{t('leaderboard.avgGuesses')}</th>}
                     </tr>
                   </thead>
                 </table>
@@ -403,8 +406,8 @@ export default function LeaderboardPage() {
 
               {/* 总数提示 */}
               <div className="leaderboard-footer">
-                共 {entries.length} 条记录
-                {entries.length >= MAX_ROWS ? '（仅显示前 50 名）' : ''}
+                {t('leaderboard.footer', { count: entries.length })}
+                {entries.length >= MAX_ROWS ? t('leaderboard.footerLimit', { count: MAX_ROWS }) : ''}
               </div>
             </div>
           )}

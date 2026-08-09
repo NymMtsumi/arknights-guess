@@ -3,14 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import DOMPurify from 'dompurify';
 import { apiCall } from '@/lib/auth';
-
-interface Announcement {
-  id: number;
-  title: string;
-  content: string;
-  is_popup: boolean;
-  created_at: string;
-}
+import type { Announcement } from './ChangelogDialog';
 
 const DISMISSED_KEY = 'arknights-dismissed-announcements';
 

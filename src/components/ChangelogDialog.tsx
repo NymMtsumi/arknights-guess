@@ -3,13 +3,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import DOMPurify from 'dompurify';
 import { apiCall } from '@/lib/auth';
+import { useI18n } from '@/lib/i18n';
 
 interface ChangelogDialogProps {
   open: boolean;
   onClose: () => void;
 }
 
-interface Announcement {
+export interface Announcement {
   id: number;
   title: string;
   content: string;
@@ -66,6 +67,7 @@ const HISTORICAL_CHANGELOG = [
 ];
 
 export function ChangelogDialog({ open, onClose }: ChangelogDialogProps) {
+  const { t } = useI18n();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [apiOk, setApiOk] = useState(false);
 
@@ -123,7 +125,7 @@ export function ChangelogDialog({ open, onClose }: ChangelogDialogProps) {
             marginBottom: '20px',
           }}
         >
-          📋 更新日志
+          {t('changelog.title')}
         </h2>
 
         {hasApiData ? (

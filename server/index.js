@@ -37,7 +37,15 @@ try {
     }
   }
   console.log('[env] loaded .env file');
-} catch { /* .env 不存在则跳过 */ }
+} catch (err) {
+  if (err.code === 'ENOENT') {
+    // .env 文件不存在则跳过（开发环境可选）
+    console.log('[env] no .env file found, using process environment only');
+  } else {
+    // 权限错误等其他异常应记录警告，不能静默吞掉
+    console.warn('[env] failed to load .env file:', err.message, '(code:', err.code || 'none', ')');
+  }
+}
 
 // ===== 全局错误处理 =====
 process.on('uncaughtException', (err) => {
@@ -52,10 +60,16 @@ process.on('unhandledRejection', (reason) => {
 // ===== 配置 =====
 const PORT = process.env.PORT || 3001;
 if (!process.env.JWT_SECRET) {
-  if (process.env.NODE_ENV === 'development') {
-    // 仅本地开发允许使用 dev 密钥
+  if (process.env.NODE_ENV === 'development' && process.env.ALLOW_DEV_FALLBACK === '1') {
+    // 仅本地开发 + 显式环境变量允许使用 dev 密钥（双重防护，防止 NODE_ENV 误设为 development）
     console.warn('[WARN] ⚠️ JWT_SECRET is not set — using dev default (local testing only)');
+    console.warn('[WARN] ⚠️ ALLOW_DEV_FALLBACK=1 is active — JWTs are forgeable! Do NOT use in production!');
     process.env.JWT_SECRET = 'arknights-guess-dev-secret-local-only';
+  } else if (process.env.NODE_ENV === 'development') {
+    // NODE_ENV=development 但未设置 ALLOW_DEV_FALLBACK → 拒绝启动（防误配置）
+    console.error('[FATAL] ⚠️ NODE_ENV=development but ALLOW_DEV_FALLBACK is not set!');
+    console.error('[FATAL] Set ALLOW_DEV_FALLBACK=1 in .env for local development, or set JWT_SECRET directly.');
+    process.exit(1);
   } else {
     // 生产环境必须设置 JWT_SECRET
     console.error('[FATAL] ⚠️ JWT_SECRET is not set in production!');
@@ -66,16 +80,20 @@ if (!process.env.JWT_SECRET) {
 const APP_VERSION = '2026-08-06-002';
 const DB_PATH = join(__dirname, '..', 'data.db');
 
-const SMTP_CONFIG = {
-  host: 'smtp.qq.com',
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.SMTP_USER || '3479083602@qq.com',
-    pass: process.env.SMTP_PASS || '',
-  },
-};
-const transporter = createTransport(SMTP_CONFIG);
+let transporter = null;
+if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+  transporter = createTransport({
+    host: 'smtp.qq.com',
+    port: 465,
+    secure: true,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+} else {
+  console.warn('[WARN] SMTP_USER or SMTP_PASS not set — email sending will be unavailable');
+}
 const SITE_URL = process.env.SITE_URL || 'http://localhost:3000';
 
 // ===== 初始化数据库 & 认证 =====
@@ -87,7 +105,7 @@ initSchema(db);
 console.log('[init] step 2: db initialized');
 const auth = createAuth({ db, JWT_SECRET: process.env.JWT_SECRET });
 console.log('[init] step 3: auth created');
-const { signToken, verifyToken, requireAuth, requireAdmin, checkRateLimit } = auth;
+const { signToken, verifyToken, requireAuth, requireAdmin, checkRateLimit, _rlCleanupInterval } = auth;
 
 // ===== 初始化 Socket.IO（先创建，路由需要引用 onlinePlayers） =====
 console.log('[init] step 4: creating HTTP server...');
@@ -115,10 +133,10 @@ const gameHandlers = registerGameHandlers({
   findRoomByIdentityKey: roomManager.findRoomByIdentityKey,
   genCode: roomManager.genCode,
   onlinePlayers, onlineSockets, ONLINE_TIMEOUT,
-  matchmakingQueue: matchmaking.matchmakingQueue,
   handleJoinQueue: matchmaking.handleJoinQueue,
   handleLeaveQueue: matchmaking.handleLeaveQueue,
   removeFromQueue: matchmaking.removeFromQueue,
+  cleanupStaleQueue: matchmaking.cleanupStaleQueue,
 });
 
 // 延迟注入：matchmaking 需要 startRound（由 gameHandlers 提供）
@@ -151,13 +169,18 @@ const adminRoutes = registerAdminRoutes({
 
 // ===== HTTP 请求处理 =====
 async function handleRequest(req, res) {
-  // CORS 预检
+  // CORS 预检（与 socket/index.js 共用同一个 ALLOWED_ORIGINS 列表，不再使用通配符 *）
   if (req.method === 'OPTIONS') {
+    const allowedOrigins = process.env.ALLOWED_ORIGINS
+      ? process.env.ALLOWED_ORIGINS.split(',').map(s => s.trim())
+      : ['https://www.arknights-guess.online', 'https://arknights-guess.pages.dev', 'http://localhost:3000'];
+    const requestOrigin = req.headers.origin || '';
+    const corsOrigin = allowedOrigins.includes(requestOrigin) ? requestOrigin : allowedOrigins[0];
     res.writeHead(204, {
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': corsOrigin,
       'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      'Access-Control-Allow-Credentials': 'false',
+      'Access-Control-Allow-Credentials': 'true',
       'Access-Control-Max-Age': '600',
     });
     return res.end();
@@ -226,15 +249,18 @@ async function handleRequest(req, res) {
     if (req.method === 'GET' && path === '/api/admin/tokens') return await adminRoutes.handleListTokens(req, res);
     if (req.method === 'DELETE' && path.startsWith('/api/admin/tokens/')) {
       const tid = parseInt(path.split('/').pop(), 10);
+      if (!Number.isFinite(tid)) return jsonResponse(res, { error: '无效的 token ID' }, 400);
       return await adminRoutes.handleRevokeToken(req, res, tid);
     }
     if (req.method === 'POST' && path === '/api/admin/announcements') return await adminRoutes.handleCreateAnnouncement(req, res);
     if (req.method === 'PUT' && path.startsWith('/api/admin/announcements/')) {
       const id = parseInt(path.split('/').pop(), 10);
+      if (!Number.isFinite(id)) return jsonResponse(res, { error: '无效的公告 ID' }, 400);
       return await adminRoutes.handleUpdateAnnouncement(req, res, id);
     }
     if (req.method === 'DELETE' && path.startsWith('/api/admin/announcements/')) {
       const id = parseInt(path.split('/').pop(), 10);
+      if (!Number.isFinite(id)) return jsonResponse(res, { error: '无效的公告 ID' }, 400);
       return await adminRoutes.handleDeleteAnnouncement(req, res, id);
     }
     if (req.method === 'GET' && path.startsWith('/api/admin/users')) return await adminRoutes.handleAdminUsers(req, res);
@@ -257,7 +283,7 @@ async function handleRequest(req, res) {
     if (req.method === 'POST' && path === '/api/deploy') return await adminRoutes.handleDeploy(req, res);
   } catch (err) {
     console.error('[route] handler error:', err.message, err.stack?.split('\n')[1] || '');
-    return jsonResponse(res, { error: '服务器内部错误' }, 500);
+    if (!res.headersSent) return jsonResponse(res, { error: '服务器内部错误' }, 500);
   }
 
   // 未匹配的路由
@@ -265,22 +291,32 @@ async function handleRequest(req, res) {
 }
 
 // ===== 统一周期清理（每分钟） =====
-setInterval(() => {
+const cleanupInterval = setInterval(() => {
   gameHandlers.runPeriodicCleanup();
-  try { db.pragma('wal_checkpoint(PASSIVE)'); } catch {}
+  try { db.pragma('wal_checkpoint(PASSIVE)'); } catch (e) { console.error('[wal] checkpoint failed:', e.message); }
 }, 60_000);
 
 // ===== 启动服务器 =====
-http.listen(PORT, () => console.log(`:${PORT}`));
+http.listen(PORT, () => console.log(`[init] Server listening on http://localhost:${PORT}`));
 
 // ===== 优雅关闭 =====
-process.on('SIGTERM', () => {
-  console.log('[shutdown] SIGTERM received, closing...');
+function gracefulShutdown(signal) {
+  console.log(`[shutdown] ${signal} received, closing...`);
+  clearInterval(cleanupInterval);
+  if (db._cleanupInterval) clearInterval(db._cleanupInterval);
+  if (_rlCleanupInterval) clearInterval(_rlCleanupInterval);
+  let shutdownTimer = null;
   io.close();
-  http.close(() => { db.close(); process.exit(0); });
-});
-process.on('SIGINT', () => {
-  console.log('[shutdown] SIGINT received, closing...');
-  io.close();
-  http.close(() => { db.close(); process.exit(0); });
-});
+  http.close(() => {
+    if (shutdownTimer) clearTimeout(shutdownTimer);
+    db.close();
+    process.exit(0);
+  });
+  // 10 秒强制退出
+  shutdownTimer = setTimeout(() => {
+    console.warn('[shutdown] timed out after 10s, forcing exit');
+    process.exit(1);
+  }, 10_000);
+}
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));

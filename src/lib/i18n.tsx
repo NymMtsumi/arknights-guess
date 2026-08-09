@@ -34,12 +34,15 @@ function getStoredLocale(): Locale {
     if (stored === 'zh-CN' || stored === 'en') return stored;
   } catch { /* ignore */ }
   // 检测浏览器语言
-  const navLang = navigator.language;
-  return navLang.startsWith('zh') ? 'zh-CN' : 'en';
+  if (typeof navigator !== 'undefined') {
+    const navLang = navigator.language;
+    return navLang.startsWith('zh') ? 'zh-CN' : 'en';
+  }
+  return 'zh-CN';
 }
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>('zh-CN');
+  const [locale, setLocaleState] = useState<Locale>(() => getStoredLocale());
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {

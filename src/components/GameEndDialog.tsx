@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useI18n } from '@/lib/i18n';
 import { loadHistory } from '@/lib/stats';
 import type { Character, GameStatus } from '@/types/character';
@@ -41,7 +42,11 @@ export function GameEndDialog({ status, target, guessCount, onClose, onNewGame }
   if (!target) return null;
 
   const won = status === 'won';
-  const streak = computeStreak();
+  const [streak, setStreak] = useState<{ type: 'win' | 'loss' | null; count: number }>({ type: null, count: 0 });
+
+  useEffect(() => {
+    setStreak(computeStreak());
+  }, []);
 
   return (
     <div
@@ -103,8 +108,8 @@ export function GameEndDialog({ status, target, guessCount, onClose, onNewGame }
             border: `1px solid ${streak.type === 'win' ? 'rgba(255, 215, 0, 0.35)' : 'rgba(255, 101, 120, 0.3)'}`,
           }}>
             {streak.type === 'win'
-              ? `🔥 连胜 ${streak.count} 局！`
-              : `💪 连败 ${streak.count} 局，下次一定！`
+              ? t('game.streakWin', { count: streak.count })
+              : t('game.streakLoss', { count: streak.count })
             }
           </div>
         )}

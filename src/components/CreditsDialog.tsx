@@ -1,5 +1,7 @@
 'use client';
 
+import { useI18n } from '@/lib/i18n';
+
 interface CreditEntry {
   name: string;
   bilibiliUrl: string;
@@ -25,14 +27,16 @@ const acknowledgements: CreditEntry[] = [
 ];
 
 export function CreditsDialog({ open, onClose, type }: CreditsDialogProps) {
+  const { t } = useI18n();
+
   if (!open) return null;
 
   const isDev = type === 'developers';
   const entries = isDev ? developers : acknowledgements;
-  const title = isDev ? '开发者名单' : '致谢名单';
+  const title = isDev ? t('credits.developersTitle') : t('credits.acknowledgementsTitle');
   const subtitle = isDev
-    ? '感谢以下开发者对本项目的贡献'
-    : '感谢以下朋友对本项目的支持与帮助';
+    ? t('credits.developersSubtitle')
+    : t('credits.acknowledgementsSubtitle');
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }}>
@@ -114,7 +118,7 @@ export function CreditsDialog({ open, onClose, type }: CreditsDialogProps) {
                 {entry.role && (
                   <span style={{ color: 'var(--text-light)', fontSize: '0.85rem' }}>{entry.role}</span>
                 )}
-                <span style={{ color: 'var(--primary)', fontSize: '0.8rem' }}>B站</span>
+                <span style={{ color: 'var(--primary)', fontSize: '0.8rem' }}>{t('credits.bilibiliLabel')}</span>
               </a>
             ))}
           </div>
@@ -125,8 +129,8 @@ export function CreditsDialog({ open, onClose, type }: CreditsDialogProps) {
             color: 'var(--text-light)',
           }}>
             <p style={{ fontSize: '3rem', margin: '0 0 12px' }}>🏗️</p>
-            <p>名单正在整理中，敬请期待</p>
-            <p style={{ fontSize: '0.8rem', marginTop: '8px' }}>List is being compiled, stay tuned</p>
+            <p>{t('credits.emptyTitle')}</p>
+            <p style={{ fontSize: '0.8rem', marginTop: '8px' }}>{t('credits.emptySubtitle')}</p>
           </div>
         )}
       </div>

@@ -43,11 +43,6 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
 
   if (!open) return null;
 
-  // 判断邮箱验证状态
-  const emailForStatus = currentUser?.email;
-  // 如果当前用户有 email（但不追踪 email_verified），简化处理：
-  // 使用一个辅助组件来显示验证状态
-
   // 登录成功后更新 email 状态
   const handleLoginSuccess = (data: any) => {
     if (data.email) {
@@ -201,7 +196,7 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
               已登录账号 · 游戏数据自动同步
             </p>
             {/* 邮箱未验证提示 */}
-            {currentUser.email && loginEmailVerified === false && (
+            {currentUser.email && loginEmailVerified !== true && (
               <div style={{
                 background: '#fff8e1',
                 color: '#8a6d14',

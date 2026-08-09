@@ -1,6 +1,10 @@
 'use client';
 
+import { useI18n } from '@/lib/i18n';
+
 export function Footer() {
+  const { t } = useI18n();
+
   return (
     <footer
       style={{
@@ -10,9 +14,9 @@ export function Footer() {
         fontSize: 'var(--fs-2xs)',
       }}
     >
-      <span>Made with ❤️ by 若叶家若麦</span>
+      <span>{t('footer.madeWith')}</span>
       <span style={{ margin: '0 8px', color: 'var(--border)' }}>·</span>
-      <span>Based on PRTS data & Friberg open-source project</span>
+      <span>{t('footer.basedOn')}</span>
     </footer>
   );
 }

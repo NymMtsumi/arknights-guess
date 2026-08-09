@@ -70,6 +70,13 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
     if (guessCount < 0) {
       return jsonResponse(res, { error: 'guessCount 不能为负数' }, 400);
     }
+    // 赢了不可能 0 次猜测；非每日模式也应有合理上限
+    if (won && guessCount < 1) {
+      return jsonResponse(res, { error: '获胜时 guessCount 至少为 1' }, 400);
+    }
+    if (guessCount > 50) {
+      return jsonResponse(res, { error: 'guessCount 超出合理范围' }, 400);
+    }
 
     const authHeader = req.headers.authorization || '';
     let userId = null;
@@ -172,7 +179,7 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
 
     // 清除排行榜缓存（新游戏可能影响排名）
     for (const key of leaderboardCache.keys()) {
-      if (key.startsWith(mode + ':') || (mode === 'daily' && key.startsWith('daily:'))) leaderboardCache.delete(key);
+      if (key.startsWith(mode + ':')) leaderboardCache.delete(key);
     }
 
     console.log(`[save-game] pk=${player_key.slice(0, 10)} won=${won} guesses=${guessCount} mode=${mode} diff=${difficulty}`);
@@ -258,6 +265,11 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
 
   // ===== GET /api/daily/status =====
   async function handleDailyStatus(req, res) {
+    const ip = getClientIP(req);
+    if (!checkRateLimit(`dstatus:${ip}`, 30, 60_000)) {
+      return jsonResponse(res, { error: '请求过于频繁，请稍后再试' }, 429);
+    }
+
     // 计算当天每日目标
     const target = pickDailyTarget('hard');
     const now = new Date();
@@ -300,17 +312,22 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
       }
     }
 
+    // 未挑战时不暴露当日目标名称/ID（客户端自行本地计算，防止 API 窥探答案）
     return jsonResponse(res, {
       date: dailyDate,
-      targetId: target.id,
-      targetName: target.name,
       played,
-      result,
+      ...(played ? { targetId: target.id, targetName: target.name } : {}),
+      ...(result ? { result } : {}),
     });
   }
 
   // ===== GET /api/daily/leaderboard =====
   async function handleDailyLeaderboard(req, res) {
+    const ip = getClientIP(req);
+    if (!checkRateLimit(`dlb:${ip}`, 30, 60_000)) {
+      return jsonResponse(res, { error: '请求过于频繁，请稍后再试' }, 429);
+    }
+
     const urlObj = new URL(req.url, 'http://localhost');
     let limit = parseInt(urlObj.searchParams.get('limit')) || 50;
     if (limit < 1) limit = 1;

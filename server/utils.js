@@ -1,6 +1,18 @@
 // 工具函数模块
 import { createHash, randomBytes } from 'node:crypto';
 
+// CORS 允许的来源（与 socket/index.js 保持一致）
+// 使用函数延迟求值：模块顶层执行时 process.env 尚未加载 .env 文件
+function getAllowedOrigins() {
+  return process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map(s => s.trim())
+    : ['https://www.arknights-guess.online', 'https://arknights-guess.pages.dev', 'http://localhost:3000'];
+}
+function getCorsOrigin() {
+  const origins = getAllowedOrigins();
+  return origins[0] || 'https://www.arknights-guess.online';
+}
+
 // 输入清理：trim 所有字符串，强制最大长度
 export function sanitizeString(val, maxLen) {
   if (typeof val !== 'string') return '';
@@ -70,10 +82,10 @@ export function jsonResponse(res, data, status = 200, extraHeaders = {}) {
   const body = JSON.stringify(data);
   const headers = {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': getCorsOrigin(),
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, PATCH, DELETE',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Allow-Credentials': 'false',
+    'Access-Control-Allow-Credentials': 'true',
     'Content-Length': Buffer.byteLength(body),
     ...extraHeaders,
   };
@@ -109,7 +121,7 @@ const NICKNAME_FORBIDDEN = new Set([
   '傻逼', '傻比', '傻b', 'sb', '傻杯', '煞笔', '沙比', '沙雕', '傻屌', '傻叉',
   '弱智', '脑残', '智障', '白痴', '二百五', '废物', '垃圾',
   '操你', '草你', '艹你', '草泥马', '操你妈', 'cnm', 'cao', '我操', '卧槽', '我艹',
-  '妈的', '妈的', '他妈的', '你妈的', '你妈', '他妈', '妈逼', '妈比', '妈了个',
+  '妈的', '他妈的', '你妈的', '你妈', '他妈', '妈逼', '妈比', '妈了个',
   '贱人', '贱货', '骚货', '骚比', '婊子', '婊', '妓女', '鸡婆', '荡妇',
   '淫', '奸', '强奸', '轮奸', '鸡巴', '鸡吧', '几把', '几巴', 'jb', 'j8',
   '屌', '屄', '逼', ' bitch', 'bitch', 'fuck', 'fck', 'fuk', 'f*ck', 'shit',
@@ -135,12 +147,12 @@ const NICKNAME_FORBIDDEN = new Set([
 ]);
 
 export function checkNicknameProfanity(nickname) {
+  if (typeof nickname !== 'string' || nickname.trim().length === 0) return '空白昵称';
   const lower = nickname.toLowerCase();
   for (const word of NICKNAME_FORBIDDEN) {
     if (lower.includes(word.toLowerCase())) return word;
   }
   if (/^[\d\s._\-+*=#@!~`]+$/.test(nickname)) return '纯数字符号';
   if (/(.)\1{6,}/.test(nickname)) return '重复字符';
-  if (nickname.trim().length === 0) return '空白昵称';
   return null;
 }

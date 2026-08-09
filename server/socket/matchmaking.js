@@ -19,9 +19,19 @@ export function createMatchmaking({ io, roomPlayerIndex, genMatchCode, createMat
     // 防止自匹配：同一 player_key 的两个 socket 不能互相对战
     if (p1.playerKey === p2.playerKey) {
       const toEvict = p2.joinedAt >= p1.joinedAt ? p2.socketId : p1.socketId;
+      const toKeep = toEvict === p1.socketId ? p2.socketId : p1.socketId;
       matchmakingQueue.delete(toEvict);
       const sock = io.sockets.sockets.get(toEvict);
       if (sock) sock.emit('matchmaking:status', { queued: false, position: 0, difficulty: '' });
+      // 通知保留的 socket 更新位置
+      const keepSock = io.sockets.sockets.get(toKeep);
+      if (keepSock) {
+        const newPos = Array.from(matchmakingQueue.values())
+          .filter(e => e.difficulty === difficulty)
+          .sort((a, b) => a.joinedAt - b.joinedAt)
+          .findIndex(e => e.socketId === toKeep) + 1;
+        keepSock.emit('matchmaking:status', { queued: true, position: newPos, difficulty });
+      }
       // 重新尝试匹配（剩余的单人可能匹配到下一个）
       tryMatch(difficulty);
       return;

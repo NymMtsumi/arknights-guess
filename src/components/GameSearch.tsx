@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { pinyin } from 'pinyin-pro';
 import type { Character } from '@/types/character';
-import { searchCharacters, findCharacterByName } from '@/lib/game-engine';
+import { findCharacterByName } from '@/lib/game-engine';
 import { useGameStore } from '@/stores/game-store';
 import charactersData from '@/data/characters.json';
 
@@ -59,11 +59,11 @@ interface GameSearchProps {
   onGuess: (character: Character) => void;
   disabled: boolean;
   guessedIds: Set<string>;
-  target?: Character | null; // 开发者 cheat
+  target?: Character | null; // 开发者 cheat（预留，暂未使用）
   remainingGuesses?: number; // 剩余猜测次数，≤3 时输入框红色预警
 }
 
-export function GameSearch({ onGuess, disabled, guessedIds, target, remainingGuesses }: GameSearchProps) {
+export function GameSearch({ onGuess, disabled, guessedIds, target: _target, remainingGuesses }: GameSearchProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Character[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);

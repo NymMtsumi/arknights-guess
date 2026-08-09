@@ -13,16 +13,19 @@ export function Header() {
   const [authOpen, setAuthOpen] = useState(false);
   const [guestName, setGuestName] = useState('');
   const user = typeof window !== 'undefined' ? getUser() : null;
+  // Stable boolean to avoid re-running the effect on every render
+  // (getUser() returns a new object reference each call via JSON.parse)
+  const isLoggedIn = !!user;
 
   useEffect(() => {
-    if (user) return;
+    if (isLoggedIn) return;
     fetch(`${getServerUrl()}/api/guest-identity`)
       .then(res => res.json())
       .then(data => {
         if (data.displayName) setGuestName(data.displayName);
       })
       .catch(() => {}); // Silently fail
-  }, [user]);
+  }, [isLoggedIn]);
 
   return (
     <header className="header-bar">

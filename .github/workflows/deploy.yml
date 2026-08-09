@@ -6,6 +6,8 @@ on:
     paths:
       - 'server/**'
       - 'package.json'
+      - 'package-lock.json'
+  workflow_dispatch:
 
 # 防止并发部署导致 git/npm 竞态
 concurrency:

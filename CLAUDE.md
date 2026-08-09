@@ -46,7 +46,7 @@ node server/index.js  # 单独启动后端（:3001，需要 server/.env）
 | `server/index.js` | API 路由 + Socket.IO + .env 加载器（~1700 行） |
 | `server/db.js` | SQLite schema + 索引初始化 |
 | `server/characters.js` | 干员数据加载 + 每日挑战算法（dailySeed/seedRandom/pickDailyTarget） |
-| `server/characters.json` | 421 个干员数据（与 `src/data/characters.json` 同步） |
+| `server/characters.json` | 425 个干员数据（与 `src/data/characters.json` 同步） |
 | `server/routes/game.js` | save-game, leaderboard, daily/status, daily/leaderboard |
 | `server/routes/auth.js` | 注册/登录/邮箱验证/密码重置 |
 | `server/routes/admin.js` | 管理员仪表盘/用户管理/deploy webhook |
@@ -60,7 +60,7 @@ node server/index.js  # 单独启动后端（:3001，需要 server/.env）
 | `src/app/multiplayer/page.tsx` | 多人对战页面 |
 | `src/app/admin/page.tsx` | 管理员面板 |
 | `next.config.ts` | `output: "export"` + `images: { unoptimized: true }` |
-| `wrangler.jsonc` | Cloudflare Workers 配置（OpenNext adapter） |
+| `wrangler.jsonc.archived` | Cloudflare Workers 配置（OpenNext adapter，已废弃归档） |
 | `.github/workflows/deploy.yml` | CI/CD — 检测 server 变更 → webhook VPS |
 
 ## VPS 运维

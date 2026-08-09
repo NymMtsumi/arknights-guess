@@ -7,26 +7,21 @@
     "build": "next build",
     "dev": "next dev",
     "start": "next start",
-    "lint": "eslint",
-    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
-    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
-    "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
-    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
+    "lint": "eslint"
   },
   "dependencies": {
-    "@opennextjs/cloudflare": "^1.20.2",
-    "bcryptjs": "^2.4.3",
-    "better-sqlite3": "^11.0.0",
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^13.0.2",
     "clsx": "^2.1.1",
     "dompurify": "^3.4.13",
-    "jsonwebtoken": "^9.0.0",
+    "jsonwebtoken": "^9.0.3",
     "next": "16.2.12",
     "next-intl": "^4.13.4",
-    "nodemailer": "^6.9.0",
+    "nodemailer": "^9.0.3",
     "pinyin-pro": "^3.28.2",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "socket.io": "^4.8.0",
+    "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3",
     "zustand": "^5.0.14"
   },
@@ -38,7 +33,6 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.12",
     "tailwindcss": "^4",
-    "typescript": "^5",
-    "wrangler": "^4.118.0"
+    "typescript": "^5"
   }
 }

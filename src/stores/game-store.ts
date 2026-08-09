@@ -44,6 +44,9 @@ export const useGameStore = create<GameState>((set, get) => ({
   difficulty: 'medium',
 
   startGame: (difficulty: Difficulty) => {
+    // 防止在游戏进行中重复开始（如双击按钮）
+    if (get().status === 'playing') return;
+
     const target = pickTarget(characters, difficulty, getRecentTargets());
     addRecentTarget(target.id);
     set({
@@ -56,43 +59,53 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   submitGuess: (name: string) => {
-    const { status, target, guesses, remainingGuesses } = get();
-    if (status !== 'playing' || !target) {
-      return { success: false, error: 'Game not in progress' };
+    const trimmed = name.trim();
+    if (!trimmed) {
+      return { success: false, error: 'Character not found' };
     }
 
-    // 查找角色
-    const guessedChar = findCharacterByName(characters, name);
+    const guessedChar = findCharacterByName(characters, trimmed);
     if (!guessedChar) {
       return { success: false, error: 'Character not found' };
     }
 
-    // 检查是否已经猜过
-    const alreadyGuessed = guesses.some(g => g.character.id === guessedChar.id);
-    if (alreadyGuessed) {
+    // Pre-check state（常见单线程路径，可返回明确错误）
+    const current = get();
+    if (current.status !== 'playing' || !current.target) {
+      return { success: false, error: 'Game not in progress' };
+    }
+    if (current.guesses.some(g => g.character.id === guessedChar.id)) {
       return { success: false, error: 'Already guessed this character' };
     }
 
-    // 创建猜测结果
+    const target = current.target;
     const result = makeGuess(target, guessedChar);
-    const newGuesses = [...guesses, result];
-    const newRemaining = remainingGuesses - 1;
+    const won = isWin(target, guessedChar);
 
-    // 检查游戏是否结束
-    if (isWin(target, guessedChar)) {
-      set({ guesses: newGuesses, remainingGuesses: newRemaining, status: 'won' });
-    } else if (newRemaining <= 0) {
-      set({ guesses: newGuesses, remainingGuesses: 0, status: 'lost' });
-    } else {
-      set({ guesses: newGuesses, remainingGuesses: newRemaining });
-    }
+    // 函数式 updater 防止并发 submitGuess 覆盖彼此的状态
+    set((state) => {
+      if (state.status !== 'playing' || !state.target) return state;
+      // 二次校验：防止并发时同一角色被提交两次
+      if (state.guesses.some(g => g.character.id === guessedChar.id)) return state;
+
+      const newGuesses = [...state.guesses, result];
+      const newRemaining = state.remainingGuesses - 1;
+
+      if (won) {
+        return { ...state, guesses: newGuesses, remainingGuesses: newRemaining, status: 'won' };
+      }
+      if (newRemaining <= 0) {
+        return { ...state, guesses: newGuesses, remainingGuesses: 0, status: 'lost' };
+      }
+      return { ...state, guesses: newGuesses, remainingGuesses: newRemaining };
+    });
 
     return { success: true };
   },
 
   giveUp: () => {
-    const { status } = get();
-    if (status !== 'playing') return;
+    const { status, target } = get();
+    if (status !== 'playing' || !target) return;
     set({ status: 'lost' });
   },
 

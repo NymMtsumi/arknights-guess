@@ -92,10 +92,19 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
     }
 
     const insert = db.prepare('INSERT INTO games (player_key, user_id, won, guess_count, difficulty, target_name, timestamp, mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+    const VALID_DIFFICULTIES = new Set(['easy', 'medium', 'hard']);
     const insertMany = db.transaction((rows) => {
       for (const g of rows) {
         const mode = g.mode === 'multi' ? 'multi' : 'single';
-        insert.run(finalPk, auth.userId, g.won ? 1 : 0, g.guessCount || 0, g.difficulty || 'hard', sanitizeString(g.targetName || '', 100), g.timestamp || new Date().toISOString(), mode);
+        const won = !!g.won ? 1 : 0;
+        const guessCount = Math.min(50, Math.max(0, parseInt(g.guessCount) || 0));
+        const difficulty = VALID_DIFFICULTIES.has(g.difficulty) ? g.difficulty : 'hard';
+        // 统一时间戳：数字转 ISO 字符串
+        let ts = g.timestamp || new Date().toISOString();
+        if (typeof ts === 'number') {
+          try { ts = new Date(ts < 1e11 ? ts * 1000 : ts).toISOString(); } catch { ts = new Date().toISOString(); }
+        }
+        insert.run(finalPk, auth.userId, won, guessCount, difficulty, sanitizeString(g.targetName || '', 100), ts, mode);
       }
     });
 
@@ -240,6 +249,11 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
     const auth = requireAuth(req, res);
     if (!auth) return;
 
+    // 频率限制：每个用户每 15 分钟最多 3 次（防止邮件 API 滥用）
+    if (!checkRateLimit('vermail:' + auth.userId, 3, 900_000)) {
+      return jsonResponse(res, { error: '请求过于频繁，请 15 分钟后再试' }, 429);
+    }
+
     const body = await parseBody(req);
     const email = sanitizeString(body.email, 320).toLowerCase();
 
@@ -255,7 +269,13 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
       return jsonResponse(res, { error: '邮箱已验证' }, 400);
     }
 
-    db.prepare('UPDATE users SET email = ? WHERE id = ?').run(email, auth.userId);
+    // 检查该邮箱是否已被其他用户验证（防止 UNIQUE 约束冲突）
+    const emailConflict = db.prepare(
+      "SELECT id FROM users WHERE LOWER(email) = LOWER(?) AND email_verified_at IS NOT NULL AND id != ?"
+    ).get(email, auth.userId);
+    if (emailConflict) {
+      return jsonResponse(res, { error: '该邮箱已被其他用户使用' }, 409);
+    }
 
     const verifyToken_ = randomBytes(32).toString('hex');
     const tokenHash = createHash('sha256').update(verifyToken_).digest('hex');
@@ -275,6 +295,8 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
       });
       return jsonResponse(res, { ok: true, message: '验证邮件已发送' });
     } catch (err) {
+      // 邮件发送失败 → 清理验证记录（与注册流程一致）
+      db.prepare('DELETE FROM email_verifications WHERE user_id = ?').run(auth.userId);
       console.error('[send-verification] email error:', err.message);
       return jsonResponse(res, { error: '邮件发送失败，请稍后再试' }, 500);
     }

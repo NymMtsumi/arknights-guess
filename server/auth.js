@@ -69,14 +69,14 @@ export function createAuth({ db, JWT_SECRET }) {
   }
 
   // 定期清理过期记录
-  setInterval(() => {
+  const _rlCleanupInterval = setInterval(() => {
     const now = Date.now();
     for (const [key, entry] of rateLimitStore) {
       if (now > entry.resetAt) rateLimitStore.delete(key);
     }
   }, 120_000);
 
-  return { signToken, verifyToken, requireAuth, requireAdmin, checkRateLimit };
+  return { signToken, verifyToken, requireAuth, requireAdmin, checkRateLimit, _rlCleanupInterval };
 }
 
 // 需要从 utils.js 的 jsonResponse（循环引用问题，在 index.js 中解决）

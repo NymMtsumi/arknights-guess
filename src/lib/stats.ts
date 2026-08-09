@@ -1,4 +1,4 @@
-import { getServerUrl, getToken, getPlayerKey } from './auth';
+import { getToken, getPlayerKey, apiCall } from './auth';
 
 export interface StatsData {
   totalGames: number;
@@ -86,15 +86,11 @@ function migrateData(): void {
               .filter(r => r && typeof r === 'object')
               .map((r: any) => {
                 // 转换旧字段（如果缺失）
-                return {
-                  timestamp: Number(r.timestamp) || Date.now(),
-                  won: Boolean(r.won),
-                  guessCount: Number(r.guessCount) || 0,
-                  difficulty: String(r.difficulty || 'hard'),
-                  targetName: String(r.targetName || r.name || ''),
-                  // 保留多人字段（如果存在）
-                  ...(r.mode === 'multi' ? {
+                if (r.mode === 'multi') {
+                  return {
+                    timestamp: Number(r.timestamp) || Date.now(),
                     mode: 'multi' as const,
+                    won: Boolean(r.won),
                     bestOf: Number(r.bestOf) || 0,
                     myScore: Number(r.myScore) || 0,
                     opponentScore: Number(r.opponentScore) || 0,
@@ -104,7 +100,14 @@ function migrateData(): void {
                       won: Boolean(rd.won),
                       guessCount: Number(rd.guessCount) || 0,
                     })) : [],
-                  } : {}),
+                  };
+                }
+                return {
+                  timestamp: Number(r.timestamp) || Date.now(),
+                  won: Boolean(r.won),
+                  guessCount: Number(r.guessCount) || 0,
+                  difficulty: String(r.difficulty || 'hard'),
+                  targetName: String(r.targetName || r.name || ''),
                 };
               })
               .slice(0, MAX_HISTORY);
@@ -174,15 +177,6 @@ function isValidRecord(r: unknown): r is HistoryRecord {
   return typeof rec.timestamp === 'number' &&
     typeof rec.won === 'boolean' &&
     typeof rec.guessCount === 'number' &&
-    typeof rec.difficulty === 'string';
-}
-
-function isValidGameRecord(r: unknown): r is GameRecord {
-  if (!r || typeof r !== 'object') return false;
-  const rec = r as Record<string, unknown>;
-  return typeof rec.timestamp === 'number' &&
-    typeof rec.won === 'boolean' &&
-    typeof rec.guessCount === 'number' &&
     typeof rec.difficulty === 'string' &&
     typeof rec.targetName === 'string';
 }
@@ -199,15 +193,24 @@ export function mergeHistories(local: HistoryRecord[], server: HistoryRecord[]):
   const seen = new Set<string>();
   const result: HistoryRecord[] = [];
 
+  function dedupKey(r: HistoryRecord): string {
+    const mr = r as MultiGameRecord;
+    if (mr.mode === 'multi') {
+      return `${mr.timestamp}-multi-${mr.opponentName || ''}`;
+    }
+    const gr = r as GameRecord;
+    return `${gr.timestamp}-single-${gr.targetName || ''}-${gr.difficulty || ''}`;
+  }
+
   for (const r of primary) {
-    const key = `${r.timestamp}-${(r as any).mode || 'single'}-${(r as GameRecord).targetName || (r as MultiGameRecord).opponentName || ''}`;
+    const key = dedupKey(r);
     if (seen.has(key)) continue;
     seen.add(key);
     result.push(r);
   }
 
   for (const r of secondary) {
-    const key = `${r.timestamp}-${(r as any).mode || 'single'}-${(r as GameRecord).targetName || (r as MultiGameRecord).opponentName || ''}`;
+    const key = dedupKey(r);
     if (seen.has(key)) continue;
     seen.add(key);
     result.push(r);
@@ -255,53 +258,15 @@ function saveHistory(record: HistoryRecord) {
   try { localStorage.setItem(HISTORY_KEY, JSON.stringify(history)); } catch (err) { console.warn('[Stats] Failed to save history:', err); }
 }
 
-/**
- * 把本地旧游客（无账号时）的游戏数据同步到服务端的指定 player_key。
- * 用于登录后迁移数据，调用 /api/sync 批量上传。
- */
-export async function syncGames(playerKey: string, games: Array<{
-  timestamp: string;
-  targetName: string;
-  won: boolean;
-  guessCount: number;
-  difficulty: string;
-}>): Promise<{ synced: number }> {
-  const base = getServerUrl();
-  const token = getToken();
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (token) headers['Authorization'] = `Bearer ${token}`;
-
-  const res = await fetch(`${base}/api/sync`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ player_key: playerKey, games }),
-  });
-  if (!res.ok) {
-    console.warn(`[Stats] syncGames failed: HTTP ${res.status}`);
-    return { synced: 0 };
-  }
-  return res.json();
-}
-
 export async function saveGameToServer(won: boolean, guessCount: number, difficulty: string, targetName: string): Promise<void> {
   if (typeof window === 'undefined') return;
 
   try {
-    const base = getServerUrl();
-    const token = getToken();
     const playerKey = getPlayerKey();
 
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
     // 发送 ISO 字符串格式的时间戳（服务端期望字符串）
-    const res = await fetch(`${base}/api/save-game`, {
+    await apiCall('/api/save-game', {
       method: 'POST',
-      headers,
       body: JSON.stringify({
         player_key: playerKey,
         won,
@@ -313,11 +278,7 @@ export async function saveGameToServer(won: boolean, guessCount: number, difficu
       }),
     });
 
-    if (res.ok) {
-      console.log('[Stats] Game saved to server');
-    } else {
-      console.warn('[Stats] Server save-game returned non-ok:', res.status);
-    }
+    console.log('[Stats] Game saved to server');
   } catch (err) {
     console.warn('[Stats] Failed to save game to server:', err);
   }
@@ -395,19 +356,16 @@ export function saveMultiGameStats(result: {
 export async function fetchHistoryFromServer(limit = 80): Promise<HistoryRecord[]> {
   if (typeof window === 'undefined') return [];
   try {
-    const base = getServerUrl();
     const token = getToken();
     if (!token) return [];
 
-    const headers: Record<string, string> = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
-    const res = await fetch(`${base}/api/history?limit=${limit}`, { headers });
-    if (!res.ok) return [];
-    const data = await res.json();
+    const data = await apiCall(`/api/history?limit=${limit}`, { method: 'GET' });
     if (Array.isArray(data.history)) {
       return data.history.map((r: any) => {
+        const ts = typeof r.timestamp === 'string' ? new Date(r.timestamp).getTime() : (Number(r.timestamp) || 0);
         if (r.mode === 'multi') {
           return {
-            timestamp: r.timestamp,
+            timestamp: ts,
             mode: 'multi' as const,
             won: r.won,
             bestOf: r.bestOf || 0,
@@ -418,7 +376,7 @@ export async function fetchHistoryFromServer(limit = 80): Promise<HistoryRecord[
           };
         }
         return {
-          timestamp: r.timestamp,
+          timestamp: ts,
           targetName: r.targetName || '',
           won: r.won,
           guessCount: r.guessCount || 0,
@@ -449,16 +407,10 @@ async function saveMultiToServer(result: {
 }) {
   if (typeof window === 'undefined') return;
   try {
-    const base = getServerUrl();
-    const token = getToken();
     const playerKey = getPlayerKey();
 
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-
-    await fetch(`${base}/api/save-game`, {
+    await apiCall('/api/save-game', {
       method: 'POST',
-      headers,
       body: JSON.stringify({
         player_key: playerKey,
         won: result.won,

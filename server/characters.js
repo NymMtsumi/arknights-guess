@@ -14,7 +14,11 @@ export function loadCharacters() {
     EASY_CHARS = data.filter(c => c.popularity === 'hot' || c.rarity >= 6).map(c => ({ id: c.id, name: c.name }));
     MED_CHARS = data.filter(c => c.popularity === 'hot' || c.popularity === 'normal').map(c => ({ id: c.id, name: c.name }));
     console.log(`已加载 ${ALL_CHARS.length} 干员`);
-  } catch { console.log('⚠ 未加载干员数据'); }
+  } catch (err) {
+    const charPath = join(__dirname, 'characters.json');
+    console.error(`[FATAL] 无法加载干员数据: ${charPath}`, err.message);
+    process.exit(1);
+  }
 }
 
 export function randomTarget(diff = 'hard') {
@@ -45,5 +49,5 @@ export function pickDailyTarget(difficulty = 'hard') {
   const pool = difficulty === 'easy' ? EASY_CHARS : difficulty === 'medium' ? MED_CHARS : ALL_CHARS;
   if (!pool.length) return { id: '', name: '?' };
   const rng = seededRandom(dailySeed());
-  return pool[Math.floor(rng() * pool.length) % pool.length];
+  return pool[Math.floor(rng() * pool.length)];
 }

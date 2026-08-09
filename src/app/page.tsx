@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { Header } from '@/components/Header';
 import { HeroSection } from '@/components/HeroSection';
@@ -21,6 +21,16 @@ export default function HomePage() {
   const changelogTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const devTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const thanksTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Cleanup all pending dialog timers on unmount
+  useEffect(() => {
+    return () => {
+      if (rulesTimer.current) clearTimeout(rulesTimer.current);
+      if (changelogTimer.current) clearTimeout(changelogTimer.current);
+      if (devTimer.current) clearTimeout(devTimer.current);
+      if (thanksTimer.current) clearTimeout(thanksTimer.current);
+    };
+  }, []);
 
   const makeClickHandler = useCallback((timer: typeof rulesTimer, setter: (v: boolean) => void) => {
     return (e: React.MouseEvent) => {

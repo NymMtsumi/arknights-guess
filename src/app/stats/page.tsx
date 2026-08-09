@@ -12,8 +12,6 @@ import { loadStats, loadHistory, fetchHistoryFromServer, mergeHistories } from '
 import { getUser, apiCall } from '@/lib/auth';
 import type { ServerStats } from '@/lib/auth';
 
-const DIFF_LABEL: Record<string, string> = { easy: '简单', medium: '普通', hard: '困难', multi: '多人' };
-
 function toStatsData(s: ServerStats): StatsData {
   return {
     totalGames: s.totalGames,
@@ -29,7 +27,7 @@ function isMultiRecord(r: HistoryRecord): r is MultiGameRecord {
 }
 
 export default function StatsPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -152,16 +150,16 @@ export default function StatsPage() {
             color: 'var(--text-light)', border: '1px solid var(--border)',
             borderRadius: 'var(--radius)', cursor: 'pointer', fontSize: '0.8rem',
           }}>
-            🔄 刷新数据
+            🔄 {t('common.refresh')}
           </button>
-          {loading && <span style={{ color: 'var(--text-light)', fontSize: '0.8rem' }}>加载中...</span>}
+          {loading && <span style={{ color: 'var(--text-light)', fontSize: '0.8rem' }}>{t('common.loading')}</span>}
           {serverSynced && !loading && (
             <span style={{
               fontSize: '0.78rem', color: 'var(--accent)',
               background: 'var(--accent-soft, rgba(0,180,216,0.1))',
               padding: '2px 10px', borderRadius: 'var(--radius)',
             }}>
-              ☁️ 已同步
+              ☁️ {t('common.synced')}
             </span>
           )}
         </div>
@@ -203,7 +201,7 @@ export default function StatsPage() {
               { label: t('stats.losses'), value: String(stats.losses), icon: '💔' },
               { label: t('stats.winRate'), value: `${winRate}%`, icon: '📈' },
               { label: t('stats.avgGuesses'), value: String(avgGuesses), icon: '📊' },
-              { label: t('stats.bestScore'), value: stats.bestScore > 0 ? `${stats.bestScore} 次` : '-', icon: '⭐' },
+              { label: t('stats.bestScore'), value: stats.bestScore > 0 ? t('stats.bestScoreValue', { count: stats.bestScore }) : '-', icon: '⭐' },
             ].map(item => (
               <div
                 key={item.label}
@@ -241,10 +239,10 @@ export default function StatsPage() {
               marginBottom: '14px',
               color: 'var(--text)',
             }}>
-              📋 最近 80 局
+              📋 {t('stats.recentGames', { count: 80 })}
             </h2>
             {history.length === 0 ? (
-              <p style={{ color: 'var(--text-light)', fontSize: '0.9rem' }}>暂无记录，完成一局游戏后自动记录</p>
+              <p style={{ color: 'var(--text-light)', fontSize: '0.9rem' }}>{t('stats.emptyHistory')}</p>
             ) : (
             <>
             <div ref={historyScrollRef} style={{ overflowX: 'auto', scrollBehavior: 'smooth' }} className="scroll-slider-container">
@@ -252,11 +250,11 @@ export default function StatsPage() {
                 <thead>
                   <tr>
                     <th style={thStyle}>#</th>
-                    <th style={{ ...thStyle, textAlign: 'left' }}>目标/对手</th>
-                    <th style={thStyle}>模式</th>
-                    <th style={thStyle}>结果</th>
-                    <th style={thStyle}>详情</th>
-                    <th style={thStyle}>时间</th>
+                    <th style={{ ...thStyle, textAlign: 'left' }}>{t('stats.table.targetOpponent')}</th>
+                    <th style={thStyle}>{t('stats.table.mode')}</th>
+                    <th style={thStyle}>{t('stats.table.result')}</th>
+                    <th style={thStyle}>{t('stats.table.details')}</th>
+                    <th style={thStyle}>{t('stats.table.time')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -289,7 +287,7 @@ export default function StatsPage() {
                               background: multi ? 'var(--accent-soft, rgba(0,180,216,0.1))' : 'var(--input-bg)',
                               color: multi ? 'var(--accent)' : 'var(--text-light)',
                             }}>
-                              {multi ? '多人' : DIFF_LABEL[(rec as GameRecord).difficulty] || '单人'}
+                              {multi ? t('stats.diffMulti') : t((rec as GameRecord).difficulty === 'easy' ? 'stats.diffEasy' : (rec as GameRecord).difficulty === 'medium' ? 'stats.diffMedium' : 'stats.diffHard')}
                             </span>
                           </td>
                           <td style={{ ...tdStyle, color: rec.won ? 'var(--correct)' : 'var(--danger)', fontWeight: 700 }}>
@@ -302,11 +300,11 @@ export default function StatsPage() {
                                 {expanded.has(i) ? ' ▲' : ' ▼'}
                               </span>
                             ) : (
-                              `${(rec as GameRecord).guessCount}次`
+                              t('stats.table.guessesCount', { count: (rec as GameRecord).guessCount })
                             )}
                           </td>
                           <td style={{ ...tdStyle, color: 'var(--text-light)', fontSize: '0.78rem' }}>
-                            {new Date(rec.timestamp).toLocaleDateString('zh-CN')}
+                            {new Date(rec.timestamp).toLocaleDateString(locale === 'zh-CN' ? 'zh-CN' : 'en-US')}
                           </td>
                         </tr>
                         {/* 展开的小局详情 */}
@@ -327,12 +325,12 @@ export default function StatsPage() {
                                     fontSize: '0.8rem',
                                     borderBottom: ri < rec.rounds.length - 1 ? '1px solid var(--border)' : 'none',
                                   }}>
-                                    <span style={{ fontWeight: 700, minWidth: '40px' }}>第{ri + 1}局</span>
+                                    <span style={{ fontWeight: 700, minWidth: '40px' }}>{t('stats.table.round', { n: ri + 1 })}</span>
                                     <span style={{ color: rd.won ? 'var(--correct)' : 'var(--danger)', fontWeight: 700 }}>
                                       {rd.won ? '✅' : '❌'}
                                     </span>
                                     <span style={{ flex: 1 }}>{rd.targetName}</span>
-                                    <span style={{ color: 'var(--text-light)' }}>猜测 {rd.guessCount} 次</span>
+                                    <span style={{ color: 'var(--text-light)' }}>{t('stats.table.guessNTimes', { count: rd.guessCount })}</span>
                                   </div>
                                 ))}
                               </div>

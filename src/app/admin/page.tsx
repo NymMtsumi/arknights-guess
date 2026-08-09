@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { fetchMe, AuthError } from '@/lib/auth';
+import { useI18n } from '@/lib/i18n';
 import AdminAnnouncements from '@/components/admin/AdminAnnouncements';
 import AdminUsers from '@/components/admin/AdminUsers';
 import AdminGuests from '@/components/admin/AdminGuests';
@@ -15,6 +17,8 @@ import AdminAuditLog from '@/components/admin/AdminAuditLog';
 type Tab = 'dashboard' | 'characters' | 'announcements' | 'users' | 'guests' | 'online' | 'tokens' | 'auditLog';
 
 export default function AdminPage() {
+  const { t } = useI18n();
+  const router = useRouter();
   const [tab, setTab] = useState<Tab>('dashboard');
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -22,7 +26,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     checkAdmin();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const checkAdmin = async () => {
     setLoading(true);
@@ -31,16 +35,34 @@ export default function AdminPage() {
       if (data.role === 'admin') {
         setIsAdmin(true);
       } else {
-        setError('无管理员权限');
+        setError(t('admin.noPermission'));
       }
     } catch (err: any) {
       if (err instanceof AuthError) {
-        setError('请先登录');
+        setError(t('admin.pleaseLogin'));
       } else {
-        setError(err.message || '验证失败');
+        setError(err.message || t('admin.verifyFailed'));
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Re-verify admin status on every tab switch; redirect home on failure
+  const handleTabChange = async (newTab: Tab) => {
+    try {
+      const data = await fetchMe();
+      if (data.role === 'admin') {
+        setTab(newTab);
+      } else {
+        setIsAdmin(false);
+        setError(t('admin.permissionExpired'));
+        router.push('/');
+      }
+    } catch (err: any) {
+      setIsAdmin(false);
+      setError(err instanceof AuthError ? t('admin.loginExpired') : t('admin.verifyFailed'));
+      router.push('/');
     }
   };
 
@@ -110,7 +132,7 @@ export default function AdminPage() {
   if (loading) {
     return (
       <div style={pageStyle}>
-        <p style={{ textAlign: 'center', color: 'var(--text-light)' }}>验证权限中...</p>
+        <p style={{ textAlign: 'center', color: 'var(--text-light)' }}>{t('admin.verifying')}</p>
       </div>
     );
   }
@@ -126,8 +148,8 @@ export default function AdminPage() {
           borderRadius: 'var(--radius)',
         }}>
           <p style={{ fontSize: '3rem', margin: '0 0 16px' }}>🔒</p>
-          <h2 style={{ margin: '0 0 8px' }}>无权限访问</h2>
-          <p style={{ color: 'var(--text-light)', margin: '0 0 20px' }}>{error || '此页面仅限管理员访问'}</p>
+          <h2 style={{ margin: '0 0 8px' }}>{t('admin.accessDenied')}</h2>
+          <p style={{ color: 'var(--text-light)', margin: '0 0 20px' }}>{error || t('admin.accessDeniedDesc')}</p>
           <a href="/" style={{
             display: 'inline-block',
             padding: '10px 24px',
@@ -137,7 +159,7 @@ export default function AdminPage() {
             borderRadius: 'var(--radius)',
             fontWeight: 700,
           }}>
-            返回首页
+            {t('game.back')}
           </a>
         </div>
       </div>
@@ -148,7 +170,7 @@ export default function AdminPage() {
   return (
     <div style={pageStyle}>
       <div style={headerStyle}>
-        <h1 style={titleStyle}>⚙️ 管理面板</h1>
+        <h1 style={titleStyle}>⚙️ {t('admin.panelTitle')}</h1>
         <Link href="/" style={{
           padding: '8px 16px',
           background: 'var(--input-bg)',
@@ -159,34 +181,34 @@ export default function AdminPage() {
           fontSize: '0.85rem',
           fontWeight: 600,
         }}>
-          ← 返回首页
+          ← {t('game.back')}
         </Link>
       </div>
 
       <div style={tabsStyle}>
-        <button style={tab === 'dashboard' ? tabBtnActive : tabBtnBase} onClick={() => setTab('dashboard')}>
-          📊 仪表盘
+        <button style={tab === 'dashboard' ? tabBtnActive : tabBtnBase} onClick={() => handleTabChange('dashboard')}>
+          📊 {t('admin.tabDashboard')}
         </button>
-        <button style={tab === 'characters' ? tabBtnActive : tabBtnBase} onClick={() => setTab('characters')}>
-          🎮 干员
+        <button style={tab === 'characters' ? tabBtnActive : tabBtnBase} onClick={() => handleTabChange('characters')}>
+          🎮 {t('admin.tabCharacters')}
         </button>
-        <button style={tab === 'announcements' ? tabBtnActive : tabBtnBase} onClick={() => setTab('announcements')}>
-          📢 更新日志
+        <button style={tab === 'announcements' ? tabBtnActive : tabBtnBase} onClick={() => handleTabChange('announcements')}>
+          📢 {t('admin.tabAnnouncements')}
         </button>
-        <button style={tab === 'users' ? tabBtnActive : tabBtnBase} onClick={() => setTab('users')}>
-          👤 用户管理
+        <button style={tab === 'users' ? tabBtnActive : tabBtnBase} onClick={() => handleTabChange('users')}>
+          👤 {t('admin.tabUsers')}
         </button>
-        <button style={tab === 'guests' ? tabBtnActive : tabBtnBase} onClick={() => setTab('guests')}>
-          🎭 游客管理
+        <button style={tab === 'guests' ? tabBtnActive : tabBtnBase} onClick={() => handleTabChange('guests')}>
+          🎭 {t('admin.tabGuests')}
         </button>
-        <button style={tab === 'online' ? tabBtnActive : tabBtnBase} onClick={() => setTab('online')}>
-          🟢 在线玩家
+        <button style={tab === 'online' ? tabBtnActive : tabBtnBase} onClick={() => handleTabChange('online')}>
+          🟢 {t('admin.tabOnline')}
         </button>
-        <button style={tab === 'tokens' ? tabBtnActive : tabBtnBase} onClick={() => setTab('tokens')}>
-          🔑 API 令牌
+        <button style={tab === 'tokens' ? tabBtnActive : tabBtnBase} onClick={() => handleTabChange('tokens')}>
+          🔑 {t('admin.tabTokens')}
         </button>
-        <button style={tab === 'auditLog' ? tabBtnActive : tabBtnBase} onClick={() => setTab('auditLog')}>
-          📋 操作日志
+        <button style={tab === 'auditLog' ? tabBtnActive : tabBtnBase} onClick={() => handleTabChange('auditLog')}>
+          📋 {t('admin.tabAuditLog')}
         </button>
       </div>
 

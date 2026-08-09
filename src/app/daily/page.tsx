@@ -25,7 +25,7 @@ export default function DailyPage() {
   const dialogTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [countdown, setCountdown] = useState('');
 
-  const { status, target, guesses, remainingGuesses, previousResult, initDaily, submitGuess, giveUp } = store;
+  const { status, target, guesses, remainingGuesses, previousResult, error, initDaily, submitGuess, giveUp } = store;
 
   const guessedIds = useMemo(() => new Set(guesses.map(g => g.character.id)), [guesses]);
 
@@ -82,11 +82,11 @@ export default function DailyPage() {
           if (!res.ok) {
             const err = await res.json();
             if (res.status === 400 && err.error?.includes('跨日')) {
-              setSaveError('已跨日，目标已更新，请刷新页面');
+              setSaveError(t('daily.crossDayError'));
             } else if (res.status === 409) {
               // 已提交过，忽略
             } else {
-              setSaveError(err.error || '保存失败');
+              setSaveError(err.error || t('daily.saveError'));
             }
           }
         }).catch(() => {});
@@ -145,6 +145,26 @@ export default function DailyPage() {
     router.push('/');
   };
 
+  // ===== 错误状态 =====
+  if (status === 'error') {
+    return (
+      <div className="page">
+        <Header />
+        <div className="page-scroll" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingTop: 'clamp(60px, 10vw, 120px)' }}>
+          <div style={{ fontSize: '2.5rem', marginBottom: '16px' }}>⚠️</div>
+          <p style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--danger)', marginBottom: '24px' }}>{error || t('common.error')}</p>
+          <button onClick={() => window.location.reload()} style={{
+            padding: '10px 24px', background: 'var(--primary)', color: 'var(--bg)',
+            border: 'none', borderRadius: 'var(--radius)', fontWeight: 700, cursor: 'pointer', fontSize: '1rem',
+          }}>
+            {t('common.refresh')}
+          </button>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
   // ===== 加载状态 =====
   if (status === 'loading') {
     return (
@@ -152,7 +172,7 @@ export default function DailyPage() {
         <Header />
         <div className="page-scroll" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingTop: 'clamp(60px, 10vw, 120px)' }}>
           <div style={{ fontSize: '2.5rem', marginBottom: '16px', animation: 'neon-pulse 1.5s infinite' }}>📅</div>
-          <p style={{ fontSize: '1.2rem', fontWeight: 700 }}>加载中...</p>
+          <p style={{ fontSize: '1.2rem', fontWeight: 700 }}>{t('common.loading')}</p>
         </div>
         <Footer />
       </div>
@@ -201,7 +221,7 @@ export default function DailyPage() {
               </p>
               {target && (
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-light)', marginTop: '8px' }}>
-                  答案：{target.name}
+                  {t('daily.answer')}：{target.name}
                 </p>
               )}
             </div>

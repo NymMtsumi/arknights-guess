@@ -8,10 +8,10 @@ export interface Character {
   subclass: string;       // 子职业（中）
   subclassEn: string;     // 子职业（英）
   faction: string;        // 阵营（中）
-  factionEn: string;      // 阵营（英）
+  factionEn: string;      // 阵营（英）— 注意：此字段来自 PRTS wiki 抓取，约 37% 条目含中文，且代码中未使用（UI 始终用 faction）
   rarity: number;         // 星级 1-6
   race: string;           // 种族（中）
-  raceEn: string;         // 种族（英）
+  raceEn: string;         // 种族（英）— 注意：此字段来自 PRTS wiki 抓取，约 83% 条目含中文，且代码中未使用（UI 始终用 race）
   gender: string;         // 性别（中）
   genderEn: string;       // 性别（英）
   releaseYear: number;    // 上线年份

@@ -175,7 +175,7 @@ export function GuessTable({ guesses, target, hideRarity, flashTrigger, staggerK
                     if (isCorrect) {
                       return (
                         <td key={col.key} style={{
-                          width: colPcts[0],
+                          width: colPcts[colIdx],
                           padding: '10px 12px', textAlign: 'center', fontWeight: 700,
                           fontSize: '0.9rem', whiteSpace: 'nowrap',
                           color: '#fff', background: 'var(--correct)',
@@ -188,7 +188,7 @@ export function GuessTable({ guesses, target, hideRarity, flashTrigger, staggerK
                     if (alterMatch) {
                       return (
                         <td key={col.key} style={{
-                          width: colPcts[0],
+                          width: colPcts[colIdx],
                           padding: '10px 12px', textAlign: 'center', fontWeight: 700,
                           fontSize: '0.9rem', whiteSpace: 'nowrap',
                           color: '#fff', background: 'var(--close)',

@@ -34,9 +34,10 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
     const body = await parseBody(req);
     const username = sanitizeString(body.username, 20);
     const password = typeof body.password === 'string' ? body.password : '';
-    const email = sanitizeString(body.email, 320);
+    const email = sanitizeString(body.email, 320).toLowerCase();
 
     // 额外按邮箱限流（IP 绕过防御）
+    // 注意：必须先 toLowerCase 再构 建 rate limit key，否则大小写变体可绕过敏率限制
     if (!checkRateLimit(`regmail:${email}`, 3, 3600_000)) {
       return jsonResponse(res, { error: '该邮箱验证请求过于频繁，请稍后再试' }, 429);
     }
@@ -53,7 +54,9 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
     if (!/^[a-zA-Z0-9_一-鿿]+$/.test(username)) {
       return jsonResponse(res, { error: '用户名只能包含字母、数字、下划线和中文' }, 400);
     }
-    if (!email.includes('@') || email.length > 320) {
+    const atIndex = email.indexOf('@');
+    if (atIndex < 1 || email.length > 320) {
+      // atIndex < 1 同时守卫了：不存在 @、@ 在开头（空本地部分）、@ 在末尾（空域部分）
       return jsonResponse(res, { error: '请输入有效的邮箱地址' }, 400);
     }
 
@@ -68,8 +71,7 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
       return jsonResponse(res, { error: '该邮箱或用户名不可用' }, 409);
     }
 
-    const normalizedEmail = email.toLowerCase();
-    const existingEmail = db.prepare("SELECT id FROM users WHERE LOWER(email) = ? AND email_verified_at IS NOT NULL").get(normalizedEmail);
+    const existingEmail = db.prepare("SELECT id FROM users WHERE LOWER(email) = ? AND email_verified_at IS NOT NULL").get(email);
     if (existingEmail) {
       // P2 fix: 不透露邮箱是否已注册，返回统一消息
       return jsonResponse(res, { error: '该邮箱或用户名不可用' }, 409);
@@ -77,7 +79,7 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
 
     const existingPending = db.prepare(
       "SELECT id FROM pending_registrations WHERE (username = ? OR LOWER(email) = ?) AND datetime(expires_at) > datetime('now')"
-    ).get(username, normalizedEmail);
+    ).get(username, email);
     if (existingPending) {
       return jsonResponse(res, { error: '该邮箱或用户名不可用' }, 409);
     }
@@ -94,12 +96,17 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
     const tokenHash = createHash('sha256').update(verifyTokenRaw).digest('hex');
     const expiresAt = new Date(Date.now() + 3600_000).toISOString();
 
-    db.prepare(
-      'INSERT INTO pending_registrations (username, password_hash, email, token_hash, expires_at) VALUES (?, ?, ?, ?, ?)'
-    ).run(username, password_hash, normalizedEmail, tokenHash, expiresAt);
+    try {
+      db.prepare(
+        'INSERT INTO pending_registrations (username, password_hash, email, token_hash, expires_at) VALUES (?, ?, ?, ?, ?)'
+      ).run(username, password_hash, email, tokenHash, expiresAt);
+    } catch (err) {
+      console.error('[register] pending_registrations INSERT error:', err.message);
+      return jsonResponse(res, { error: '注册失败，请稍后重试' }, 500);
+    }
 
     const verifyLink = `${SITE_URL}/verify?token=${verifyTokenRaw}`;
-    const isDev = !process.env.SMTP_PASS || SITE_URL === 'http://localhost:3000';
+    const isDev = process.env.NODE_ENV === 'development';
 
     if (isDev) {
       console.log('[DEV] 验证链接:', verifyLink);
@@ -108,6 +115,12 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
         message: '[DEV] 验证邮件已跳过，请使用控制台打印的链接完成验证',
         devVerifyLink: verifyLink,
       });
+    }
+
+    // 生产环境必须配置 SMTP，否则不能泄露验证链接
+    if (!process.env.SMTP_PASS) {
+      console.error('[register] SMTP_PASS not configured in production');
+      return jsonResponse(res, { error: '邮件服务未配置，请稍后再试' }, 500);
     }
 
     try {
@@ -201,7 +214,7 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
     const setPlayerKeyCookie = `player_key=${playerKey}; SameSite=Lax; Secure; Path=/; Max-Age=94608000; HttpOnly`;
 
     const cookieHeaders = [`token=${token}; SameSite=None; Secure; HttpOnly; Path=/; Max-Age=2592000`];
-    if (setPlayerKeyCookie) cookieHeaders.push(setPlayerKeyCookie);
+    cookieHeaders.push(setPlayerKeyCookie);
 
     return jsonResponse(res, {
       token, username: user.username, displayId: user.display_id || null,
@@ -352,11 +365,17 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
     }
 
     const resetLink = `${SITE_URL}/reset-password?token=${resetToken}`;
-    const isDev = !process.env.SMTP_PASS || SITE_URL === 'http://localhost:3000';
+    const isDev = process.env.NODE_ENV === 'development';
 
     if (isDev) {
       console.log('[DEV] 重置密码链接:', resetLink);
       return jsonResponse(res, { ok: true, message: `[DEV] 重置链接已打印到控制台` });
+    }
+
+    // 生产环境必须配置 SMTP
+    if (!process.env.SMTP_PASS) {
+      console.error('[forgot-pw] SMTP_PASS not configured in production');
+      return jsonResponse(res, { error: '邮件服务未配置，请稍后再试' }, 500);
     }
 
     try {
@@ -395,20 +414,35 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
     const tokenHash = createHash('sha256').update(token).digest('hex');
     const record = db.prepare('SELECT id, user_id, expires_at, used FROM password_resets WHERE token_hash = ?').get(tokenHash);
 
+    // 前置检查：尽早拒绝明显无效的请求（事务内仍会做最终原子检查）
     if (!record) return jsonResponse(res, { error: '无效的重置链接' }, 400);
     if (record.used) return jsonResponse(res, { error: '此重置链接已被使用' }, 400);
     if (new Date(record.expires_at) < new Date()) {
       return jsonResponse(res, { error: '重置链接已过期，请重新申请' }, 400);
     }
 
-    const passwordHash = await bcrypt.hash(newPassword, 10);
+    let passwordHash;
+    try {
+      passwordHash = await bcrypt.hash(newPassword, 10);
+    } catch (err) {
+      console.error('[reset-pw] bcrypt.hash error:', err.message);
+      return jsonResponse(res, { error: '服务器内部错误，请稍后再试' }, 500);
+    }
+
     try {
       const doReset = db.transaction(() => {
-        db.prepare('UPDATE password_resets SET used = 1 WHERE id = ?').run(record.id);
+        // 原子检查：AND used = 0 防止并发重复消费同一 token
+        const updRes = db.prepare('UPDATE password_resets SET used = 1 WHERE id = ? AND used = 0').run(record.id);
+        if (updRes.changes === 0) {
+          throw new Error('TOKEN_ALREADY_USED');
+        }
         db.prepare('UPDATE users SET password_hash = ?, token_version = token_version + 1 WHERE id = ?').run(passwordHash, record.user_id);
       });
       doReset();
     } catch (err) {
+      if (err.message === 'TOKEN_ALREADY_USED') {
+        return jsonResponse(res, { error: '此重置链接已被使用' }, 400);
+      }
       console.error('[reset-pw] transaction failed:', err.message);
       return jsonResponse(res, { error: '密码重置失败，请稍后重试' }, 500);
     }

@@ -10,8 +10,7 @@ export function registerGameHandlers({
   findRoomByPlayerKey, findRoomByIdentityKey,
   genCode,
   onlinePlayers, onlineSockets, ONLINE_TIMEOUT,
-  matchmakingQueue,
-  handleJoinQueue, handleLeaveQueue, removeFromQueue,
+  handleJoinQueue, handleLeaveQueue, removeFromQueue, cleanupStaleQueue,
 }) {
 
   // ===== 回合管理 =====
@@ -31,7 +30,9 @@ export function registerGameHandlers({
 
     const timer = setTimeout(() => {
       // 回合超时 = 平局（双方均未猜出且未放弃）
+      if (room.roundSettled) return; // 防御：player_win_round 已先行结算
       room.roundSettled = true;
+      room._roundStartAt = null;
       io.to(room.code).emit('round_end', {
         winner: null, winnerName: '', targetName: target.name,
         score: score(room), matchOver: false, reason: 'timeout',
@@ -78,7 +79,8 @@ export function registerGameHandlers({
   }
 
   function score(room) {
-    const arr = Array.from(room.players.values());
+    // 按 playerKey 稳定排序，防止重连（delete+set 改变 Map 插入顺序）导致比分方向对调
+    const arr = Array.from(room.players.values()).sort((a, b) => a.playerKey.localeCompare(b.playerKey));
     return `${arr[0]?.name || '?'} ${arr[0]?.wins || 0} - ${arr[1]?.wins || 0} ${arr[1]?.name || '?'}`;
   }
 
@@ -162,10 +164,17 @@ export function registerGameHandlers({
     socket.on('matchmaking:join', (data) => {
       const existingR = findRoomByPlayerKey(socket.data.playerKey);
       if (existingR) {
+        // 通过 playerKey/identityKey 查找玩家信息，而非 socket.id（重连后 id 会变）
+        let wins = 0;
+        for (const [, p] of existingR.players) {
+          if (p.playerKey === socket.data.playerKey || p.identityKey === socket.data.identityKey) {
+            wins = p.wins; break;
+          }
+        }
         socket.emit('existing_room', {
           code: existingR.code, bestOf: existingR.bestOf,
           difficulty: existingR.difficulty || 'hard', started: existingR.started,
-          wins: existingR.players.get(socket.id)?.wins || 0,
+          wins,
         });
         return;
       }
@@ -198,7 +207,7 @@ export function registerGameHandlers({
       rooms.set(code, {
         code, bestOf, winsNeeded: Math.ceil(bestOf / 2), difficulty, _createdAt: Date.now(),
         players: new Map([[socket.id, {
-          name: data?.playerName || '玩家', wins: 0, dcTimer: null,
+          name: sanitizeString(data?.playerName || '玩家', 20), wins: 0, dcTimer: null,
           lastSocketId: null, playerKey: socket.data.playerKey,
           identityKey: socket.data.identityKey, ready: false,
         }]]),
@@ -256,7 +265,7 @@ export function registerGameHandlers({
       }
 
       room.players.set(socket.id, {
-        name: data?.playerName || '玩家', wins: 0, dcTimer: null,
+        name: sanitizeString(data?.playerName || '玩家', 20), wins: 0, dcTimer: null,
         lastSocketId: null, playerKey: socket.data.playerKey,
         identityKey: socket.data.identityKey, ready: false,
       });
@@ -274,7 +283,11 @@ export function registerGameHandlers({
     });
 
     // === _log ===
+    let _logCount = 0, _logResetAt = Date.now();
     socket.on('_log', (d) => {
+      const now = Date.now();
+      if (now - _logResetAt > 10_000) { _logCount = 0; _logResetAt = now; }
+      if (++_logCount > 5) return; // 限速：每 10 秒最多 5 条
       const action = typeof d?.action === 'string' ? d.action.replace(/\n/g, '\\n').slice(0, 200) : '[invalid]';
       console.log(`[日志] ${action}`);
     });
@@ -283,6 +296,7 @@ export function registerGameHandlers({
     socket.on('guess_update', (data) => {
       const room = rooms.get(socket.data.roomCode);
       if (!room || room.finished || room.roundSettled) return;
+      if (!room.players.has(socket.id)) return; // 防止 stale roomCode 跨房间数据泄露
       socket.to(room.code).emit('opponent_update', {
         guessCount: data?.guessCount ?? 0,
         allComparisons: data?.allComparisons || [],
@@ -297,8 +311,9 @@ export function registerGameHandlers({
       const player = room.players.get(socket.id);
       if (!player) return;
 
-      // 标记猜出状态
+      // 标记猜出状态（防重复上报：同一回合只能赢一次）
       const rp = room._roundPlayers?.get(socket.id);
+      if (rp?.guessed) return;
       if (rp) rp.guessed = true;
 
       player.wins++;
@@ -405,10 +420,10 @@ export function registerGameHandlers({
     socket.on('rematch_cancel', () => {
       const room = rooms.get(socket.data.roomCode);
       if (!room || !room.finished) return;
-      const player = room.players.get(socket.id);
-      if (player) player.ready = false;
+      // 重置双方 ready 标志，防止一方取消后另一方 stale ready 导致误启动
+      for (const p of room.players.values()) p.ready = false;
       if (room._rematchTimer) { clearTimeout(room._rematchTimer); room._rematchTimer = null; }
-      socket.to(room.code).emit('rematch_cancelled', { playerName: player?.name });
+      socket.to(room.code).emit('rematch_cancelled', { playerName: room.players.get(socket.id)?.name });
     });
 
     // === disconnect ===
@@ -435,13 +450,12 @@ export function registerGameHandlers({
             p.dcTimer = null;
             p.ready = false; // R3: 防止断线后 rematch 带幽灵玩家启动
             io.to(room.code).emit('opponent_disconnected', { playerName: p.name });
+            // B9 fix: 断线立即取消 rematch，不等待超时
             const other = Array.from(room.players.values()).find(x => x.playerKey !== p.playerKey);
-            if (other && other.ready) {
-              other.ready = false;
-              clearTimeout(room._rematchTimer);
-              room._rematchTimer = null;
-              io.to(room.code).emit('rematch_cancelled', { playerName: '系统', reason: 'opponent_left' });
-            }
+            if (other) other.ready = false;
+            clearTimeout(room._rematchTimer);
+            room._rematchTimer = null;
+            io.to(room.code).emit('rematch_cancelled', { playerName: '系统', reason: 'opponent_left' });
           }
         }
         return;
@@ -485,10 +499,12 @@ export function registerGameHandlers({
         }
 
         // 单方离线 → 离线方判负
-        if (room.roundSettled || room.finished) {
+        if (room.finished) return; // 比赛已正常结束，match_end 流程已处理
+        if (room.roundSettled) {
+          // 回合刚结束（等待下一回合），延长宽限期让玩家有机会重连
           if (player.dcTimer) clearTimeout(player.dcTimer);
           player.dcTimer = setTimeout(() => {
-            if (room.roundSettled || room.finished) return;
+            if (room.finished) return;
             if (room._roundTimer) { clearTimeout(room._roundTimer); room._roundTimer = null; }
             if (room._nextRound) { clearTimeout(room._nextRound); room._nextRound = null; }
             io.to(room.code).emit('match_end', {
@@ -627,17 +643,8 @@ export function registerGameHandlers({
       }
     }
 
-    // 清理超时排队
-    const _queueNow = Date.now();
-    for (const [sid, entry] of matchmakingQueue) {
-      if (_queueNow - entry.joinedAt > 300_000) {
-        matchmakingQueue.delete(sid);
-        const sock = io.sockets.sockets.get(sid);
-        if (sock) {
-          sock.emit('matchmaking:status', { queued: false, position: 0, difficulty: '' });
-        }
-      }
-    }
+    // 清理超时排队（委托给 matchmaking 模块，避免代码重复）
+    cleanupStaleQueue();
   }
 
   return { startRound, endRound, score, runPeriodicCleanup };

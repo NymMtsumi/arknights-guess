@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { fetchMe, updateProfile, AuthError, clearAuth, logout } from '@/lib/auth';
 
@@ -15,7 +15,7 @@ export function ProfilePage() {
   const [msg, setMsg] = useState('');
 
   // 加载用户信息
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     setLoading(true); setError('');
     try {
       const data = await fetchMe();
@@ -32,10 +32,10 @@ export function ProfilePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // 首次加载
-  useEffect(() => { loadProfile(); }, []);
+  useEffect(() => { loadProfile(); }, [loadProfile]);
 
   // 保存修改
   const handleSave = async () => {
@@ -141,7 +141,7 @@ export function ProfilePage() {
           fontWeight: 900,
           border: '2px solid var(--border)',
         }}>
-          {(user.nickname || user.username).charAt(0).toUpperCase()}
+          {(user.nickname || user.username || '?').charAt(0).toUpperCase()}
         </div>
 
         <div>

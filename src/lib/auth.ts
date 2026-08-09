@@ -35,15 +35,24 @@ export interface MeResponse {
 export function getServerUrl(): string {
   if (typeof window !== 'undefined') {
     const wsUrl = process.env.NEXT_PUBLIC_WS_URL;
+    let url: string;
     if (wsUrl) {
       // 支持 https://, http://, wss://, ws:// 前缀
-      if (wsUrl.startsWith('wss://')) return wsUrl.replace('wss://', 'https://');
-      if (wsUrl.startsWith('ws://')) return wsUrl.replace('ws://', 'http://');
-      if (wsUrl.startsWith('https://') || wsUrl.startsWith('http://')) return wsUrl;
+      if (wsUrl.startsWith('wss://')) url = wsUrl.replace('wss://', 'https://');
+      else if (wsUrl.startsWith('ws://')) url = wsUrl.replace('ws://', 'http://');
+      else if (wsUrl.startsWith('https://') || wsUrl.startsWith('http://')) url = wsUrl;
       // 无协议前缀，假定为生产域名
-      return 'https://' + wsUrl;
+      else url = 'https://' + wsUrl;
+    } else {
+      // Runtime warning: env var missing in production (not localhost)
+      const hostname = window.location.hostname;
+      if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+        console.warn('[Auth] NEXT_PUBLIC_WS_URL is not set, falling back to localhost:3001. API calls will fail in production.');
+      }
+      url = 'http://localhost:3001';
     }
-    return 'http://localhost:3001';
+    // Strip trailing slashes to prevent double slashes in API paths
+    return url.replace(/\/+$/, '');
   }
   return 'http://localhost:3001';
 }
@@ -86,6 +95,58 @@ export function clearAuth(): void {
   clearUser();
 }
 
+/**
+ * SECURITY NOTE: JWT stored in localStorage — readable by any JS on the page (XSS risk).
+ * This is an inherent limitation of static export (no SSR for httpOnly cookies).
+ * Mitigations layered:
+ *   - Server sets token as HttpOnly cookie too (auto-sent with requests when credentials: 'include')
+ *   - Server JWT expires in 30 days (cookie Max-Age also 30 days)
+ *   - apiCall() and getAuthHeaders() warn when token is within 1 day of expiry
+ *   - Server validates token_version on each request (password change = force logout)
+ *
+ * DO NOT switch to cookie-only auth — localStorage is required for Bearer token with static export.
+ * The HttpOnly cookie serves as a secondary channel; apiCall uses the Authorization header from localStorage.
+ */
+
+/** Decode JWT payload without verification (client-side expiry check only) */
+function decodeJwtPayload(token: string): { exp?: number; iat?: number } | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    // atob handles base64url by replacing chars
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const json = atob(base64);
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Get auth headers for API requests.
+ * Includes Bearer token from localStorage and warns if token is about to expire.
+ * Callers should use apiCall() instead of this directly unless they need raw headers.
+ */
+export function getAuthHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  const token = getToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+    // Warn if token expires within 1 day (86,400 seconds)
+    const payload = decodeJwtPayload(token);
+    if (payload?.exp) {
+      const expiresAt = payload.exp * 1000; // JWT exp is in seconds
+      const oneDayMs = 86_400_000;
+      if (expiresAt - Date.now() < oneDayMs) {
+        console.warn('[Auth] JWT token expires soon (within 1 day). Consider re-logging in.');
+      }
+    }
+  }
+  return headers;
+}
+
 /** 检测是否为鉴权错误（401），供调用方处理过期登录 */
 export class AuthError extends Error {
   constructor(message: string) {
@@ -94,21 +155,25 @@ export class AuthError extends Error {
   }
 }
 
+/**
+ * Centralized API caller. All server requests should go through this function.
+ * @param path - API path starting with / (e.g. '/api/me')
+ * @param options - fetch options; method defaults to 'GET'
+ */
 export async function apiCall(path: string, options: RequestInit = {}): Promise<any> {
   const base = getServerUrl();
-  const token = getToken();
+  const { method: optMethod, headers: optHeaders, ...restOptions } = options;
+  const method = optMethod || 'GET';
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...((options.headers as Record<string, string>) || {}),
+    ...getAuthHeaders(),
+    ...((optHeaders as Record<string, string>) || {}),
   };
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
 
   let res: Response;
   try {
     res = await fetch(`${base}${path}`, {
-      ...options,
+      method,
+      ...restOptions,
       headers,
     });
   } catch (fetchErr: any) {
@@ -224,8 +289,11 @@ export async function migrateGuestDataToAccount(accountPlayerKey: string, oldGue
     if (ownerlessGames.length === 0) return;
 
     // 立即标记为"迁移中"，防止并发 tab 重复迁移
+    // 覆盖所有匹配的记录（无 pk + 旧游客 pk），不仅是 !r.player_key 的
     let updated = history.map((r: any) => {
-      if (!r || r.player_key || r._migrating) return r;
+      if (!r || r._migrating) return r;
+      // 已有 pk 且不是旧游客 pk 的记录跳过（属于其他账户）
+      if (r.player_key && r.player_key !== oldGuestPk) return r;
       return { ...r, _migrating: accountPlayerKey };
     });
     try { localStorage.setItem(HISTORY_KEY, JSON.stringify(updated)); } catch {}
@@ -236,7 +304,6 @@ export async function migrateGuestDataToAccount(accountPlayerKey: string, oldGue
 
     // 收集成功迁移的记录索引，逐条标记（不再 all-or-nothing）
     const migratedIndices = new Set<number>();
-    const originalIndices: number[] = []; // ownerlessGames 在 history 中的原始索引
 
     // 提取单人战绩
     const singleGames = ownerlessGames
@@ -311,7 +378,8 @@ export async function migrateGuestDataToAccount(accountPlayerKey: string, oldGue
           migratedSet.add(`${g.timestamp}|${g.targetName}|${g.mode}`);
         }
         const finalHistory = currentHistory.map((r: any) => {
-          if (!r || r.player_key) return r;
+          // Skip records belonging to a different account (keep their player_key)
+          if (!r || (r.player_key && r.player_key !== oldGuestPk)) return r;
           const key = `${r.timestamp}|${r.targetName}|${r.mode}`;
           if (migratedSet.has(key)) {
             const { _migrating, ...rest } = r;
@@ -365,7 +433,7 @@ export async function logout(): Promise<void> {
 
 // ===== 获取个人信息 =====
 export async function fetchMe(): Promise<MeResponse> {
-  return apiCall('/api/me');
+  return apiCall('/api/me', { method: 'GET' });
 }
 
 // ===== 修改个人信息 =====

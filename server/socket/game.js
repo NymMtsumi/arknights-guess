@@ -23,12 +23,18 @@ export function registerGameHandlers({
     room.roundSettled = false;
     room.surrendered = new Set();
     room._roundStartAt = Date.now();
+    // 跟踪本回合每位玩家的状态
+    room._roundPlayers = new Map();
+    for (const [sid, p] of room.players) {
+      room._roundPlayers.set(sid, { guessed: false, exhausted: false, surrendered: false });
+    }
 
     const timer = setTimeout(() => {
+      // 回合超时 = 平局（双方均未猜出且未放弃）
       room.roundSettled = true;
       io.to(room.code).emit('round_end', {
         winner: null, winnerName: '', targetName: target.name,
-        score: score(room), matchOver: false,
+        score: score(room), matchOver: false, reason: 'timeout',
       });
       room._nextRound = setTimeout(() => startRound(room), 5000);
     }, ROUND_TIME);
@@ -290,11 +296,38 @@ export function registerGameHandlers({
       if (!room || room.finished || room.roundSettled) return;
       const player = room.players.get(socket.id);
       if (!player) return;
+
+      // 标记猜出状态
+      const rp = room._roundPlayers?.get(socket.id);
+      if (rp) rp.guessed = true;
+
       player.wins++;
       const won = player.wins >= room.winsNeeded;
       console.log(`[胜] ${player.name} ${player.wins}/${room.winsNeeded}`);
       endRound(room, socket.id, player.name, data?.targetName || room.target?.name || '', won);
       } catch (e) { console.error('[game] player_win_round error:', e.message); }
+    });
+
+    // === player_exhausted ===
+    socket.on('player_exhausted', (data) => {
+      try {
+      const room = rooms.get(socket.data.roomCode);
+      if (!room || room.finished || room.roundSettled) return;
+      const player = room.players.get(socket.id);
+      if (!player) return;
+
+      const rp = room._roundPlayers?.get(socket.id);
+      if (rp) rp.exhausted = true;
+
+      // 检查双方是否均耗尽 → 平局
+      const otherId = Array.from(room.players.keys()).find(id => id !== socket.id);
+      const otherRp = otherId ? room._roundPlayers?.get(otherId) : null;
+      if (otherRp?.exhausted) {
+        console.log(`[耗尽] 双方次数耗尽 → 平局`);
+        endRound(room, null, '', data?.targetName || room.target?.name || '', false);
+        // 平局不加分
+      }
+      } catch (e) { console.error('[game] player_exhausted error:', e.message); }
     });
 
     // === surrender_round ===
@@ -303,16 +336,36 @@ export function registerGameHandlers({
       const room = rooms.get(socket.data.roomCode);
       if (!room || room.finished || room.roundSettled) return;
       const player = room.players.get(socket.id);
-      if (!player) return; // 只允许房间内的真实玩家弃权，防止幽灵 socket 利用
-      // 单人弃权 = 对方胜
+      if (!player) return;
+
+      const rp = room._roundPlayers?.get(socket.id);
+      if (rp) rp.surrendered = true;
+
       const otherId = Array.from(room.players.keys()).find(id => id !== socket.id);
-      const otherPlayer = room.players.get(otherId);
-      if (otherPlayer) {
-        otherPlayer.wins++;
-        const won = otherPlayer.wins >= room.winsNeeded;
-        console.log(`[弃权] ${room.players.get(socket.id)?.name} → ${otherPlayer.name} ${otherPlayer.wins}/${room.winsNeeded}`);
-        endRound(room, otherId, otherPlayer.name, data?.targetName || room.target?.name || '', won);
+      const otherPlayer = otherId ? room.players.get(otherId) : null;
+      const otherRp = otherId ? room._roundPlayers?.get(otherId) : null;
+
+      // 通知对方你已放弃
+      socket.to(room.code).emit('opponent_surrendered', { playerName: player.name });
+
+      // 判断胜负：
+      // 对方已猜出 → 对方胜
+      if (otherRp?.guessed) {
+        console.log(`[弃权] ${player.name} 弃权 → ${otherPlayer?.name} 已猜出，胜出`);
+        endRound(room, otherId, otherPlayer?.name || '对手', data?.targetName || room.target?.name || '', otherPlayer ? otherPlayer.wins >= room.winsNeeded : false);
+        return;
       }
+
+      // 对方已放弃或已耗尽 → 双方弃权/放弃vs耗尽 → 平局
+      if (otherRp?.surrendered || otherRp?.exhausted) {
+        console.log(`[弃权] 双方弃权/耗尽 → 平局`);
+        endRound(room, null, '', data?.targetName || room.target?.name || '', false);
+        return;
+      }
+
+      // 对方未猜出、未放弃 → 平局（弃权方主动放弃，不判对方胜）
+      console.log(`[弃权] ${player.name} 弃权 → 对方未猜出 → 平局`);
+      endRound(room, null, '', data?.targetName || room.target?.name || '', false);
       } catch (e) { console.error('[game] surrender_round error:', e.message); }
     });
 
@@ -400,17 +453,46 @@ export function registerGameHandlers({
       io.to(room.code).emit('opponent_disconnected', { playerName: player.name });
 
       player.dcTimer = setTimeout(() => {
-        // 如果在 roundSettled 窗口（回合刚结束/比赛中），延后检查
+        // 检查对方是否也离线了
+        const otherId = Array.from(room.players.keys()).find(id => id !== socket.id);
+        const otherPlayer = otherId ? room.players.get(otherId) : null;
+        let bothOffline = false;
+        if (otherPlayer) {
+          const otherPk = otherPlayer.playerKey;
+          const otherSocks = onlineSockets.get(otherPk);
+          if (!otherSocks || otherSocks.size === 0) {
+            bothOffline = true;
+          }
+        }
+
+        if (bothOffline) {
+          // 双方离线 → 解散房间，双方判负
+          console.log(`[断线] 双方离线 → 解散房间 ${room.code}`);
+          if (room._roundTimer) { clearTimeout(room._roundTimer); room._roundTimer = null; }
+          if (room._nextRound) { clearTimeout(room._nextRound); room._nextRound = null; }
+          io.to(room.code).emit('match_end', {
+            winner: null, winnerName: '', score: score(room), reason: 'both_disconnected',
+            players: Array.from(room.players.entries()).map(([id, p]) => ({ id, name: p.name, wins: p.wins })),
+          });
+          room.finished = true;
+          room._finishedAt = Date.now();
+          for (const p of room.players.values()) roomPlayerIndex.delete(p.playerKey);
+          for (const p of room.players.values()) {
+            const entry = onlinePlayers.get(p.playerKey);
+            if (entry && entry.type === 'multi') { entry.type = 'idle'; entry.roomCode = null; }
+          }
+          return;
+        }
+
+        // 单方离线 → 离线方判负
         if (room.roundSettled || room.finished) {
-          // 重新设置一个短定时器，在回合结束后再次检查
           if (player.dcTimer) clearTimeout(player.dcTimer);
           player.dcTimer = setTimeout(() => {
             if (room.roundSettled || room.finished) return;
             if (room._roundTimer) { clearTimeout(room._roundTimer); room._roundTimer = null; }
             if (room._nextRound) { clearTimeout(room._nextRound); room._nextRound = null; }
-            const other = Array.from(room.players.keys()).find(id => id !== socket.id);
             io.to(room.code).emit('match_end', {
-              winner: other, winnerName: room.players.get(other)?.name || '对手',
+              winner: otherId, winnerName: otherPlayer?.name || '对手',
               score: score(room), reason: 'disconnect',
               players: Array.from(room.players.entries()).map(([id, p]) => ({ id, name: p.name, wins: p.wins })),
             });
@@ -426,9 +508,8 @@ export function registerGameHandlers({
         }
         if (room._roundTimer) { clearTimeout(room._roundTimer); room._roundTimer = null; }
         if (room._nextRound) { clearTimeout(room._nextRound); room._nextRound = null; }
-        const other = Array.from(room.players.keys()).find(id => id !== socket.id);
         io.to(room.code).emit('match_end', {
-          winner: other, winnerName: room.players.get(other)?.name || '对手',
+          winner: otherId, winnerName: otherPlayer?.name || '对手',
           score: score(room), reason: 'disconnect',
           players: Array.from(room.players.entries()).map(([id, p]) => ({ id, name: p.name, wins: p.wins })),
         });

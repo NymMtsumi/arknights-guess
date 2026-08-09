@@ -265,7 +265,12 @@ export default function MultiplayerPage() {
       roundResultsRef.current = [];
       clearRoomCode();
       setStage('matchEnd');
-      setEndMsg(d.reason === 'disconnect' ? `${d.winnerName} 获胜（对方断线超30秒）` : `${d.winnerName} 赢得比赛！\n${d.score}`);
+      setEndMsg(
+        d.reason === 'both_disconnected' ? '双方离线，比赛解散'
+        : d.reason === 'disconnect' ? `${d.winnerName} 获胜（对方断线超30秒）`
+        : d.winner === null ? '比赛平局！'
+        : `${d.winnerName} 赢得比赛！\n${d.score}`
+      );
       // 不 disconnect，保留连接给再理一把
       if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     });
@@ -403,6 +408,7 @@ export default function MultiplayerPage() {
     if (sock?.connected) {
       sock.emit('guess_update', { guessCount: s.guesses.length, allComparisons: myColorsRef.current });
       if (s.status === 'won') sock.emit('player_win_round', { targetName: s.target?.name || '' });
+      if (s.status === 'lost') sock.emit('player_exhausted', { targetName: s.target?.name || '' });
     }
   };
 

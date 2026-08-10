@@ -3,6 +3,9 @@ import { Server } from 'socket.io';
 import { parseCookies, deriveGuestName } from '../utils.js';
 
 export function createSocketServer(http, { db, verifyToken, generateKey }) {
+  // 派对模式 Room Map（与1v1 rooms分离）
+  const partyRooms = new Map();
+  const partyRoomPlayerIndex = new Map(); // playerKey → roomCode
   const allowedOrigins = process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(',').map(s => s.trim())
     : ['https://www.arknights-guess.online', 'https://arknights-guess.pages.dev', 'http://localhost:3000'];
@@ -136,5 +139,5 @@ export function createSocketServer(http, { db, verifyToken, generateKey }) {
     return ips;
   }
 
-  return { io, onlinePlayers, onlineSockets, socketIps, getUserIps, ONLINE_TIMEOUT };
+  return { io, onlinePlayers, onlineSockets, socketIps, getUserIps, ONLINE_TIMEOUT, partyRooms, partyRoomPlayerIndex };
 }

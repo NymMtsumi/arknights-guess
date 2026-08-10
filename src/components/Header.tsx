@@ -30,22 +30,60 @@ export function Header() {
   return (
     <header className="header-bar">
       {/* 左侧：标题 */}
-      <Link
-        href="/"
-        className="no-underline text-[var(--text)] flex items-center gap-2 hover:text-[var(--primary)] transition-colors"
-      >
-        <span
-          style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: '1.125rem',
-            fontWeight: 800,
-            fontStyle: 'italic',
-            letterSpacing: '0.06em',
-          }}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <Link
+          href="/"
+          className="no-underline text-[var(--text)] flex items-center gap-2 hover:text-[var(--primary)] transition-colors"
         >
-          {t('game.nameShort')}
-        </span>
-      </Link>
+          <span
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: '1.125rem',
+              fontWeight: 800,
+              fontStyle: 'italic',
+              letterSpacing: '0.06em',
+            }}
+          >
+            {t('game.nameShort')}
+          </span>
+        </Link>
+        {/* 导航链接 */}
+        <nav style={{ display: 'flex', gap: '8px' }}>
+          <Link
+            href="/multiplayer"
+            style={{
+              background: 'transparent', color: 'var(--text-light)',
+              border: '1px solid var(--border)', borderRadius: 'var(--radius)',
+              padding: '4px 10px', fontSize: '0.8rem', fontWeight: 600,
+              textDecoration: 'none',
+            }}
+          >
+            ⚔️ {t('menu.multiplayer')}
+          </Link>
+          <Link
+            href="/party"
+            style={{
+              background: 'transparent', color: 'var(--accent)',
+              border: '1px solid var(--accent)', borderRadius: 'var(--radius)',
+              padding: '4px 10px', fontSize: '0.8rem', fontWeight: 600,
+              textDecoration: 'none',
+            }}
+          >
+            🎉 {t('menu.party')}
+          </Link>
+          <Link
+            href="/daily"
+            style={{
+              background: 'transparent', color: 'var(--text-light)',
+              border: '1px solid var(--border)', borderRadius: 'var(--radius)',
+              padding: '4px 10px', fontSize: '0.8rem', fontWeight: 600,
+              textDecoration: 'none',
+            }}
+          >
+            📅 {t('menu.daily')}
+          </Link>
+        </nav>
+      </div>
 
       {/* 右侧：语言切换 + 主题切换 + Admin + 登录按钮 */}
       <div className="flex items-center gap-4">

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head><title>Socket.IO Test</title></head>
+<body>
+<h1>Socket.IO Test</h1>
+<div id="status">Connecting...</div>
+<div id="room"></div>
+<button onclick="createRoom()">Create Room</button>
+<button onclick="joinRoom()">Join Room</button>
+<input id="code" placeholder="Room code" />
+
+<script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+<script>
+const status = document.getElementById('status');
+const room = document.getElementById('room');
+
+const s = io('http://localhost:3001', {
+  transports: ['websocket', 'polling'],
+  reconnection: false,
+  autoConnect: true,
+  auth: { token: '', pk: '' }
+});
+
+s.on('connect', () => {
+  status.textContent = 'CONNECTED: ' + s.id;
+  status.style.color = 'green';
+});
+
+s.on('connect_error', (err) => {
+  status.textContent = 'ERROR: ' + err.message;
+  status.style.color = 'red';
+});
+
+s.on('connect_timeout', () => {
+  status.textContent = 'TIMEOUT';
+  status.style.color = 'red';
+});
+
+s.on('error_msg', (d) => {
+  status.textContent = 'ERROR_MSG: ' + d.message;
+  status.style.color = 'red';
+});
+
+s.on('party:error', (d) => {
+  status.textContent = 'PARTY_ERROR: ' + d.code + ' - ' + d.message;
+  status.style.color = 'red';
+});
+
+s.on('party:created', (d) => {
+  room.textContent = 'Room created: ' + d.roomCode;
+  status.textContent = 'In waiting room';
+});
+
+window.createRoom = () => {
+  s.emit('party:create', { playerName: 'Test' + Math.random().toString(36).slice(2,6), difficulty: 'hard', rounds: 2, roundTime: 60 });
+};
+window.joinRoom = () => {
+  const code = document.getElementById('code').value.trim();
+  s.emit('party:join', { roomCode: code, playerName: 'TestJoin' + Math.random().toString(36).slice(2,6) });
+};
+</script>
+</body>
+</html>

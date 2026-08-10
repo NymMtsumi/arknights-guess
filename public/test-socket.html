@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head><title>Socket.IO Test</title></head>
+<body>
+<h1>Socket.IO Party Test</h1>
+<div id="status">Connecting...</div>
+<div id="room"></div>
+<button onclick="createRoom()">Create Room</button>
+<button onclick="joinRoom()">Join Room</button>
+<input id="code" placeholder="Room code" size="10" />
+<br><br>
+<button onclick="testReady()" style="background:orange">Test Toggle Ready</button>
+<button onclick="testLeave()" style="background:red;color:white">Test Leave</button>
+
+<script src="https://cdn.socket.io/4.8.3/socket.io.min.js"></script>
+<script>
+const status = document.getElementById('status');
+const room = document.getElementById('room');
+const log = (msg) => { console.log('[TEST]', msg); status.textContent = msg; };
+
+const s = io('http://localhost:3001', {
+  transports: ['websocket', 'polling'],
+  reconnection: false,
+  autoConnect: true,
+  auth: { token: '', pk: '' }
+});
+
+s.on('connect', () => {
+  log('CONNECTED: ' + s.id);
+  status.style.color = 'green';
+});
+s.on('connect_error', (err) => { log('ERROR: ' + err.message); status.style.color = 'red'; });
+s.on('connect_timeout', () => { log('TIMEOUT'); status.style.color = 'red'; });
+s.on('error_msg', (d) => { log('ERROR_MSG: ' + d.message); status.style.color = 'red'; });
+s.on('party:error', (d) => { log('PARTY_ERROR: ' + d.code); status.style.color = 'red'; });
+s.on('party:created', (d) => {
+  room.textContent = 'Room: ' + d.roomCode;
+  log('Room created: ' + d.roomCode);
+});
+s.on('party:joined', (d) => {
+  room.textContent = 'Joined: ' + d.room.code + ' (' + d.players.length + ' players)';
+  log('Joined room: ' + d.room.code);
+});
+s.on('party:player_ready', (d) => { log('player_ready: ' + d.playerId + ' ready=' + d.ready); });
+s.on('party:player_left', (d) => { log('player_left: ' + d.playerId); });
+s.on('party:kicked', () => { log('kicked!'); });
+
+window.createRoom = () => {
+  s.emit('party:create', { playerName: 'Test' + Math.random().toString(36).slice(2,6), difficulty: 'hard', rounds: 2, roundTime: 60 });
+};
+window.joinRoom = () => {
+  const code = document.getElementById('code').value.trim();
+  s.emit('party:join', { roomCode: code, playerName: 'TestJoin' + Math.random().toString(36).slice(2,6) });
+};
+window.testReady = () => {
+  log('emitting party:toggle_ready...');
+  s.emit('party:toggle_ready');
+};
+window.testLeave = () => {
+  log('emitting party:leave...');
+  s.emit('party:leave');
+};
+</script>
+</body>
+</html>

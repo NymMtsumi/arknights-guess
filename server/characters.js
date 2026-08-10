@@ -29,10 +29,20 @@ export function randomTarget(diff = 'hard') {
 
 // ===== 每日挑战：与客户端共享的确定性目标算法 =====
 
-/** 每日固定种子（基于 UTC 日期） */
+/** 每日固定种子（基于 UTC 日期，hash 后相邻天数值差异大） */
 export function dailySeed() {
   const now = new Date();
-  return now.getUTCFullYear() * 10000 + (now.getUTCMonth() + 1) * 100 + now.getUTCDate();
+  const dateStr = [
+    String(now.getUTCFullYear()),
+    String(now.getUTCMonth() + 1).padStart(2, '0'),
+    String(now.getUTCDate()).padStart(2, '0'),
+  ].join('-');
+  // djb2 hash → 32-bit unsigned integer
+  let hash = 5381;
+  for (let i = 0; i < dateStr.length; i++) {
+    hash = ((hash << 5) + hash + dateStr.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash);
 }
 
 /** 基于种子的伪随机数生成器（LCG） */
@@ -49,5 +59,7 @@ export function pickDailyTarget(difficulty = 'hard') {
   const pool = difficulty === 'easy' ? EASY_CHARS : difficulty === 'medium' ? MED_CHARS : ALL_CHARS;
   if (!pool.length) return { id: '', name: '?' };
   const rng = seededRandom(dailySeed());
+  // warm-up：LCG 相邻种子只经过 1 次迭代时输出高度相关，需要跑 5 次让状态发散
+  for (let i = 0; i < 5; i++) rng();
   return pool[Math.floor(rng() * pool.length)];
 }

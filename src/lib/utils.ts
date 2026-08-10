@@ -17,11 +17,22 @@ export function pickRandom<T>(arr: T[]): T {
 }
 
 /**
- * 每日固定种子（基于日期字符串）
+ * 每日固定种子（基于 UTC 日期字符串 hash）
+ * 使用 djb2 hash 确保相邻日期的种子差异大，LCG 输出真正不同
  */
 export function dailySeed(): number {
   const now = new Date();
-  return now.getUTCFullYear() * 10000 + (now.getUTCMonth() + 1) * 100 + now.getUTCDate();
+  const dateStr = [
+    String(now.getUTCFullYear()),
+    String(now.getUTCMonth() + 1).padStart(2, '0'),
+    String(now.getUTCDate()).padStart(2, '0'),
+  ].join('-');
+  // djb2 hash → 32-bit unsigned integer
+  let hash = 5381;
+  for (let i = 0; i < dateStr.length; i++) {
+    hash = ((hash << 5) + hash + dateStr.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash);
 }
 
 /**

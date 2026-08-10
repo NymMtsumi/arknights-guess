@@ -52,7 +52,9 @@ export function pickDailyTarget(characters: Character[], difficulty: Difficulty)
     throw new Error('pickDailyTarget: no characters available for the given difficulty');
   }
   const rng = seededRandom(dailySeed());
-  const index = Math.floor(rng() * pool.length) % pool.length;
+  // warm-up：LCG 相邻种子只经过 1 次迭代时输出高度相关，需要跑 5 次让状态发散
+  for (let i = 0; i < 5; i++) rng();
+  const index = Math.floor(rng() * pool.length);
   return pool[index];
 }
 

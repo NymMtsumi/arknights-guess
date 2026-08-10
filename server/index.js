@@ -18,7 +18,6 @@ import { createSocketServer } from './socket/index.js';
 import { createRoomManager } from './socket/rooms.js';
 import { createMatchmaking } from './socket/matchmaking.js';
 import { registerGameHandlers } from './socket/game.js';
-import { registerPartyHandlers } from './socket/party.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -113,7 +112,7 @@ console.log('[init] step 4: creating HTTP server...');
 const http = createServer((req, res) => handleRequest(req, res));
 console.log('[init] step 5: creating socket server...');
 const socketServer = createSocketServer(http, { db, verifyToken, generateKey });
-const { io, onlinePlayers, onlineSockets, socketIps, getUserIps, ONLINE_TIMEOUT, partyRooms, partyRoomPlayerIndex } = socketServer;
+const { io, onlinePlayers, onlineSockets, socketIps, getUserIps, ONLINE_TIMEOUT } = socketServer;
 
 // ===== 初始化房间管理 & 匹配 & 游戏 =====
 const roomManager = createRoomManager();
@@ -143,17 +142,6 @@ const gameHandlers = registerGameHandlers({
 // 延迟注入：matchmaking 需要 startRound（由 gameHandlers 提供）
 matchmaking.setStartRound(gameHandlers.startRound);
 
-// 注册派对模式处理器
-const partyHandlers = registerPartyHandlers({
-  io,
-  partyRooms,
-  partyRoomPlayerIndex,
-  onlinePlayers,
-  onlineSockets,
-  ONLINE_TIMEOUT,
-  rooms: roomManager.rooms,
-  roomPlayerIndex: roomManager.roomPlayerIndex,
-});
 
 // ===== 注册路由处理器 =====
 const authRoutes = registerAuthRoutes({
@@ -306,7 +294,6 @@ async function handleRequest(req, res) {
 // ===== 统一周期清理（每分钟） =====
 const cleanupInterval = setInterval(() => {
   gameHandlers.runPeriodicCleanup();
-  partyHandlers.runPeriodicCleanup();
   try { db.pragma('wal_checkpoint(PASSIVE)'); } catch (e) { console.error('[wal] checkpoint failed:', e.message); }
 }, 60_000);
 

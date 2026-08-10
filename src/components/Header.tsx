@@ -60,18 +60,7 @@ export function Header() {
           >
             ⚔️ {t('menu.multiplayer')}
           </Link>
-          <Link
-            href="/party"
-            style={{
-              background: 'transparent', color: 'var(--accent)',
-              border: '1px solid var(--accent)', borderRadius: 'var(--radius)',
-              padding: '4px 10px', fontSize: '0.8rem', fontWeight: 600,
-              textDecoration: 'none',
-            }}
-          >
-            🎉 {t('menu.party')}
-          </Link>
-          <Link
+<Link
             href="/daily"
             style={{
               background: 'transparent', color: 'var(--text-light)',

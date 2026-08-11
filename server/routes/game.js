@@ -120,24 +120,6 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
         return jsonResponse(res, { error: '每日目标不匹配，可能已跨日，请刷新重试' }, 400);
       }
 
-      // 去重：每人每天只能提交一次
-      if (userId) {
-        const existing = db.prepare(
-          'SELECT id FROM games WHERE user_id = ? AND daily_date = ?'
-        ).get(userId, dailyDate);
-        if (existing) {
-          return jsonResponse(res, { error: '今日已挑战' }, 409);
-        }
-      } else {
-        // 游客：按 player_key 去重
-        const existing = db.prepare(
-          'SELECT id FROM games WHERE player_key = ? AND daily_date = ? AND user_id IS NULL'
-        ).get(player_key, dailyDate);
-        if (existing) {
-          return jsonResponse(res, { error: '今日已挑战' }, 409);
-        }
-      }
-
       // 验证猜测次数在合理范围内（1-8）
       if (guessCount < 1 || guessCount > 8) {
         return jsonResponse(res, { error: 'guessCount 必须在 1-8 之间' }, 400);
@@ -145,16 +127,38 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
     }
 
     let result;
-    try {
-      result = db.prepare(
-        'INSERT INTO games (player_key, user_id, won, guess_count, difficulty, target_name, timestamp, mode, daily_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
-      ).run(player_key, userId || null, won ? 1 : 0, guessCount, difficulty, targetName, timestamp, mode, dailyDate);
-    } catch (e) {
-      // UNIQUE constraint — 并发去重命中
-      if (e.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+    if (mode === 'daily') {
+      // 每日模式：去重检查 + 写入封装在事务中，防止并发竞态
+      const txnResult = db.transaction(() => {
+        if (userId) {
+          const existing = db.prepare(
+            'SELECT id FROM games WHERE user_id = ? AND daily_date = ?'
+          ).get(userId, dailyDate);
+          if (existing) return { conflict: true };
+        } else {
+          const existing = db.prepare(
+            'SELECT id FROM games WHERE player_key = ? AND daily_date = ? AND user_id IS NULL'
+          ).get(player_key, dailyDate);
+          if (existing) return { conflict: true };
+        }
+
+        return db.prepare(
+          'INSERT INTO games (player_key, user_id, won, guess_count, difficulty, target_name, timestamp, mode, daily_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        ).run(player_key, userId || null, won ? 1 : 0, guessCount, difficulty, targetName, timestamp, mode, dailyDate);
+      })();
+
+      if (txnResult.conflict) {
         return jsonResponse(res, { error: '今日已挑战' }, 409);
       }
-      throw e;
+      result = txnResult;
+    } else {
+      try {
+        result = db.prepare(
+          'INSERT INTO games (player_key, user_id, won, guess_count, difficulty, target_name, timestamp, mode, daily_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        ).run(player_key, userId || null, won ? 1 : 0, guessCount, difficulty, targetName, timestamp, mode, dailyDate);
+      } catch (e) {
+        throw e;
+      }
     }
 
     const extraHeaders = {};
@@ -303,11 +307,13 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
       }
     }
 
-    // 未挑战时不暴露当日目标名称/ID（客户端自行本地计算，防止 API 窥探答案）
+    // 始终返回当日目标（客户端使用服务端权威目标，不再离线计算）
+    // 目标由日期确定性派生，服务端 save-game 时二次验证，暴露目标不构成安全风险
     return jsonResponse(res, {
       date: dailyDate,
       played,
-      ...(played ? { targetId: target.id, targetName: target.name } : {}),
+      targetId: target.id,
+      targetName: target.name,
       ...(result ? { result } : {}),
     });
   }

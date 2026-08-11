@@ -2,7 +2,7 @@
 import { randomBytes, createHash } from 'node:crypto';
 import { promises as dns } from 'node:dns';
 import bcrypt from 'bcryptjs';
-import { sanitizeString, parseCookies, parseBody, jsonResponse, generateKey, SMTP_SENDER } from '../utils.js';
+import { sanitizeString, parseCookies, parseBody, jsonResponse, generateKey, generateDisplayCode, SMTP_SENDER } from '../utils.js';
 
 // ===== 邮箱 MX 记录验证 =====
 async function checkEmailMX(email) {
@@ -269,7 +269,6 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
       }
 
       let result;
-      const { generateDisplayCode } = await import('../utils.js');
       try {
         const doVerify = db.transaction(() => {
           const r = db.prepare(

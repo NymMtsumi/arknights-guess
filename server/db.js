@@ -120,21 +120,24 @@ export function initSchema(db) {
     }
   } catch {}
 
-  // ===== 1. 先清理重复的 pk（确保 users 表 pk 唯一后再回填） =====
-  // 保留最早注册的账号（MIN(id)），删除重复 pk 的后续注册
+  // ===== 1. 检测重复 pk 并记录警告（不再静默删除用户账户） =====
+  // 重复 pk 可能由历史 bug/竞态导致，需人工介入排查，不应自动删除
   try {
-    const dupResult = db.prepare(`
-      DELETE FROM users WHERE id IN (
-        SELECT id FROM users WHERE player_key IS NOT NULL AND id NOT IN (
-          SELECT MIN(id) FROM users WHERE player_key IS NOT NULL GROUP BY player_key
-        )
+    const dupRows = db.prepare(`
+      SELECT id, username, player_key, created_at FROM users WHERE player_key IS NOT NULL AND id NOT IN (
+        SELECT MIN(id) FROM users WHERE player_key IS NOT NULL GROUP BY player_key
       )
-    `).run();
-    if (dupResult.changes > 0) {
-      console.log(`[DB] Cleaned ${dupResult.changes} duplicate player_key user records`);
+    `).all();
+    if (dupRows.length > 0) {
+      console.error(`[DB] ⚠️ 检测到 ${dupRows.length} 个重复 player_key 的用户账户：`);
+      for (const d of dupRows) {
+        console.error(`[DB]   id=${d.id} username=${d.username} pk=${d.player_key?.slice(0,10)} created=${d.created_at}`);
+      }
+      console.error('[DB] 这些账户可能是历史竞态条件导致的，请人工审核后手动清理。');
+      console.error('[DB] 保留最早注册的账户（MIN(id)），新账户的 games 记录可能变为孤儿。');
     }
   } catch (e) {
-    console.warn('[DB] Duplicate pk cleanup failed:', e.message);
+    console.warn('[DB] Duplicate pk detection failed:', e.message);
   }
 
   // ===== 2. 回填历史数据的 user_id（在去重之后执行，确保引用完整性） =====

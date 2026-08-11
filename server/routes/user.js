@@ -64,6 +64,9 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
     }
 
     const user = db.prepare('SELECT player_key FROM users WHERE id = ?').get(auth.userId);
+    if (!user) {
+      return jsonResponse(res, { error: '用户不存在' }, 404);
+    }
     let finalPk = player_key;
 
     // 确保用户有 pk（生成新的，不迁移旧 pk 的游戏！）
@@ -303,6 +306,10 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
 
   // ===== GET /api/guest-identity =====
   async function handleGuestIdentity(req, res) {
+    const ip = getClientIP(req);
+    if (!checkRateLimit(`guest:${ip}`, 30, 60_000)) {
+      return jsonResponse(res, { error: '请求过于频繁，请稍后再试' }, 429);
+    }
     const cookies = parseCookies(req.headers.cookie || '');
     let guestKey = cookies.guest_id || '';
 
@@ -335,13 +342,15 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
     const existing = onlinePlayers.get(playerKey);
     const isFresh = existing && Date.now() - (existing.lastSeen || 0) < 30_000;
     let displayName, username, userId;
+    // 无论如何都检查封禁状态（轻量 SELECT，防直接 SQL 封禁后缓存延迟）
+    const banCheck = db.prepare('SELECT banned_at FROM users WHERE player_key = ?').get(playerKey);
+    if (banCheck?.banned_at) return jsonResponse(res, { ok: true }); // 静默忽略被封禁用户
     if (isFresh) {
       displayName = existing.displayName;
       username = existing.username;
       userId = existing.userId;
     } else {
-      const userRow = db.prepare('SELECT id, username, nickname, banned_at FROM users WHERE player_key = ?').get(playerKey);
-      if (userRow?.banned_at) return jsonResponse(res, { ok: true }); // 静默忽略被封禁用户
+      const userRow = db.prepare('SELECT id, username, nickname FROM users WHERE player_key = ?').get(playerKey);
       displayName = userRow?.nickname || userRow?.username || deriveGuestName(playerKey);
       username = userRow?.username || null;
       userId = userRow?.id || null;

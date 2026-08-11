@@ -70,8 +70,8 @@ export function createSocketServer(http, { db, verifyToken, generateKey }) {
     // 回退到 cookie/auth/URL player_key（游客或 JWT 不可用）
     const authPk = socket.handshake.auth?.pk;
     const urlPk = socket.handshake.query?.pk; // 兼容旧客户端（逐步废弃）
-    if (cookies.player_key) {
-      socket.data.playerKey = cookies.player_key;
+    if (cookiePk) {
+      socket.data.playerKey = cookiePk;
     } else if (authPk && typeof authPk === 'string' && authPk.startsWith('p_')) {
       socket.data.playerKey = authPk;
     } else if (urlPk && typeof urlPk === 'string' && urlPk.startsWith('p_')) {

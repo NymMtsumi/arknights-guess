@@ -63,7 +63,7 @@ export function parseBody(req) {
       if (settled) return;
       size += chunk.length;
       if (size > MAX_SIZE) {
-        req.destroy();
+        // 丢弃超大数据体（settled 标记防止后续 end 事件重复 resolve），保持 keep-alive 连接可用
         done({});
         return;
       }
@@ -135,8 +135,8 @@ export function normalizeTimestamp(ts) {
   return ts;
 }
 
-// 服务端统一发件人邮箱
-export const SMTP_SENDER = '"明日方舟猜干员" <3479083602@qq.com>';
+// 服务端统一发件人（SMTP_FROM 环境变量覆盖，避免硬编码 QQ 号在源码中）
+export const SMTP_SENDER = process.env.SMTP_FROM || '"明日方舟猜干员" <noreply@arknights-guess.online>';
 
 // ===== 昵称违禁词过滤 =====
 const NICKNAME_FORBIDDEN = new Set([

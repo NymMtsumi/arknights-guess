@@ -50,7 +50,7 @@ export function getServerUrl(): string {
       // Runtime warning: env var missing in production (not localhost)
       const hostname = window.location.hostname;
       if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-        console.warn('[Auth] NEXT_PUBLIC_WS_URL is not set, falling back to localhost:3001. API calls will fail in production.');
+        console.error('[Auth] NEXT_PUBLIC_WS_URL is not set! API calls will fail. Set NEXT_PUBLIC_WS_URL in .env.local');
       }
       url = 'http://localhost:3001';
     }
@@ -76,21 +76,31 @@ export function clearToken(): void {
   try { localStorage.removeItem(TOKEN_KEY); } catch {}
 }
 
+let _cachedUser: AuthUser | null = null;
+let _cachedUserFetched = false;
+
 export function getUser(): AuthUser | null {
   if (typeof window === 'undefined') return null;
+  if (_cachedUserFetched) return _cachedUser;
+  _cachedUserFetched = true;
   try {
     const stored = localStorage.getItem(USER_KEY);
-    return stored ? JSON.parse(stored) : null;
+    _cachedUser = stored ? JSON.parse(stored) : null;
+    return _cachedUser;
   } catch { return null; }
 }
 
 export function setUser(user: AuthUser): void {
   if (typeof window === 'undefined') return;
+  _cachedUser = user;
+  _cachedUserFetched = true;
   try { localStorage.setItem(USER_KEY, JSON.stringify(user)); } catch {}
 }
 
 export function clearUser(): void {
   if (typeof window === 'undefined') return;
+  _cachedUser = null;
+  _cachedUserFetched = false;
   try { localStorage.removeItem(USER_KEY); } catch {}
 }
 
@@ -168,8 +178,8 @@ export async function apiCall<T = any>(path: string, options: RequestInit = {}):
   const { method: optMethod, headers: optHeaders, ...restOptions } = options;
   const method = optMethod || 'GET';
   const headers: Record<string, string> = {
-    ...getAuthHeaders(),
     ...((optHeaders as Record<string, string>) || {}),
+    ...getAuthHeaders(), // 后展开覆盖，防止 caller 注入假 Authorization
   };
 
   let res: Response;
@@ -178,6 +188,7 @@ export async function apiCall<T = any>(path: string, options: RequestInit = {}):
       method,
       ...restOptions,
       headers,
+      credentials: 'include',
     });
   } catch (fetchErr: any) {
     throw new Error(fetchErr?.message === 'Failed to fetch'
@@ -300,10 +311,6 @@ export async function migrateGuestDataToAccount(accountPlayerKey: string, oldGue
       return { ...r, _migrating: accountPlayerKey };
     });
     try { localStorage.setItem(HISTORY_KEY, JSON.stringify(updated)); } catch {}
-
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-    const token = getToken();
-    if (token) headers['Authorization'] = `Bearer ${token}`;
 
     // 收集成功迁移的记录索引，逐条标记（不再 all-or-nothing）
     const migratedIndices = new Set<number>();

@@ -173,6 +173,10 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
 
   // ===== GET /api/leaderboard =====
   async function handleLeaderboard(req, res) {
+    const ip = getClientIP(req);
+    if (!checkRateLimit(`lb:${ip}`, 30, 60_000)) {
+      return jsonResponse(res, { error: '请求过于频繁，请稍后再试' }, 429);
+    }
     const urlObj = new URL(req.url, 'http://localhost');
     let limit = parseInt(urlObj.searchParams.get('limit')) || 50;
     const difficulty = sanitizeString(urlObj.searchParams.get('difficulty') || '', 20);
@@ -239,7 +243,7 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
 
     leaderboardCache.set(cacheKey, { data: leaderboard, at: Date.now() });
     // 清理过期缓存（超过 90s 的条目）
-    if (leaderboardCache.size > 50) {
+    if (leaderboardCache.size >= 50) {
       const cutoff = Date.now() - 90_000;
       for (const [k, v] of leaderboardCache) { if (v.at < cutoff) leaderboardCache.delete(k); }
     }
@@ -347,7 +351,7 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
 
     leaderboardCache.set(cacheKey, { data: leaderboard, at: Date.now() });
     // 定期清理过期缓存
-    if (leaderboardCache.size > 50) {
+    if (leaderboardCache.size >= 50) {
       const cutoff = Date.now() - 90_000;
       for (const [k, v] of leaderboardCache) { if (v.at < cutoff) leaderboardCache.delete(k); }
     }

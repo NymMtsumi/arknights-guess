@@ -64,9 +64,14 @@ export default function AdminPage() {
         router.push('/');
       }
     } catch (err: any) {
-      setIsAdmin(false);
-      setError(err instanceof AuthError ? t('admin.loginExpired') : t('admin.verifyFailed'));
-      router.push('/');
+      // 仅认证错误时重定向；网络错误仅提示（不踢出管理面板）
+      if (err instanceof AuthError) {
+        setIsAdmin(false);
+        setError(t('admin.loginExpired'));
+        router.push('/');
+      } else {
+        setError(err.message || t('admin.verifyFailed'));
+      }
     } finally {
       tabVerifyingRef.current = false;
     }

@@ -438,7 +438,8 @@ export function registerAdminRoutes({ app, db, requireAdmin, checkNicknameProfan
       // is set by the PM2 ecosystem file and must match the running process name
       const pm2Name = process.env.PM2_APP_NAME || 'liyiba';
       // 使用 node + better-sqlite3 备份数据库（避免依赖 sqlite3 CLI）
-      const backupCmd = `node -e "const db=require('better-sqlite3')('data.db');const ts=new Date().toISOString().replace(/[:T]/g,'').slice(0,12);db.backup('data.db.bak-'+ts);db.close();console.log('data.db.bak-'+ts)"`;
+      // --input-type=commonjs 确保 require 在 ESM package 下也能用
+      const backupCmd = `node --input-type=commonjs -e "const db=require('better-sqlite3')('data.db');const ts=new Date().toISOString().replace(/[:T]/g,'').slice(0,12);db.backup('data.db.bak-'+ts);db.close();console.log('data.db.bak-'+ts)"`;
       spawn('bash', ['-c',
         `cd ${projectPath} && echo "=== Deploy $(date -Iseconds) ===" >> deploy.log && BACKUP_FILE=$(${backupCmd} 2>> deploy.log) && echo " Backup: $BACKUP_FILE" >> deploy.log && git fetch origin main >> deploy.log 2>&1 && git stash push -m "auto-stash-before-deploy" >> deploy.log 2>&1; git pull --ff-only origin main >> deploy.log 2>&1 && export PATH=$PATH:${nodeDir} && npm install --production >> deploy.log 2>&1 && pm2 restart ${pm2Name} --update-env >> deploy.log 2>&1 && find ${projectPath} -maxdepth 1 -name "data.db.bak-*" -mtime +7 -delete 2>/dev/null && echo "=== Deploy OK ===" >> deploy.log || echo "=== Deploy FAILED ===" >> deploy.log`
       ], { detached: true, stdio: 'ignore' }).unref();

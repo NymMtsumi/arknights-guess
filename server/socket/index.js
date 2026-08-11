@@ -100,7 +100,7 @@ export function createSocketServer(http, { db, verifyToken, generateKey }) {
   });
 
   // ===== 在线追踪数据结构 =====
-  const onlinePlayers = new Map(); // playerKey → { playerKey, displayName, username, userId, type, roomCode, lastSeen }
+  const onlinePlayers = new Map(); // playerKey → { playerKey, displayName, username, userId, type, roomCode, lastSeen, lastIp }
   const onlineSockets = new Map(); // playerKey → Set<socketId>
   const socketIps = new Map();     // socketId → IP (用于封禁时追踪游客)
   const ONLINE_TIMEOUT = 90_000;
@@ -121,6 +121,8 @@ export function createSocketServer(http, { db, verifyToken, generateKey }) {
     // 规范化 IPv6-mapped IPv4（无论来源都执行）
     ip = ip.replace(/^::ffff:/, '');
     socketIps.set(socket.id, ip);
+    // Store IP on socket data so onlinePlayers entry can read it without iterating socketIps
+    socket.data.ip = ip;
     socket.on('disconnect', () => socketIps.delete(socket.id));
   });
 

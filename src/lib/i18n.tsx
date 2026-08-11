@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import zhCN from '@/messages/zh-CN.json';
 import en from '@/messages/en.json';
 
@@ -67,8 +67,10 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     return interpolate(template, params);
   }, [locale]);
 
+  const value = useMemo(() => ({ locale, setLocale, t, mounted }), [locale, setLocale, t, mounted]);
+
   return (
-    <I18nContext.Provider value={{ locale, setLocale, t, mounted }}>
+    <I18nContext.Provider value={value}>
       {children}
     </I18nContext.Provider>
   );

@@ -8,23 +8,7 @@ export function HeroSection() {
   return (
     <div className="home-hero">
       {/* Kick 标签 */}
-      <div
-        style={{
-          position: 'relative',
-          marginBottom: '14px',
-          padding: '5px 10px',
-          borderLeft: '3px solid var(--primary)',
-          color: 'var(--primary)',
-          fontFamily: "Bahnschrift, 'Arial Narrow', sans-serif",
-          fontSize: 'var(--fs-xs)',
-          fontWeight: 800,
-          letterSpacing: '0.16em',
-          textTransform: 'uppercase',
-          animation: 'kicker-enter 0.55s 0.08s cubic-bezier(0.2, 0.72, 0.25, 1) both',
-        }}
-      >
-        {t('hero.kicker')}
-      </div>
+      <div className="hero-kicker">{t('hero.kicker')}</div>
 
       {/* 主标题 */}
       <h1>{t('hero.title')}</h1>

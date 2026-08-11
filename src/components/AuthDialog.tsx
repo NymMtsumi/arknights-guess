@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { register, login, forgotPassword, syncGames, linkPlayerKey, getUser, getPlayerKey, logout, apiCall } from '@/lib/auth';
 import { loadHistory } from '@/lib/stats';
 
@@ -10,6 +11,7 @@ interface AuthDialogProps {
 }
 
 export function AuthDialog({ open, onClose }: AuthDialogProps) {
+  const router = useRouter();
   const [mode, setMode] = useState<'login' | 'register' | 'forgot'>('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -66,6 +68,11 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
 
     if (!username.trim() || (!password && mode !== 'forgot')) {
       setError(mode === 'forgot' ? '请填写邮箱' : '请填写邮箱和密码');
+      return;
+    }
+    // Client-side password length check (server-side enforces >= 8 as well)
+    if ((mode === 'register' || mode === 'login') && password.length < 8) {
+      setError('密码至少需要8个字符');
       return;
     }
     if (mode === 'register' && !email.trim()) {
@@ -233,7 +240,7 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
               </p>
             )}
             {/* 个人中心 */}
-            <button onClick={() => { window.location.href = '/profile'; }} style={{
+            <button onClick={() => { router.push('/profile'); }} style={{
               ...btnStyle,
               marginBottom: '10px',
             }}>

@@ -15,9 +15,12 @@ jobs:
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             BASE="${{ github.event.pull_request.base.sha }}"
           else
-            BASE="origin/main"
+            # Use github.event.before for push events (avoids blind spot for direct pushes to main)
+            BASE="${{ github.event.before }}"
+            if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ]; then
+              BASE="HEAD^"
+            fi
           fi
-          git fetch origin main 2>/dev/null || true
           FILES=$(git diff --name-only ${BASE}...HEAD -- '*.db' '*.db-shm' '*.db-wal' '*.db-journal' 2>/dev/null || true)
           if [ -n "$FILES" ]; then
             echo ""

@@ -7,6 +7,9 @@ on:
       - 'server/**'
       - 'package.json'
       - 'package-lock.json'
+      # NOTE: Triggering on root package.json/pnpm-lock.yaml covers shared config changes
+      # (linting, scripts, dependency updates). This may cause a deploy for changes that
+      # don't affect the server runtime, but the trade-off is acceptable for simplicity.
   workflow_dispatch:
 
 # 防止并发部署导致 git/npm 竞态
@@ -19,9 +22,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 触发 VPS 部署
+        env:
+          # Domain dependency: ws.arknights-guess.online → VPS nginx → Node :3001
+          # Override via vars.DEPLOY_WEBHOOK_URL in repo settings if domain changes
+          DEPLOY_WEBHOOK_URL: ${{ vars.DEPLOY_WEBHOOK_URL || 'https://ws.arknights-guess.online/api/deploy' }}
         run: |
-          curl -s -X POST https://ws.arknights-guess.online/api/deploy \
+          curl -fsS --retry 3 --max-time 30 -X POST "$DEPLOY_WEBHOOK_URL" \
             -H "Content-Type: application/json" \
-            -d "{\"token\": \"${{ secrets.DEPLOY_TOKEN }}\"}"
+            -d "{\"token\": \"${{ secrets.DEPLOY_TOKEN }}\"}" \
+            || { echo "::error::Deploy webhook failed"; exit 1; }
           echo ""
           echo "✅ 部署触发完成"

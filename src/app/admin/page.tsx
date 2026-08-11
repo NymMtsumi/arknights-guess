@@ -49,7 +49,8 @@ export default function AdminPage() {
   };
 
   // Re-verify admin status on every tab switch; redirect home on failure
-  // useRef guard prevents concurrent verifications on rapid tab switching
+  // useRef guard prevents concurrent verifications on rapid tab switching.
+  // The ref resets on remount (page navigation), so no cleanup effect is needed.
   const tabVerifyingRef = useRef(false);
   const handleTabChange = async (newTab: Tab) => {
     if (tabVerifyingRef.current) return;

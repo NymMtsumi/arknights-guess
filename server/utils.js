@@ -17,7 +17,7 @@ export function getCorsOrigin(requestOrigin) {
 // 输入清理：trim 所有字符串，强制最大长度
 export function sanitizeString(val, maxLen) {
   if (typeof val !== 'string') return '';
-  return val.trim().slice(0, maxLen);
+  return val.replace(/[\x00-\x1f\x7f]/g, '').trim().slice(0, maxLen);
 }
 
 // 解析 Cookie
@@ -100,13 +100,13 @@ export function deriveGuestName(key) {
   return `访客#${code}`;
 }
 
-// 唯一显示编号（基于 userId + salt）
-const DISPLAY_ID_SALT = randomBytes(32).toString('hex');
+// 唯一显示编号（基于 userId + 固定盐值，确保跨重启稳定）
+const DISPLAY_ID_SALT = 'arknights-display-v2-fixed-salt-2026';
+const DISPLAY_DOMAIN_PREFIX = createHash('sha256').update('arknights-display-v2\0', 'ascii').update(DISPLAY_ID_SALT).digest();
 export function generateDisplayCode(userId) {
   const digest = createHash('sha256')
-    .update(`arknights-display-v1\0`, 'ascii')
+    .update(DISPLAY_DOMAIN_PREFIX)
     .update(String(userId))
-    .update(DISPLAY_ID_SALT)
     .digest();
   const value = digest.readUInt32BE(0) % (36 ** 5);
   return value.toString(36).padStart(5, '0').toUpperCase();

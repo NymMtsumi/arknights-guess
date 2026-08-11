@@ -113,6 +113,8 @@ export default function LeaderboardPage() {
     setDifficulty('');
   };
 
+  // Display name with graceful fallback chain: nickname → username → displayName.
+  // Redundant lookups are intentional for robustness against partial API responses.
   const getDisplayName = (entry: LeaderboardEntry) => {
     return entry.nickname || entry.username || entry.displayName;
   };

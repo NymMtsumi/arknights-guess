@@ -3,6 +3,11 @@ import type { Character, Difficulty, GameStatus, GuessResult } from '@/types/cha
 import { makeGuess, pickTarget, findCharacterByName, isWin } from '@/lib/game-engine';
 import charactersData from '@/data/characters.json';
 
+// NOTE: Store error messages are hardcoded English strings.
+// i18n integration (via useI18n hook) would be ideal for consistency with the rest of the UI,
+// but Zustand stores run outside React component tree and cannot directly consume React context.
+// Also note the inconsistency: daily-store.ts uses Chinese while game-store.ts uses English.
+
 const MAX_GUESSES = 8;
 const ANTI_REPEAT = 5;
 const RECENT_KEY = 'arknights-recent-targets';
@@ -58,6 +63,9 @@ export const useGameStore = create<GameState>((set, get) => ({
     });
   },
 
+  // NOTE: submitGuess logic is duplicated between game-store.ts and daily-store.ts.
+  // A shared helper (e.g. makeGuessAndUpdateState) would be ideal but is deferred
+  // to avoid coupling the two stores prematurely.
   submitGuess: (name: string) => {
     const trimmed = name.trim();
     if (!trimmed) {

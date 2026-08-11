@@ -39,7 +39,6 @@ PROJECT_CREDENTIALS.md
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
 
 # raw game data (14MB, not needed for build)
 scripts/character_table_raw.json

@@ -49,6 +49,8 @@ export function createMatchmaking({ io, roomPlayerIndex, genMatchCode, createMat
     }
 
     const code = genMatchCode();
+    // Use Math.max so both players get at least the format they chose;
+    // e.g. BO3 player vs BO7 player → BO7 (favors the longer format)
     const bestOf = Math.max(
       [3, 5, 7].includes(p1.bestOf) ? p1.bestOf : 5,
       [3, 5, 7].includes(p2.bestOf) ? p2.bestOf : 5

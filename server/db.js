@@ -110,15 +110,15 @@ export function initSchema(db) {
   }
 
   // 创建 user_id 索引（用于按用户查询战绩）
-  try { db.exec('CREATE INDEX IF NOT EXISTS idx_games_user_id ON games(user_id)'); } catch {}
+  try { db.exec('CREATE INDEX IF NOT EXISTS idx_games_user_id ON games(user_id)'); } catch (e) { console.warn('[DB] idx_games_user_id index failed:', e.message); }
 
   // 清理可能的测试数据
   try {
-    const cleanResult = db.prepare("DELETE FROM games WHERE target_name = 'test' OR player_key = 'test'").run();
+    const cleanResult = db.prepare("DELETE FROM games WHERE target_name IN ('test', '?') OR player_key = 'test'").run();
     if (cleanResult.changes > 0) {
       console.log(`[DB] Cleaned ${cleanResult.changes} test records from games`);
     }
-  } catch {}
+  } catch (e) { console.warn('[DB] Test data cleanup failed:', e.message); }
 
   // ===== 1. 检测重复 pk 并记录警告（不再静默删除用户账户） =====
   // 重复 pk 可能由历史 bug/竞态导致，需人工介入排查，不应自动删除
@@ -157,7 +157,7 @@ export function initSchema(db) {
   }
 
   // UNIQUE 索引（兼容旧数据）
-  try { db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_display_id ON users(display_id)'); } catch {}
+  try { db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_display_id ON users(display_id)'); } catch (e) { console.warn('[DB] idx_users_display_id unique index failed:', e.message); }
 
   try { db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_player_key_unique ON users(player_key)'); } catch (e) {
     console.warn('[DB] Could not create UNIQUE index on users(player_key) — duplicates may exist:', e.message);
@@ -168,23 +168,24 @@ export function initSchema(db) {
   }
 
   // 性能索引
-  try { db.exec('CREATE INDEX IF NOT EXISTS idx_games_mode_diff ON games(mode, difficulty)'); } catch {}
-  try { db.exec('CREATE INDEX IF NOT EXISTS idx_games_player_mode ON games(player_key, mode)'); } catch {}
-  try { db.exec('CREATE INDEX IF NOT EXISTS idx_games_mode_player ON games(mode, player_key)'); } catch {}
-  try { db.exec('CREATE INDEX IF NOT EXISTS idx_games_player_ts ON games(player_key, timestamp DESC)'); } catch {}
-  try { db.exec('CREATE INDEX IF NOT EXISTS idx_admin_actions_action ON admin_actions(action, created_at)'); } catch {}
-  try { db.exec('CREATE INDEX IF NOT EXISTS idx_email_verifications_token ON email_verifications(token_hash)'); } catch {}
-  try { db.exec('CREATE INDEX IF NOT EXISTS idx_users_created ON users(created_at)'); } catch {}
+  try { db.exec('CREATE INDEX IF NOT EXISTS idx_games_mode_diff ON games(mode, difficulty)'); } catch (e) { console.warn('[DB] idx_games_mode_diff index failed:', e.message); }
+  try { db.exec('CREATE INDEX IF NOT EXISTS idx_games_player_mode ON games(player_key, mode)'); } catch (e) { console.warn('[DB] idx_games_player_mode index failed:', e.message); }
+  try { db.exec('CREATE INDEX IF NOT EXISTS idx_games_mode_player ON games(mode, player_key)'); } catch (e) { console.warn('[DB] idx_games_mode_player index failed:', e.message); }
+  try { db.exec('CREATE INDEX IF NOT EXISTS idx_games_player_ts ON games(player_key, timestamp DESC)'); } catch (e) { console.warn('[DB] idx_games_player_ts index failed:', e.message); }
+  try { db.exec('CREATE INDEX IF NOT EXISTS idx_games_user_ts ON games(user_id, timestamp)'); } catch (e) { console.warn('[DB] idx_games_user_ts index failed:', e.message); }
+  try { db.exec('CREATE INDEX IF NOT EXISTS idx_admin_actions_action ON admin_actions(action, created_at)'); } catch (e) { console.warn('[DB] idx_admin_actions_action index failed:', e.message); }
+  try { db.exec('CREATE INDEX IF NOT EXISTS idx_email_verifications_token ON email_verifications(token_hash)'); } catch (e) { console.warn('[DB] idx_email_verifications_token index failed:', e.message); }
+  try { db.exec('CREATE INDEX IF NOT EXISTS idx_users_created ON users(created_at)'); } catch (e) { console.warn('[DB] idx_users_created index failed:', e.message); }
 
   // 每日挑战去重：每个用户每天只能有一条记录
-  try { db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_games_daily_unique ON games(user_id, daily_date) WHERE user_id IS NOT NULL AND daily_date IS NOT NULL'); } catch {}
-  try { db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_games_daily_guest_unique ON games(player_key, daily_date) WHERE user_id IS NULL AND daily_date IS NOT NULL'); } catch {}
-  try { db.exec('CREATE INDEX IF NOT EXISTS idx_games_daily_lb ON games(mode, daily_date, won)'); } catch {}
+  try { db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_games_daily_unique ON games(user_id, daily_date) WHERE user_id IS NOT NULL AND daily_date IS NOT NULL'); } catch (e) { console.warn('[DB] idx_games_daily_unique index failed:', e.message); }
+  try { db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_games_daily_guest_unique ON games(player_key, daily_date) WHERE user_id IS NULL AND daily_date IS NOT NULL'); } catch (e) { console.warn('[DB] idx_games_daily_guest_unique index failed:', e.message); }
+  try { db.exec('CREATE INDEX IF NOT EXISTS idx_games_daily_lb ON games(mode, daily_date, won)'); } catch (e) { console.warn('[DB] idx_games_daily_lb index failed:', e.message); }
 
   // 过期清理索引（加速 DELETE WHERE datetime(expires_at) < datetime('now')）
-  try { db.exec('CREATE INDEX IF NOT EXISTS idx_pending_reg_expires ON pending_registrations(expires_at)'); } catch {}
-  try { db.exec('CREATE INDEX IF NOT EXISTS idx_password_resets_expires ON password_resets(expires_at)'); } catch {}
-  try { db.exec('CREATE INDEX IF NOT EXISTS idx_email_verifications_expires ON email_verifications(expires_at)'); } catch {}
+  try { db.exec('CREATE INDEX IF NOT EXISTS idx_pending_reg_expires ON pending_registrations(expires_at)'); } catch (e) { console.warn('[DB] idx_pending_reg_expires index failed:', e.message); }
+  try { db.exec('CREATE INDEX IF NOT EXISTS idx_password_resets_expires ON password_resets(expires_at)'); } catch (e) { console.warn('[DB] idx_password_resets_expires index failed:', e.message); }
+  try { db.exec('CREATE INDEX IF NOT EXISTS idx_email_verifications_expires ON email_verifications(expires_at)'); } catch (e) { console.warn('[DB] idx_email_verifications_expires index failed:', e.message); }
 
   // ===== 定期清理 =====
   // 清理过期记录（每小时）, 句柄存储在 db 对象上供 gracefulShutdown 清理

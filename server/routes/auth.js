@@ -4,12 +4,17 @@ import { promises as dns } from 'node:dns';
 import bcrypt from 'bcryptjs';
 import { sanitizeString, parseCookies, parseBody, jsonResponse, generateKey, generateDisplayCode, SMTP_SENDER } from '../utils.js';
 
+// 时序防御：固定 bcrypt hash，防止通过响应时间枚举账号
+const TIMING_DEFENSE_HASH = '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy';
+
 // ===== 邮箱 MX 记录验证 =====
 async function checkEmailMX(email) {
   const domain = email.split('@')[1];
   if (!domain) return false;
   try {
     // Node.js dns.promises 不支持 AbortController，用 Promise.race 实现超时
+    // 3s timeout is a trade-off: long enough for slow DNS resolvers on congested
+    // networks, short enough to avoid holding the registration request for too long.
     const records = await Promise.race([
       dns.resolveMx(domain),
       new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000))
@@ -106,7 +111,7 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
     const isDev = process.env.NODE_ENV === 'development';
 
     if (isDev) {
-      console.log('[DEV] 验证链接:', verifyLink);
+      console.log('[DEV] 验证链接 token=', verifyTokenRaw.slice(0, 8) + '...');
       return jsonResponse(res, {
         ok: true,
         message: '[DEV] 验证邮件已跳过，请使用控制台打印的链接完成验证',
@@ -142,7 +147,9 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
     }
 
     const body = await parseBody(req);
-    const email = sanitizeString(body.username, 320).toLowerCase();
+    // Accept both 'email' and 'username' fields for compatibility with clients
+    // that still send the login identifier under the 'username' key
+    const email = sanitizeString(body.email || body.username, 320).toLowerCase();
     const password = typeof body.password === 'string' ? body.password : '';
 
     if (!email || !password) {
@@ -157,7 +164,7 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
     const user = db.prepare('SELECT id, username, display_id, nickname, role, password_hash, player_key, email, email_verified_at, banned_at, token_version FROM users WHERE LOWER(email) = ?').get(email);
     if (!user) {
       // 时序防御：即使未找到用户也执行 bcrypt.compare，防止通过响应时间枚举账号
-      try { await bcrypt.compare('timing-defense', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'); } catch {}
+      try { await bcrypt.compare('timing-defense', TIMING_DEFENSE_HASH); } catch {}
       return jsonResponse(res, { error: '账号或密码错误' }, 401);
     }
 
@@ -341,7 +348,7 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
     const user = db.prepare('SELECT id, username, email FROM users WHERE LOWER(email) = ? AND email_verified_at IS NOT NULL').get(email);
     if (!user) {
       // 时序防御：即使未找到也执行 bcrypt（与登录路径一致的防御策略）
-      try { await bcrypt.compare('timing-defense', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'); } catch {}
+      try { await bcrypt.compare('timing-defense', TIMING_DEFENSE_HASH); } catch {}
       return jsonResponse(res, { ok: true, message: '如果该邮箱已注册，重置邮件已发送' });
     }
 
@@ -364,7 +371,7 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
     const isDev = process.env.NODE_ENV === 'development';
 
     if (isDev) {
-      console.log('[DEV] 重置密码链接:', resetLink);
+      console.log('[DEV] 重置密码链接 token=', resetToken.slice(0, 8) + '...');
       return jsonResponse(res, { ok: true, message: `[DEV] 重置链接已打印到控制台` });
     }
 

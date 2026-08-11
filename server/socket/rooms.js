@@ -69,9 +69,6 @@ export function createRoomManager() {
     return null;
   }
 
-  // 注：createRoom, getRoom, deleteRoom, setPlayerIndex, deletePlayerIndex,
-  // cleanupRooms, score 已移除 — 均未被调用（实际逻辑在 socket/game.js 中）
-
   return {
     rooms,
     roomPlayerIndex,

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useI18n } from '@/lib/i18n';
 import { ThemeToggle } from './ThemeToggle';
 import { LanguageSwitcher } from './LanguageSwitcher';
@@ -10,6 +11,7 @@ import { getUser, getServerUrl } from '@/lib/auth';
 
 export function Header() {
   const { t } = useI18n();
+  const router = useRouter();
   const [authOpen, setAuthOpen] = useState(false);
   const [guestName, setGuestName] = useState('');
   const user = typeof window !== 'undefined' ? getUser() : null;
@@ -51,28 +53,6 @@ export function Header() {
         </Link>
         {/* 导航链接 */}
         <nav style={{ display: 'flex', gap: '8px' }}>
-          <Link
-            href="/multiplayer"
-            style={{
-              background: 'transparent', color: 'var(--text-light)',
-              border: '1px solid var(--border)', borderRadius: 'var(--radius)',
-              padding: '4px 10px', fontSize: '0.8rem', fontWeight: 600,
-              textDecoration: 'none',
-            }}
-          >
-            ⚔️ {t('menu.multiplayer')}
-          </Link>
-<Link
-            href="/daily"
-            style={{
-              background: 'transparent', color: 'var(--text-light)',
-              border: '1px solid var(--border)', borderRadius: 'var(--radius)',
-              padding: '4px 10px', fontSize: '0.8rem', fontWeight: 600,
-              textDecoration: 'none',
-            }}
-          >
-            📅 {t('menu.daily')}
-          </Link>
         </nav>
       </div>
 
@@ -99,7 +79,7 @@ export function Header() {
           </Link>
         )}
         <button
-          onClick={() => { user ? window.location.href = '/profile' : setAuthOpen(true); }}
+          onClick={() => { user ? router.push('/profile') : setAuthOpen(true); }}
           style={{
             background: user ? 'var(--primary-soft)' : 'transparent',
             color: user ? 'var(--primary-strong)' : 'var(--text-light)',

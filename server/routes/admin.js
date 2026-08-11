@@ -23,10 +23,9 @@ function checkDeployRate(ip) {
   const entry = deployRateMap.get(ip);
   if (entry && now - entry < 60_000) return false;
   deployRateMap.set(ip, now);
-  // 清理旧记录
-  if (deployRateMap.size > 100) {
-    for (const [k, t] of deployRateMap) { if (now - t > 120_000) deployRateMap.delete(k); }
-  }
+  // Always run cleanup to prevent unbounded growth (runs on every call, O(n) but
+  // the map is small because entries older than 120s are evicted on each pass)
+  for (const [k, t] of deployRateMap) { if (now - t > 120_000) deployRateMap.delete(k); }
   return true;
 }
 
@@ -378,17 +377,13 @@ export function registerAdminRoutes({ app, db, requireAdmin, checkNicknameProfan
       else if (entry.type === 'single') result.inSinglePlayer++;
       else result.idle++;
 
-      // 获取 IP（脱敏：仅保留前两段）
+      // 获取 IP（脱敏：仅保留前两段）— read from onlinePlayers.lastIp
+      // stored during socket connection, avoiding O(sockets) iteration per request
       let maskedIp = '';
-      if (sockSet && socketIps) {
-        for (const sid of sockSet) {
-          const ip = socketIps.get(sid);
-          if (ip) {
-            const parts = ip.replace(/^::ffff:/, '').split('.');
-            maskedIp = parts.length === 4 ? `${parts[0]}.${parts[1]}.*.*` : ip.slice(0, 6) + '...';
-            break;
-          }
-        }
+      const storedIp = entry.lastIp;
+      if (storedIp) {
+        const parts = storedIp.replace(/^::ffff:/, '').split('.');
+        maskedIp = parts.length === 4 ? `${parts[0]}.${parts[1]}.*.*` : storedIp.slice(0, 6) + '...';
       }
 
       result.players.push({
@@ -439,6 +434,8 @@ export function registerAdminRoutes({ app, db, requireAdmin, checkNicknameProfan
     setTimeout(() => {
       const projectPath = process.cwd();
       const nodeDir = process.execPath.replace(/[/\\][^/\\]+$/, '');
+      // PM2_APP_NAME fallback exists for local dev (no PM2); in production the env var
+      // is set by the PM2 ecosystem file and must match the running process name
       const pm2Name = process.env.PM2_APP_NAME || 'liyiba';
       // 使用 node + better-sqlite3 备份数据库（避免依赖 sqlite3 CLI）
       const backupCmd = `node -e "const db=require('better-sqlite3')('data.db');const ts=new Date().toISOString().replace(/[:T]/g,'').slice(0,12);db.backup('data.db.bak-'+ts);db.close();console.log('data.db.bak-'+ts)"`;
@@ -449,6 +446,7 @@ export function registerAdminRoutes({ app, db, requireAdmin, checkNicknameProfan
       // 部署后健康检查：等待 PM2 重启完成后探测 /api/version
       // 这是尽最大努力的检查，不是完整的回滚——仅记录失败以便人工介入
       setTimeout(() => {
+        // PORT fallback exists for local dev; in production PM2 injects the real port
         const PORT = process.env.PORT || 3001;
         const url = `http://127.0.0.1:${PORT}/api/version`;
         const transport = url.startsWith('https') ? https : http;
@@ -516,6 +514,10 @@ export function registerAdminRoutes({ app, db, requireAdmin, checkNicknameProfan
     if (!name) return jsonResponse(res, { error: '干员名称不能为空' }, 400);
     const rarity = Math.min(6, Math.max(1, parseInt(body.rarity) || 1));
 
+    // WARNING: characters.json is read-modify-written without a mutex. Concurrent
+    // admin requests (create/update/delete/import) may race and lose writes.
+    // This is acceptable for a low-traffic admin panel; if concurrent edits become
+    // common, replace with a per-file lock or a proper DB table.
     const chars = readCharacters();
     if (!chars) return jsonResponse(res, { error: '干员数据读取失败' }, 500);
     if (chars.some(c => c.name === name)) {

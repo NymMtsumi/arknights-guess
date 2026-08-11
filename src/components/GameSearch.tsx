@@ -63,7 +63,7 @@ interface GameSearchProps {
   remainingGuesses?: number; // 剩余猜测次数，≤3 时输入框红色预警
 }
 
-export function GameSearch({ onGuess, disabled, guessedIds, target: _target, remainingGuesses }: GameSearchProps) {
+export function GameSearch({ onGuess, disabled, guessedIds, remainingGuesses }: GameSearchProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Character[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -74,15 +74,18 @@ export function GameSearch({ onGuess, disabled, guessedIds, target: _target, rem
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (query.trim() && !isComposing) {
-      const filtered = rankResults(query).filter(c => !guessedIds.has(c.id));
-      setResults(filtered);
-      setShowDropdown(filtered.length > 0);
-      setSelectedIndex(-1);
-    } else if (!isComposing) {
-      setResults([]);
-      setShowDropdown(false);
-    }
+    const handler = setTimeout(() => {
+      if (query.trim() && !isComposing) {
+        const filtered = rankResults(query).filter(c => !guessedIds.has(c.id));
+        setResults(filtered);
+        setShowDropdown(filtered.length > 0);
+        setSelectedIndex(-1);
+      } else if (!isComposing) {
+        setResults([]);
+        setShowDropdown(false);
+      }
+    }, 150); // 150ms debounce to reduce filtering on fast typists
+    return () => clearTimeout(handler);
   }, [query, guessedIds, isComposing]);
 
   useEffect(() => {

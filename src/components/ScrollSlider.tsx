@@ -142,6 +142,10 @@ export function ScrollSlider({ containerRef }: ScrollSliderProps) {
   };
 
   // ----- Global move / up listeners -----
+  // NOTE: thumbWidth is in the dependency array of this effect, so event listeners are
+  // recreated when thumbWidth changes. Since thumbWidth only updates when the container
+  // resizes or scrollWidth changes (which is rare), listener churn is minimal in practice.
+  // Storing thumbWidth in a ref would avoid this but adds complexity for negligible gain.
 
   useEffect(() => {
     const onMouseMove = (e: MouseEvent) => {

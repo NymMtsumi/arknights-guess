@@ -217,6 +217,8 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
     db.prepare('UPDATE users SET nickname = ? WHERE id = ?').run(nickname, auth.userId);
 
     // 审计日志：记录旧→新（方便排查"昵称被动修改"问题）
+    // This is intentional user self-service logging via admin_actions table —
+    // the action 'self_change_nickname' distinguishes it from admin-initiated changes
     try {
       db.prepare(
         'INSERT INTO admin_actions (admin_id, action, target_type, target_id, detail, ip) VALUES (?, ?, ?, ?, ?, ?)'

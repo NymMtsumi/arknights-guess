@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { io, Socket } from 'socket.io-client';
 import { Header } from '@/components/Header';
@@ -15,22 +15,15 @@ import { findCharacterByName } from '@/lib/game-engine';
 import type { Character } from '@/types/character';
 import charactersData from '@/data/characters.json';
 
+// NOTE: Socket event payloads use `any` types throughout this file.
+// Proper TypeScript interfaces for all socket events would be a future improvement.
 // WebSocket server address
 const WS_BASE = process.env.NEXT_PUBLIC_WS_URL || 'https://ws.arknights-guess.online';
 const allChars = charactersData as Character[];
-const NICK_KEY = 'liyiba-nickname';
 const ROOM_KEY = 'liyiba-room';
 function saveRoomCode(code: string) { try { localStorage.setItem(ROOM_KEY, code); } catch {} }
 function loadRoomCode(): string { try { return localStorage.getItem(ROOM_KEY) || ''; } catch { return ''; } }
 function clearRoomCode() { try { localStorage.removeItem(ROOM_KEY); } catch {} }
-
-function loadNick(): string {
-  if (typeof window === 'undefined') return '';
-  try { return localStorage.getItem(NICK_KEY) || ''; } catch { return ''; }
-}
-function saveNick(n: string) {
-  try { localStorage.setItem(NICK_KEY, n); } catch {}
-}
 
 type Stage = 'menu' | 'lobby' | 'waiting' | 'playing' | 'roundEnd' | 'matchEnd' | 'matchmaking';
 
@@ -54,7 +47,7 @@ export default function MultiplayerPage() {
   const [stage, setStage] = useState<Stage>('menu');
   const [socket, setSocket] = useState<Socket | null>(null);
   const [roomCode, setRoomCode] = useState('');
-  const [playerName, setPlayerName] = useState(loadNick);
+  const [playerName, setPlayerName] = useState('');
   const [bestOf, setBestOf] = useState(5);
   const [difficulty, setDifficulty] = useState<string>('hard');
   const [oppName, setOppName] = useState('');
@@ -103,21 +96,19 @@ export default function MultiplayerPage() {
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Set default player name from auth or guest identity
+  // Derive player name from auth or guest identity (full name, no truncation)
   useEffect(() => {
-    if (loadNick()) return;
-
     const user = getUser();
     if (user) {
       const name = user.nickname || user.username;
-      if (name) setPlayerName(name.slice(0, 4));
+      if (name) setPlayerName(name);
       return;
     }
 
     fetch(`${getServerUrl()}/api/guest-identity`)
       .then(res => res.json())
       .then(data => {
-        if (data.displayName) setPlayerName(data.displayName.slice(0, 4));
+        if (data.displayName) setPlayerName(data.displayName);
       })
       .catch(() => {});
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -334,8 +325,8 @@ export default function MultiplayerPage() {
 
   const handleCreate = () => {
     clearConnecting();
-    if (!playerName.trim() || playerName.trim().length > 4) { setError(t('multi.nickTooLong')); return; }
-    setError(''); saveNick(playerName.trim()); setConnecting('create');
+    if (!playerName.trim()) { setError(t('multi.enterRoomCode')); return; }
+    setError(''); setConnecting('create');
     const s = connect();
     s.emit('create_room', { playerName: playerName.trim(), bestOf, difficulty });
     s.emit('_log', { action: 'create_room' });
@@ -344,9 +335,8 @@ export default function MultiplayerPage() {
 
   const handleJoin = () => {
     clearConnecting();
-    if (!playerName.trim() || !roomCode.trim()) { setError(t('multi.enterNickAndCode')); return; }
-    if (playerName.trim().length > 4) { setError(t('multi.nickTooLong')); return; }
-    setError(''); saveNick(playerName.trim()); setConnecting('join');
+    if (!roomCode.trim()) { setError(t('multi.enterRoomCode')); return; }
+    setError(''); setConnecting('join');
     roomCodeRef.current = roomCode.trim().toUpperCase();
     saveRoomCode(roomCodeRef.current);
     const s = connect();
@@ -357,8 +347,8 @@ export default function MultiplayerPage() {
 
   const handleQuickMatch = () => {
     clearConnecting();
-    if (!playerName.trim() || playerName.trim().length > 4) { setError(t('multi.nickTooLong')); return; }
-    setError(''); saveNick(playerName.trim()); setConnecting('quickmatch');
+    if (!playerName.trim()) { setError(t('multi.enterRoomCode')); return; }
+    setError(''); setConnecting('quickmatch');
     const s = connect();
     s.emit('matchmaking:join', { playerName: playerName.trim(), difficulty, bestOf });
     s.emit('_log', { action: 'quickmatch' });
@@ -373,6 +363,9 @@ export default function MultiplayerPage() {
   };
 
   // Waiting page countdown tick
+  // OPTIMIZATION: This forces a full page re-render every second. Could be extracted
+  // into a sub-component (e.g. <WaitingRoom />) to isolate re-renders, but the
+  // current approach is acceptable given the low complexity of the waiting view.
   const [, setTick] = useState(0);
   useEffect(() => {
     if (stage !== 'waiting') return;
@@ -431,7 +424,7 @@ export default function MultiplayerPage() {
 
   useEffect(() => { return () => { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; } if (rematchTimer.current) { clearTimeout(rematchTimer.current); rematchTimer.current = null; } if (socket) { socket.removeAllListeners(); socket.disconnect(); } }; }, [socket]);
 
-  const guessedIds = new Set(store.guesses.map(g => g.character.id));
+  const guessedIds = useMemo(() => new Set(store.guesses.map(g => g.character.id)), [store.guesses]);
   const inputDisabled = store.status !== 'playing' || iSurrendered;
   const winTarget = bestOf === 3 ? 2 : bestOf === 5 ? 3 : 4;
 
@@ -445,41 +438,38 @@ export default function MultiplayerPage() {
           <div style={{ textAlign: 'center', maxWidth: '450px' }}>
             <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.5rem,4vw,2rem)', fontStyle: 'italic', fontWeight: 900, marginBottom: '16px' }}>⚔️ {t('multi.title')}</h1>
             <p style={{ color: 'var(--text-light)', fontSize: '0.9rem', marginBottom: '14px' }}>{t('multi.description')}</p>
-            <input value={playerName} onChange={e => setPlayerName(e.target.value)} placeholder={t('multi.nickPlaceholder')} style={{ ...inp, marginBottom: '10px', maxWidth: '240px' }} maxLength={4} />
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '12px', flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', gap: '8px', flexBasis: '100%', justifyContent: 'center', marginBottom: '4px' }}>
-                {['easy','medium','hard'].map(d => (
-                  <button key={d} onClick={() => setDifficulty(d)} style={{
-                    padding: '5px 12px', fontSize: '0.8rem', background: difficulty===d?'var(--primary)':'transparent',
-                    color: difficulty===d?'var(--bg)':'var(--text)', border: `1px solid ${difficulty===d?'var(--primary)':'var(--border)'}`,
-                    borderRadius: 'var(--radius)', cursor:'pointer', fontWeight: difficulty===d?700:400,
-                  }}>{t(DIFF_KEY_MAP[d])}</button>
-                ))}
-              </div>
+            <div className="multi-select-row">
+              <label className="multi-select-wrapper">
+                <span className="multi-select-label">{t('multi.difficultyLabel')}</span>
+                <select value={difficulty} onChange={e => setDifficulty(e.target.value)} className="multi-select">
+                  <option value="easy">{t('multi.difficultyEasy')}</option>
+                  <option value="medium">{t('multi.difficultyMedium')}</option>
+                  <option value="hard">{t('multi.difficultyHard')}</option>
+                </select>
+              </label>
+              <label className="multi-select-wrapper">
+                <span className="multi-select-label">{t('multi.formatLabel')}</span>
+                <select value={bestOf} onChange={e => setBestOf(Number(e.target.value))} className="multi-select">
+                  <option value={3}>BO3</option>
+                  <option value={5}>BO5</option>
+                  <option value={7}>BO7</option>
+                </select>
+              </label>
+            </div>
             <button onClick={handleQuickMatch} disabled={!!connecting} style={{
               width: '100%', padding: '12px 20px', background: connecting ? 'var(--card-soft)' : 'var(--accent)', color: connecting ? 'var(--text-light)' : '#fff',
               border: 'none', borderRadius: 'var(--radius)', fontSize: '1.05rem', fontWeight: 700,
               cursor: connecting ? 'default' : 'pointer', marginTop: '4px', opacity: connecting ? 0.7 : 1,
             }}>{connecting ? t('multi.connecting') : '⚡ ' + t('multi.quickMatch')}</button>
-              <div style={{ display: 'flex', gap: '8px' }}>
-              {[3,5,7].map(n => (
-                <button key={n} onClick={() => setBestOf(n)} style={{
-                  padding: '6px 16px', background: bestOf === n ? 'var(--primary)' : 'transparent',
-                  color: bestOf === n ? 'var(--bg)' : 'var(--text)', border: `1px solid ${bestOf === n ? 'var(--primary)' : 'var(--border)'}`,
-                  borderRadius: 'var(--radius)', cursor: 'pointer', fontWeight: bestOf === n ? 700 : 400,
-                }}>BO{n}</button>
-              ))}
-            </div>
             {error && <p style={{ color: 'var(--danger)', fontSize: '0.85rem', marginTop: '8px' }}>{error}</p>}
             {loadRoomCode() && (
               <div style={{ width: '100%', maxWidth: '320px', padding: '12px', background: 'var(--card-soft)', borderRadius: 'var(--radius)', border: '1px solid var(--primary)', marginBottom: '12px', marginTop: '12px' }}>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-light)', marginBottom: '4px' }}>📋 {t('multi.lastRoom')}</p>
                 <p style={{ fontSize: '1.3rem', fontFamily: 'monospace', fontWeight: 900, color: 'var(--primary)' }}>{loadRoomCode()}</p>
-                <button onClick={() => { setConnecting('join'); const s = connect(); s.emit('reconnect_room', { code: loadRoomCode() }); s.emit('_log', { action: 'quick_rejoin' }); connectTimer.current = setTimeout(() => { s.disconnect(); setConnecting(''); setError(t('multi.reconnectTimeout')); }, 30000); }} style={{ ...btn, marginTop: '8px', padding: '6px 16px', fontSize: '0.9rem' }}>🚪 {t('multi.quickRejoin')}</button>
+                <button onClick={() => { const code = loadRoomCode(); setConnecting('join'); const s = connect(); s.emit('reconnect_room', { code }); s.emit('_log', { action: 'quick_rejoin' }); connectTimer.current = setTimeout(() => { s.disconnect(); setConnecting(''); setError(t('multi.reconnectTimeout')); }, 30000); }} style={{ ...btn, marginTop: '8px', padding: '6px 16px', fontSize: '0.9rem' }}>🚪 {t('multi.quickRejoin')}</button>
               </div>
             )}
             <button onClick={() => setStage('lobby')} style={{ ...btn, marginTop: '8px' }}>🏠 {t('multi.createJoinRoom')}</button>
-          </div>
           </div>
         )}
 
@@ -489,7 +479,6 @@ export default function MultiplayerPage() {
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontStyle: 'italic', marginBottom: '12px' }}>
               BO{bestOf} · {t('multi.winFormat', { n: winTarget })}制
             </h2>
-            <input value={playerName} onChange={e => setPlayerName(e.target.value)} placeholder={t('multi.nickPlaceholder')} style={inp} maxLength={4} />
             <div style={{ marginTop: '12px' }}>
               <button onClick={handleCreate} style={btn}>{t('multi.createRoom')}</button>
             </div>

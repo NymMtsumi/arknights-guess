@@ -101,6 +101,7 @@ export function registerGameHandlers({
       type: existingEntry?.type || 'idle',
       roomCode: existingEntry?.roomCode || null,
       lastSeen: Date.now(),
+      lastIp: socket.data.ip || existingEntry?.lastIp || null,
     });
 
     // === 自动恢复：连接时查旧房 ===
@@ -252,7 +253,7 @@ export function registerGameHandlers({
                 : 0;
               socket.emit('reconnect_state', {
                 code, bestOf: room.bestOf, winsNeeded: room.winsNeeded,
-                score: room.players.size >= 2 ? `${Array.from(room.players.values())[0]?.name || '?'} ${Array.from(room.players.values())[0]?.wins || 0} - ${Array.from(room.players.values())[1]?.wins || 0} ${Array.from(room.players.values())[1]?.name || '?'}` : '',
+                score: room.players.size >= 2 ? score(room) : '',
                 target: room.target, remainingTime, hasActiveRound,
                 players: Array.from(room.players.entries()).map(([id, pl]) => ({ id, name: pl.name, wins: pl.wins })),
               });
@@ -379,6 +380,10 @@ export function registerGameHandlers({
       }
 
       // 对方未猜出、未放弃 → 平局（弃权方主动放弃，不判对方胜）
+      // KNOWN EDGE CASE: If both players surrender_round within the same event-loop tick,
+      // the second emit may see the first's surrender flag set via otherRp?.surrendered and
+      // take the "both surrendered → draw" branch above. This is rare (< ~1ms race window)
+      // and the outcome is the same (draw), so it is accepted without a setTimeout defense.
       console.log(`[弃权] ${player.name} 弃权 → 对方未猜出 → 平局`);
       endRound(room, null, '', data?.targetName || room.target?.name || '', false);
       } catch (e) { console.error('[game] surrender_round error:', e.message); }

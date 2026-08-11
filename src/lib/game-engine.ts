@@ -98,8 +98,8 @@ function compareFaction(targetFaction: string, guessFaction: string): GuessStatu
   const g = guessFaction.trim();
   if (t === g) return 'correct';
 
-  const targetParts = t.split(/[,，]/).map(s => s.trim());
-  const guessParts = g.split(/[,，]/).map(s => s.trim());
+  const targetParts = t.split(/[,，]/).map(s => s.trim()).filter(Boolean);
+  const guessParts = g.split(/[,，]/).map(s => s.trim()).filter(Boolean);
 
   const targetIsSimple = targetParts.length === 1;
   const guessIsSimple = guessParts.length === 1;
@@ -112,6 +112,8 @@ function compareFaction(targetFaction: string, guessFaction: string): GuessStatu
   if (targetParts[0] === guessParts[0]) return 'close';
 
   // 阵营大组归类 → close
+  // NOTE: factionGroups is game design data intentionally maintained in-code.
+  // These groupings represent lore-based faction relationships in Arknights.
   const factionGroups: string[][] = [
     ['罗德岛', '巴别塔'],
     ['炎', '龙门'],
@@ -161,6 +163,7 @@ export function compareGuess(target: Character, guess: Character): GuessComparis
 }
 
 function comparePosition(tPos: string, gPos: string): GuessStatus {
+  // Empty/falsy position (e.g. missing data) always returns 'wrong'
   if (!tPos || !gPos) return 'wrong';
   if (tPos === gPos) return 'correct';
   // 有一方是"皆可"→ close
@@ -202,11 +205,11 @@ export function isAlterRelation(target: Character, guess: Character): boolean {
   if (guess.alterBase && target.alterBase && guess.alterBase === target.alterBase) return true;
   // 反向: 目标的 _alters 包含猜测
   if (target._alters) {
-    const alters = target._alters.split(',').filter(Boolean);
+    const alters = target._alters.split(',').map(s => s.trim()).filter(Boolean);
     if (alters.includes(guess.name)) return true;
   }
   if (guess._alters) {
-    const alters = guess._alters.split(',').filter(Boolean);
+    const alters = guess._alters.split(',').map(s => s.trim()).filter(Boolean);
     if (alters.includes(target.name)) return true;
   }
   return false;
@@ -249,17 +252,22 @@ export function searchCharacters(characters: Character[], query: string): Charac
   const exact: Character[] = [];
   const starts: Character[] = [];
   const contains: Character[] = [];
+  const seen = new Set<string>();
 
   for (const c of characters) {
+    if (seen.has(c.id)) continue;
     const nameLow = c.name.toLowerCase();
     const nameEnLow = c.nameEn.toLowerCase();
 
     if (nameLow === q || nameEnLow === q) {
       exact.push(c);
+      seen.add(c.id);
     } else if (nameLow.startsWith(q) || nameEnLow.startsWith(q)) {
       starts.push(c);
+      seen.add(c.id);
     } else if (nameLow.includes(q) || nameEnLow.includes(q)) {
       contains.push(c);
+      seen.add(c.id);
     }
   }
 

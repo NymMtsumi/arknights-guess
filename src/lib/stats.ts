@@ -1,4 +1,6 @@
-import { getToken, getPlayerKey, apiCall } from './auth';
+'use client';
+
+import { getToken, getPlayerKey, apiCall, AuthError } from './auth';
 
 export interface StatsData {
   totalGames: number;
@@ -37,8 +39,8 @@ export interface MultiGameRecord {
 
 export type HistoryRecord = GameRecord | MultiGameRecord;
 
-const STATS_KEY = 'arknights-guess-stats';
-const HISTORY_KEY = 'arknights-guess-history';
+export const STATS_KEY = 'arknights-guess-stats';
+export const HISTORY_KEY = 'arknights-guess-history';
 const VERSION_KEY = 'arknights-guess-data-version';
 const MAX_HISTORY = 80;
 
@@ -254,8 +256,8 @@ function saveHistory(record: HistoryRecord) {
   const history = loadHistory();
   console.log('[Stats] Saving record:', record);
   history.unshift(record);
-  if (history.length > MAX_HISTORY) history.length = MAX_HISTORY;
-  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(history)); } catch (err) { console.warn('[Stats] Failed to save history:', err); }
+  const trimmed = history.length > MAX_HISTORY ? history.slice(0, MAX_HISTORY) : history;
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(trimmed)); } catch (err) { console.warn('[Stats] Failed to save history:', err); }
 }
 
 export async function saveGameToServer(won: boolean, guessCount: number, difficulty: string, targetName: string): Promise<void> {
@@ -284,7 +286,12 @@ export async function saveGameToServer(won: boolean, guessCount: number, difficu
   }
 }
 
-/** 单人游戏存档 */
+/**
+ * 单人游戏存档。
+ * NOTE: This app is a static export without cross-tab locking (e.g. SharedWorker or BroadcastChannel).
+ * Concurrent writes from multiple tabs can produce a read-modify-write race on localStorage stats/history.
+ * In practice this is low-risk because users rarely play in multiple tabs simultaneously.
+ */
 export function saveGameStats(won: boolean, guessCount: number, difficulty: string, targetName: string, mode: 'single' | 'daily' = 'single') {
   const stats = loadStats();
   stats.totalGames++;
@@ -393,7 +400,7 @@ export async function fetchHistoryFromServer(limit = 80): Promise<HistoryRecord[
 
 /** 检测是否为鉴权错误（401），供调用方处理过期登录 */
 export function isAuthError(err: unknown): boolean {
-  return err instanceof Error && err.message.includes('登录已过期');
+  return err instanceof AuthError;
 }
 
 /** 多人比赛存档到服务器 */

@@ -242,7 +242,9 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
     }));
 
     leaderboardCache.set(cacheKey, { data: leaderboard, at: Date.now() });
-    // 清理过期缓存（超过 90s 的条目）
+    // Piggyback cleanup: evict entries older than 90s when the cache reaches 50 entries.
+    // Acceptable trade-off — leaderboard reads are infrequent (~1/min at most) and
+    // the cache is bounded by unique mode:difficulty:limit combinations (< 20 typically).
     if (leaderboardCache.size >= 50) {
       const cutoff = Date.now() - 90_000;
       for (const [k, v] of leaderboardCache) { if (v.at < cutoff) leaderboardCache.delete(k); }
@@ -350,7 +352,7 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
     }));
 
     leaderboardCache.set(cacheKey, { data: leaderboard, at: Date.now() });
-    // 定期清理过期缓存
+    // Same piggyback cleanup as classic leaderboard (see comment above)
     if (leaderboardCache.size >= 50) {
       const cutoff = Date.now() - 90_000;
       for (const [k, v] of leaderboardCache) { if (v.at < cutoff) leaderboardCache.delete(k); }

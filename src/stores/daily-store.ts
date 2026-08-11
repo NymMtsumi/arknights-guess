@@ -4,6 +4,10 @@ import { makeGuess, findCharacterByName, isWin, pickDailyTarget } from '@/lib/ga
 import charactersData from '@/data/characters.json';
 import { apiCall } from '@/lib/auth';
 
+// NOTE: Store error messages are hardcoded Chinese strings.
+// i18n integration (via useI18n hook) would be ideal for consistency with the rest of the UI,
+// but Zustand stores run outside React component tree and cannot directly consume React context.
+
 const MAX_GUESSES = 8;
 const characters: Character[] = charactersData as Character[];
 
@@ -125,6 +129,9 @@ export const useDailyStore = create<DailyState>((set, get) => {
       }
     },
 
+  // NOTE: submitGuess logic is duplicated between game-store.ts and daily-store.ts.
+  // A shared helper (e.g. makeGuessAndUpdateState) would be ideal but is deferred
+  // to avoid coupling the two stores prematurely.
   submitGuess: (name: string) => {
     const trimmed = name.trim();
     if (!trimmed) {

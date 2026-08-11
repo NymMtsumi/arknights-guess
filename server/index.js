@@ -48,11 +48,7 @@ try {
 }
 
 // ===== 全局错误处理 =====
-process.on('uncaughtException', (err) => {
-  console.error('[FATAL] uncaughtException:', err.message, err.stack?.split('\n')[1] || '');
-  console.error('[FATAL] exiting to avoid corrupted in-memory state');
-  process.exit(1);
-});
+// uncaughtException 处理器移到了 gracefulShutdown 定义之后，确保能执行完整清理
 process.on('unhandledRejection', (reason) => {
   console.error('[FATAL] unhandledRejection:', reason?.message || reason, reason?.stack?.split('\n')[1] || '');
 });
@@ -77,14 +73,14 @@ if (!process.env.JWT_SECRET) {
     process.exit(1);
   }
 }
-const APP_VERSION = '2026-08-06-002';
+const APP_VERSION = process.env.APP_VERSION || '2026-08-06-002';
 const DB_PATH = join(__dirname, '..', 'data.db');
 
 let transporter = null;
 if (process.env.SMTP_USER && process.env.SMTP_PASS) {
   transporter = createTransport({
-    host: 'smtp.qq.com',
-    port: 465,
+    host: process.env.SMTP_HOST || 'smtp.qq.com',
+    port: parseInt(process.env.SMTP_PORT, 10) || 465,
     secure: true,
     auth: {
       user: process.env.SMTP_USER,
@@ -193,13 +189,21 @@ async function handleRequest(req, res) {
   const path = (() => { try { return new URL(url, 'http://localhost').pathname; } catch { return url.split('?')[0]; } })();
   const ip = getClientIP(req);
 
-  // 旧统计端点
+  // 旧统计端点（带 5 秒缓存，避免重复轮询时迭代 rooms）
+  let statsCache = null;
+  let statsCacheTime = 0;
+  const STATS_CACHE_TTL = 5000;
   if (path.startsWith('/stats')) {
-    return jsonResponse(res, {
-      connections: io.engine.clientsCount,
-      rooms: roomManager.rooms.size,
-      playing: Array.from(roomManager.rooms.values()).filter(r => r.started && !r.finished).length,
-    });
+    const now = Date.now();
+    if (!statsCache || (now - statsCacheTime) > STATS_CACHE_TTL) {
+      statsCache = {
+        connections: io.engine.clientsCount,
+        rooms: roomManager.rooms.size,
+        playing: Array.from(roomManager.rooms.values()).filter(r => r.started && !r.finished).length,
+      };
+      statsCacheTime = now;
+    }
+    return jsonResponse(res, statsCache);
   }
 
   // ===== 路由分发（统一 try/catch 防止 handler 抛异常导致请求挂起） =====
@@ -285,7 +289,7 @@ async function handleRequest(req, res) {
     if (req.method === 'POST' && path === '/api/deploy') return await adminRoutes.handleDeploy(req, res);
   } catch (err) {
     console.error('[route] handler error:', err.message, err.stack?.split('\n')[1] || '');
-    if (!res.headersSent) return jsonResponse(res, { error: '服务器内部错误' }, 500);
+    if (!res.headersSent && !res.writableEnded) return jsonResponse(res, { error: '服务器内部错误' }, 500);
   }
 
   // 未匹配的路由
@@ -322,3 +326,7 @@ function gracefulShutdown(signal) {
 }
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('uncaughtException', (err) => {
+  console.error('[FATAL] uncaughtException:', err.message, err.stack?.split('\n')[1] || '');
+  gracefulShutdown('uncaughtException');
+});

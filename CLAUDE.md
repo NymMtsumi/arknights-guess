@@ -43,10 +43,10 @@ node server/index.js  # 单独启动后端（:3001，需要 server/.env）
 ## 关键文件
 | 文件 | 用途 |
 |------|------|
-| `server/index.js` | API 路由 + Socket.IO + .env 加载器（~1700 行） |
+| `server/index.js` | HTTP routing + Socket.IO + middleware（routes split into server/routes/） |
 | `server/db.js` | SQLite schema + 索引初始化 |
 | `server/characters.js` | 干员数据加载 + 每日挑战算法（dailySeed/seedRandom/pickDailyTarget） |
-| `server/characters.json` | 425 个干员数据（与 `src/data/characters.json` 同步） |
+| `server/characters.json` | 全部干员数据（与 `src/data/characters.json` 同步） |
 | `server/routes/game.js` | save-game, leaderboard, daily/status, daily/leaderboard |
 | `server/routes/auth.js` | 注册/登录/邮箱验证/密码重置 |
 | `server/routes/admin.js` | 管理员仪表盘/用户管理/deploy webhook |
@@ -98,4 +98,4 @@ sqlite3 /opt/liyiba/data.db   # 直接操作数据库
 
 ## 当前版本
 - 已上线功能：单人模式（3 难度）、多人对战（BO3）、每日挑战、用户注册/登录/邮箱验证/密码重置、排行榜（经典+每日）、在线玩家监测、公告系统
-- 生产状态：前端 Cloudflare Pages (ac541a0) / 后端 PM2 liyiba / 数据库 42 条每日记录 / 排行榜 17 人
+- 生产状态：前端 Cloudflare Pages / 后端 PM2 liyiba

@@ -127,9 +127,9 @@ function decodeJwtPayload(token: string): { exp?: number; iat?: number } | null 
   try {
     const parts = token.split('.');
     if (parts.length !== 3) return null;
-    // atob handles base64url by replacing chars
     const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-    const json = atob(base64);
+    const padded = base64 + '==='.slice(0, (4 - base64.length % 4) % 4);
+    const json = atob(padded);
     return JSON.parse(json);
   } catch {
     return null;
@@ -141,9 +141,7 @@ function decodeJwtPayload(token: string): { exp?: number; iat?: number } | null 
  * Includes Bearer token from localStorage and warns if token is about to expire.
  */
 function getAuthHeaders(): Record<string, string> {
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
+  const headers: Record<string, string> = {};
   const token = getToken();
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
@@ -178,8 +176,9 @@ export async function apiCall<T = any>(path: string, options: RequestInit = {}):
   const { method: optMethod, headers: optHeaders, ...restOptions } = options;
   const method = optMethod || 'GET';
   const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
     ...((optHeaders as Record<string, string>) || {}),
-    ...getAuthHeaders(), // 后展开覆盖，防止 caller 注入假 Authorization
+    ...getAuthHeaders(), // 后展开覆盖，防止 caller 注入假 Authorization（authHeaders 仅含 Authorization）
   };
 
   let res: Response;
@@ -191,6 +190,8 @@ export async function apiCall<T = any>(path: string, options: RequestInit = {}):
       credentials: 'include',
     });
   } catch (fetchErr: any) {
+    // NOTE: Hardcoded Chinese error messages bypass i18n.
+    // Acceptable trade-off: these are network/server errors where i18n context may be unavailable.
     throw new Error(fetchErr?.message === 'Failed to fetch'
       ? '网络连接失败，请刷新页面后重试'
       : (fetchErr?.message || '网络错误'));
@@ -414,6 +415,7 @@ export async function migrateGuestDataToAccount(accountPlayerKey: string, oldGue
 
 // ===== 退出登录 =====
 export async function logout(): Promise<void> {
+  const hadToken = !!getToken();
   // 通知服务器清除 HttpOnly cookies（token + player_key）
   try {
     const headers: Record<string, string> = {};
@@ -424,9 +426,12 @@ export async function logout(): Promise<void> {
   clearAuth();
   // 清除 player_key，防止登出后新游戏仍用旧 pk（导致数据归属错误）
   try { localStorage.removeItem('player_key'); } catch {}
-  // 清除本地游戏历史，防止下一个登录用户同步到不属于他的记录
-  try { localStorage.removeItem('arknights-guess-history'); } catch {}
-  try { localStorage.removeItem('arknights-guess-stats'); } catch {}
+  // Clear only server-synced data; guest-only data is preserved.
+  // These keys must match the definitions in src/lib/stats.ts (HISTORY_KEY, STATS_KEY).
+  if (hadToken) {
+    try { localStorage.removeItem('arknights-guess-history'); } catch {}
+    try { localStorage.removeItem('arknights-guess-stats'); } catch {}
+  }
 }
 
 // ===== 获取个人信息 =====

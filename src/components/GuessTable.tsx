@@ -200,7 +200,7 @@ export function GuessTable({ guesses, target, hideRarity, flashTrigger, staggerK
                     }
                     return (
                       <td key={col.key} style={{
-                        width: colPcts[0],
+                        width: colPcts[colIdx],
                         padding: '10px 12px', textAlign: 'center', fontWeight: 700,
                         color: 'var(--text)', fontSize: '0.9rem', whiteSpace: 'nowrap',
                         ...cellStyle,

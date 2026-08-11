@@ -385,17 +385,33 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
 
     // 按 user_id 查询（一级归属），不再仅靠 player_key
     const rows = db.prepare(
-      'SELECT won, guess_count, difficulty, target_name, timestamp, mode FROM games WHERE user_id = ? ORDER BY timestamp DESC LIMIT ?'
+      'SELECT won, guess_count, difficulty, target_name, timestamp, mode, multi_data FROM games WHERE user_id = ? ORDER BY timestamp DESC LIMIT ?'
     ).all(auth.userId, limit);
 
-    const history = rows.map(r => ({
-      timestamp: new Date(r.timestamp).getTime(),
-      won: !!r.won,
-      guessCount: r.guess_count,
-      difficulty: r.difficulty,
-      targetName: r.target_name || '',
-      mode: r.mode || 'single',
-    }));
+    const history = rows.map(r => {
+      const base = {
+        timestamp: new Date(r.timestamp).getTime(),
+        won: !!r.won,
+        guessCount: r.guess_count,
+        difficulty: r.difficulty,
+        targetName: r.target_name || '',
+        mode: r.mode || 'single',
+      };
+      // 多人模式：解析 multi_data JSON 附加字段
+      if (r.mode === 'multi' && r.multi_data) {
+        try {
+          const md = JSON.parse(r.multi_data);
+          if (md && typeof md === 'object') {
+            base.bestOf = typeof md.bestOf === 'number' ? md.bestOf : 0;
+            base.myScore = typeof md.myScore === 'number' ? md.myScore : 0;
+            base.opponentScore = typeof md.opponentScore === 'number' ? md.opponentScore : 0;
+            base.opponentName = typeof md.opponentName === 'string' ? md.opponentName : (r.target_name || '');
+            base.rounds = Array.isArray(md.rounds) ? md.rounds : [];
+          }
+        } catch { /* ignore parse errors */ }
+      }
+      return base;
+    });
 
     return jsonResponse(res, { history, count: history.length });
   }

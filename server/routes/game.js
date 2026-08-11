@@ -29,6 +29,14 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
 
     let timestamp = normalizeTimestamp(body.timestamp);
 
+    // 多人模式额外数据（BO 格式、比分、小局详情）
+    let multiData = null;
+    if (mode === 'multi' && body.multiData && typeof body.multiData === 'object') {
+      try {
+        multiData = JSON.stringify(body.multiData);
+      } catch { multiData = null; }
+    }
+
     if (mode === 'multi') {
       if (difficulty !== 'multi') difficulty = 'multi';
     } else if (mode === 'daily') {
@@ -143,8 +151,8 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
         }
 
         return db.prepare(
-          'INSERT INTO games (player_key, user_id, won, guess_count, difficulty, target_name, timestamp, mode, daily_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
-        ).run(player_key, userId || null, won ? 1 : 0, guessCount, difficulty, targetName, timestamp, mode, dailyDate);
+          'INSERT INTO games (player_key, user_id, won, guess_count, difficulty, target_name, timestamp, mode, daily_date, multi_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        ).run(player_key, userId || null, won ? 1 : 0, guessCount, difficulty, targetName, timestamp, mode, dailyDate, multiData);
       })();
 
       if (txnResult.conflict) {
@@ -154,8 +162,8 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
     } else {
       try {
         result = db.prepare(
-          'INSERT INTO games (player_key, user_id, won, guess_count, difficulty, target_name, timestamp, mode, daily_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
-        ).run(player_key, userId || null, won ? 1 : 0, guessCount, difficulty, targetName, timestamp, mode, dailyDate);
+          'INSERT INTO games (player_key, user_id, won, guess_count, difficulty, target_name, timestamp, mode, daily_date, multi_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        ).run(player_key, userId || null, won ? 1 : 0, guessCount, difficulty, targetName, timestamp, mode, dailyDate, multiData);
       } catch (e) {
         throw e;
       }

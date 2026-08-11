@@ -101,6 +101,7 @@ export function initSchema(db) {
     ['games', 'mode', "TEXT DEFAULT 'single'"],
     ['games', 'user_id', "INTEGER REFERENCES users(id)"],
     ['games', 'daily_date', 'TEXT'],
+    ['games', 'multi_data', 'TEXT'],
   ]) {
     try { db.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${type}`); } catch (e) {
       if (!e.message.includes('duplicate column')) {

@@ -426,6 +426,13 @@ async function saveMultiToServer(result: {
         targetName: result.opponentName,
         mode: 'multi',
         timestamp: new Date(Date.now()).toISOString(),
+        multiData: {
+          bestOf: result.bestOf,
+          myScore: result.myScore,
+          opponentScore: result.opponentScore,
+          opponentName: result.opponentName,
+          rounds: result.rounds,
+        },
       }),
     });
   } catch (err) {

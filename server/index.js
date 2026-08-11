@@ -10,7 +10,7 @@ import { generateKey, getClientIP, jsonResponse, checkNicknameProfanity, getAllo
 import { initSchema } from './db.js';
 import { createAuth } from './auth.js';
 import { loadCharacters } from './characters.js';
-// Enemy routes removed — enemy guessing is now purely client-side, integrated into /game
+import { loadGameEngine } from './game-engine.js';
 import { registerAuthRoutes } from './routes/auth.js';
 import { registerUserRoutes } from './routes/user.js';
 import { registerGameRoutes } from './routes/game.js';
@@ -97,6 +97,8 @@ const SITE_URL = process.env.SITE_URL || 'http://localhost:3000';
 // ===== 初始化数据库 & 认证 =====
 loadCharacters();
 console.log('[init] step 1: characters loaded');
+loadGameEngine();
+	console.log("[init] step 1b: game engine loaded");
 // 必须在 index.js 顶层创建 Database（better-sqlite3 在此 VPS 上跨文件调用会 segfault）
 const db = new Database(DB_PATH);
 initSchema(db);
@@ -235,6 +237,7 @@ async function handleRequest(req, res) {
     if (req.method === 'POST' && path === '/api/save-game') return await gameRoutes.handleSaveGame(req, res);
     if (req.method === 'GET' && path.startsWith('/api/leaderboard')) return await gameRoutes.handleLeaderboard(req, res);
     if (req.method === 'GET' && path === '/api/daily/status') return await gameRoutes.handleDailyStatus(req, res);
+    if (req.method === 'POST' && path === '/api/daily/guess') return await gameRoutes.handleDailyGuess(req, res);
     if (req.method === 'GET' && path.startsWith('/api/daily/leaderboard')) return await gameRoutes.handleDailyLeaderboard(req, res);
 
     // Enemy

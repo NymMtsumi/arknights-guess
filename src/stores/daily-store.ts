@@ -1,12 +1,8 @@
 import { create } from 'zustand';
-import type { Character, GuessResult } from '@/types/character';
-import { makeGuess, findCharacterByName, isWin, pickDailyTarget } from '@/lib/game-engine';
+import type { Character, GuessResult, GuessComparisons } from '@/types/character';
+import { findCharacterByName } from '@/lib/game-engine';
 import charactersData from '@/data/characters.json';
 import { apiCall } from '@/lib/auth';
-
-// NOTE: Store error messages are hardcoded Chinese strings.
-// i18n integration (via useI18n hook) would be ideal for consistency with the rest of the UI,
-// but Zustand stores run outside React component tree and cannot directly consume React context.
 
 const MAX_GUESSES = 8;
 const characters: Character[] = charactersData as Character[];
@@ -15,13 +11,31 @@ export interface DailyResult {
   won: boolean;
   guessCount: number;
   timestamp: string;
+  targetName?: string;
 }
 
 type DailyStatus = 'loading' | 'already-played' | 'playing' | 'won' | 'lost' | 'error';
 
+/** 将服务端返回的 comparisons 对象转为 GuessResult 的 comparisons */
+function toGuessComparisons(raw: Record<string, string>): GuessComparisons {
+  const valid = ['correct', 'close', 'wrong'];
+  const s = (v: string) => valid.includes(v) ? v as 'correct' | 'close' | 'wrong' : 'wrong';
+  return {
+    class: s(raw.class || 'wrong'),
+    subclass: s(raw.subclass || 'wrong'),
+    faction: s(raw.faction || 'wrong'),
+    rarity: s(raw.rarity || 'wrong'),
+    race: s(raw.race || 'wrong'),
+    gender: s(raw.gender || 'wrong'),
+    releaseYear: s(raw.releaseYear || 'wrong'),
+    tags: s(raw.tags || 'wrong'),
+    position: s(raw.position || 'wrong'),
+  };
+}
+
 interface DailyState {
   status: DailyStatus;
-  target: Character | null;
+  target: Character | null;          // null until revealed (win/loss/already-played)
   guesses: GuessResult[];
   remainingGuesses: number;
   previousResult: DailyResult | null;
@@ -29,158 +43,160 @@ interface DailyState {
   error: string | null;
 
   initDaily: () => Promise<void>;
-  submitGuess: (name: string) => { success: boolean; error?: string };
+  submitGuess: (name: string) => Promise<{ success: boolean; error?: string }>;
   giveUp: () => void;
 }
 
-export const useDailyStore = create<DailyState>((set, get) => {
-  /** 离线降级：当服务端不可用时，用客户端确定性算法初始化每日挑战 */
-  function initDailyOfflineFallback() {
+export const useDailyStore = create<DailyState>((set, get) => ({
+  status: 'loading',
+  target: null,
+  guesses: [],
+  remainingGuesses: MAX_GUESSES,
+  previousResult: null,
+  dailyDate: '',
+  error: null,
+
+  initDaily: async () => {
+    set({ status: 'loading', error: null });
+
     try {
-      const target = pickDailyTarget(characters, 'hard');
-      set({
-        status: 'playing',
-        target,
-        guesses: [],
-        remainingGuesses: MAX_GUESSES,
-        dailyDate: new Date().toISOString().slice(0, 10),
-      });
-    } catch (fallbackErr) {
-      console.error('[Daily] Offline fallback also failed:', fallbackErr);
-      set({ status: 'error', error: '无法初始化每日挑战，请稍后再试' });
-    }
-  }
+      const data = await apiCall('/api/daily/status', { method: 'GET' });
 
-  return {
-    status: 'loading',
-    target: null,
-    guesses: [],
-    remainingGuesses: MAX_GUESSES,
-    previousResult: null,
-    dailyDate: '',
-    error: null,
+      if (!data || typeof data.played !== 'boolean') {
+        set({ status: 'error', error: '服务器响应异常，请稍后再试' });
+        return;
+      }
 
-    initDaily: async () => {
-      set({ status: 'loading', error: null });
+      if (data.played) {
+        // 已完成：显示结果
+        const target = (data.result?.targetName && findCharacterByName(characters, data.result.targetName)) || null;
+        set({
+          status: 'already-played',
+          target,
+          previousResult: data.result || null,
+          dailyDate: data.date || '',
+        });
+        return;
+      }
 
-      try {
-        const data = await apiCall('/api/daily/status', { method: 'GET' });
-
-        // 验证 API 响应基本有效性
-        if (!data || typeof data.played !== 'boolean') {
-          console.warn('[Daily] Invalid API response shape, falling back to offline mode');
-          initDailyOfflineFallback();
-          return;
-        }
-
-        if (data.played) {
-          // 已玩过：尽力展示已有信息，缺失字段优雅降级
-          const target = (data.targetName && findCharacterByName(characters, data.targetName)) || null;
-          set({
-            status: 'already-played',
-            target,
-            previousResult: data.result || null,
-            dailyDate: data.date || '',
-          });
-          return;
-        }
-
-        // 未玩过：targetId 和 targetName 必须存在，否则无法验证客户端一致性
-        if (!data.targetId || !data.targetName || !data.date) {
-          console.warn('[Daily] API missing required fields for unplayed game, falling back to offline mode');
-          initDailyOfflineFallback();
-          return;
-        }
-
-        // 客户端也用确定性算法计算目标，作为 UI 预览（服务端权威验证）
-        const target = pickDailyTarget(characters, 'hard');
-
-        // 防御性检查：如果客户端与服务器目标不一致，以服务器为准
-        if (target.id !== data.targetId) {
-          console.warn('[Daily] Client-server target mismatch, using server target');
-          const serverTarget = findCharacterByName(characters, data.targetName);
-          if (serverTarget) {
-            set({
-              status: 'playing',
-              target: serverTarget,
-              guesses: [],
-              remainingGuesses: MAX_GUESSES,
-              dailyDate: data.date,
-            });
-            return;
-          }
-          // 服务端目标在本地数据库中找不到，说明客户端数据版本落后，不应继续游戏
-          set({ status: 'error', error: '数据不一致，请刷新页面' });
-          return;
-        }
-
+      // 未玩过：目标保密（服务器校验模式）
+      if (data.inProgress) {
+        // 恢复进行中的会话（刷新页面/重连场景）
         set({
           status: 'playing',
-          target,
+          target: null,       // 目标保密
+          guesses: [],        // 服务端跟踪猜测历史，客户端用 guesses.length 做本地显示
+          remainingGuesses: typeof data.remainingGuesses === 'number' ? data.remainingGuesses : MAX_GUESSES,
+          dailyDate: data.date || '',
+        });
+      } else {
+        // 全新游戏
+        set({
+          status: 'playing',
+          target: null,
           guesses: [],
           remainingGuesses: MAX_GUESSES,
-          dailyDate: data.date,
+          dailyDate: data.date || '',
         });
-      } catch (err) {
-        console.error('[Daily] Failed to initialize:', err);
-        // 仅当 API 调用本身失败时才降级到离线模式（网络错误/服务器宕机）
-        // API 成功但处理失败的场景已在 try 块内部处理
-        initDailyOfflineFallback();
       }
-    },
+    } catch (err: any) {
+      console.error('[Daily] Failed to initialize:', err);
+      set({ status: 'error', error: err.message || '无法连接服务器，请稍后再试' });
+    }
+  },
 
-  // NOTE: submitGuess logic is duplicated between game-store.ts and daily-store.ts.
-  // A shared helper (e.g. makeGuessAndUpdateState) would be ideal but is deferred
-  // to avoid coupling the two stores prematurely.
-  submitGuess: (name: string) => {
+  submitGuess: async (name: string) => {
     const trimmed = name.trim();
     if (!trimmed) {
-      return { success: false, error: '未找到该干员' };
+      return { success: false, error: '请输入干员名称' };
     }
 
+    const current = get();
+    if (current.status !== 'playing') {
+      return { success: false, error: '游戏未在进行中' };
+    }
+
+    // 本地先去重检查
     const guessedChar = findCharacterByName(characters, trimmed);
     if (!guessedChar) {
       return { success: false, error: '未找到该干员' };
-    }
-
-    // Pre-check state（常见单线程路径，可返回明确错误）
-    const current = get();
-    if (current.status !== 'playing' || !current.target) {
-      return { success: false, error: '游戏未在进行中' };
     }
     if (current.guesses.some(g => g.character.id === guessedChar.id)) {
       return { success: false, error: '已猜过该干员' };
     }
 
-    const target = current.target;
-    const result = makeGuess(target, guessedChar);
-    const won = isWin(target, guessedChar);
+    try {
+      const data = await apiCall('/api/daily/guess', {
+        method: 'POST',
+        body: JSON.stringify({ name: trimmed }),
+      });
 
-    // 函数式 updater 防止并发 submitGuess 覆盖彼此的状态
-    set((state) => {
-      if (state.status !== 'playing' || !state.target) return state;
-      // 二次校验：防止并发时同一角色被提交两次
-      if (state.guesses.some(g => g.character.id === guessedChar.id)) return state;
+      // 构建 GuessResult
+      const comparisons = toGuessComparisons(data.comparisons || {});
+      const guessResult: GuessResult = {
+        character: guessedChar,
+        comparisons,
+        timestamp: Date.now(),
+      };
 
-      const newGuesses = [...state.guesses, result];
-      const newRemaining = state.remainingGuesses - 1;
-
-      if (won) {
-        return { ...state, guesses: newGuesses, remainingGuesses: newRemaining, status: 'won' };
+      if (data.won) {
+        // 猜对了
+        const target = findCharacterByName(characters, data.target.name);
+        set((state) => ({
+          ...state,
+          guesses: [...state.guesses, guessResult],
+          target,
+          status: 'won',
+        }));
+        return { success: true };
       }
-      if (newRemaining <= 0) {
-        return { ...state, guesses: newGuesses, remainingGuesses: 0, status: 'lost' };
-      }
-      return { ...state, guesses: newGuesses, remainingGuesses: newRemaining };
-    });
 
-    return { success: true };
+      if (data.lost) {
+        // 次数用尽
+        const target = findCharacterByName(characters, data.target.name);
+        set((state) => ({
+          ...state,
+          guesses: [...state.guesses, guessResult],
+          target,
+          remainingGuesses: 0,
+          status: 'lost',
+        }));
+        return { success: true };
+      }
+
+      // 继续游戏
+      set((state) => ({
+        ...state,
+        guesses: [...state.guesses, guessResult],
+        remainingGuesses: typeof data.remainingGuesses === 'number' ? data.remainingGuesses : state.remainingGuesses - 1,
+      }));
+
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || '请求失败' };
+    }
   },
 
-  giveUp: () => {
-    const { status, target } = get();
-    if (status !== 'playing' || !target) return;
-    set({ status: 'lost' });
+  giveUp: async () => {
+    const { status } = get();
+    if (status !== 'playing') return;
+
+    try {
+      const data = await apiCall('/api/daily/guess', {
+        method: 'POST',
+        body: JSON.stringify({ giveUp: true }),
+      });
+
+      const target = findCharacterByName(characters, data.target?.name);
+      set({
+        status: 'lost',
+        target,
+        guesses: [], // 服务端已保存，客户端清空
+      });
+    } catch (err: any) {
+      console.error('[Daily] giveUp failed:', err);
+      // 即使请求失败也设为 lost（网络问题时至少客户端停止游戏）
+      set({ status: 'lost' });
+    }
   },
-  };
-});
+}));

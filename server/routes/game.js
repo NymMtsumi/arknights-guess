@@ -1,9 +1,24 @@
-// 游戏路由：save-game, leaderboard
+// 游戏路由：save-game, leaderboard, daily
 import { sanitizeString, parseCookies, parseBody, jsonResponse, generateKey, normalizeTimestamp } from '../utils.js';
 import { pickDailyTarget } from '../characters.js';
+import { findCharByName, compareGuess, isWin } from '../game-engine.js';
 
 // 排行榜内存缓存（60s TTL，避免每次请求全表聚合扫描）
 const leaderboardCache = new Map();
+
+// 每日挑战会话（内存中跟踪猜测状态）
+// key: `${userId || playerKey}:${dailyDate}`
+const dailySessions = new Map();
+const DAILY_MAX_GUESSES = 8;
+const SESSION_TTL = 3600_000; // 1 小时后清理
+
+// 定期清理过期会话
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, sess] of dailySessions) {
+    if (now - sess.startedAt > SESSION_TTL) dailySessions.delete(key);
+  }
+}, 300_000); // 每 5 分钟
 
 export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getClientIP }) {
 
@@ -273,8 +288,6 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
       return jsonResponse(res, { error: '请求过于频繁，请稍后再试' }, 429);
     }
 
-    // 计算当天每日目标
-    const target = pickDailyTarget('hard');
     const now = new Date();
     const dailyDate = now.toISOString().slice(0, 10);
 
@@ -289,40 +302,195 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
       }
     }
 
-    // 查询今天是否已挑战
+    // 查询今天是否已挑战（数据库记录）
     let played = false;
     let result = null;
     if (userId) {
       const row = db.prepare(
-        'SELECT won, guess_count, timestamp FROM games WHERE user_id = ? AND daily_date = ?'
+        'SELECT won, guess_count, timestamp, target_name FROM games WHERE user_id = ? AND daily_date = ?'
       ).get(userId, dailyDate);
       if (row) {
         played = true;
-        result = { won: row.won === 1, guessCount: row.guess_count, timestamp: row.timestamp };
+        result = { won: row.won === 1, guessCount: row.guess_count, timestamp: row.timestamp, targetName: row.target_name };
       }
     } else {
-      // 游客：通过 player_key cookie 查询
       const cookies = parseCookies(req.headers.cookie || '');
       const pk = cookies.player_key || sanitizeString(req.headers['x-player-key'] || '', 64);
       if (pk) {
         const row = db.prepare(
-          'SELECT won, guess_count, timestamp FROM games WHERE player_key = ? AND daily_date = ? AND user_id IS NULL'
+          'SELECT won, guess_count, timestamp, target_name FROM games WHERE player_key = ? AND daily_date = ? AND user_id IS NULL'
         ).get(pk, dailyDate);
         if (row) {
           played = true;
-          result = { won: row.won === 1, guessCount: row.guess_count, timestamp: row.timestamp };
+          result = { won: row.won === 1, guessCount: row.guess_count, timestamp: row.timestamp, targetName: row.target_name };
         }
       }
     }
 
-    // 始终返回当日目标（客户端使用服务端权威目标，不再离线计算）
-    // 目标由日期确定性派生，服务端 save-game 时二次验证，暴露目标不构成安全风险
+    // 检查是否有进行中的内存会话（服务器重启后丢失，但 DB 记录仍是最终权威）
+    const cookies = parseCookies(req.headers.cookie || '');
+    const pk = cookies.player_key || '';
+    const sessionKey = userId ? `${userId}:${dailyDate}` : (pk ? `${pk}:${dailyDate}` : '');
+    const session = sessionKey ? dailySessions.get(sessionKey) : null;
+    const inProgress = !played && session && session.status === 'playing';
+
+    // 不再返回 target（服务端校验模式：目标保密）
     return jsonResponse(res, {
       date: dailyDate,
       played,
-      targetId: target.id,
-      targetName: target.name,
+      inProgress: inProgress || undefined,
+      remainingGuesses: inProgress ? session.remaining : undefined,
+      guessCount: inProgress ? session.guesses.length : undefined,
       ...(result ? { result } : {}),
+    });
+  }
+
+  // ===== POST /api/daily/guess =====
+  async function handleDailyGuess(req, res) {
+    const ip = getClientIP(req);
+    if (!checkRateLimit(`dguess:${ip}`, 30, 60_000)) {
+      return jsonResponse(res, { error: '请求过于频繁，请稍后再试' }, 429);
+    }
+
+    const body = await parseBody(req);
+    const giveUp = body.giveUp === true;
+    const name = sanitizeString(body.name || '', 100);
+    if (!giveUp && !name) {
+      return jsonResponse(res, { error: '请提供干员名称' }, 400);
+    }
+
+    // 解析用户身份
+    const authHeader = req.headers.authorization || '';
+    let userId = null;
+    let player_key = body.player_key || '';
+    const decoded = authHeader.startsWith('Bearer ') ? verifyToken(authHeader.slice(7)) : null;
+    if (decoded) {
+      const user = db.prepare('SELECT id, banned_at, token_version, player_key FROM users WHERE id = ?').get(decoded.userId);
+      if (!user) { /* 用户已删除，按游客处理 */ }
+      else if (user.banned_at) return jsonResponse(res, { error: '账号已被封禁' }, 403);
+      else if ((decoded.tokenVersion || 0) !== (user.token_version || 0)) return jsonResponse(res, { error: '密码已更改，请重新登录' }, 401);
+      else { userId = decoded.userId; player_key = user.player_key || player_key; }
+    }
+
+    if (!player_key) {
+      const cookies = parseCookies(req.headers.cookie || '');
+      player_key = cookies.player_key || '';
+    }
+    if (!userId && !player_key) {
+      return jsonResponse(res, { error: '无法识别身份' }, 400);
+    }
+
+    const now = new Date();
+    const dailyDate = now.toISOString().slice(0, 10);
+
+    // 检查是否已完成
+    let alreadyDone = false;
+    if (userId) {
+      const row = db.prepare('SELECT id FROM games WHERE user_id = ? AND daily_date = ?').get(userId, dailyDate);
+      if (row) alreadyDone = true;
+    } else {
+      const row = db.prepare('SELECT id FROM games WHERE player_key = ? AND daily_date = ? AND user_id IS NULL').get(player_key, dailyDate);
+      if (row) alreadyDone = true;
+    }
+    if (alreadyDone) {
+      return jsonResponse(res, { error: '今日已挑战' }, 409);
+    }
+
+    // 获取或创建会话
+    const sessionKey = userId ? `${userId}:${dailyDate}` : `${player_key}:${dailyDate}`;
+    let session = dailySessions.get(sessionKey);
+
+    if (!session) {
+      const target = pickDailyTarget('hard');
+      const fullTarget = findCharByName(target.name);
+      if (!fullTarget) {
+        return jsonResponse(res, { error: '服务器数据异常，请稍后再试' }, 500);
+      }
+      session = {
+        target: fullTarget,
+        guesses: [],        // 已猜角色名列表
+        remaining: DAILY_MAX_GUESSES,
+        status: 'playing',
+        startedAt: Date.now(),
+      };
+      dailySessions.set(sessionKey, session);
+    }
+
+    if (session.status !== 'playing') {
+      return jsonResponse(res, { error: '游戏已结束' }, 400);
+    }
+
+    // 放弃：直接结束游戏，保存为失败
+    if (giveUp) {
+      const targetName = session.target.name;
+      db.prepare(
+        'INSERT INTO games (player_key, user_id, won, guess_count, difficulty, target_name, timestamp, mode, daily_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+      ).run(player_key, userId || null, 0, session.guesses.length, 'hard', targetName, now.toISOString(), 'daily', dailyDate);
+      dailySessions.delete(sessionKey);
+      for (const k of leaderboardCache.keys()) {
+        if (k.startsWith('daily:')) leaderboardCache.delete(k);
+      }
+      console.log(`[daily-guess] pk=${player_key.slice(0, 10)} GAVE_UP guesses=${session.guesses.length}`);
+      return jsonResponse(res, {
+        won: false,
+        lost: true,
+        gaveUp: true,
+        guessCount: session.guesses.length,
+        target: { id: session.target.id, name: session.target.name },
+      });
+    }
+
+    // 查找猜测的干员
+    const guessed = findCharByName(name);
+    if (!guessed) {
+      return jsonResponse(res, { error: '未找到该干员' }, 400);
+    }
+
+    // 去重检查
+    if (session.guesses.includes(guessed.name)) {
+      return jsonResponse(res, { error: '已猜过该干员' }, 400);
+    }
+
+    // 对比
+    const comparisons = compareGuess(session.target, guessed);
+    session.guesses.push(guessed.name);
+    session.remaining--;
+
+    const won = isWin(session.target, guessed);
+
+    if (won || session.remaining <= 0) {
+      // 游戏结束：保存到数据库
+      const saveWon = won ? 1 : 0;
+      const guessCount = session.guesses.length;
+      const targetName = session.target.name;
+
+      db.prepare(
+        'INSERT INTO games (player_key, user_id, won, guess_count, difficulty, target_name, timestamp, mode, daily_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+      ).run(player_key, userId || null, saveWon, guessCount, 'hard', targetName, now.toISOString(), 'daily', dailyDate);
+
+      // 清理内存会话
+      dailySessions.delete(sessionKey);
+      // 失效排行榜缓存
+      for (const k of leaderboardCache.keys()) {
+        if (k.startsWith('daily:')) leaderboardCache.delete(k);
+      }
+
+      console.log(`[daily-guess] pk=${player_key.slice(0, 10)} ${won ? 'WON' : 'LOST'} guesses=${guessCount}`);
+      return jsonResponse(res, {
+        won,
+        lost: !won,
+        guessCount,
+        comparisons,
+        target: { id: session.target.id, name: session.target.name },
+      });
+    }
+
+    // 继续游戏
+    return jsonResponse(res, {
+      won: false,
+      comparisons,
+      remainingGuesses: session.remaining,
+      guessCount: session.guesses.length,
     });
   }
 
@@ -379,6 +547,7 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
   return {
     handleSaveGame,
     handleLeaderboard,
+    handleDailyGuess,
     handleDailyStatus,
     handleDailyLeaderboard,
     // 昵称变更时清除排行榜缓存（避免改名后最多 60s 显示旧名）

@@ -10,8 +10,7 @@ import { RulesDialog } from '@/components/RulesDialog';
 import { Footer } from '@/components/Footer';
 import { useDailyStore } from '@/stores/daily-store';
 import { useI18n } from '@/lib/i18n';
-import { getServerUrl, getPlayerKey, getToken } from '@/lib/auth';
-import { saveGameStats } from '@/lib/stats';
+import { getServerUrl, getPlayerKey } from '@/lib/auth';
 
 export default function DailyPage() {
   const { t } = useI18n();
@@ -21,7 +20,6 @@ export default function DailyPage() {
   const [dialogClosed, setDialogClosed] = useState(false);
   const [dialogReady, setDialogReady] = useState(false);
   const [flashTrigger, setFlashTrigger] = useState(0);
-  const [saveError, setSaveError] = useState('');
   const dialogTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [countdown, setCountdown] = useState('');
 
@@ -50,49 +48,10 @@ export default function DailyPage() {
     return () => clearInterval(t);
   }, []);
 
-  // 游戏结束时保存统计 + 提交到服务端
+  // 游戏结束时弹窗（服务端已在 /api/daily/guess 中自动保存战绩）
   const prevStatus = useRef(status);
-  const savedRef = useRef(false);
   useEffect(() => {
     if (prevStatus.current === 'playing' && (status === 'won' || status === 'lost')) {
-      if (!savedRef.current) {
-        const won = status === 'won';
-        // 本地统计
-        saveGameStats(won, guesses.length, 'hard', target?.name || '', 'daily');
-
-        // 提交到服务端（mode='daily'）
-        const base = getServerUrl();
-        const token = getToken();
-        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-        if (token) headers['Authorization'] = `Bearer ${token}`;
-
-        fetch(`${base}/api/save-game`, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({
-            player_key: getPlayerKey() || '',
-            won,
-            guessCount: guesses.length,
-            difficulty: 'hard',
-            targetName: target?.name || '',
-            mode: 'daily',
-            timestamp: Date.now(),
-          }),
-        }).then(async (res) => {
-          if (!res.ok) {
-            const err = await res.json();
-            if (res.status === 400) {
-              setSaveError(t('daily.crossDayError'));
-            } else if (res.status === 409) {
-              // 已提交过，忽略
-            } else {
-              setSaveError(err.error || t('daily.saveError'));
-            }
-          }
-        }).catch(() => {});
-
-        savedRef.current = true;
-      }
       if (status === 'won') {
         setDialogReady(false);
         dialogTimer.current = setTimeout(() => setDialogReady(true), 800);
@@ -101,14 +60,12 @@ export default function DailyPage() {
       }
     }
     if (status === 'playing') {
-      savedRef.current = false;
       setDialogReady(false);
-      setSaveError('');
       if (dialogTimer.current) { clearTimeout(dialogTimer.current); dialogTimer.current = null; }
     }
     prevStatus.current = status;
     return () => { if (dialogTimer.current) { clearTimeout(dialogTimer.current); dialogTimer.current = null; } };
-  }, [status, guesses.length, target]);
+  }, [status]);
 
   // 心跳：告知服务器正在玩游戏
   useEffect(() => {
@@ -331,17 +288,6 @@ export default function DailyPage() {
             )}
           </div>
         </div>
-
-        {/* 保存错误提示 */}
-        {saveError && (
-          <div style={{
-            textAlign: 'center', padding: '8px', marginBottom: '12px',
-            background: 'var(--card-soft)', color: 'var(--warning)',
-            borderRadius: 'var(--radius)', fontSize: '0.85rem',
-          }}>
-            {saveError}
-          </div>
-        )}
 
         {/* 搜索输入 */}
         <div style={{ maxWidth: 'var(--content-max)', margin: '0 auto' }}>

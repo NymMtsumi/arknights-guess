@@ -27,7 +27,7 @@
 - **Cloudflare Pages**: 项目 `arknights-guess`，GitHub 集成，每次 push main 自动构建
 - **VPS**: `160.236.110.37`（Debian 12, Node v22.23.2），PM2 进程 `liyiba`
 - **VPS .env**: `/opt/liyiba/.env`（SMTP_PASS, JWT_SECRET, DEPLOY_TOKEN, CLOUDFLARE_API_TOKEN 等）
-- **后端部署**: GitHub Actions `deploy.yml` → curl webhook `/api/deploy` → VPS git pull + pm2 restart
+- **后端部署**: GitHub Actions `deploy.yml` → curl webhook `/api/deploy` → VPS `server/deploy.sh`（6 步结构化部署 + 自动回滚）
 - **nginx 配置**: `/etc/nginx/sites-available/liyiba`（反向代理 :443→:3001, WebSocket upgrade）
 
 ## 本地开发
@@ -52,6 +52,8 @@ node server/index.js  # 单独启动后端（:3001，需要 server/.env）
 | `server/routes/admin.js` | 管理员仪表盘/用户管理/deploy webhook |
 | `server/routes/user.js` | me/profile/sync/link-player-key/history |
 | `server/socket/index.js` | Socket.IO 多人对战 + 在线追踪 |
+| `server/backup-db.cjs` | **数据库备份脚本**（CommonJS，cron 定时执行，与部署解耦） |
+| `server/deploy.sh` | **部署脚本**（6 步结构化：备份→语法检查→pull→npm install→健康检查→失败自动回滚） |
 | `src/lib/auth.ts` | JWT 管理、apiCall、getServerUrl |
 | `src/lib/stats.ts` | 游戏统计 + saveGameToServer |
 | `src/stores/game-store.ts` | 单人模式 zustand store |
@@ -69,12 +71,13 @@ ssh -i ~/.ssh/id_ed25519 root@160.236.110.37
 pm2 status                    # 查看进程
 pm2 restart liyiba --update-env  # 重启（必须加 --update-env！否则 env vars 丢失）
 pm2 logs liyiba --lines 50    # 查看日志
+tail -30 /opt/liyiba/deploy.log  # 查看最近部署状态
 cat /opt/liyiba/.env          # 查看环境变量
 sqlite3 /opt/liyiba/data.db   # 直接操作数据库
 ```
 - **重启 PM2 必须加 `--update-env`**，否则 SMTP_PASS/JWT_SECRET 等丢失 → 邮件退化为调试模式
 - **Nginx 配置变更后**: `nginx -t && systemctl reload nginx`
-- **数据库备份**: 每次部署自动备份 `data.db.bak-YYYYMMDD-HHMM`
+- **数据库备份**: 每天 3:07 和 15:07 通过 cron 自动备份（`server/backup-db.cjs`），保留 14 天，与部署流程完全解耦
 
 ## 关键陷阱（详见 memory/critical-gotchas.md）
 1. 🔴 **绝不提交 data.db 到 Git** — 会覆盖生产数据库。`.gitignore` 同时排除 `server/data.db*` 和根目录 `data.db*`

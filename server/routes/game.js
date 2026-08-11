@@ -372,12 +372,22 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
       else { userId = decoded.userId; player_key = user.player_key || player_key; }
     }
 
+    let newPlayerKey = null;
     if (!player_key) {
       const cookies = parseCookies(req.headers.cookie || '');
-      player_key = cookies.player_key || '';
+      if (cookies.player_key) {
+        player_key = cookies.player_key;
+      }
     }
+    // 新游客自动生成 player_key（与 handleSaveGame 保持一致）
     if (!userId && !player_key) {
-      return jsonResponse(res, { error: '无法识别身份' }, 400);
+      player_key = generateKey();
+      newPlayerKey = player_key;
+    }
+
+    const extraHeaders = {};
+    if (newPlayerKey) {
+      extraHeaders['Set-Cookie'] = `player_key=${newPlayerKey}; SameSite=Lax; Secure; Path=/; Max-Age=94608000; HttpOnly`;
     }
 
     const now = new Date();
@@ -393,7 +403,7 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
       if (row) alreadyDone = true;
     }
     if (alreadyDone) {
-      return jsonResponse(res, { error: '今日已挑战' }, 409);
+      return jsonResponse(res, { error: '今日已挑战' }, 409, extraHeaders);
     }
 
     // 获取或创建会话
@@ -404,7 +414,7 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
       const target = pickDailyTarget('hard');
       const fullTarget = findCharByName(target.name);
       if (!fullTarget) {
-        return jsonResponse(res, { error: '服务器数据异常，请稍后再试' }, 500);
+        return jsonResponse(res, { error: '服务器数据异常，请稍后再试' }, 500, extraHeaders);
       }
       session = {
         target: fullTarget,
@@ -417,7 +427,7 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
     }
 
     if (session.status !== 'playing') {
-      return jsonResponse(res, { error: '游戏已结束' }, 400);
+      return jsonResponse(res, { error: '游戏已结束' }, 400, extraHeaders);
     }
 
     // 放弃：直接结束游戏，保存为失败
@@ -437,18 +447,19 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
         gaveUp: true,
         guessCount: session.guesses.length,
         target: { id: session.target.id, name: session.target.name },
-      });
+        player_key: newPlayerKey || undefined,
+      }, 200, extraHeaders);
     }
 
     // 查找猜测的干员
     const guessed = findCharByName(name);
     if (!guessed) {
-      return jsonResponse(res, { error: '未找到该干员' }, 400);
+      return jsonResponse(res, { error: '未找到该干员' }, 400, extraHeaders);
     }
 
     // 去重检查
     if (session.guesses.includes(guessed.name)) {
-      return jsonResponse(res, { error: '已猜过该干员' }, 400);
+      return jsonResponse(res, { error: '已猜过该干员' }, 400, extraHeaders);
     }
 
     // 对比
@@ -482,7 +493,8 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
         guessCount,
         comparisons,
         target: { id: session.target.id, name: session.target.name },
-      });
+        player_key: newPlayerKey || undefined,
+      }, 200, extraHeaders);
     }
 
     // 继续游戏
@@ -491,7 +503,8 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
       comparisons,
       remainingGuesses: session.remaining,
       guessCount: session.guesses.length,
-    });
+      player_key: newPlayerKey || undefined,
+    }, 200, extraHeaders);
   }
 
   // ===== GET /api/daily/leaderboard =====

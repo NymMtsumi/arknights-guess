@@ -4,8 +4,6 @@ import { spawn } from 'node:child_process';
 import { readFileSync, writeFileSync, renameSync, unlinkSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import http from 'node:http';
-import https from 'node:https';
 import { sanitizeString, parseBody, jsonResponse, deriveGuestName, getClientIP } from '../utils.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -429,47 +427,17 @@ export function registerAdminRoutes({ app, db, requireAdmin, checkNicknameProfan
     // admin_id = 0 表示系统操作（users 表 id 从 1 开始，0 不会冲突）
     logAdminAction(0, 'deploy', 'system', null, 'webhook triggered', ip);
 
-    // 注意：当前部署流程缺乏自动回滚机制。如果新代码有运行时错误，
-    // 服务器将保持故障状态，需手动 SSH 到 VPS 执行 git revert + pm2 restart。
+    // 部署流程已移至 server/deploy.sh，包含：
+    // - 6 步结构化部署（备份→语法检查→fetch→pull→npm install→重启+健康检查）
+    // - 逐步骤错误处理 + 详细日志（/opt/liyiba/deploy.log）
+    // - 健康检查失败自动回滚（git reset --hard + pm2 restart）
+    // - 备份由 cron 独立执行（server/backup-db.cjs），与部署解耦
+    const deployLock = join(process.cwd(), '.deploy.lock');
+    const deployScript = join(process.cwd(), 'server', 'deploy.sh');
     setTimeout(() => {
-      const projectPath = process.cwd();
-      const nodeDir = process.execPath.replace(/[/\\][^/\\]+$/, '');
-      // PM2_APP_NAME fallback exists for local dev (no PM2); in production the env var
-      // is set by the PM2 ecosystem file and must match the running process name
-      const pm2Name = process.env.PM2_APP_NAME || 'liyiba';
-      // 使用 node + better-sqlite3 备份数据库（避免依赖 sqlite3 CLI）
-      // --input-type=commonjs 确保 require 在 ESM package 下也能用
-      const backupCmd = `node --input-type=commonjs -e "const db=require('better-sqlite3')('data.db');const ts=new Date().toISOString().replace(/[:T]/g,'').slice(0,12);db.backup('data.db.bak-'+ts);db.close();console.log('data.db.bak-'+ts)"`;
       spawn('bash', ['-c',
-        `cd ${projectPath} && echo "=== Deploy $(date -Iseconds) ===" >> deploy.log && BACKUP_FILE=$(${backupCmd} 2>> deploy.log) && echo " Backup: $BACKUP_FILE" >> deploy.log && git fetch origin main >> deploy.log 2>&1 && git stash push -m "auto-stash-before-deploy" >> deploy.log 2>&1; git pull --ff-only origin main >> deploy.log 2>&1 && export PATH=$PATH:${nodeDir} && npm install --production >> deploy.log 2>&1 && pm2 restart ${pm2Name} --update-env >> deploy.log 2>&1 && find ${projectPath} -maxdepth 1 -name "data.db.bak-*" -mtime +7 -delete 2>/dev/null && echo "=== Deploy OK ===" >> deploy.log || echo "=== Deploy FAILED ===" >> deploy.log`
+        `flock -n "${deployLock}" bash "${deployScript}" 2>&1 || echo "[deploy] flock: another deploy is in progress"`
       ], { detached: true, stdio: 'ignore' }).unref();
-
-      // 部署后健康检查：等待 PM2 重启完成后探测 /api/version
-      // 这是尽最大努力的检查，不是完整的回滚——仅记录失败以便人工介入
-      setTimeout(() => {
-        // PORT fallback exists for local dev; in production PM2 injects the real port
-        const PORT = process.env.PORT || 3001;
-        const url = `http://127.0.0.1:${PORT}/api/version`;
-        const transport = url.startsWith('https') ? https : http;
-        const checkReq = transport.get(url, { timeout: 5000 }, (checkRes) => {
-          let data = '';
-          checkRes.on('data', chunk => data += chunk);
-          checkRes.on('end', () => {
-            if (checkRes.statusCode === 200) {
-              console.log('[deploy] health check PASSED:', data.slice(0, 100));
-            } else {
-              console.error('[deploy] health check FAILED: HTTP', checkRes.statusCode, data.slice(0, 200));
-            }
-          });
-        });
-        checkReq.on('error', (e) => {
-          console.error('[deploy] health check ERROR:', e.message, '(server may be down after deploy)');
-        });
-        checkReq.on('timeout', () => {
-          checkReq.destroy();
-          console.error('[deploy] health check TIMEOUT: server not responding after deploy');
-        });
-      }, 8000); // 500ms deploy delay + ~5s PM2 restart + 2.5s buffer
     }, 500);
   }
 

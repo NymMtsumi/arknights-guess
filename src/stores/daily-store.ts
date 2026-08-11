@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import type { Character, GuessResult, GuessComparisons } from '@/types/character';
 import { findCharacterByName } from '@/lib/game-engine';
 import charactersData from '@/data/characters.json';
-import { apiCall } from '@/lib/auth';
+import { apiCall, getPlayerKey, AuthError } from '@/lib/auth';
 
 const MAX_GUESSES = 8;
 const characters: Character[] = charactersData as Character[];
@@ -128,8 +128,13 @@ export const useDailyStore = create<DailyState>((set, get) => ({
     try {
       const data = await apiCall('/api/daily/guess', {
         method: 'POST',
-        body: JSON.stringify({ name: trimmed }),
+        body: JSON.stringify({ name: trimmed, player_key: getPlayerKey() || '' }),
       });
+
+      // 服务端返回了新的 player_key → 保存到 localStorage
+      if (data.player_key && typeof data.player_key === 'string') {
+        try { localStorage.setItem('player_key', data.player_key); } catch {}
+      }
 
       // 构建 GuessResult
       const comparisons = toGuessComparisons(data.comparisons || {});
@@ -173,6 +178,8 @@ export const useDailyStore = create<DailyState>((set, get) => ({
 
       return { success: true };
     } catch (err: any) {
+      // AuthError（401 登录过期）向上抛出让页面处理
+      if (err instanceof AuthError) throw err;
       return { success: false, error: err.message || '请求失败' };
     }
   },
@@ -184,8 +191,13 @@ export const useDailyStore = create<DailyState>((set, get) => ({
     try {
       const data = await apiCall('/api/daily/guess', {
         method: 'POST',
-        body: JSON.stringify({ giveUp: true }),
+        body: JSON.stringify({ giveUp: true, player_key: getPlayerKey() || '' }),
       });
+
+      // 服务端返回了新的 player_key → 保存到 localStorage
+      if (data.player_key && typeof data.player_key === 'string') {
+        try { localStorage.setItem('player_key', data.player_key); } catch {}
+      }
 
       const target = findCharacterByName(characters, data.target?.name);
       set({

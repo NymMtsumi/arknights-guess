@@ -10,7 +10,7 @@ import { RulesDialog } from '@/components/RulesDialog';
 import { Footer } from '@/components/Footer';
 import { useDailyStore } from '@/stores/daily-store';
 import { useI18n } from '@/lib/i18n';
-import { getServerUrl, getPlayerKey } from '@/lib/auth';
+import { getServerUrl, getPlayerKey, AuthError } from '@/lib/auth';
 
 export default function DailyPage() {
   const { t } = useI18n();
@@ -20,6 +20,9 @@ export default function DailyPage() {
   const [dialogClosed, setDialogClosed] = useState(false);
   const [dialogReady, setDialogReady] = useState(false);
   const [flashTrigger, setFlashTrigger] = useState(0);
+  const [guessError, setGuessError] = useState('');
+  const [authError, setAuthError] = useState(false); // 401 登录过期，持久显示
+  const guessErrorTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dialogTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [countdown, setCountdown] = useState('');
 
@@ -89,9 +92,30 @@ export default function DailyPage() {
     };
   }, [status]);
 
-  const handleGuess = (char: import('@/types/character').Character) => {
-    submitGuess(char.name);
+  const handleGuess = async (char: import('@/types/character').Character) => {
+    try {
+      const result = await submitGuess(char.name);
+      if (!result.success && result.error) {
+        setGuessError(result.error);
+        if (guessErrorTimer.current) clearTimeout(guessErrorTimer.current);
+        guessErrorTimer.current = setTimeout(() => setGuessError(''), 3000);
+      }
+    } catch (err) {
+      // AuthError（401）：登录过期，显示持久提示
+      if (err instanceof AuthError) {
+        setAuthError(true);
+      } else {
+        setGuessError((err as Error)?.message || '请求失败');
+        if (guessErrorTimer.current) clearTimeout(guessErrorTimer.current);
+        guessErrorTimer.current = setTimeout(() => setGuessError(''), 3000);
+      }
+    }
   };
+
+  // 清理 error timer
+  useEffect(() => {
+    return () => { if (guessErrorTimer.current) clearTimeout(guessErrorTimer.current); };
+  }, []);
 
   const handleClose = () => {
     setDialogClosed(true);
@@ -291,7 +315,7 @@ export default function DailyPage() {
 
         {/* 搜索输入 */}
         <div style={{ maxWidth: 'var(--content-max)', margin: '0 auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', flexDirection: 'column', alignItems: 'center' }}>
             <GameSearch
               onGuess={handleGuess}
               disabled={status !== 'playing'}
@@ -299,6 +323,50 @@ export default function DailyPage() {
               target={target}
               remainingGuesses={remainingGuesses}
             />
+            {guessError && (
+              <div style={{
+                color: 'var(--danger)',
+                fontSize: '0.85rem',
+                marginTop: '4px',
+                padding: '6px 14px',
+                background: 'var(--card-soft)',
+                borderRadius: 'var(--radius)',
+                border: '1px solid var(--danger)',
+                animation: 'fadeIn 0.2s ease',
+              }}>
+                ⚠ {guessError}
+              </div>
+            )}
+            {authError && (
+              <div style={{
+                color: 'var(--danger)',
+                fontSize: '0.9rem',
+                marginTop: '12px',
+                padding: '12px 20px',
+                background: 'var(--card-soft)',
+                borderRadius: 'var(--radius)',
+                border: '1px solid var(--danger)',
+                textAlign: 'center',
+                animation: 'fadeIn 0.2s ease',
+              }}>
+                <p style={{ margin: '0 0 8px 0' }}>登录已过期，请重新登录后继续游戏</p>
+                <button
+                  onClick={() => router.push('/')}
+                  style={{
+                    padding: '6px 20px',
+                    background: 'var(--primary)',
+                    color: 'var(--bg)',
+                    border: 'none',
+                    borderRadius: 'var(--radius)',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    fontSize: '0.85rem',
+                  }}
+                >
+                  返回首页登录
+                </button>
+              </div>
+            )}
           </div>
 
           {/* 猜测表格（每日挑战固定 hard 难度） */}

@@ -3,13 +3,14 @@ import { createHash, randomBytes } from 'node:crypto';
 
 // CORS 允许的来源（与 socket/index.js 保持一致）
 // 使用函数延迟求值：模块顶层执行时 process.env 尚未加载 .env 文件
-function getAllowedOrigins() {
+export function getAllowedOrigins() {
   return process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(',').map(s => s.trim())
     : ['https://www.arknights-guess.online', 'https://arknights-guess.pages.dev', 'http://localhost:3000'];
 }
-function getCorsOrigin() {
+export function getCorsOrigin(requestOrigin) {
   const origins = getAllowedOrigins();
+  if (requestOrigin && origins.includes(requestOrigin)) return requestOrigin;
   return origins[0] || 'https://www.arknights-guess.online';
 }
 
@@ -77,12 +78,12 @@ export function parseBody(req) {
   });
 }
 
-// 输出 JSON 响应
+// 输出 JSON 响应（自动匹配请求 origin 实现 credentialed CORS）
 export function jsonResponse(res, data, status = 200, extraHeaders = {}) {
   const body = JSON.stringify(data);
   const headers = {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': getCorsOrigin(),
+    'Access-Control-Allow-Origin': getCorsOrigin(res._requestOrigin || null),
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, PATCH, DELETE',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Credentials': 'true',
@@ -115,6 +116,27 @@ export function generateDisplayCode(userId) {
 export function generateKey() {
   return 'p_' + randomBytes(9).toString('base64url');
 }
+
+// 统一时间戳规范化：数字→ISO字符串（供 save-game 和 sync 共用）
+export function normalizeTimestamp(ts) {
+  if (typeof ts === 'number') {
+    if (ts <= 0 || !Number.isFinite(ts)) return new Date().toISOString();
+    if (ts < 1e11) {
+      // 秒级时间戳
+      try { return new Date(ts * 1000).toISOString(); } catch { return new Date().toISOString(); }
+    }
+    if (ts <= 1e13) {
+      // 毫秒级时间戳
+      try { return new Date(ts).toISOString(); } catch { return new Date().toISOString(); }
+    }
+    return new Date().toISOString();
+  }
+  if (typeof ts !== 'string' || !ts) return new Date().toISOString();
+  return ts;
+}
+
+// 服务端统一发件人邮箱
+export const SMTP_SENDER = '"明日方舟猜干员" <3479083602@qq.com>';
 
 // ===== 昵称违禁词过滤 =====
 const NICKNAME_FORBIDDEN = new Set([

@@ -1,6 +1,6 @@
 // 用户路由：me, sync, link-player-key, update-profile, send-verification, guest-identity, heartbeat, history
 import { randomBytes, createHash } from 'node:crypto';
-import { sanitizeString, parseCookies, parseBody, jsonResponse, deriveGuestName, generateKey } from '../utils.js';
+import { sanitizeString, parseCookies, parseBody, jsonResponse, deriveGuestName, generateKey, normalizeTimestamp, SMTP_SENDER } from '../utils.js';
 
 export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNicknameProfanity, transporter, SITE_URL, onlinePlayers, onlineSockets, ONLINE_TIMEOUT, checkRateLimit, getClientIP, invalidateLeaderboardCache }) {
 
@@ -91,19 +91,15 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
       finalPk = user.player_key;
     }
 
-    const insert = db.prepare('INSERT INTO games (player_key, user_id, won, guess_count, difficulty, target_name, timestamp, mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
     const VALID_DIFFICULTIES = new Set(['easy', 'medium', 'hard']);
+    const insert = db.prepare('INSERT INTO games (player_key, user_id, won, guess_count, difficulty, target_name, timestamp, mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
     const insertMany = db.transaction((rows) => {
       for (const g of rows) {
         const mode = g.mode === 'multi' ? 'multi' : 'single';
         const won = !!g.won ? 1 : 0;
         const guessCount = Math.min(50, Math.max(0, parseInt(g.guessCount) || 0));
         const difficulty = VALID_DIFFICULTIES.has(g.difficulty) ? g.difficulty : 'hard';
-        // 统一时间戳：数字转 ISO 字符串
-        let ts = g.timestamp || new Date().toISOString();
-        if (typeof ts === 'number') {
-          try { ts = new Date(ts < 1e11 ? ts * 1000 : ts).toISOString(); } catch { ts = new Date().toISOString(); }
-        }
+        const ts = normalizeTimestamp(g.timestamp);
         insert.run(finalPk, auth.userId, won, guessCount, difficulty, sanitizeString(g.targetName || '', 100), ts, mode);
       }
     });
@@ -281,14 +277,17 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
     const tokenHash = createHash('sha256').update(verifyToken_).digest('hex');
     const expiresAt = new Date(Date.now() + 3600_000).toISOString();
 
-    db.prepare('DELETE FROM email_verifications WHERE user_id = ?').run(auth.userId);
-    db.prepare('INSERT INTO email_verifications (user_id, email, token_hash, expires_at) VALUES (?, ?, ?, ?)').run(auth.userId, email, tokenHash, expiresAt);
+    const doVerification = db.transaction(() => {
+      db.prepare('DELETE FROM email_verifications WHERE user_id = ?').run(auth.userId);
+      db.prepare('INSERT INTO email_verifications (user_id, email, token_hash, expires_at) VALUES (?, ?, ?, ?)').run(auth.userId, email, tokenHash, expiresAt);
+    });
+    doVerification();
 
     const verifyLink = `${SITE_URL}/verify?token=${verifyToken_}`;
 
     try {
       await transporter.sendMail({
-        from: '"明日方舟猜干员" <3479083602@qq.com>',
+        from: SMTP_SENDER,
         to: email,
         subject: '验证你的邮箱 - 明日方舟猜干员',
         html: `<div style="max-width:480px;margin:0 auto;font-family:sans-serif"><h2>验证你的邮箱</h2><p>感谢注册！点击下方按钮验证你的邮箱地址：</p><a href="${verifyLink}" style="display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none;font-weight:bold">验证邮箱</a><p style="color:#666;margin-top:20px;font-size:0.85rem">或者复制此链接到浏览器：<br>${verifyLink}</p><p style="color:#999;font-size:0.8rem">此链接1小时内有效。如果你没有注册此账号，请忽略此邮件。</p><p style="color:#999;font-size:0.8rem;margin-top:12px">如果未收到邮件，请检查垃圾邮件箱。</p></div>`,

@@ -80,7 +80,11 @@ export function createMatchmaking({ io, roomPlayerIndex, genMatchCode, createMat
     sock1.emit('matchmaking:matched', { roomCode: code, opponent: { name: p2.playerName }, bestOf, difficulty });
     sock2.emit('matchmaking:matched', { roomCode: code, opponent: { name: p1.playerName }, bestOf, difficulty });
 
-    if (_startRound) _startRound(room);
+    if (typeof _startRound === 'function') {
+      _startRound(room);
+    } else {
+      console.warn('[匹配] startRound 未注入，房间将无法开始游戏');
+    }
   }
 
   // 处理 matchmaking:join 事件

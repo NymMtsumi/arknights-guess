@@ -16,8 +16,8 @@ export function loadCharacters() {
     console.log(`已加载 ${ALL_CHARS.length} 干员`);
   } catch (err) {
     const charPath = join(__dirname, 'characters.json');
-    console.error(`[FATAL] 无法加载干员数据: ${charPath}`, err.message);
-    process.exit(1);
+    console.error(`[ERROR] 无法加载干员数据: ${charPath}`, err.message);
+    console.error('[ERROR] 服务器将继续运行，但每日挑战和角色数据将不可用');
   }
 }
 
@@ -42,7 +42,7 @@ export function dailySeed() {
   for (let i = 0; i < dateStr.length; i++) {
     hash = ((hash << 5) + hash + dateStr.charCodeAt(i)) | 0;
   }
-  return Math.abs(hash);
+  return (hash >>> 0);
 }
 
 /** 基于种子的伪随机数生成器（LCG） */

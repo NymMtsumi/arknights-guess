@@ -394,7 +394,7 @@ export default function LeaderboardPage() {
                         <td className="lb-player">{getDisplayName(entry)}</td>
                         <td className="lb-stat">{entry.wins}</td>
                         <td>{entry.totalGames}</td>
-                        <td className="lb-stat">{entry.winRate.toFixed(1)}%</td>
+                        <td className="lb-stat">{(entry.winRate ?? 0).toFixed(1)}%</td>
                         {showAvgGuesses && (
                           <td className="lb-stat">{formatAvgGuesses(entry)}</td>
                         )}

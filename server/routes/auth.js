@@ -2,21 +2,18 @@
 import { randomBytes, createHash } from 'node:crypto';
 import { promises as dns } from 'node:dns';
 import bcrypt from 'bcryptjs';
-import { sanitizeString, parseCookies, parseBody, jsonResponse, generateKey } from '../utils.js';
+import { sanitizeString, parseCookies, parseBody, jsonResponse, generateKey, SMTP_SENDER } from '../utils.js';
 
 // ===== 邮箱 MX 记录验证 =====
 async function checkEmailMX(email) {
   const domain = email.split('@')[1];
   if (!domain) return false;
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 3000);
     // Node.js dns.promises 不支持 AbortController，用 Promise.race 实现超时
     const records = await Promise.race([
       dns.resolveMx(domain),
       new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000))
     ]);
-    clearTimeout(timeout);
     return Array.isArray(records) && records.length > 0;
   } catch {
     return false;
@@ -125,7 +122,7 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
 
     try {
       await transporter.sendMail({
-        from: '"明日方舟猜干员" <3479083602@qq.com>',
+        from: SMTP_SENDER,
         to: email,
         subject: '完成注册 - 明日方舟猜干员',
         html: `<div style="max-width:480px;margin:0 auto;font-family:sans-serif"><h2>完成你的注册</h2><p>感谢注册！点击下方按钮完成注册：</p><a href="${verifyLink}" style="display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none;font-weight:bold">完成注册</a><p style="color:#666;margin-top:20px;font-size:0.85rem">或者复制此链接到浏览器：<br>${verifyLink}</p><p style="color:#999;font-size:0.8rem">此链接1小时内有效。如果你没有注册此账号，请忽略此邮件。</p><p style="color:#999;font-size:0.8rem;margin-top:12px">如果未收到邮件，请检查垃圾邮件箱。</p></div>`,
@@ -380,7 +377,7 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
 
     try {
       await transporter.sendMail({
-        from: '"明日方舟猜干员" <3479083602@qq.com>',
+        from: SMTP_SENDER,
         to: email,
         subject: '重置你的密码 - 明日方舟猜干员',
         html: `<div style="max-width:480px;margin:0 auto;font-family:sans-serif"><h2>重置密码</h2><p>你好 ${user.username}，我们收到了重置密码的请求。</p><p>点击下方按钮设置新密码：</p><a href="${resetLink}" style="display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none;font-weight:bold">重置密码</a><p style="color:#666;margin-top:20px;font-size:0.85rem">或者复制此链接到浏览器：<br>${resetLink}</p><p style="color:#999;font-size:0.8rem">此链接1小时内有效。如果你没有请求重置密码，请忽略此邮件。</p></div>`,

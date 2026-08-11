@@ -37,16 +37,18 @@ function computeStreak(): { type: 'win' | 'loss' | null; count: number } {
 
 export function GameEndDialog({ status, target, guessCount, onClose, onNewGame }: GameEndDialogProps) {
   const { t } = useI18n();
+  const [streak, setStreak] = useState<{ type: 'win' | 'loss' | null; count: number }>({ type: null, count: 0 });
+
+  useEffect(() => {
+    if (status === 'won' || status === 'lost') {
+      setStreak(computeStreak());
+    }
+  }, [status]);
 
   if (status !== 'won' && status !== 'lost') return null;
   if (!target) return null;
 
   const won = status === 'won';
-  const [streak, setStreak] = useState<{ type: 'win' | 'loss' | null; count: number }>({ type: null, count: 0 });
-
-  useEffect(() => {
-    setStreak(computeStreak());
-  }, []);
 
   return (
     <div

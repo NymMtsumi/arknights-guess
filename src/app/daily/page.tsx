@@ -81,7 +81,7 @@ export default function DailyPage() {
         }).then(async (res) => {
           if (!res.ok) {
             const err = await res.json();
-            if (res.status === 400 && err.error?.includes('跨日')) {
+            if (res.status === 400) {
               setSaveError(t('daily.crossDayError'));
             } else if (res.status === 409) {
               // 已提交过，忽略

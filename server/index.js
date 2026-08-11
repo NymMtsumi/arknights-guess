@@ -6,7 +6,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createTransport } from 'nodemailer';
 import Database from 'better-sqlite3';
-import { generateKey, getClientIP, jsonResponse, checkNicknameProfanity } from './utils.js';
+import { generateKey, getClientIP, jsonResponse, checkNicknameProfanity, getAllowedOrigins } from './utils.js';
 import { initSchema } from './db.js';
 import { createAuth } from './auth.js';
 import { loadCharacters } from './characters.js';
@@ -172,9 +172,7 @@ const adminRoutes = registerAdminRoutes({
 async function handleRequest(req, res) {
   // CORS 预检（与 socket/index.js 共用同一个 ALLOWED_ORIGINS 列表，不再使用通配符 *）
   if (req.method === 'OPTIONS') {
-    const allowedOrigins = process.env.ALLOWED_ORIGINS
-      ? process.env.ALLOWED_ORIGINS.split(',').map(s => s.trim())
-      : ['https://www.arknights-guess.online', 'https://arknights-guess.pages.dev', 'http://localhost:3000'];
+    const allowedOrigins = getAllowedOrigins();
     const requestOrigin = req.headers.origin || '';
     const corsOrigin = allowedOrigins.includes(requestOrigin) ? requestOrigin : allowedOrigins[0];
     res.writeHead(204, {
@@ -186,6 +184,9 @@ async function handleRequest(req, res) {
     });
     return res.end();
   }
+
+  // 存储请求 origin 供 jsonResponse 动态匹配 CORS
+  res._requestOrigin = req.headers.origin || '';
 
   const url = req.url || '';
   // 标准化路径（去掉 query string，防止 ?v= 等参数导致路由匹配失败）
@@ -293,7 +294,7 @@ async function handleRequest(req, res) {
 
 // ===== 统一周期清理（每分钟） =====
 const cleanupInterval = setInterval(() => {
-  gameHandlers.runPeriodicCleanup();
+  try { gameHandlers.runPeriodicCleanup(); } catch (e) { console.error('[cleanup] periodicCleanup failed:', e.message); }
   try { db.pragma('wal_checkpoint(PASSIVE)'); } catch (e) { console.error('[wal] checkpoint failed:', e.message); }
 }, 60_000);
 

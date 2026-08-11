@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { fetchMe, AuthError } from '@/lib/auth';
@@ -49,7 +49,11 @@ export default function AdminPage() {
   };
 
   // Re-verify admin status on every tab switch; redirect home on failure
+  // useRef guard prevents concurrent verifications on rapid tab switching
+  const tabVerifyingRef = useRef(false);
   const handleTabChange = async (newTab: Tab) => {
+    if (tabVerifyingRef.current) return;
+    tabVerifyingRef.current = true;
     try {
       const data = await fetchMe();
       if (data.role === 'admin') {
@@ -63,6 +67,8 @@ export default function AdminPage() {
       setIsAdmin(false);
       setError(err instanceof AuthError ? t('admin.loginExpired') : t('admin.verifyFailed'));
       router.push('/');
+    } finally {
+      tabVerifyingRef.current = false;
     }
   };
 

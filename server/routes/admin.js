@@ -4,6 +4,8 @@ import { spawn } from 'node:child_process';
 import { readFileSync, writeFileSync, renameSync, unlinkSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import http from 'node:http';
+import https from 'node:https';
 import { sanitizeString, parseBody, jsonResponse, deriveGuestName, getClientIP } from '../utils.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -449,8 +451,8 @@ export function registerAdminRoutes({ app, db, requireAdmin, checkNicknameProfan
       setTimeout(() => {
         const PORT = process.env.PORT || 3001;
         const url = `http://127.0.0.1:${PORT}/api/version`;
-        const http = url.startsWith('https') ? require('node:https') : require('node:http');
-        const checkReq = http.get(url, { timeout: 5000 }, (checkRes) => {
+        const transport = url.startsWith('https') ? https : http;
+        const checkReq = transport.get(url, { timeout: 5000 }, (checkRes) => {
           let data = '';
           checkRes.on('data', chunk => data += chunk);
           checkRes.on('end', () => {

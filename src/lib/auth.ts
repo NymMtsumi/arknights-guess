@@ -32,7 +32,10 @@ export interface MeResponse {
   stats: ServerStats;
 }
 
+let _cachedServerUrl: string | null = null;
+
 export function getServerUrl(): string {
+  if (_cachedServerUrl) return _cachedServerUrl;
   if (typeof window !== 'undefined') {
     const wsUrl = process.env.NEXT_PUBLIC_WS_URL;
     let url: string;
@@ -52,7 +55,8 @@ export function getServerUrl(): string {
       url = 'http://localhost:3001';
     }
     // Strip trailing slashes to prevent double slashes in API paths
-    return url.replace(/\/+$/, '');
+    _cachedServerUrl = url.replace(/\/+$/, '');
+    return _cachedServerUrl;
   }
   return 'http://localhost:3001';
 }
@@ -123,11 +127,10 @@ function decodeJwtPayload(token: string): { exp?: number; iat?: number } | null 
 }
 
 /**
- * Get auth headers for API requests.
+ * Get auth headers for API requests (internal — use apiCall() instead).
  * Includes Bearer token from localStorage and warns if token is about to expire.
- * Callers should use apiCall() instead of this directly unless they need raw headers.
  */
-export function getAuthHeaders(): Record<string, string> {
+function getAuthHeaders(): Record<string, string> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
@@ -160,7 +163,7 @@ export class AuthError extends Error {
  * @param path - API path starting with / (e.g. '/api/me')
  * @param options - fetch options; method defaults to 'GET'
  */
-export async function apiCall(path: string, options: RequestInit = {}): Promise<any> {
+export async function apiCall<T = any>(path: string, options: RequestInit = {}): Promise<T> {
   const base = getServerUrl();
   const { method: optMethod, headers: optHeaders, ...restOptions } = options;
   const method = optMethod || 'GET';
@@ -305,7 +308,7 @@ export async function migrateGuestDataToAccount(accountPlayerKey: string, oldGue
     // 收集成功迁移的记录索引，逐条标记（不再 all-or-nothing）
     const migratedIndices = new Set<number>();
 
-    // 提取单人战绩
+    // 提取单人战绩（移除 headers，apiCall 内部处理认证）
     const singleGames = ownerlessGames
       .filter((r: any) => r.mode !== 'multi' && typeof r.timestamp === 'number')
       .map((r: any) => ({
@@ -317,20 +320,15 @@ export async function migrateGuestDataToAccount(accountPlayerKey: string, oldGue
       }));
 
     if (singleGames.length > 0) {
-      const res = await fetch(`${getServerUrl()}/api/sync`, {
+      const data = await apiCall('/api/sync', {
         method: 'POST',
-        headers,
         body: JSON.stringify({ player_key: accountPlayerKey, games: singleGames }),
       });
-
-      if (res.ok) {
-        const data = await res.json();
-        console.log(`[Auth] Migrated ${data.synced || singleGames.length} guest single game(s) to account`);
-        // 标记所有单人记录为已迁移
-        ownerlessGames.forEach((g, i) => {
-          if (g.mode !== 'multi' && typeof g.timestamp === 'number') migratedIndices.add(i);
-        });
-      }
+      console.log(`[Auth] Migrated ${data.synced || singleGames.length} guest single game(s) to account`);
+      // 标记所有单人记录为已迁移
+      ownerlessGames.forEach((g, i) => {
+        if (g.mode !== 'multi' && typeof g.timestamp === 'number') migratedIndices.add(i);
+      });
     }
 
     // 多人战绩逐条保存，每条即刻标记（单条失败不中断其他保存）
@@ -339,9 +337,8 @@ export async function migrateGuestDataToAccount(accountPlayerKey: string, oldGue
       if (g.mode !== 'multi' || typeof g.timestamp !== 'number') continue;
 
       try {
-        const res = await fetch(`${getServerUrl()}/api/save-game`, {
+        await apiCall('/api/save-game', {
           method: 'POST',
-          headers,
           body: JSON.stringify({
             player_key: accountPlayerKey,
             won: Boolean(g.won),
@@ -352,16 +349,10 @@ export async function migrateGuestDataToAccount(accountPlayerKey: string, oldGue
             timestamp: new Date(g.timestamp).toISOString(),
           }),
         });
-
-        if (res.ok) {
-          migratedIndices.add(i);
-          console.log(`[Auth] Migrated multi-game #${i} to account`);
-        } else {
-          console.warn(`[Auth] Failed to migrate multi-game #${i}: HTTP ${res.status}`);
-        }
+        migratedIndices.add(i);
+        console.log(`[Auth] Migrated multi-game #${i} to account`);
       } catch (err) {
-        // 网络错误不中断循环，继续处理剩余游戏
-        console.warn(`[Auth] Network error migrating multi-game #${i}:`, (err as Error)?.message);
+        console.warn(`[Auth] Failed to migrate multi-game #${i}:`, (err as Error)?.message);
       }
     }
 

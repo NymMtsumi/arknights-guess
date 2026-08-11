@@ -1,11 +1,9 @@
 // Socket.IO 初始化、身份中间件、在线追踪
 import { Server } from 'socket.io';
-import { parseCookies, deriveGuestName } from '../utils.js';
+import { parseCookies, deriveGuestName, getAllowedOrigins } from '../utils.js';
 
 export function createSocketServer(http, { db, verifyToken, generateKey }) {
-  const allowedOrigins = process.env.ALLOWED_ORIGINS
-    ? process.env.ALLOWED_ORIGINS.split(',').map(s => s.trim())
-    : ['https://www.arknights-guess.online', 'https://arknights-guess.pages.dev', 'http://localhost:3000'];
+  const allowedOrigins = getAllowedOrigins();
 
   const io = new Server(http, {
     cors: { origin: allowedOrigins },

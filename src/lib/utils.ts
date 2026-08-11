@@ -32,7 +32,7 @@ export function dailySeed(): number {
   for (let i = 0; i < dateStr.length; i++) {
     hash = ((hash << 5) + hash + dateStr.charCodeAt(i)) | 0;
   }
-  return Math.abs(hash);
+  return hash >>> 0;
 }
 
 /**

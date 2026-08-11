@@ -19,12 +19,14 @@ export function Header() {
 
   useEffect(() => {
     if (isLoggedIn) return;
-    fetch(`${getServerUrl()}/api/guest-identity`)
+    const controller = new AbortController();
+    fetch(`${getServerUrl()}/api/guest-identity`, { signal: controller.signal })
       .then(res => res.json())
       .then(data => {
         if (data.displayName) setGuestName(data.displayName);
       })
-      .catch(() => {}); // Silently fail
+      .catch(() => {}); // Silently fail (aborted requests included)
+    return () => controller.abort();
   }, [isLoggedIn]);
 
   return (

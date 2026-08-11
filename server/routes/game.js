@@ -1,5 +1,5 @@
 // 游戏路由：save-game, leaderboard
-import { sanitizeString, parseCookies, parseBody, jsonResponse, generateKey } from '../utils.js';
+import { sanitizeString, parseCookies, parseBody, jsonResponse, generateKey, normalizeTimestamp } from '../utils.js';
 import { pickDailyTarget } from '../characters.js';
 
 // 排行榜内存缓存（60s TTL，避免每次请求全表聚合扫描）
@@ -27,22 +27,7 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
       return jsonResponse(res, { error: 'mode 必须是 single、multi 或 daily' }, 400);
     }
 
-    let timestamp = body.timestamp;
-    if (typeof timestamp === 'number') {
-      if (timestamp <= 0 || !Number.isFinite(timestamp)) {
-        timestamp = new Date().toISOString();
-      } else if (timestamp < 1e11) {
-        // 秒级时间戳 → 转换为毫秒
-        try { timestamp = new Date(timestamp * 1000).toISOString(); } catch { timestamp = new Date().toISOString(); }
-      } else if (timestamp <= 1e13) {
-        // 毫秒级时间戳（1e12 ≈ 2001, 1e13 ≈ 2286）
-        try { timestamp = new Date(timestamp).toISOString(); } catch { timestamp = new Date().toISOString(); }
-      } else {
-        timestamp = new Date().toISOString();
-      }
-    } else if (typeof timestamp !== 'string' || !timestamp) {
-      timestamp = new Date().toISOString();
-    }
+    let timestamp = normalizeTimestamp(body.timestamp);
 
     if (mode === 'multi') {
       if (difficulty !== 'multi') difficulty = 'multi';

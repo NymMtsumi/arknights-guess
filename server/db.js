@@ -178,6 +178,11 @@ export function initSchema(db) {
   try { db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_games_daily_guest_unique ON games(player_key, daily_date) WHERE user_id IS NULL AND daily_date IS NOT NULL'); } catch {}
   try { db.exec('CREATE INDEX IF NOT EXISTS idx_games_daily_lb ON games(mode, daily_date, won)'); } catch {}
 
+  // 过期清理索引（加速 DELETE WHERE datetime(expires_at) < datetime('now')）
+  try { db.exec('CREATE INDEX IF NOT EXISTS idx_pending_reg_expires ON pending_registrations(expires_at)'); } catch {}
+  try { db.exec('CREATE INDEX IF NOT EXISTS idx_password_resets_expires ON password_resets(expires_at)'); } catch {}
+  try { db.exec('CREATE INDEX IF NOT EXISTS idx_email_verifications_expires ON email_verifications(expires_at)'); } catch {}
+
   // ===== 定期清理 =====
   // 清理过期记录（每小时）, 句柄存储在 db 对象上供 gracefulShutdown 清理
   db._cleanupInterval = setInterval(() => {

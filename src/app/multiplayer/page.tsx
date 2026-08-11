@@ -98,6 +98,8 @@ export default function MultiplayerPage() {
     connectTimer.current = setTimeout(() => { s.disconnect(); setConnecting(""); }, 15000);
     return () => {
       if (connectTimer.current) { clearTimeout(connectTimer.current); connectTimer.current = null; }
+      // 清理未被 socketRef 持有的 socket（避免孤立连接泄漏）
+      if (socketRef.current !== s) { s.disconnect(); }
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

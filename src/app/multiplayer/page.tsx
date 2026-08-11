@@ -325,10 +325,9 @@ export default function MultiplayerPage() {
 
   const handleCreate = () => {
     clearConnecting();
-    if (!playerName.trim()) { setError(t('multi.enterRoomCode')); return; }
     setError(''); setConnecting('create');
     const s = connect();
-    s.emit('create_room', { playerName: playerName.trim(), bestOf, difficulty });
+    s.emit('create_room', { playerName: playerName.trim() || undefined, bestOf, difficulty });
     s.emit('_log', { action: 'create_room' });
     connectTimer.current = setTimeout(() => { s.disconnect(); setConnecting(''); setError(t('multi.createTimeout')); }, 30000);
   };
@@ -347,10 +346,9 @@ export default function MultiplayerPage() {
 
   const handleQuickMatch = () => {
     clearConnecting();
-    if (!playerName.trim()) { setError(t('multi.enterRoomCode')); return; }
     setError(''); setConnecting('quickmatch');
     const s = connect();
-    s.emit('matchmaking:join', { playerName: playerName.trim(), difficulty, bestOf });
+    s.emit('matchmaking:join', { playerName: playerName.trim() || undefined, difficulty, bestOf });
     s.emit('_log', { action: 'quickmatch' });
     connectTimer.current = setTimeout(() => { s.disconnect(); setConnecting(''); setError(t('multi.matchTimeout')); }, 60000);
   };

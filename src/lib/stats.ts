@@ -292,7 +292,7 @@ export async function saveGameToServer(won: boolean, guessCount: number, difficu
  * Concurrent writes from multiple tabs can produce a read-modify-write race on localStorage stats/history.
  * In practice this is low-risk because users rarely play in multiple tabs simultaneously.
  */
-export function saveGameStats(won: boolean, guessCount: number, difficulty: string, targetName: string, mode: 'single' | 'daily' = 'single') {
+export function saveGameStats(won: boolean, guessCount: number, difficulty: string, targetName: string, mode: 'single' | 'daily' | 'multi' = 'single') {
   const stats = loadStats();
   stats.totalGames++;
   if (won) {

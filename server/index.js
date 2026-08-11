@@ -10,9 +10,11 @@ import { generateKey, getClientIP, jsonResponse, checkNicknameProfanity, getAllo
 import { initSchema } from './db.js';
 import { createAuth } from './auth.js';
 import { loadCharacters } from './characters.js';
+// Enemy routes removed — enemy guessing is now purely client-side, integrated into /game
 import { registerAuthRoutes } from './routes/auth.js';
 import { registerUserRoutes } from './routes/user.js';
 import { registerGameRoutes } from './routes/game.js';
+
 import { registerAdminRoutes } from './routes/admin.js';
 import { createSocketServer } from './socket/index.js';
 import { createRoomManager } from './socket/rooms.js';
@@ -99,6 +101,7 @@ console.log('[init] step 1: characters loaded');
 const db = new Database(DB_PATH);
 initSchema(db);
 console.log('[init] step 2: db initialized');
+
 const auth = createAuth({ db, JWT_SECRET: process.env.JWT_SECRET });
 console.log('[init] step 3: auth created');
 const { signToken, verifyToken, requireAuth, requireAdmin, checkRateLimit, _rlCleanupInterval } = auth;
@@ -148,6 +151,7 @@ const authRoutes = registerAuthRoutes({
 const gameRoutes = registerGameRoutes({
   app: {}, db, verifyToken, checkRateLimit, getClientIP,
 });
+
 
 const userRoutes = registerUserRoutes({
   app: {}, db, verifyToken, requireAuth,
@@ -232,6 +236,8 @@ async function handleRequest(req, res) {
     if (req.method === 'GET' && path.startsWith('/api/leaderboard')) return await gameRoutes.handleLeaderboard(req, res);
     if (req.method === 'GET' && path === '/api/daily/status') return await gameRoutes.handleDailyStatus(req, res);
     if (req.method === 'GET' && path.startsWith('/api/daily/leaderboard')) return await gameRoutes.handleDailyLeaderboard(req, res);
+
+    // Enemy
 
     // Admin (public)
     if (req.method === 'GET' && path === '/api/announcements') return await adminRoutes.handleGetAnnouncements(req, res);

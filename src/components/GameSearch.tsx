@@ -143,7 +143,7 @@ export function GameSearch({ onGuess, disabled, guessedIds, remainingGuesses }: 
   const formatRarity = (r: number) => '★'.repeat(r) + '☆'.repeat(6 - r);
 
   return (
-    <div ref={containerRef} style={{ position: 'relative', maxWidth: '500px', marginBottom: '20px' }}>
+    <div ref={containerRef} style={{ position: 'relative', maxWidth: '500px', width: '100%', marginBottom: '20px' }}>
       <input
         ref={inputRef}
         type="text"

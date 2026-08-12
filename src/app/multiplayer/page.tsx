@@ -626,12 +626,12 @@ export default function MultiplayerPage() {
               {oppSurrendered && <span style={{ color: 'var(--warning)', fontSize: '0.8rem', alignSelf: 'center' }}>{t('multi.oppSurrendered')}</span>}
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-              <div style={{ flex: '1 1 48%', minWidth: '280px' }}>
+              <div style={{ flex: '1 1 48%', minWidth: '260px' }}>
                 <div style={{ fontWeight: 700, marginBottom: '4px', fontSize: '0.85rem', color: 'var(--primary)' }}>{t('multi.yourGuesses')}</div>
                 <div ref={myBoardScrollRef} style={{ overflowX: 'auto', scrollBehavior: 'smooth' }} className="scroll-slider-container"><GuessTable guesses={store.guesses} target={store.target} hideRarity={difficulty === 'hard'} staggerKey={store.guesses.length} /></div>
                 <ScrollSlider containerRef={myBoardScrollRef} />
               </div>
-              <div style={{ flex: '1 1 48%', minWidth: '280px' }}>
+              <div style={{ flex: '1 1 48%', minWidth: '260px' }}>
                 <div style={{ fontWeight: 700, marginBottom: '4px', fontSize: '0.85rem', color: 'var(--accent)' }}>{t('multi.oppGuesses', { name: oppName, count: oppGuessCount })}</div>
                 <div ref={oppBoardScrollRef} style={{ overflowX: 'auto', scrollBehavior: 'smooth' }} className="scroll-slider-container">
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.65rem' }}>

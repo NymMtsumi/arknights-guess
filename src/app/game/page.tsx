@@ -266,7 +266,7 @@ export default function GamePage() {
           <div style={{
             display: 'flex', gap: '0', marginBottom: 'clamp(20px, 3vw, 32px)',
             background: 'var(--card-soft)', borderRadius: 'var(--radius)',
-            border: '1px solid var(--border)', overflow: 'hidden',
+            border: '1px solid var(--border)',
           }}>
             <button
               onClick={() => switchMode('operator')}
@@ -390,7 +390,7 @@ export default function GamePage() {
             ← {t('game.back')}
           </button>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
             {/* Mode badge */}
             <span style={{
               fontWeight: 700, fontSize: '0.8rem', color: 'var(--primary)',
@@ -504,7 +504,7 @@ export default function GamePage() {
               <div ref={scrollRef} style={{ overflowX: 'auto', scrollBehavior: 'smooth' }} className="scroll-slider-container">
                 <table style={{
                   width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse',
-                  fontSize: '0.82rem', minWidth: `${Math.max(enemyTotalW, 700)}px`,
+                  fontSize: '0.82rem', minWidth: `${Math.max(enemyTotalW, 320)}px`,
                 }}>
                   <thead>
                     <tr>

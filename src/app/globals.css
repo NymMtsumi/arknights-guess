@@ -122,7 +122,6 @@ html, body, #root {
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
-  overflow-x: clip;
 }
 
 html {
@@ -670,6 +669,12 @@ html[data-theme="blast-wine"] .game-search-input.low-guesses:focus {
   border-bottom: 1px solid var(--border);
   background: var(--card);
   z-index: 10;
+}
+
+@media (max-width: 380px) {
+  .header-bar {
+    padding: 0 clamp(0.5rem, 2vw, 1rem);
+  }
 }
 
 html[data-theme="blast"] .header-bar::after,

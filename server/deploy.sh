@@ -38,17 +38,20 @@ if [ "$SYNTAX_OK" -eq 0 ]; then
 fi
 log " Syntax OK (all files)"
 
-# ===== Step 3: Fetch + Stash =====
+# ===== Step 3: Fetch + 丢弃本地修改 =====
 OLD_HEAD=$(git rev-parse HEAD)
 log "Step 3/6: fetch (current: ${OLD_HEAD:0:7})..."
 git fetch origin main >> "$LOG_FILE" 2>&1
-git stash push -m "auto-stash-before-deploy" >> "$LOG_FILE" 2>&1 || true
+
+# 丢弃所有本地修改（VPS 不应有本地 hot-fix，所有改动应通过 git）
+# stash 方案反复失败：npm install 改 package-lock.json，chmod 改 deploy.sh 权限
+git checkout -- . 2>>"$LOG_FILE" || true
+git clean -fd server/ 2>>"$LOG_FILE" || true  # 清理 server/ 下的临时文件
 
 # ===== Step 4: Pull（fast-forward only） =====
 log "Step 4/6: pull..."
 if ! git pull --ff-only origin main >> "$LOG_FILE" 2>&1; then
-  log " Pull FAILED — restoring stash"
-  git stash pop >> "$LOG_FILE" 2>&1 || true
+  log " Pull FAILED"
   exit 1
 fi
 NEW_HEAD=$(git rev-parse HEAD)

@@ -158,7 +158,12 @@ export default function MultiplayerPage() {
       setRoomCode(d.code); roomCodeRef.current = d.code; saveRoomCode(d.code);
       setBestOf(d.bestOf); if (d.difficulty) setDifficulty(d.difficulty);
       if (d.started) { setStage('playing'); setMyWins(d.wins||0); }
-      else { setRoomExpireTime(Date.now() + 120_000); setStage('waiting'); }
+      else {
+        // 基于服务端 _createdAt 计算剩余倒计时，防止重连时倒计时重置
+        const createdAt = d._createdAt || Date.now();
+        setRoomExpireTime(createdAt + 120_000);
+        setStage('waiting');
+      }
     });
 
     s.on('set_cookie', (d: any) => {

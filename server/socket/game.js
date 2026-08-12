@@ -130,7 +130,7 @@ export function registerGameHandlers({
           socket.to(existing.code).emit('opponent_reconnected', { playerName: player.name });
           socket.emit('existing_room', {
             code: existing.code, bestOf: existing.bestOf, difficulty: existing.difficulty || 'hard',
-            started: existing.started, wins: player.wins,
+            started: existing.started, wins: player.wins, _createdAt: existing._createdAt,
           });
           if (existing.started) {
             const hasActiveRound = !!existing._roundStartAt;
@@ -178,7 +178,7 @@ export function registerGameHandlers({
         socket.emit('existing_room', {
           code: existingR.code, bestOf: existingR.bestOf,
           difficulty: existingR.difficulty || 'hard', started: existingR.started,
-          wins,
+          wins, _createdAt: existingR._createdAt,
         });
         return;
       }
@@ -203,6 +203,7 @@ export function registerGameHandlers({
         socket.emit('existing_room', {
           code: hasRoom.code, bestOf: hasRoom.bestOf,
           difficulty: hasRoom.difficulty || 'hard', started: hasRoom.started,
+          _createdAt: hasRoom._createdAt,
         });
         return;
       }
@@ -263,7 +264,7 @@ export function registerGameHandlers({
             const entry2 = onlinePlayers.get(socket.data.playerKey);
             if (entry2) { entry2.type = 'multi'; entry2.roomCode = code; }
             socket.to(code).emit('opponent_reconnected', { playerName: p.name });
-            socket.emit('existing_room', { code, bestOf: room.bestOf, difficulty: room.difficulty || 'hard', started: room.started, wins: p.wins });
+            socket.emit('existing_room', { code, bestOf: room.bestOf, difficulty: room.difficulty || 'hard', started: room.started, wins: p.wins, _createdAt: room._createdAt });
             if (room.started) {
               const hasActiveRound = !!room._roundStartAt;
               const remainingTime = hasActiveRound
@@ -608,7 +609,7 @@ export function registerGameHandlers({
       } else {
         socket.emit('existing_room', {
           code, bestOf: room.bestOf, difficulty: room.difficulty || 'hard',
-          started: false, wins: player.wins,
+          started: false, wins: player.wins, _createdAt: room._createdAt,
         });
       }
 

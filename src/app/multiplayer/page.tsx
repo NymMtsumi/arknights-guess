@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { io, Socket } from 'socket.io-client';
 import { Header } from '@/components/Header';
 import { GameSearch } from '@/components/GameSearch';
@@ -35,6 +36,7 @@ const DIFF_KEY_MAP: Record<string, string> = {
 
 export default function MultiplayerPage() {
   const { t } = useI18n();
+  const router = useRouter();
 
   // Compute column labels from i18n (used for opponent grid headers)
   const colLabelKeys = ['table.name', 'table.class', 'table.subclass', 'table.faction', 'table.rarity', 'table.race', 'table.gender', 'table.year', 'table.position', 'table.tags'];
@@ -68,6 +70,7 @@ export default function MultiplayerPage() {
   const [rematchReady, setRematchReady] = useState(false);
   const [queuePosition, setQueuePosition] = useState(0);
   const [matchDifficulty, setMatchDifficulty] = useState('');
+  const [disbandCooldown, setDisbandCooldown] = useState(0); // 解散房间冷却到期时间戳
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const connectTimer = useRef<NodeJS.Timeout | null>(null);
   const rematchTimer = useRef<NodeJS.Timeout | null>(null);
@@ -169,6 +172,19 @@ export default function MultiplayerPage() {
     });
 
     s.on('room_created', (d) => { clearConnecting(); setRoomCode(d.code); roomCodeRef.current = d.code; saveRoomCode(d.code); setBestOf(d.bestOf); setRoomExpireTime(Date.now() + 120_000); setStage('waiting'); });
+
+    s.on('room_disbanded', (d: any) => {
+      clearRoomCode();
+      if (d.cooldown) {
+        setDisbandCooldown(Date.now() + d.cooldown);
+      }
+      setStage('menu');
+      setConnecting('');
+      if (d.reason === 'host_disbanded') {
+        setError('房主已解散房间');
+        setTimeout(() => setError(''), 4000);
+      }
+    });
 
     s.on("reconnect_state", (d) => {
       clearConnecting();
@@ -325,6 +341,10 @@ export default function MultiplayerPage() {
 
   const handleCreate = () => {
     clearConnecting();
+    if (disbandCooldown > Date.now()) {
+      setError(t('multi.cooldownMsg', { seconds: Math.ceil((disbandCooldown - Date.now()) / 1000) }));
+      return;
+    }
     setError(''); setConnecting('create');
     const s = connect();
     s.emit('create_room', { playerName: playerName.trim() || undefined, bestOf, difficulty });
@@ -346,6 +366,10 @@ export default function MultiplayerPage() {
 
   const handleQuickMatch = () => {
     clearConnecting();
+    if (disbandCooldown > Date.now()) {
+      setError(t('multi.cooldownMsg', { seconds: Math.ceil((disbandCooldown - Date.now()) / 1000) }));
+      return;
+    }
     setError(''); setConnecting('quickmatch');
     const s = connect();
     s.emit('matchmaking:join', { playerName: playerName.trim() || undefined, difficulty, bestOf });
@@ -366,10 +390,10 @@ export default function MultiplayerPage() {
   // current approach is acceptable given the low complexity of the waiting view.
   const [, setTick] = useState(0);
   useEffect(() => {
-    if (stage !== 'waiting') return;
+    if (stage !== 'waiting' && !(disbandCooldown > Date.now())) return;
     const timer = setInterval(() => setTick(x => x + 1), 1000);
     return () => clearInterval(timer);
-  }, [stage]);
+  }, [stage, disbandCooldown]);
 
   const handleGuess = (char: Character) => {
     if (useGameStore.getState().status !== 'playing') return;
@@ -434,6 +458,14 @@ export default function MultiplayerPage() {
         {/* ===== Menu ===== */}
         {stage === 'menu' && (
           <div style={{ textAlign: 'center', maxWidth: '450px' }}>
+            <button onClick={() => router.push('/')} style={{
+              padding: '6px 14px', marginBottom: '12px',
+              background: 'transparent', color: 'var(--text-light)',
+              border: '1px solid var(--border)', borderRadius: 'var(--radius)',
+              cursor: 'pointer', fontSize: '0.85rem',
+            }}>
+              ← {t('game.back')}
+            </button>
             <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.5rem,4vw,2rem)', fontStyle: 'italic', fontWeight: 900, marginBottom: '16px' }}>⚔️ {t('multi.title')}</h1>
             <p style={{ color: 'var(--text-light)', fontSize: '0.9rem', marginBottom: '14px' }}>{t('multi.description')}</p>
             <div className="multi-select-row">
@@ -474,11 +506,24 @@ export default function MultiplayerPage() {
         {/* ===== Lobby ===== */}
         {stage === 'lobby' && (
           <div style={{ textAlign: 'center', maxWidth: '400px' }}>
+            <button onClick={() => { setStage('menu'); setError(''); }} style={{
+              padding: '6px 14px', marginBottom: '12px',
+              background: 'transparent', color: 'var(--text-light)',
+              border: '1px solid var(--border)', borderRadius: 'var(--radius)',
+              cursor: 'pointer', fontSize: '0.85rem',
+            }}>
+              ← {t('multi.back')}
+            </button>
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontStyle: 'italic', marginBottom: '12px' }}>
               BO{bestOf} · {t('multi.winFormat', { n: winTarget })}制
             </h2>
             <div style={{ marginTop: '12px' }}>
-              <button onClick={handleCreate} style={btn}>{t('multi.createRoom')}</button>
+              <button onClick={handleCreate} style={btn} disabled={disbandCooldown > Date.now()}>{t('multi.createRoom')}</button>
+              {disbandCooldown > Date.now() && (
+                <p style={{ color: 'var(--warning)', fontSize: '0.82rem', marginTop: '6px' }}>
+                  ⏳ {t('multi.cooldownMsg', { seconds: Math.max(0, Math.ceil((disbandCooldown - Date.now()) / 1000)) })}
+                </p>
+              )}
             </div>
             <div style={{ marginTop: '16px', padding: '12px', borderTop: '1px solid var(--border)' }}>
               <input value={roomCode} onChange={e => setRoomCode(e.target.value.replace(/\D/g,''))} placeholder={t('multi.roomCodePlaceholder')} style={{ ...inp, marginBottom: '8px' }} maxLength={4} inputMode="numeric" />
@@ -504,6 +549,28 @@ export default function MultiplayerPage() {
                 <p style={{ color: 'var(--text-light)', fontSize: '0.8rem', marginTop: '8px' }}>
                   {t('multi.roomExpireIn', { seconds: Math.max(0, Math.ceil((roomExpireTime - Date.now()) / 1000)) })}
                 </p>
+                <button
+                  onClick={() => {
+                    const s = socketRef.current;
+                    if (s?.connected) {
+                      s.emit('disband_room');
+                      s.emit('_log', { action: 'disband_room' });
+                    }
+                  }}
+                  style={{
+                    marginTop: '20px',
+                    padding: '8px 20px',
+                    background: 'transparent',
+                    color: 'var(--danger)',
+                    border: '1px solid var(--danger)',
+                    borderRadius: 'var(--radius)',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    fontSize: '0.9rem',
+                  }}
+                >
+                  {t('multi.disbandRoom')}
+                </button>
               </>
             )}
           </div>

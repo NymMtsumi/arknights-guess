@@ -186,6 +186,8 @@
   "multi.roomCodePlaceholder": "4位数字房间码",
   "multi.roomExpired": "房间已过期",
   "multi.back": "返回",
+  "multi.disbandRoom": "解散房间",
+  "multi.cooldownMsg": "解散房间后 {{seconds}} 秒内不能创建新房间",
   "multi.waitingOpponent": "等待对手加入",
   "multi.shareRoom": "BO{{bo}} · 分享房间码给好友",
   "multi.roomExpireIn": "房间将在 {{seconds}} 秒后自动解散",

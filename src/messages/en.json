@@ -186,6 +186,8 @@
   "multi.roomCodePlaceholder": "4-digit room code",
   "multi.roomExpired": "Room Expired",
   "multi.back": "Back",
+  "multi.disbandRoom": "Disband Room",
+  "multi.cooldownMsg": "Cannot create room for {{seconds}}s after disbanding",
   "multi.waitingOpponent": "Waiting for opponent to join",
   "multi.shareRoom": "BO{{bo}} · Share room code with a friend",
   "multi.roomExpireIn": "Room will auto-close in {{seconds}}s",

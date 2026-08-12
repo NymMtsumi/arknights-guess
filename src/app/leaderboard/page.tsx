@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { useI18n } from '@/lib/i18n';
@@ -49,6 +50,7 @@ const MAX_ROWS = 50;
 
 export default function LeaderboardPage() {
   const { t, locale } = useI18n();
+  const router = useRouter();
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [dailyEntries, setDailyEntries] = useState<DailyEntry[]>([]);
   const [dailyDate, setDailyDate] = useState('');
@@ -186,6 +188,21 @@ export default function LeaderboardPage() {
           paddingTop: 'clamp(28px, 5vw, 52px)',
         }}
       >
+        {/* 返回按钮 */}
+        <div style={{ maxWidth: 'min(700px, 100%)', margin: '0 auto 8px', width: '100%' }}>
+          <button onClick={() => router.push('/')} style={{
+            padding: '6px 14px',
+            background: 'transparent',
+            color: 'var(--text-light)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius)',
+            cursor: 'pointer',
+            fontSize: '0.85rem',
+          }}>
+            ← {t('game.back')}
+          </button>
+        </div>
+
         {/* 标题 */}
         <h1
           style={{

@@ -4,6 +4,7 @@ import { randomTarget } from '../characters.js';
 
 const ROUND_TIME = 120_000;
 const DISCONNECT = 30_000;
+const DISBAND_COOLDOWN = 120_000; // 解散房间后 120 秒内不能创建新房间
 
 export function registerGameHandlers({
   io, rooms, roomPlayerIndex,
@@ -12,6 +13,8 @@ export function registerGameHandlers({
   onlinePlayers, onlineSockets, ONLINE_TIMEOUT,
   handleJoinQueue, handleLeaveQueue, removeFromQueue, cleanupStaleQueue,
 }) {
+
+  const roomCooldowns = new Map(); // playerKey → expiry timestamp (ms)
 
   // ===== 回合管理 =====
   function startRound(room) {
@@ -179,6 +182,13 @@ export function registerGameHandlers({
         });
         return;
       }
+      // 检查解散冷却
+      const cooldownUntil = roomCooldowns.get(socket.data.playerKey);
+      if (cooldownUntil && Date.now() < cooldownUntil) {
+        const remaining = Math.ceil((cooldownUntil - Date.now()) / 1000);
+        socket.emit('error_msg', { message: `解散房间后需等待 ${remaining} 秒才能进行快速匹配`, cooldown: remaining });
+        return;
+      }
       handleJoinQueue(socket, data);
     });
 
@@ -194,6 +204,14 @@ export function registerGameHandlers({
           code: hasRoom.code, bestOf: hasRoom.bestOf,
           difficulty: hasRoom.difficulty || 'hard', started: hasRoom.started,
         });
+        return;
+      }
+
+      // 检查解散冷却
+      const cooldownUntil = roomCooldowns.get(socket.data.playerKey);
+      if (cooldownUntil && Date.now() < cooldownUntil) {
+        const remaining = Math.ceil((cooldownUntil - Date.now()) / 1000);
+        socket.emit('error_msg', { message: `解散房间后需等待 ${remaining} 秒才能创建新房间`, cooldown: remaining });
         return;
       }
 
@@ -599,6 +617,43 @@ export function registerGameHandlers({
       console.log(`[重连] ${socket.id} → ${code}`);
       } catch (e) { console.error('[game] reconnect_room error:', e.message); }
     });
+
+    // === disband_room ===
+    socket.on('disband_room', () => {
+      try {
+        const room = findRoomByPlayerKey(socket.data.playerKey);
+        if (!room) { socket.emit('error_msg', { message: '你没有正在进行的房间' }); return; }
+        if (room.started) { socket.emit('error_msg', { message: '游戏已开始，无法解散' }); return; }
+        if (room.finished) return;
+
+        const code = room.code;
+
+        // 清理房间定时器
+        if (room._roundTimer) clearTimeout(room._roundTimer);
+        if (room._nextRound) clearTimeout(room._nextRound);
+        if (room._matchEndTimer) clearTimeout(room._matchEndTimer);
+        if (room._rematchTimer) clearTimeout(room._rematchTimer);
+
+        // 清理玩家索引
+        for (const p of room.players.values()) {
+          roomPlayerIndex.delete(p.playerKey);
+          const entry = onlinePlayers.get(p.playerKey);
+          if (entry && entry.type === 'multi') { entry.type = 'idle'; entry.roomCode = null; }
+        }
+
+        // 通知房间内其他人（如果有）
+        socket.to(code).emit('room_disbanded', { code, reason: 'host_disbanded' });
+
+        // 删除房间
+        rooms.delete(code);
+
+        // 设置冷却时间（仅对房主）
+        roomCooldowns.set(socket.data.playerKey, Date.now() + DISBAND_COOLDOWN);
+
+        socket.emit('room_disbanded', { code, reason: 'disbanded', cooldown: DISBAND_COOLDOWN });
+        console.log(`[房] ${code} 被房主解散, 冷却 ${DISBAND_COOLDOWN / 1000}s`);
+      } catch (e) { console.error('[game] disband_room error:', e.message); }
+    });
   });
 
   // ===== 周期清理（由 index.js 中统一的 setInterval 调用） =====
@@ -650,7 +705,12 @@ export function registerGameHandlers({
 
     // 清理超时排队（委托给 matchmaking 模块，避免代码重复）
     cleanupStaleQueue();
+
+    // 清理过期冷却
+    for (const [pk, expiry] of roomCooldowns) {
+      if (Date.now() >= expiry) roomCooldowns.delete(pk);
+    }
   }
 
-  return { startRound, endRound, score, runPeriodicCleanup };
+  return { startRound, endRound, score, runPeriodicCleanup, roomCooldowns };
 }

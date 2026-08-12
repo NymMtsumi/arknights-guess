@@ -49,9 +49,19 @@ db.exec("DELETE FROM sqlite_sequence WHERE name IN ('users', 'games', 'email_ver
 console.log('已清空所有账号和游戏数据。');
 
 // ===== 第二步：创建管理员账号 =====
+// 密码必须从环境变量提供（ADMIN_PASSWORD 或 ADMIN_PASSWORD_<USERNAME>），
+// 缺失则生成随机强密码并打印（不再硬编码弱密码）。
+function resolveAdminPassword(username) {
+  const perUser = process.env['ADMIN_PASSWORD_' + username.toUpperCase()];
+  if (perUser && perUser.length >= 8) return perUser;
+  const shared = process.env.ADMIN_PASSWORD;
+  if (shared && shared.length >= 8) return shared;
+  return randomBytes(12).toString('base64url'); // 16 字符随机强密码
+}
+
 const ADMINS = [
-  { username: 'aLurta',  password: '12345678', displayId: '1109' },
-  { username: 'NymMutsumi', password: '12345678', displayId: '0210' },
+  { username: 'aLurta', displayId: '1109' },
+  { username: 'NymMutsumi', displayId: '0210' },
 ];
 
 const insertUser = db.prepare(`
@@ -60,7 +70,8 @@ const insertUser = db.prepare(`
 `);
 
 for (const admin of ADMINS) {
-  const passwordHash = bcrypt.hashSync(admin.password, 10);
+  const adminPassword = resolveAdminPassword(admin.username);
+  const passwordHash = bcrypt.hashSync(adminPassword, 10);
   const playerKey = 'p_' + randomBytes(9).toString('base64url');
 
   // 生成唯一 email（用于防重复）
@@ -69,6 +80,7 @@ for (const admin of ADMINS) {
   insertUser.run(admin.username, passwordHash, admin.displayId, admin.username, email, playerKey);
 
   console.log(`✅ 已创建管理员: ${admin.username} (display_id: #${admin.displayId})`);
+  console.log(`   🔑 密码: ${adminPassword}`);
 }
 
 // ===== 第三步：验证 =====

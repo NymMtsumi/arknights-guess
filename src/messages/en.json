@@ -135,6 +135,10 @@
   "stats.diffMedium": "Normal",
   "stats.diffHard": "Hard",
   "stats.diffMulti": "Multi",
+  "stats.diffCustom": "Custom",
+  "stats.custom.attributes": "Attributes",
+  "stats.custom.maxGuesses": "Max guesses",
+  "stats.custom.roundTime": "Round time",
 
   "leaderboard.title": "Leaderboard",
   "leaderboard.modeSingle": "Single",
@@ -233,6 +237,12 @@
   "multi.matchEndDisconnect": "{{name}} wins (opponent disconnected 30s)",
   "multi.matchEndDraw": "Match draw!",
   "multi.matchEndWin": "{{name}} wins the match!\n{{score}}",
+  "multi.custom.title": "Custom Room",
+  "multi.custom.desc": "Customize display attributes, guess count, round time and format",
+  "multi.custom.maxGuesses": "Max guesses",
+  "multi.custom.roundTime": "Round time",
+  "multi.custom.attributes": "Display attributes",
+  "multi.custom.minAttrs": "Select at least 3 attributes",
 
   "theme.light": "Light",
   "theme.blast": "Cyan",

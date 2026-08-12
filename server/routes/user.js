@@ -16,7 +16,7 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
       return jsonResponse(res, { error: '用户不存在' }, 404);
     }
 
-    // 按 user_id 查询（一级归属），player_key 仅作兜底
+    // 按 user_id 查询（一级归属），player_key 仅作兜底；排除自定义房（不计入聚合数据）
     const stats = db.prepare(`
       SELECT
         COUNT(*) as totalGames,
@@ -24,7 +24,7 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
         COUNT(*) - SUM(won) as losses,
         SUM(guess_count) as totalGuesses,
         MIN(CASE WHEN won = 1 THEN guess_count ELSE NULL END) as bestScore
-      FROM games WHERE user_id = ?
+      FROM games WHERE user_id = ? AND mode != 'custom'
     `).get(auth.userId);
 
     return jsonResponse(res, {
@@ -50,6 +50,11 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
   async function handleSync(req, res) {
     const auth = requireAuth(req, res);
     if (!auth) return;
+
+    // 频率限制：防止高频灌库
+    if (!checkRateLimit('sync:' + auth.userId, 20, 300_000)) {
+      return jsonResponse(res, { error: '同步过于频繁，请稍后再试' }, 429);
+    }
 
     const body = await parseBody(req);
     const player_key = typeof body.player_key === 'string' ? body.player_key.trim() : '';
@@ -98,6 +103,8 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
     const insert = db.prepare('INSERT INTO games (player_key, user_id, won, guess_count, difficulty, target_name, timestamp, mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
     const insertMany = db.transaction((rows) => {
       for (const g of rows) {
+        // 仅支持 single/multi；custom/daily 应走 save-game，静默跳过避免模式失真
+        if (g.mode !== 'multi' && g.mode !== 'single') continue;
         const mode = g.mode === 'multi' ? 'multi' : 'single';
         const won = !!g.won ? 1 : 0;
         const guessCount = Math.min(50, Math.max(0, parseInt(g.guessCount) || 0));
@@ -126,6 +133,11 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
   async function handleLinkPlayerKey(req, res) {
     const auth = requireAuth(req, res);
     if (!auth) return;
+
+    // 频率限制：防止遍历/探测 player_key 归属
+    if (!checkRateLimit('linkpk:' + auth.userId, 20, 300_000)) {
+      return jsonResponse(res, { error: '操作过于频繁，请稍后再试' }, 429);
+    }
 
     const body = await parseBody(req);
     const oldPk = typeof body.player_key === 'string' ? body.player_key.trim() : '';
@@ -397,8 +409,8 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
         targetName: r.target_name || '',
         mode: r.mode || 'single',
       };
-      // 多人模式：解析 multi_data JSON 附加字段
-      if (r.mode === 'multi' && r.multi_data) {
+      // 多人/自定义模式：解析 multi_data JSON 附加字段
+      if ((r.mode === 'multi' || r.mode === 'custom') && r.multi_data) {
         try {
           const md = JSON.parse(r.multi_data);
           if (md && typeof md === 'object') {
@@ -407,6 +419,14 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
             base.opponentScore = typeof md.opponentScore === 'number' ? md.opponentScore : 0;
             base.opponentName = typeof md.opponentName === 'string' ? md.opponentName : (r.target_name || '');
             base.rounds = Array.isArray(md.rounds) ? md.rounds : [];
+            if (r.mode === 'custom') {
+              base.custom = {
+                attributes: Array.isArray(md.attributes) ? md.attributes : [],
+                maxGuesses: typeof md.maxGuesses === 'number' ? md.maxGuesses : 8,
+                roundTime: typeof md.roundTime === 'number' ? md.roundTime : 120000,
+                difficulty: typeof md.difficulty === 'string' ? md.difficulty : (r.difficulty || 'hard'),
+              };
+            }
           }
         } catch { /* ignore parse errors */ }
       }

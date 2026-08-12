@@ -11,17 +11,20 @@ const TIMING_DEFENSE_HASH = '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJ
 async function checkEmailMX(email) {
   const domain = email.split('@')[1];
   if (!domain) return false;
+  let timer;
   try {
     // Node.js dns.promises 不支持 AbortController，用 Promise.race 实现超时
     // 3s timeout is a trade-off: long enough for slow DNS resolvers on congested
     // networks, short enough to avoid holding the registration request for too long.
     const records = await Promise.race([
       dns.resolveMx(domain),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000))
+      new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('timeout')), 3000); })
     ]);
     return Array.isArray(records) && records.length > 0;
   } catch {
     return false;
+  } finally {
+    clearTimeout(timer); // 防止超时定时器滞留（原实现泄漏未清理的 timer）
   }
 }
 

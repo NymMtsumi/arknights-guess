@@ -135,6 +135,10 @@
   "stats.diffMedium": "普通",
   "stats.diffHard": "困难",
   "stats.diffMulti": "多人",
+  "stats.diffCustom": "自定义",
+  "stats.custom.attributes": "属性",
+  "stats.custom.maxGuesses": "猜测次数",
+  "stats.custom.roundTime": "单局时间",
 
   "leaderboard.title": "排行榜",
   "leaderboard.modeSingle": "单人",
@@ -233,6 +237,12 @@
   "multi.matchEndDisconnect": "{{name}} 获胜（对方断线超30秒）",
   "multi.matchEndDraw": "比赛平局！",
   "multi.matchEndWin": "{{name}} 赢得比赛！\n{{score}}",
+  "multi.custom.title": "自定义房间",
+  "multi.custom.desc": "自定义展示属性、猜测次数、单局时间与赛制",
+  "multi.custom.maxGuesses": "猜测次数",
+  "multi.custom.roundTime": "单局时间",
+  "multi.custom.attributes": "展示属性",
+  "multi.custom.minAttrs": "至少选择 3 项属性",
 
   "theme.light": "浅色",
   "theme.blast": "Cyan",

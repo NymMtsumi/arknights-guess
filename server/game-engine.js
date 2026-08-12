@@ -20,6 +20,11 @@ export function loadGameEngine() {
   }
 }
 
+/** 获取全量干员数据（供 characters.js 复用，避免重复读取 characters.json） */
+export function getAllCharacters() {
+  return ALL_CHARS;
+}
+
 /** 按名称查找角色（支持中文名和英文名） */
 export function findCharByName(name) {
   const trimmed = name.trim();

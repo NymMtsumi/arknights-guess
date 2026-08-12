@@ -23,7 +23,8 @@ function toStatsData(s: ServerStats): StatsData {
 }
 
 function isMultiRecord(r: HistoryRecord): r is MultiGameRecord {
-  return (r as any).mode === 'multi';
+  const m = (r as any).mode;
+  return m === 'multi' || m === 'custom';
 }
 
 export default function StatsPage() {
@@ -260,6 +261,7 @@ export default function StatsPage() {
                 <tbody>
                   {history.map((rec, i) => {
                     const multi = isMultiRecord(rec);
+                    const isCustom = multi && rec.mode === 'custom';
                     return (
                       <>
                         <tr
@@ -284,10 +286,10 @@ export default function StatsPage() {
                               fontSize: '0.7rem',
                               padding: '1px 6px',
                               borderRadius: '3px',
-                              background: multi ? 'var(--accent-soft, rgba(0,180,216,0.1))' : 'var(--input-bg)',
-                              color: multi ? 'var(--accent)' : 'var(--text-light)',
+                              background: isCustom ? 'var(--primary-soft)' : multi ? 'var(--accent-soft, rgba(0,180,216,0.1))' : 'var(--input-bg)',
+                              color: isCustom ? 'var(--primary)' : multi ? 'var(--accent)' : 'var(--text-light)',
                             }}>
-                              {multi ? t('stats.diffMulti') : t((rec as GameRecord).difficulty === 'easy' ? 'stats.diffEasy' : (rec as GameRecord).difficulty === 'medium' ? 'stats.diffMedium' : 'stats.diffHard')}
+                              {isCustom ? t('stats.diffCustom') : multi ? t('stats.diffMulti') : t((rec as GameRecord).difficulty === 'easy' ? 'stats.diffEasy' : (rec as GameRecord).difficulty === 'medium' ? 'stats.diffMedium' : 'stats.diffHard')}
                             </span>
                           </td>
                           <td style={{ ...tdStyle, color: rec.won ? 'var(--correct)' : 'var(--danger)', fontWeight: 700 }}>
@@ -316,6 +318,13 @@ export default function StatsPage() {
                                 padding: '8px 16px',
                                 borderBottom: '2px solid var(--accent-soft, rgba(0,180,216,0.15))',
                               }}>
+                                {isCustom && rec.custom && (
+                                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 18px', padding: '6px 0', fontSize: '0.78rem', color: 'var(--text-light)', borderBottom: '1px solid var(--border)' }}>
+                                    <span>🎨 {t('stats.custom.attributes')}: {rec.custom.attributes.map(a => t(`table.${a === 'releaseYear' ? 'year' : a}`)).join(' / ')}</span>
+                                    <span>{t('stats.custom.maxGuesses')}: {rec.custom.maxGuesses}</span>
+                                    <span>{t('stats.custom.roundTime')}: {Math.round(rec.custom.roundTime / 1000)}s</span>
+                                  </div>
+                                )}
                                 {rec.rounds.map((rd, ri) => (
                                   <div key={ri} style={{
                                     display: 'flex',

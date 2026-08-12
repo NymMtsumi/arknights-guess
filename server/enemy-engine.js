@@ -1,4 +1,6 @@
 // 敌方单位数据加载与游戏引擎
+// ⚠️ DEPRECATED：敌方单位功能未上线（routes/enemy.js 未在 index.js 接线），
+// 本模块当前仅被未接线路由引用，属死代码。请勿在生产启用前单独依赖此模块。
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';

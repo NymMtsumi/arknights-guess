@@ -7,6 +7,13 @@ const leaderboardCache = new Map();
 
 export function registerEnemyRoutes({ app, db, verifyToken, checkRateLimit, getClientIP }) {
   const enemyDb = getEnemyDb();
+  // 注意：本路由目前未在 index.js 接线（Enemy 段为空，属未上线功能）。
+  // 主库 users 表位于独立 data.db，需 ATTACH 才能 JOIN（否则 LEFT JOIN users 会崩溃）。
+  try {
+    enemyDb.prepare('ATTACH DATABASE ? AS maindb').run(db.name);
+  } catch (e) {
+    console.warn('[enemy] ATTACH maindb failed:', e.message);
+  }
 
   // ===== POST /api/enemy/save-game =====
   async function handleEnemySaveGame(req, res) {
@@ -18,7 +25,7 @@ export function registerEnemyRoutes({ app, db, verifyToken, checkRateLimit, getC
     const body = await parseBody(req);
     let player_key = typeof body.player_key === 'string' ? body.player_key.trim() : '';
     const won = body.won;
-    const guessCount = typeof body.guessCount === 'number' ? body.guessCount : -1;
+    const guessCount = Number.isInteger(body.guessCount) ? body.guessCount : -1;
     const mode = sanitizeString(body.mode || 'enemy_single', 15);
     let difficulty = sanitizeString(body.difficulty || 'hard', 10);
     const targetName = sanitizeString(body.targetName || '', 100);
@@ -133,13 +140,9 @@ export function registerEnemyRoutes({ app, db, verifyToken, checkRateLimit, getC
       }
       result = txnResult;
     } else {
-      try {
-        result = enemyDb.prepare(
-          'INSERT INTO enemy_games (player_key, user_id, won, guess_count, difficulty, target_name, timestamp, mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-        ).run(player_key, userId || null, won ? 1 : 0, guessCount, difficulty, targetName, timestamp, mode);
-      } catch (e) {
-        throw e;
-      }
+      result = enemyDb.prepare(
+        'INSERT INTO enemy_games (player_key, user_id, won, guess_count, difficulty, target_name, timestamp, mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+      ).run(player_key, userId || null, won ? 1 : 0, guessCount, difficulty, targetName, timestamp, mode);
     }
 
     const extraHeaders = {};
@@ -239,7 +242,7 @@ export function registerEnemyRoutes({ app, db, verifyToken, checkRateLimit, getC
                SUM(g.guess_count) as totalGuesses,
                ROUND(CAST(SUM(g.won) AS REAL) / CAST(COUNT(*) AS REAL) * 100, 1) as winRate
         FROM enemy_games g
-        LEFT JOIN users u ON u.id = g.user_id
+        LEFT JOIN maindb.users u ON u.id = g.user_id
         WHERE g.difficulty = ? AND g.mode = 'enemy_single'
         GROUP BY g.user_id
         ORDER BY wins DESC, winRate DESC
@@ -254,7 +257,7 @@ export function registerEnemyRoutes({ app, db, verifyToken, checkRateLimit, getC
                SUM(g.guess_count) as totalGuesses,
                ROUND(CAST(SUM(g.won) AS REAL) / CAST(COUNT(*) AS REAL) * 100, 1) as winRate
         FROM enemy_games g
-        LEFT JOIN users u ON u.id = g.user_id
+        LEFT JOIN maindb.users u ON u.id = g.user_id
         WHERE g.mode = 'enemy_single'
         GROUP BY g.user_id
         ORDER BY wins DESC, winRate DESC

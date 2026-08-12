@@ -4,12 +4,12 @@ import jwt from 'jsonwebtoken';
 export function createAuth({ db, JWT_SECRET }) {
   // ===== JWT =====
   function signToken(payload) {
-    return jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' });
+    return jwt.sign(payload, JWT_SECRET, { algorithm: 'HS256', expiresIn: '30d' });
   }
 
   function verifyToken(token) {
     try {
-      return jwt.verify(token, JWT_SECRET);
+      return jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] });
     } catch {
       return null;
     }
@@ -18,11 +18,20 @@ export function createAuth({ db, JWT_SECRET }) {
   // ===== 鉴权中间件 =====
   function requireAuth(req, res) {
     const authHeader = req.headers.authorization || '';
-    if (!authHeader.startsWith('Bearer ')) {
+    let token = '';
+    if (authHeader.startsWith('Bearer ')) {
+      token = authHeader.slice(7);
+    } else {
+      // 兜底：从 HttpOnly cookie 读取 token（SameSite=None; Secure; credentials:'include'）
+      // 使 cookie 成为真正可用的二级鉴权通道（前端 localStorage 为一级，见 auth.ts 注释）
+      const cookies = parseCookies(req.headers.cookie || '');
+      token = cookies.token || '';
+    }
+    if (!token) {
       jsonResponse(res, { error: '未登录，请先登录' }, 401);
       return null;
     }
-    const decoded = verifyToken(authHeader.slice(7));
+    const decoded = verifyToken(token);
     if (!decoded) {
       jsonResponse(res, { error: '登录已过期，请重新登录' }, 401);
       return null;
@@ -80,4 +89,4 @@ export function createAuth({ db, JWT_SECRET }) {
 }
 
 // 需要从 utils.js 的 jsonResponse（循环引用问题，在 index.js 中解决）
-import { jsonResponse } from './utils.js';
+import { jsonResponse, parseCookies } from './utils.js';

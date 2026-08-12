@@ -317,8 +317,9 @@ export async function migrateGuestDataToAccount(accountPlayerKey: string, oldGue
     const migratedIndices = new Set<number>();
 
     // 提取单人战绩（移除 headers，apiCall 内部处理认证）
+    // 注意：custom 模式不在此迁移（单独走 save-game，避免被 /api/sync 误判为 single 丢失）
     const singleGames = ownerlessGames
-      .filter((r: any) => r.mode !== 'multi' && typeof r.timestamp === 'number')
+      .filter((r: any) => r.mode !== 'multi' && r.mode !== 'custom' && typeof r.timestamp === 'number')
       .map((r: any) => ({
         timestamp: new Date(r.timestamp).toISOString(),
         targetName: String(r.targetName || ''),
@@ -335,7 +336,7 @@ export async function migrateGuestDataToAccount(accountPlayerKey: string, oldGue
       console.log(`[Auth] Migrated ${data.synced || singleGames.length} guest single game(s) to account`);
       // 标记所有单人记录为已迁移
       ownerlessGames.forEach((g, i) => {
-        if (g.mode !== 'multi' && typeof g.timestamp === 'number') migratedIndices.add(i);
+        if (g.mode !== 'multi' && g.mode !== 'custom' && typeof g.timestamp === 'number') migratedIndices.add(i);
       });
     }
 
@@ -361,6 +362,43 @@ export async function migrateGuestDataToAccount(accountPlayerKey: string, oldGue
         console.log(`[Auth] Migrated multi-game #${i} to account`);
       } catch (err) {
         console.warn(`[Auth] Failed to migrate multi-game #${i}:`, (err as Error)?.message);
+      }
+    }
+
+    // 自定义房战绩逐条保存（mode custom + multi_data，含 config），避免游客登录后丢失
+    for (let i = 0; i < ownerlessGames.length; i++) {
+      const g = ownerlessGames[i];
+      if (g.mode !== 'custom' || typeof g.timestamp !== 'number') continue;
+
+      try {
+        const customCfg = g.custom && typeof g.custom === 'object' ? g.custom : {};
+        await apiCall('/api/save-game', {
+          method: 'POST',
+          body: JSON.stringify({
+            player_key: accountPlayerKey,
+            won: Boolean(g.won),
+            guessCount: Array.isArray(g.rounds) ? g.rounds.reduce((sum: number, rd: any) => sum + (Number(rd.guessCount) || 0), 0) : 0,
+            difficulty: typeof customCfg.difficulty === 'string' ? customCfg.difficulty : 'hard',
+            targetName: String(g.opponentName || ''),
+            mode: 'custom',
+            timestamp: new Date(g.timestamp).toISOString(),
+            multiData: {
+              bestOf: Number(g.bestOf) || 0,
+              myScore: Number(g.myScore) || 0,
+              opponentScore: Number(g.opponentScore) || 0,
+              opponentName: String(g.opponentName || ''),
+              rounds: Array.isArray(g.rounds) ? g.rounds : [],
+              attributes: Array.isArray(customCfg.attributes) ? customCfg.attributes : [],
+              maxGuesses: typeof customCfg.maxGuesses === 'number' ? customCfg.maxGuesses : 8,
+              roundTime: typeof customCfg.roundTime === 'number' ? customCfg.roundTime : 120000,
+              difficulty: typeof customCfg.difficulty === 'string' ? customCfg.difficulty : 'hard',
+            },
+          }),
+        });
+        migratedIndices.add(i);
+        console.log(`[Auth] Migrated custom-game #${i} to account`);
+      } catch (err) {
+        console.warn(`[Auth] Failed to migrate custom-game #${i}:`, (err as Error)?.message);
       }
     }
 

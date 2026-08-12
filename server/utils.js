@@ -51,20 +51,29 @@ export function getClientIP(req) {
   return '127.0.0.1';
 }
 
-// 解析 JSON 请求体（Body 大小限制 1MB）
+// 解析 JSON 请求体（Body 大小限制 1MB，读取超时 30s）
 export function parseBody(req) {
   return new Promise((resolve) => {
     let body = '';
     const MAX_SIZE = 1_048_576;
     let size = 0;
     let settled = false;
-    const done = (result) => { if (!settled) { settled = true; resolve(result); } };
+    let timeout;
+    const done = (result) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      resolve(result);
+    };
+    // 读取超时保护：慢速/超大 body 长时间占用连接时强制断开
+    timeout = setTimeout(() => { req.destroy(); }, 30_000);
     req.on('data', chunk => {
       if (settled) return;
       size += chunk.length;
       if (size > MAX_SIZE) {
-        // 丢弃超大数据体（settled 标记防止后续 end 事件重复 resolve），保持 keep-alive 连接可用
+        // 超限：断开连接（无法安全复用带未读数据的 keep-alive 连接）
         done({});
+        req.destroy();
         return;
       }
       body += chunk;
@@ -100,12 +109,17 @@ export function deriveGuestName(key) {
   return `访客#${code}`;
 }
 
-// 唯一显示编号（基于 userId + 固定盐值，确保跨重启稳定）
-const DISPLAY_ID_SALT = 'arknights-display-v2-fixed-salt-2026';
-const DISPLAY_DOMAIN_PREFIX = createHash('sha256').update('arknights-display-v2\0', 'ascii').update(DISPLAY_ID_SALT).digest();
+// 唯一显示编号（基于 userId + 盐值，确保跨重启稳定）
+// 盐值可经环境变量 DISPLAY_ID_SALT 覆盖（默认值不变，向后兼容既有编号）
+function getDisplayIdSalt() {
+  return process.env.DISPLAY_ID_SALT || 'arknights-display-v2-fixed-salt-2026';
+}
+function getDisplayDomainPrefix() {
+  return createHash('sha256').update('arknights-display-v2\0', 'ascii').update(getDisplayIdSalt()).digest();
+}
 export function generateDisplayCode(userId) {
   const digest = createHash('sha256')
-    .update(DISPLAY_DOMAIN_PREFIX)
+    .update(getDisplayDomainPrefix())
     .update(String(userId))
     .digest();
   const value = digest.readUInt32BE(0) % (36 ** 5);
@@ -132,7 +146,11 @@ export function normalizeTimestamp(ts) {
     return new Date().toISOString();
   }
   if (typeof ts !== 'string' || !ts) return new Date().toISOString();
-  return ts;
+  const parsed = new Date(ts);
+  if (isNaN(parsed.getTime())) return new Date().toISOString();
+  // 拒绝明显异常的未来时间戳（允许 1 天时钟偏移，防污染排序）
+  if (parsed.getTime() > Date.now() + 24 * 3600_000) return new Date().toISOString();
+  return parsed.toISOString();
 }
 
 // 服务端统一发件人
@@ -177,8 +195,17 @@ const NICKNAME_FORBIDDEN = new Set([
 export function checkNicknameProfanity(nickname) {
   if (typeof nickname !== 'string' || nickname.trim().length === 0) return '空白昵称';
   const lower = nickname.toLowerCase();
-  for (const word of NICKNAME_FORBIDDEN) {
-    if (lower.includes(word.toLowerCase())) return word;
+  for (const rawWord of NICKNAME_FORBIDDEN) {
+    const word = rawWord.trim(); // 去掉前导/尾随空格（原 bug：' bitch' 等无法命中词首）
+    if (!word) continue;
+    const wl = word.toLowerCase();
+    if (word.length <= 2 && /^[a-z0-9]+$/.test(word)) {
+      // 短 ASCII 词用词边界匹配，避免 'sb'/'jb'/'fag' 误伤包含该子串的合法昵称
+      const re = new RegExp(`\\b${wl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`);
+      if (re.test(lower)) return word;
+    } else if (lower.includes(wl)) {
+      return word;
+    }
   }
   if (/^[\d\s._\-+*=#@!~`]+$/.test(nickname)) return '纯数字符号';
   if (/(.)\1{6,}/.test(nickname)) return '重复字符';

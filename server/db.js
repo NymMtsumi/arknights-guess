@@ -113,9 +113,9 @@ export function initSchema(db) {
   // 创建 user_id 索引（用于按用户查询战绩）
   try { db.exec('CREATE INDEX IF NOT EXISTS idx_games_user_id ON games(user_id)'); } catch (e) { console.warn('[DB] idx_games_user_id index failed:', e.message); }
 
-  // 清理可能的测试数据
+  // 清理可能的测试数据（仅清理明确的测试标记，避免误删 '?' 兜底目标）
   try {
-    const cleanResult = db.prepare("DELETE FROM games WHERE target_name IN ('test', '?') OR player_key = 'test'").run();
+    const cleanResult = db.prepare("DELETE FROM games WHERE target_name = 'test' OR player_key = 'test'").run();
     if (cleanResult.changes > 0) {
       console.log(`[DB] Cleaned ${cleanResult.changes} test records from games`);
     }
@@ -170,6 +170,7 @@ export function initSchema(db) {
 
   // 性能索引
   try { db.exec('CREATE INDEX IF NOT EXISTS idx_games_mode_diff ON games(mode, difficulty)'); } catch (e) { console.warn('[DB] idx_games_mode_diff index failed:', e.message); }
+  try { db.exec('CREATE INDEX IF NOT EXISTS idx_games_mode_user ON games(mode, user_id)'); } catch (e) { console.warn('[DB] idx_games_mode_user index failed:', e.message); }
   try { db.exec('CREATE INDEX IF NOT EXISTS idx_games_player_mode ON games(player_key, mode)'); } catch (e) { console.warn('[DB] idx_games_player_mode index failed:', e.message); }
   try { db.exec('CREATE INDEX IF NOT EXISTS idx_games_mode_player ON games(mode, player_key)'); } catch (e) { console.warn('[DB] idx_games_mode_player index failed:', e.message); }
   try { db.exec('CREATE INDEX IF NOT EXISTS idx_games_player_ts ON games(player_key, timestamp DESC)'); } catch (e) { console.warn('[DB] idx_games_player_ts index failed:', e.message); }

@@ -9,7 +9,8 @@ import { fileURLToPath } from 'node:url';
 import bcrypt from 'bcryptjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const DB_PATH = join(__dirname, '..', 'data.db');
+// 与 reset-and-create-admins.js 一致：数据库位于仓库根目录 data.db（不是 server/ 下）
+const DB_PATH = join(__dirname, '..', '..', 'data.db');
 
 const username = (process.argv[2] || process.env.ADMIN_USERNAME || '').trim();
 const password = process.argv[3] || process.env.ADMIN_PASSWORD || '';

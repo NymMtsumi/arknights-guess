@@ -105,8 +105,8 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
         try {
           await linkPlayerKey(pk);
           const history = loadHistory();
-          // 只同步无 pk 标签的记录（有 pk 标签的记录已在游玩时通过 saveGameToServer 保存到服务器）
-          const singleGames = history.filter(r => !r.player_key && !('mode' in r && r.mode === 'multi'));
+          // 只同步无 pk 标签的单人记录（multi/custom 已由 login() 内的 migrateGuestDataToAccount 处理）
+          const singleGames = history.filter(r => !r.player_key && !('mode' in r && (r.mode === 'multi' || r.mode === 'custom')));
           if (singleGames.length > 0) {
             await syncGames(pk, singleGames as any[]);
           }

@@ -21,7 +21,7 @@ jobs:
               BASE="HEAD^"
             fi
           fi
-          FILES=$(git diff --name-only ${BASE}...HEAD -- '*.db' '*.db-shm' '*.db-wal' '*.db-journal' 2>/dev/null || true)
+          FILES=$(git diff --name-only ${BASE}...HEAD -- '*.db' '*.db-shm' '*.db-wal' '*.db-journal' '*.db.bak-*' '*.db.backup' '*.sqlite' '*.sqlite3' 2>/dev/null || true)
           if [ -n "$FILES" ]; then
             echo ""
             echo "❌ 检测到数据库文件被提交！"

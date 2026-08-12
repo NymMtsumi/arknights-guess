@@ -1,23 +1,19 @@
-// 干员数据加载
-import { readFileSync } from 'node:fs';
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
+// 干员数据加载（复用 game-engine.js 的全量数据，避免重复读取 characters.json）
+import { loadGameEngine, getAllCharacters } from './game-engine.js';
 
 let ALL_CHARS = [], EASY_CHARS = [], MED_CHARS = [];
 
 export function loadCharacters() {
   try {
-    const data = JSON.parse(readFileSync(join(__dirname, 'characters.json'), 'utf-8'));
+    loadGameEngine(); // 确保全量数据已加载（内部有 _loaded 守卫，不会重复读文件）
+    const data = getAllCharacters();
     ALL_CHARS = data.map(c => ({ id: c.id, name: c.name }));
     EASY_CHARS = data.filter(c => c.popularity === 'hot' || c.rarity >= 6).map(c => ({ id: c.id, name: c.name }));
     MED_CHARS = data.filter(c => c.popularity === 'hot' || c.popularity === 'normal').map(c => ({ id: c.id, name: c.name }));
     console.log(`已加载 ${ALL_CHARS.length} 干员`);
     if (ALL_CHARS.length === 0) console.error('[characters] Failed to load characters — ALL_CHARS is empty');
   } catch (err) {
-    const charPath = join(__dirname, 'characters.json');
-    console.error(`[ERROR] 无法加载干员数据: ${charPath}`, err.message);
+    console.error('[ERROR] 无法加载干员数据:', err.message);
     console.error('[ERROR] 服务器将继续运行，但每日挑战和角色数据将不可用');
   }
 }

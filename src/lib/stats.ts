@@ -27,13 +27,14 @@ export interface MultiRoundResult {
 
 export interface MultiGameRecord {
   timestamp: number;
-  mode: 'multi';
+  mode: 'multi' | 'custom';
   won: boolean;         // 整场比赛是否获胜
   bestOf: number;
   myScore: number;
   opponentScore: number;
   opponentName: string;
   rounds: MultiRoundResult[];
+  custom?: { attributes: string[]; maxGuesses: number; roundTime: number; difficulty: string }; // 自定义房配置
   player_key?: string; // 游戏时的 pk，用于迁移过滤，防止数据串乱
 }
 
@@ -161,7 +162,7 @@ function isValidRecord(r: unknown): r is HistoryRecord {
   if (!r || typeof r !== 'object') return false;
   const rec = r as Record<string, unknown>;
   // MultiGameRecord check
-  if (rec.mode === 'multi') {
+  if (rec.mode === 'multi' || rec.mode === 'custom') {
     return typeof rec.timestamp === 'number' &&
       typeof rec.won === 'boolean' &&
       typeof rec.bestOf === 'number' &&
@@ -197,8 +198,8 @@ export function mergeHistories(local: HistoryRecord[], server: HistoryRecord[]):
 
   function dedupKey(r: HistoryRecord): string {
     const mr = r as MultiGameRecord;
-    if (mr.mode === 'multi') {
-      return `${mr.timestamp}-multi-${mr.opponentName || ''}`;
+    if (mr.mode === 'multi' || mr.mode === 'custom') {
+      return `${mr.timestamp}-${mr.mode}-${mr.opponentName || ''}`;
     }
     const gr = r as GameRecord;
     return `${gr.timestamp}-single-${gr.targetName || ''}-${gr.difficulty || ''}`;
@@ -359,6 +360,36 @@ export function saveMultiGameStats(result: {
   }
 }
 
+/** 自定义房比赛存档：只写历史（不计入聚合统计/排行榜），登录用户额外提交到服务器 */
+export function saveCustomGameStats(result: {
+  won: boolean;
+  bestOf: number;
+  myScore: number;
+  opponentScore: number;
+  opponentName: string;
+  rounds: MultiRoundResult[];
+  custom: { attributes: string[]; maxGuesses: number; roundTime: number; difficulty: string };
+}) {
+  // 注意：不更新 loadStats 聚合（自定义房不计入 totalGames/wins/losses）
+  saveHistory({
+    timestamp: Date.now(),
+    mode: 'custom',
+    won: result.won,
+    bestOf: result.bestOf,
+    myScore: result.myScore,
+    opponentScore: result.opponentScore,
+    opponentName: result.opponentName,
+    rounds: result.rounds,
+    custom: result.custom,
+    player_key: getPlayerKey() || undefined,
+  });
+
+  // 仅登录用户同步到服务器（游客纯本地存储）
+  if (getToken()) {
+    saveCustomToServer(result).catch(() => {});
+  }
+}
+
 /** 从服务器获取游戏历史 */
 export async function fetchHistoryFromServer(limit = 80): Promise<HistoryRecord[]> {
   if (typeof window === 'undefined') return [];
@@ -370,16 +401,17 @@ export async function fetchHistoryFromServer(limit = 80): Promise<HistoryRecord[
     if (Array.isArray(data.history)) {
       return data.history.map((r: any) => {
         const ts = typeof r.timestamp === 'string' ? new Date(r.timestamp).getTime() : (Number(r.timestamp) || 0);
-        if (r.mode === 'multi') {
+        if (r.mode === 'multi' || r.mode === 'custom') {
           return {
             timestamp: ts,
-            mode: 'multi' as const,
+            mode: (r.mode === 'custom' ? 'custom' : 'multi') as 'multi' | 'custom',
             won: r.won,
             bestOf: r.bestOf || 0,
             myScore: r.myScore || 0,
             opponentScore: r.opponentScore || 0,
             opponentName: r.opponentName || r.targetName || '',
             rounds: r.rounds || [],
+            ...(r.mode === 'custom' && r.custom ? { custom: r.custom } : {}),
           };
         }
         return {
@@ -437,5 +469,47 @@ async function saveMultiToServer(result: {
     });
   } catch (err) {
     console.warn('[Stats] Failed to save multi game to server:', err);
+  }
+}
+
+/** 自定义房比赛存档到服务器 */
+async function saveCustomToServer(result: {
+  won: boolean;
+  bestOf: number;
+  myScore: number;
+  opponentScore: number;
+  opponentName: string;
+  rounds: MultiRoundResult[];
+  custom: { attributes: string[]; maxGuesses: number; roundTime: number; difficulty: string };
+}) {
+  if (typeof window === 'undefined') return;
+  try {
+    const playerKey = getPlayerKey();
+
+    await apiCall('/api/save-game', {
+      method: 'POST',
+      body: JSON.stringify({
+        player_key: playerKey,
+        won: result.won,
+        guessCount: result.rounds.reduce((sum, r) => sum + r.guessCount, 0),
+        difficulty: result.custom.difficulty,
+        targetName: result.opponentName,
+        mode: 'custom',
+        timestamp: new Date(Date.now()).toISOString(),
+        multiData: {
+          bestOf: result.bestOf,
+          myScore: result.myScore,
+          opponentScore: result.opponentScore,
+          opponentName: result.opponentName,
+          rounds: result.rounds,
+          attributes: result.custom.attributes,
+          maxGuesses: result.custom.maxGuesses,
+          roundTime: result.custom.roundTime,
+          difficulty: result.custom.difficulty,
+        },
+      }),
+    });
+  } catch (err) {
+    console.warn('[Stats] Failed to save custom game to server:', err);
   }
 }

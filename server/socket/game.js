@@ -1,10 +1,20 @@
 // 回合管理 + 所有 Socket.IO 事件处理器
 import { sanitizeString } from '../utils.js';
 import { randomTarget } from '../characters.js';
+import { ROUND_TIME, ROUND_TIME_PRESETS, ATTR_KEYS } from '../constants.js';
 
-const ROUND_TIME = 120_000;
 const DISCONNECT = 30_000;
 const DISBAND_COOLDOWN = 120_000; // 解散房间后 120 秒内不能创建新房间
+
+/** 房间配置字段（自定义房带 attributes；标准房为 null） */
+function roomConfig(room) {
+  return {
+    maxGuesses: room.maxGuesses ?? 8,
+    roundTime: room.roundTime ?? ROUND_TIME,
+    attributes: room.attributes ?? null,
+    custom: !!room.custom,
+  };
+}
 
 export function registerGameHandlers({
   io, rooms, roomPlayerIndex,
@@ -31,6 +41,7 @@ export function registerGameHandlers({
       room._roundPlayers.set(sid, { guessed: false, exhausted: false, surrendered: false });
     }
 
+    const roundTime = room.roundTime ?? ROUND_TIME;
     const timer = setTimeout(() => {
       // 回合超时 = 平局（双方均未猜出且未放弃）
       if (room.roundSettled) return; // 防御：player_win_round 已先行结算
@@ -41,13 +52,14 @@ export function registerGameHandlers({
         score: score(room), matchOver: false, reason: 'timeout',
       });
       room._nextRound = setTimeout(() => startRound(room), 5000);
-    }, ROUND_TIME);
+    }, roundTime);
     room._roundTimer = timer;
 
     io.to(room.code).emit('round_start', {
-      startTime: Date.now(), timeLimit: ROUND_TIME,
+      startTime: Date.now(), timeLimit: roundTime,
       score: score(room), target, difficulty: room.difficulty || 'hard',
       players: Array.from(room.players.entries()).map(([id, p]) => ({ id, name: p.name, wins: p.wins })),
+      ...roomConfig(room),
     });
   }
 
@@ -131,16 +143,20 @@ export function registerGameHandlers({
           socket.emit('existing_room', {
             code: existing.code, bestOf: existing.bestOf, difficulty: existing.difficulty || 'hard',
             started: existing.started, wins: player.wins, _createdAt: existing._createdAt,
+            ...roomConfig(existing),
           });
           if (existing.started) {
             const hasActiveRound = !!existing._roundStartAt;
+            const roundTime = existing.roundTime ?? ROUND_TIME;
             const remainingTime = hasActiveRound
-              ? Math.max(0, Math.ceil((ROUND_TIME - (Date.now() - existing._roundStartAt)) / 1000))
+              ? Math.max(0, Math.ceil((roundTime - (Date.now() - existing._roundStartAt)) / 1000))
               : 0;
             socket.emit('reconnect_state', {
               code: existing.code, bestOf: existing.bestOf, winsNeeded: existing.winsNeeded,
               score: score(existing), target: existing.target, remainingTime, hasActiveRound,
+              difficulty: existing.difficulty || 'hard',
               players: Array.from(existing.players.entries()).map(([id, p]) => ({ id, name: p.name, wins: p.wins })),
+              ...roomConfig(existing),
             });
           }
           const reEntry = onlinePlayers.get(socket.data.playerKey);
@@ -157,7 +173,7 @@ export function registerGameHandlers({
       const room = findRoomByIdentityKey(socket.data.identityKey);
       if (room && !room.finished) {
         socket.emit('room:sync', {
-          room: { code: room.code, bestOf: room.bestOf, difficulty: room.difficulty || 'hard', started: room.started, status: room.started ? 'playing' : 'waiting' },
+          room: { code: room.code, bestOf: room.bestOf, difficulty: room.difficulty || 'hard', started: room.started, status: room.started ? 'playing' : 'waiting', ...roomConfig(room) },
         });
       } else {
         socket.emit('room:sync', { room: null });
@@ -179,6 +195,7 @@ export function registerGameHandlers({
           code: existingR.code, bestOf: existingR.bestOf,
           difficulty: existingR.difficulty || 'hard', started: existingR.started,
           wins, _createdAt: existingR._createdAt,
+          ...roomConfig(existingR),
         });
         return;
       }
@@ -204,6 +221,7 @@ export function registerGameHandlers({
           code: hasRoom.code, bestOf: hasRoom.bestOf,
           difficulty: hasRoom.difficulty || 'hard', started: hasRoom.started,
           _createdAt: hasRoom._createdAt,
+          ...roomConfig(hasRoom),
         });
         return;
       }
@@ -221,11 +239,19 @@ export function registerGameHandlers({
       }
 
       const code = genCode();
-      const bestOf = [3, 5, 7].includes(data?.bestOf) ? data?.bestOf : 5;
+      const bestOf = Number.isInteger(data?.bestOf) && data?.bestOf >= 1 && data?.bestOf <= 7 ? data?.bestOf : 5;
       const difficulty = ['easy', 'medium', 'hard'].includes(data?.difficulty) ? data?.difficulty : 'hard';
+      const maxGuesses = Number.isInteger(data?.maxGuesses) && data?.maxGuesses >= 1 && data?.maxGuesses <= 15 ? data?.maxGuesses : 8;
+      const roundTime = ROUND_TIME_PRESETS.includes(data?.roundTime) ? data?.roundTime : ROUND_TIME;
+      // 至少 3 个合法属性才算自定义房；否则退化为标准房（attributes = null）
+      const rawAttrs = Array.isArray(data?.attributes)
+        ? [...new Set(data.attributes.filter(a => ATTR_KEYS.includes(a)))] : [];
+      const custom = rawAttrs.length >= 3;
+      const attributes = custom ? rawAttrs : null;
 
       rooms.set(code, {
         code, bestOf, winsNeeded: Math.ceil(bestOf / 2), difficulty, _createdAt: Date.now(),
+        maxGuesses, roundTime, attributes, custom,
         players: new Map([[socket.id, {
           name: sanitizeString(data?.playerName || '玩家', 20), wins: 0, dcTimer: null,
           lastSocketId: null, playerKey: socket.data.playerKey,
@@ -240,8 +266,8 @@ export function registerGameHandlers({
       const entry = onlinePlayers.get(socket.data.playerKey);
       if (entry) { entry.type = 'multi'; entry.roomCode = code; }
 
-      socket.emit('room_created', { code, bestOf, difficulty });
-      console.log(`[房] ${code} BO${bestOf}`);
+      socket.emit('room_created', { code, bestOf, difficulty, ...roomConfig({ maxGuesses, roundTime, attributes, custom }) });
+      console.log(`[房] ${code} BO${bestOf}${custom ? ' 自定义' : ''}`);
       } catch (e) { console.error('[game] create_room error:', e.message); }
     });
 
@@ -264,17 +290,20 @@ export function registerGameHandlers({
             const entry2 = onlinePlayers.get(socket.data.playerKey);
             if (entry2) { entry2.type = 'multi'; entry2.roomCode = code; }
             socket.to(code).emit('opponent_reconnected', { playerName: p.name });
-            socket.emit('existing_room', { code, bestOf: room.bestOf, difficulty: room.difficulty || 'hard', started: room.started, wins: p.wins, _createdAt: room._createdAt });
+            socket.emit('existing_room', { code, bestOf: room.bestOf, difficulty: room.difficulty || 'hard', started: room.started, wins: p.wins, _createdAt: room._createdAt, ...roomConfig(room) });
             if (room.started) {
               const hasActiveRound = !!room._roundStartAt;
+              const roundTime = room.roundTime ?? ROUND_TIME;
               const remainingTime = hasActiveRound
-                ? Math.max(0, Math.ceil((ROUND_TIME - (Date.now() - room._roundStartAt)) / 1000))
+                ? Math.max(0, Math.ceil((roundTime - (Date.now() - room._roundStartAt)) / 1000))
                 : 0;
               socket.emit('reconnect_state', {
                 code, bestOf: room.bestOf, winsNeeded: room.winsNeeded,
                 score: room.players.size >= 2 ? score(room) : '',
                 target: room.target, remainingTime, hasActiveRound,
+                difficulty: room.difficulty || 'hard',
                 players: Array.from(room.players.entries()).map(([id, pl]) => ({ id, name: pl.name, wins: pl.wins })),
+                ...roomConfig(room),
               });
             }
             console.log(`[重连] ${socket.id} → ${code}`);
@@ -331,6 +360,12 @@ export function registerGameHandlers({
       const player = room.players.get(socket.id);
       if (!player) return;
 
+      // 安全校验：上报的答案必须与服务器本回合答案一致，否则忽略（防未收答案直接刷分）
+      if (!room.target || !data?.targetName || String(data.targetName).trim() !== room.target.name) {
+        console.warn(`[game] player_win_round 答案不匹配，忽略: ${socket.id} 上报=${data?.targetName}`);
+        return;
+      }
+
       // 标记猜出状态（防重复上报：同一回合只能赢一次）
       const rp = room._roundPlayers?.get(socket.id);
       if (rp?.guessed) return;
@@ -377,19 +412,14 @@ export function registerGameHandlers({
       if (rp) rp.surrendered = true;
 
       const otherId = Array.from(room.players.keys()).find(id => id !== socket.id);
-      const otherPlayer = otherId ? room.players.get(otherId) : null;
       const otherRp = otherId ? room._roundPlayers?.get(otherId) : null;
 
       // 通知对方你已放弃
       socket.to(room.code).emit('opponent_surrendered', { playerName: player.name });
 
       // 判断胜负：
-      // 对方已猜出 → 对方胜
-      if (otherRp?.guessed) {
-        console.log(`[弃权] ${player.name} 弃权 → ${otherPlayer?.name} 已猜出，胜出`);
-        endRound(room, otherId, otherPlayer?.name || '对手', data?.targetName || room.target?.name || '', otherPlayer ? otherPlayer.wins >= room.winsNeeded : false);
-        return;
-      }
+      // 注：不存在「对方已猜出」分支——player_win_round 会立即 endRound 置 roundSettled=true，
+      // 此处已因顶部 roundSettled 检查提前返回，故该分支不可达，已移除。
 
       // 对方已放弃或已耗尽 → 双方弃权/放弃vs耗尽 → 平局
       if (otherRp?.surrendered || otherRp?.exhausted) {
@@ -434,7 +464,7 @@ export function registerGameHandlers({
           const entry = onlinePlayers.get(p.playerKey);
           if (entry) { entry.type = 'multi'; entry.roomCode = room.code; }
         }
-        io.to(room.code).emit('rematch_start', { bestOf: room.bestOf, winsNeeded: room.winsNeeded });
+        io.to(room.code).emit('rematch_start', { bestOf: room.bestOf, winsNeeded: room.winsNeeded, difficulty: room.difficulty || 'hard', ...roomConfig(room) });
         setTimeout(() => startRound(room), 1500);
       }
       } catch (e) { console.error('[game] rematch_ready error:', e.message); }
@@ -598,18 +628,22 @@ export function registerGameHandlers({
 
       if (room.started) {
         const hasActiveRound = !!room._roundStartAt;
+        const roundTime = room.roundTime ?? ROUND_TIME;
         const remainingTime = hasActiveRound
-          ? Math.max(0, Math.ceil((ROUND_TIME - (Date.now() - room._roundStartAt)) / 1000))
+          ? Math.max(0, Math.ceil((roundTime - (Date.now() - room._roundStartAt)) / 1000))
           : 0;
         socket.emit('reconnect_state', {
           code, bestOf: room.bestOf, winsNeeded: room.winsNeeded,
           score: score(room), target: room.target, remainingTime, hasActiveRound,
+          difficulty: room.difficulty || 'hard',
           players: Array.from(room.players.entries()).map(([id, p]) => ({ id, name: p.name, wins: p.wins })),
+          ...roomConfig(room),
         });
       } else {
         socket.emit('existing_room', {
           code, bestOf: room.bestOf, difficulty: room.difficulty || 'hard',
           started: false, wins: player.wins, _createdAt: room._createdAt,
+          ...roomConfig(room),
         });
       }
 

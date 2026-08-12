@@ -1,4 +1,6 @@
 // 敌方单位独立数据库（与干员 data.db 分离）
+// ⚠️ DEPRECATED：敌方单位功能未上线（routes/enemy.js 未在 index.js 接线），
+// 本模块仅被未接线路由引用，属死代码。
 import Database from 'better-sqlite3';
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';

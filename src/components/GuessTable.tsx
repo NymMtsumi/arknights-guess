@@ -10,6 +10,8 @@ interface GuessTableProps {
   guesses: GuessResult[];
   target: Character | null;
   hideRarity?: boolean;
+  /** 自定义房：指定要展示的属性列（ATTR_KEYS 子集，规范顺序）。为数组时覆盖 hideRarity 逻辑 */
+  displayAttributes?: string[] | null;
   /** 每次递增强制猜对行重新挂载，重新播放闪烁动画 */
   flashTrigger?: number;
   /** 每次猜中递增，强制最新非胜行重新挂载以重播逐格揭示 */
@@ -56,52 +58,51 @@ function estimateTextWidth(text: string): number {
 interface ColDef {
   key: string;
   label: string;
-  getText: (g: GuessResult) => string;
+  getText: (c: Character) => string;
 }
 
-function buildColumns(t: (k: string) => string, hideRarity: boolean): ColDef[] {
-  const cols: ColDef[] = [
-    { key: 'name', label: t('table.name'), getText: (g) => g.character.name },
-    { key: 'class', label: t('table.class'), getText: (g) => g.character.class },
-    { key: 'subclass', label: t('table.subclass'), getText: (g) => g.character.subclass },
-    { key: 'faction', label: t('table.faction'), getText: (g) => g.character.faction },
-    ...(hideRarity ? [] : [{ key: 'rarity', label: t('table.rarity'), getText: (g: GuessResult) => '★'.repeat(g.character.rarity) }]),
-    { key: 'race', label: t('table.race'), getText: (g) => g.character.race },
-    { key: 'gender', label: t('table.gender'), getText: (g) => g.character.gender },
-    { key: 'releaseYear', label: t('table.year'), getText: (g) => g.character.releaseYear ? String(g.character.releaseYear) : '?' },
-    { key: 'position', label: t('table.position'), getText: (g) => g.character.position || '?' },
-    { key: 'tags', label: t('table.tags'), getText: (g) => (g.character.tags || []).join(' ') || '-' },
-  ];
-  return cols;
+// 属性列规范顺序（与 myColorsRef / 服务端 ATTR_KEYS 一致）
+const ATTR_KEYS = ['class', 'subclass', 'faction', 'rarity', 'race', 'gender', 'releaseYear', 'position', 'tags'] as const;
+
+function buildColumns(t: (k: string) => string, hideRarity: boolean, displayAttributes?: string[] | null): ColDef[] {
+  const nameCol: ColDef = { key: 'name', label: t('table.name'), getText: (c) => c.name };
+  const attrCols: Record<string, ColDef> = {
+    class: { key: 'class', label: t('table.class'), getText: (c) => c.class },
+    subclass: { key: 'subclass', label: t('table.subclass'), getText: (c) => c.subclass },
+    faction: { key: 'faction', label: t('table.faction'), getText: (c) => c.faction },
+    rarity: { key: 'rarity', label: t('table.rarity'), getText: (c) => '★'.repeat(c.rarity) },
+    race: { key: 'race', label: t('table.race'), getText: (c) => c.race },
+    gender: { key: 'gender', label: t('table.gender'), getText: (c) => c.gender },
+    releaseYear: { key: 'releaseYear', label: t('table.year'), getText: (c) => c.releaseYear ? String(c.releaseYear) : '?' },
+    position: { key: 'position', label: t('table.position'), getText: (c) => c.position || '?' },
+    tags: { key: 'tags', label: t('table.tags'), getText: (c) => (c.tags || []).join(' ') || '-' },
+  };
+
+  // 自定义房：只展示名字 + 所选属性
+  if (displayAttributes && displayAttributes.length > 0) {
+    return [nameCol, ...displayAttributes.filter(a => attrCols[a]).map(a => attrCols[a])];
+  }
+  // 标准房：全部 9 项（hard 隐藏 rarity）
+  return [nameCol, ...ATTR_KEYS.filter(a => !(hideRarity && a === 'rarity')).map(a => attrCols[a])];
 }
 
 /** 扫描所有猜测数据，计算每列所需的最小像素宽度 */
-function computeColumnWidths(guesses: GuessResult[], target: Character | null, hideRarity: boolean, t: (k: string) => string): number[] {
-  const columns = buildColumns(t, hideRarity);
+function computeColumnWidths(guesses: GuessResult[], target: Character | null, hideRarity: boolean, displayAttributes: string[] | null | undefined, t: (k: string) => string): number[] {
+  const columns = buildColumns(t, hideRarity, displayAttributes);
   // 确保表头宽度也被考虑
   const widths = columns.map(col => estimateTextWidth(col.label) + 28); // padding 12+12 + 4 buffer
 
   for (const g of guesses) {
     for (let i = 0; i < columns.length; i++) {
-      const textW = estimateTextWidth(columns[i].getText(g));
+      const textW = estimateTextWidth(columns[i].getText(g.character));
       const cellW = textW + 28; // left+right padding 12px each + 4px buffer
       if (cellW > widths[i]) widths[i] = cellW;
     }
   }
   // 也考虑 target（如果已揭晓）
   if (target) {
-    // target 的名字/职业等可能出现在对比中，但不会作为行渲染
-    // 仍然确保列足够宽
-    const targetTexts = [
-      target.name, target.class, target.subclass, target.faction,
-      ...(hideRarity ? [] : ['★'.repeat(target.rarity)]),
-      target.race, target.gender,
-      target.releaseYear ? String(target.releaseYear) : '?',
-      target.position || '?',
-      (target.tags || []).join(' ') || '-',
-    ];
-    for (let i = 0; i < Math.min(columns.length, targetTexts.length); i++) {
-      const textW = estimateTextWidth(targetTexts[i]);
+    for (let i = 0; i < columns.length; i++) {
+      const textW = estimateTextWidth(columns[i].getText(target));
       const cellW = textW + 28;
       if (cellW > widths[i]) widths[i] = cellW;
     }
@@ -109,19 +110,19 @@ function computeColumnWidths(guesses: GuessResult[], target: Character | null, h
   return widths;
 }
 
-export function GuessTable({ guesses, target, hideRarity, flashTrigger, staggerKey }: GuessTableProps) {
+export function GuessTable({ guesses, target, hideRarity, displayAttributes, flashTrigger, staggerKey }: GuessTableProps) {
   const { t } = useI18n();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // 动态测量列宽：扫描所有数据后计算精确像素宽度
   const colWidths = useMemo(
-    () => computeColumnWidths(guesses, target, !!hideRarity, t),
-    [guesses, target, hideRarity, t]
+    () => computeColumnWidths(guesses, target, !!hideRarity, displayAttributes, t),
+    [guesses, target, hideRarity, displayAttributes, t]
   );
 
   if (guesses.length === 0) return null;
 
-  const columns = buildColumns(t, !!hideRarity);
+  const columns = buildColumns(t, !!hideRarity, displayAttributes);
   const totalWidth = colWidths.reduce((a: number, b: number) => a + b, 0);
   // 像素宽度 → 百分比（总和 100%），配合 width:100% 表格居中且列宽精确不偏移
   const colPcts = colWidths.map((w: number) => `${(w / totalWidth) * 100}%`);
@@ -181,7 +182,7 @@ export function GuessTable({ guesses, target, hideRarity, flashTrigger, staggerK
                           color: '#fff', background: 'var(--correct)',
                           ...cellStyle,
                         }}>
-                          {col.getText(guess)}
+                          {col.getText(guess.character)}
                         </td>
                       );
                     }
@@ -194,7 +195,7 @@ export function GuessTable({ guesses, target, hideRarity, flashTrigger, staggerK
                           color: '#fff', background: 'var(--close)',
                           ...cellStyle,
                         }}>
-                          {col.getText(guess)}
+                          {col.getText(guess.character)}
                         </td>
                       );
                     }
@@ -205,7 +206,7 @@ export function GuessTable({ guesses, target, hideRarity, flashTrigger, staggerK
                         color: 'var(--text)', fontSize: '0.9rem', whiteSpace: 'nowrap',
                         ...cellStyle,
                       }}>
-                        {col.getText(guess)}
+                        {col.getText(guess.character)}
                       </td>
                     );
                   }
@@ -214,7 +215,7 @@ export function GuessTable({ guesses, target, hideRarity, flashTrigger, staggerK
                   if (guess.comparisons && statusKey in guess.comparisons) {
                     return (
                       <StatusCell key={col.key} status={guess.comparisons[statusKey] as GuessStatus} width={colPcts[colIdx]} extraStyle={cellStyle}>
-                        {col.getText(guess)}
+                        {col.getText(guess.character)}
                       </StatusCell>
                     );
                   }

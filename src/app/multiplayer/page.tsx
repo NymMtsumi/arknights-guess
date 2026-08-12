@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { io, Socket } from 'socket.io-client';
 import { Header } from '@/components/Header';
@@ -9,7 +8,7 @@ import { GameSearch } from '@/components/GameSearch';
 import { GuessTable } from '@/components/GuessTable';
 import { ScrollSlider } from '@/components/ScrollSlider';
 import { useGameStore } from '@/stores/game-store';
-import { saveMultiGameStats, type MultiRoundResult } from '@/lib/stats';
+import { saveMultiGameStats, saveCustomGameStats, type MultiRoundResult } from '@/lib/stats';
 import { getUser, getServerUrl, getToken, getPlayerKey } from '@/lib/auth';
 import { useI18n } from '@/lib/i18n';
 import { findCharacterByName } from '@/lib/game-engine';
@@ -26,7 +25,7 @@ function saveRoomCode(code: string) { try { localStorage.setItem(ROOM_KEY, code)
 function loadRoomCode(): string { try { return localStorage.getItem(ROOM_KEY) || ''; } catch { return ''; } }
 function clearRoomCode() { try { localStorage.removeItem(ROOM_KEY); } catch {} }
 
-type Stage = 'menu' | 'lobby' | 'waiting' | 'playing' | 'roundEnd' | 'matchEnd' | 'matchmaking';
+type Stage = 'menu' | 'lobby' | 'custom' | 'waiting' | 'playing' | 'roundEnd' | 'matchEnd' | 'matchmaking';
 
 const DIFF_KEY_MAP: Record<string, string> = {
   easy: 'multi.difficultyEasy',
@@ -34,17 +33,41 @@ const DIFF_KEY_MAP: Record<string, string> = {
   hard: 'multi.difficultyHard',
 };
 
+// 自定义房：属性规范顺序（与服务端 ATTR_KEYS、myColorsRef 一致）及单局时间预设
+const ATTR_KEYS = ['class', 'subclass', 'faction', 'rarity', 'race', 'gender', 'releaseYear', 'position', 'tags'];
+const ATTR_LABEL_KEYS: Record<string, string> = {
+  class: 'table.class',
+  subclass: 'table.subclass',
+  faction: 'table.faction',
+  rarity: 'table.rarity',
+  race: 'table.race',
+  gender: 'table.gender',
+  releaseYear: 'table.year',
+  position: 'table.position',
+  tags: 'table.tags',
+};
+const ROUND_TIME_OPTIONS = [30000, 60000, 90000, 120000, 180000, 300000];
+
 export default function MultiplayerPage() {
   const { t } = useI18n();
   const router = useRouter();
 
-  // Compute column labels from i18n (used for opponent grid headers)
-  const colLabelKeys = ['table.name', 'table.class', 'table.subclass', 'table.faction', 'table.rarity', 'table.race', 'table.gender', 'table.year', 'table.position', 'table.tags'];
-  const colLabels = colLabelKeys.map(k => t(k));
-  const colLabelsHard = colLabels.filter((_, i) => i !== 4);
-  function filterOppGrid(grid: string[][]) {
-    return grid.map(row => row.filter((_, i) => i !== 4));
-  }
+  // 从服务端载荷同步自定义房配置（标准房重置为 null）
+  const applyConfig = (d: any) => {
+    if (d.custom && Array.isArray(d.attributes)) {
+      const cfg = {
+        attributes: d.attributes,
+        maxGuesses: typeof d.maxGuesses === 'number' ? d.maxGuesses : 8,
+        roundTime: typeof d.roundTime === 'number' ? d.roundTime : 120000,
+        difficulty: d.difficulty || 'hard',
+      };
+      customConfigRef.current = cfg;
+      setDisplayAttributes(cfg.attributes);
+    } else {
+      customConfigRef.current = null;
+      setDisplayAttributes(null);
+    }
+  };
 
   const [stage, setStage] = useState<Stage>('menu');
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -71,11 +94,29 @@ export default function MultiplayerPage() {
   const [queuePosition, setQueuePosition] = useState(0);
   const [matchDifficulty, setMatchDifficulty] = useState('');
   const [disbandCooldown, setDisbandCooldown] = useState(0); // 解散房间冷却到期时间戳
+  // 自定义房运行时配置（从服务端载荷同步）
+  const [displayAttributes, setDisplayAttributes] = useState<string[] | null>(null);
+  // 自定义房表单状态
+  const [customAttrs, setCustomAttrs] = useState<string[]>(['class', 'faction', 'rarity']);
+  const [customMaxGuesses, setCustomMaxGuesses] = useState(8);
+  const [customRoundTime, setCustomRoundTime] = useState(120000);
+  const [customBestOf, setCustomBestOf] = useState(5);
+  const [customDifficulty, setCustomDifficulty] = useState('hard');
+
+  // 展示列（自定义房按配置过滤；标准房 hard 隐藏 rarity）
+  const displayCols = useMemo(() => {
+    const attrs = displayAttributes ?? ATTR_KEYS.filter(a => !(difficulty === 'hard' && a === 'rarity'));
+    return [
+      { key: 'name', label: t('table.name'), dataIdx: 0 },
+      ...attrs.map(a => ({ key: a, label: t(ATTR_LABEL_KEYS[a]), dataIdx: 1 + ATTR_KEYS.indexOf(a) })),
+    ];
+  }, [displayAttributes, difficulty, t]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const connectTimer = useRef<NodeJS.Timeout | null>(null);
   const rematchTimer = useRef<NodeJS.Timeout | null>(null);
   const myColorsRef = useRef<string[][]>([]);
   const roundResultsRef = useRef<MultiRoundResult[]>([]);
+  const customConfigRef = useRef<{ attributes: string[]; maxGuesses: number; roundTime: number; difficulty: string } | null>(null);
   const bestOfRef = useRef(5);
   const oppNameRef = useRef('');
   const roomCodeRef = useRef('');
@@ -157,6 +198,7 @@ export default function MultiplayerPage() {
       clearConnecting();
       setRoomCode(d.code); roomCodeRef.current = d.code; saveRoomCode(d.code);
       setBestOf(d.bestOf); if (d.difficulty) setDifficulty(d.difficulty);
+      applyConfig(d);
       if (d.started) { setStage('playing'); setMyWins(d.wins||0); }
       else {
         // 基于服务端 _createdAt 计算剩余倒计时，防止重连时倒计时重置
@@ -176,7 +218,7 @@ export default function MultiplayerPage() {
       if (code) s.emit('reconnect_room', { code });
     });
 
-    s.on('room_created', (d) => { clearConnecting(); setRoomCode(d.code); roomCodeRef.current = d.code; saveRoomCode(d.code); setBestOf(d.bestOf); setRoomExpireTime(Date.now() + 120_000); setStage('waiting'); });
+    s.on('room_created', (d) => { clearConnecting(); setRoomCode(d.code); roomCodeRef.current = d.code; saveRoomCode(d.code); setBestOf(d.bestOf); if (d.difficulty) setDifficulty(d.difficulty); applyConfig(d); setRoomExpireTime(Date.now() + 120_000); setStage('waiting'); });
 
     s.on('room_disbanded', (d: any) => {
       clearRoomCode();
@@ -195,6 +237,7 @@ export default function MultiplayerPage() {
       clearConnecting();
       setRoomCode(d.code); roomCodeRef.current = d.code; saveRoomCode(d.code);
       setBestOf(d.bestOf); if (d.difficulty) setDifficulty(d.difficulty);
+      applyConfig(d);
       setStage("playing");
       const hasActiveRound = d.hasActiveRound !== false;
       const remaining = typeof d.remainingTime === 'number' ? Math.max(0, d.remainingTime) : 120;
@@ -212,7 +255,7 @@ export default function MultiplayerPage() {
       const target = d.target?.name ? findCharacterByName(allChars, d.target.name) : null;
       if (target) {
         const existingGuesses = useGameStore.getState().guesses;
-        useGameStore.setState({ status: "playing", target, remainingGuesses: Math.max(0, 8 - existingGuesses.length), difficulty: "hard" });
+        useGameStore.setState({ status: "playing", target, remainingGuesses: Math.max(0, (d.maxGuesses ?? 8) - existingGuesses.length), difficulty: "hard" });
       }
       if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
       if (hasActiveRound && remaining > 0) {
@@ -225,6 +268,7 @@ export default function MultiplayerPage() {
     s.on('round_start', (d) => {
       clearConnecting();
       if (d.difficulty) setDifficulty(d.difficulty);
+      applyConfig(d);
       setStage('playing');
       const roundSec = typeof d.timeLimit === 'number' ? Math.ceil(d.timeLimit / 1000) : 120;
       setTimeLeft(roundSec);
@@ -239,7 +283,7 @@ export default function MultiplayerPage() {
       if (meP) setMyWins(meP.wins);
       const target = d.target?.name ? findCharacterByName(allChars, d.target.name) : null;
       if (target) {
-        useGameStore.setState({ status: 'playing', target, guesses: [], remainingGuesses: 8, difficulty: 'hard' });
+        useGameStore.setState({ status: 'playing', target, guesses: [], remainingGuesses: d.maxGuesses ?? 8, difficulty: 'hard' });
       }
       if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
       timerRef.current = setInterval(() => {
@@ -271,14 +315,30 @@ export default function MultiplayerPage() {
       const opp = players.find((p: { id: string }) => p.id !== mySid);
       const myScore = me?.wins || 0;
       const oppScore = opp?.wins || 0;
-      saveMultiGameStats({
-        won: d.winner === mySid,
-        bestOf: bestOfRef.current || 1,
-        myScore,
-        opponentScore: oppScore,
-        opponentName: oppNameRef.current || 'Opponent',
-        rounds: [...roundResultsRef.current],
-      });
+      const won = d.winner === mySid;
+      const rounds = [...roundResultsRef.current];
+      const customCfg = customConfigRef.current;
+      if (customCfg) {
+        // 自定义房：不计入聚合，仅写入历史
+        saveCustomGameStats({
+          won,
+          bestOf: bestOfRef.current || 1,
+          myScore,
+          opponentScore: oppScore,
+          opponentName: oppNameRef.current || 'Opponent',
+          rounds,
+          custom: customCfg,
+        });
+      } else {
+        saveMultiGameStats({
+          won,
+          bestOf: bestOfRef.current || 1,
+          myScore,
+          opponentScore: oppScore,
+          opponentName: oppNameRef.current || 'Opponent',
+          rounds,
+        });
+      }
       roundResultsRef.current = [];
       clearRoomCode();
       setStage('matchEnd');
@@ -295,12 +355,14 @@ export default function MultiplayerPage() {
       setStage('playing'); setMyWins(0); setOppWins(0);
       setRematchReady(false);
       setBestOf(d.bestOf);
-      setTimeLeft(120); setOppGuessCount(0); setOppGrid([]);
+      if (d.difficulty) setDifficulty(d.difficulty);
+      applyConfig(d);
+      setTimeLeft(Math.ceil((d.roundTime ?? 120000) / 1000)); setOppGuessCount(0); setOppGrid([]);
       setISurrendered(false); setOppSurrendered(false);
       roundResultsRef.current = [];
       setOppDisconnected(false); setRoundEndData(null);
       myColorsRef.current = [];
-      useGameStore.setState({ status: 'idle', target: null, guesses: [], remainingGuesses: 8, difficulty: 'hard' });
+      useGameStore.setState({ status: 'idle', target: null, guesses: [], remainingGuesses: d.maxGuesses ?? 8, difficulty: 'hard' });
     });
 
     s.on('rematch_cancelled', (d: any) => {
@@ -329,6 +391,7 @@ export default function MultiplayerPage() {
       saveRoomCode(d.roomCode);
       setBestOf(d.bestOf);
       if (d.difficulty) setDifficulty(d.difficulty);
+      applyConfig({});
       setOppName(d.opponent.name);
       setMyWins(0); setOppWins(0);
       setOppGuessCount(0); setOppGrid([]);
@@ -354,6 +417,30 @@ export default function MultiplayerPage() {
     const s = connect();
     s.emit('create_room', { playerName: playerName.trim() || undefined, bestOf, difficulty });
     s.emit('_log', { action: 'create_room' });
+    connectTimer.current = setTimeout(() => { s.disconnect(); setConnecting(''); setError(t('multi.createTimeout')); }, 30000);
+  };
+
+  const handleCreateCustom = () => {
+    clearConnecting();
+    if (customAttrs.length < 3) {
+      setError(t('multi.custom.minAttrs'));
+      return;
+    }
+    if (disbandCooldown > Date.now()) {
+      setError(t('multi.cooldownMsg', { seconds: Math.ceil((disbandCooldown - Date.now()) / 1000) }));
+      return;
+    }
+    setError(''); setConnecting('create');
+    const s = connect();
+    s.emit('create_room', {
+      playerName: playerName.trim() || undefined,
+      bestOf: customBestOf,
+      difficulty: customDifficulty,
+      maxGuesses: customMaxGuesses,
+      roundTime: customRoundTime,
+      attributes: customAttrs,
+    });
+    s.emit('_log', { action: 'create_custom_room' });
     connectTimer.current = setTimeout(() => { s.disconnect(); setConnecting(''); setError(t('multi.createTimeout')); }, 30000);
   };
 
@@ -449,6 +536,39 @@ export default function MultiplayerPage() {
     socketRef.current?.emit('rematch_cancel');
   };
 
+  // 离开比赛 / 房间过期后回到大厅：断开 socket 并复位全部对局状态
+  const resetToMenu = () => {
+    const sock = socketRef.current;
+    if (sock) {
+      sock.removeAllListeners();
+      sock.disconnect();
+      socketRef.current = null;
+      setSocket(null);
+    }
+    clearRoomCode();
+    roomCodeRef.current = '';
+    setStage('menu');
+    setRoomCode('');
+    setOppGrid([]);
+    setOppGuessCount(0);
+    setMyWins(0);
+    setOppWins(0);
+    setOppName('');
+    setEndMsg('');
+    setRoundEndData(null);
+    setRematchReady(false);
+    setISurrendered(false);
+    setOppSurrendered(false);
+    setOppDisconnected(false);
+    setError('');
+    setConnecting('');
+    myColorsRef.current = [];
+    roundResultsRef.current = [];
+    customConfigRef.current = null;
+    setDisplayAttributes(null);
+    useGameStore.getState().resetGame();
+  };
+
   useEffect(() => { return () => { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; } if (rematchTimer.current) { clearTimeout(rematchTimer.current); rematchTimer.current = null; } if (socket) { socket.removeAllListeners(); socket.disconnect(); } }; }, [socket]);
 
   const guessedIds = useMemo(() => new Set(store.guesses.map(g => g.character.id)), [store.guesses]);
@@ -505,6 +625,7 @@ export default function MultiplayerPage() {
               </div>
             )}
             <button onClick={() => setStage('lobby')} style={{ ...btn, marginTop: '8px' }}>🏠 {t('multi.createJoinRoom')}</button>
+            <button onClick={() => { setError(''); setStage('custom'); }} style={{ ...btn, marginTop: '8px', background: 'var(--card-soft)', color: 'var(--text)', border: '1px solid var(--border)' }}>🎨 {t('multi.custom.title')}</button>
           </div>
         )}
 
@@ -538,13 +659,100 @@ export default function MultiplayerPage() {
           </div>
         )}
 
+        {/* ===== Custom Room ===== */}
+        {stage === 'custom' && (
+          <div style={{ textAlign: 'center', maxWidth: '460px', width: '100%' }}>
+            <button onClick={() => { setStage('menu'); setError(''); }} style={{
+              padding: '6px 14px', marginBottom: '12px',
+              background: 'transparent', color: 'var(--text-light)',
+              border: '1px solid var(--border)', borderRadius: 'var(--radius)',
+              cursor: 'pointer', fontSize: '0.85rem',
+            }}>
+              ← {t('multi.back')}
+            </button>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontStyle: 'italic', marginBottom: '4px' }}>🎨 {t('multi.custom.title')}</h2>
+            <p style={{ color: 'var(--text-light)', fontSize: '0.82rem', marginBottom: '14px' }}>{t('multi.custom.desc')}</p>
+
+            <div className="multi-select-row">
+              <label className="multi-select-wrapper">
+                <span className="multi-select-label">{t('multi.difficultyLabel')}</span>
+                <select value={customDifficulty} onChange={e => setCustomDifficulty(e.target.value)} className="multi-select">
+                  <option value="easy">{t('multi.difficultyEasy')}</option>
+                  <option value="medium">{t('multi.difficultyMedium')}</option>
+                  <option value="hard">{t('multi.difficultyHard')}</option>
+                </select>
+              </label>
+              <label className="multi-select-wrapper">
+                <span className="multi-select-label">{t('multi.formatLabel')}</span>
+                <select value={customBestOf} onChange={e => setCustomBestOf(Number(e.target.value))} className="multi-select">
+                  {[1, 2, 3, 4, 5, 6, 7].map(n => <option key={n} value={n}>BO{n}</option>)}
+                </select>
+              </label>
+              <label className="multi-select-wrapper">
+                <span className="multi-select-label">{t('multi.custom.maxGuesses')}</span>
+                <select value={customMaxGuesses} onChange={e => setCustomMaxGuesses(Number(e.target.value))} className="multi-select">
+                  {Array.from({ length: 15 }, (_, i) => i + 1).map(n => <option key={n} value={n}>{n}</option>)}
+                </select>
+              </label>
+              <label className="multi-select-wrapper">
+                <span className="multi-select-label">{t('multi.custom.roundTime')}</span>
+                <select value={customRoundTime} onChange={e => setCustomRoundTime(Number(e.target.value))} className="multi-select">
+                  {ROUND_TIME_OPTIONS.map(ms => <option key={ms} value={ms}>{Math.round(ms / 1000)}s</option>)}
+                </select>
+              </label>
+            </div>
+
+            <div style={{ marginTop: '14px', textAlign: 'left' }}>
+              <p style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-light)', marginBottom: '8px' }}>
+                {t('multi.custom.attributes')} <span style={{ fontWeight: 400, fontSize: '0.75rem' }}>({customAttrs.length}/9)</span>
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {ATTR_KEYS.map(a => {
+                  const on = customAttrs.includes(a);
+                  return (
+                    <button
+                      key={a}
+                      onClick={() => setCustomAttrs(prev => on ? prev.filter(x => x !== a) : [...prev, a])}
+                      style={{
+                        padding: '6px 12px', borderRadius: 'var(--radius)', fontSize: '0.82rem', cursor: 'pointer',
+                        background: on ? 'var(--primary)' : 'var(--input-bg)',
+                        color: on ? 'var(--bg)' : 'var(--text)',
+                        border: `1px solid ${on ? 'var(--primary)' : 'var(--border)'}`,
+                        fontWeight: on ? 700 : 400,
+                      }}
+                    >
+                      {t(ATTR_LABEL_KEYS[a])}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <button
+              onClick={handleCreateCustom}
+              disabled={!!connecting || customAttrs.length < 3}
+              style={{
+                width: '100%', marginTop: '18px', padding: '12px 20px',
+                background: connecting || customAttrs.length < 3 ? 'var(--card-soft)' : 'var(--primary)',
+                color: connecting || customAttrs.length < 3 ? 'var(--text-light)' : 'var(--bg)',
+                border: 'none', borderRadius: 'var(--radius)', fontSize: '1.05rem', fontWeight: 700,
+                cursor: connecting || customAttrs.length < 3 ? 'default' : 'pointer',
+                opacity: connecting || customAttrs.length < 3 ? 0.7 : 1,
+              }}
+            >
+              {connecting ? t('multi.connecting') : t('multi.createRoom')}
+            </button>
+            {error && <p style={{ color: 'var(--danger)', fontSize: '0.85rem', marginTop: '8px' }}>{error}</p>}
+          </div>
+        )}
+
         {/* ===== Waiting ===== */}
         {stage === 'waiting' && (
           <div style={{ textAlign: 'center' }}>
             {roomExpireTime > 0 && roomExpireTime - Date.now() <= 0 ? (
               <>
                 <p style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--danger)', marginBottom: '16px' }}>{t('multi.roomExpired')}</p>
-                <Link href="/multiplayer" style={{ padding: '8px 20px', background: 'var(--primary)', color: 'var(--bg)', border: 'none', borderRadius: 'var(--radius)', fontWeight: 700, textDecoration: 'none' }}>{t('multi.back')}</Link>
+                <button onClick={resetToMenu} style={{ padding: '8px 20px', background: 'var(--primary)', color: 'var(--bg)', border: 'none', borderRadius: 'var(--radius)', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem' }}>{t('multi.back')}</button>
               </>
             ) : (
               <>
@@ -628,24 +836,27 @@ export default function MultiplayerPage() {
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
               <div style={{ flex: '1 1 48%', minWidth: '260px' }}>
                 <div style={{ fontWeight: 700, marginBottom: '4px', fontSize: '0.85rem', color: 'var(--primary)' }}>{t('multi.yourGuesses')}</div>
-                <div ref={myBoardScrollRef} style={{ overflowX: 'auto', scrollBehavior: 'smooth' }} className="scroll-slider-container"><GuessTable guesses={store.guesses} target={store.target} hideRarity={difficulty === 'hard'} staggerKey={store.guesses.length} /></div>
+                <div ref={myBoardScrollRef} style={{ overflowX: 'auto', scrollBehavior: 'smooth' }} className="scroll-slider-container"><GuessTable guesses={store.guesses} target={store.target} hideRarity={difficulty === 'hard'} displayAttributes={displayAttributes} staggerKey={store.guesses.length} /></div>
                 <ScrollSlider containerRef={myBoardScrollRef} />
               </div>
               <div style={{ flex: '1 1 48%', minWidth: '260px' }}>
                 <div style={{ fontWeight: 700, marginBottom: '4px', fontSize: '0.85rem', color: 'var(--accent)' }}>{t('multi.oppGuesses', { name: oppName, count: oppGuessCount })}</div>
                 <div ref={oppBoardScrollRef} style={{ overflowX: 'auto', scrollBehavior: 'smooth' }} className="scroll-slider-container">
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.65rem' }}>
-                    <thead><tr>{(difficulty==='hard'?colLabelsHard:colLabels).map((l,i)=><th key={i} style={{padding:'3px 2px',fontWeight:600,color:'var(--text-light)',borderBottom:'1px solid var(--border)',whiteSpace:'nowrap'}}>{l}</th>)}</tr></thead>
+                    <thead><tr>{displayCols.map((c,i)=><th key={i} style={{padding:'3px 2px',fontWeight:600,color:'var(--text-light)',borderBottom:'1px solid var(--border)',whiteSpace:'nowrap'}}>{c.label}</th>)}</tr></thead>
                     <tbody>
                       {oppGrid.length===0
-                        ? <tr><td colSpan={difficulty==='hard'?9:10} style={{padding:'16px',textAlign:'center',color:'var(--text-light)',fontSize:'0.75rem'}}>{t('multi.waitingOppGuess')}</td></tr>
-                        : [...(difficulty==='hard'?filterOppGrid(oppGrid):oppGrid)].reverse().map((row,i)=>(
+                        ? <tr><td colSpan={displayCols.length} style={{padding:'16px',textAlign:'center',color:'var(--text-light)',fontSize:'0.75rem'}}>{t('multi.waitingOppGuess')}</td></tr>
+                        : [...oppGrid].reverse().map((row,i)=>(
                           <tr key={i} style={{animation:'surface-enter 0.35s both'}}>
-                            {row.map((color,j)=>(
-                              <td key={j} style={{padding:'3px 2px',textAlign:'center'}}>
-                                <span style={{display:'inline-block',width:'12px',height:'12px',borderRadius:'2px',background:color==='correct'?'var(--correct)':color==='close'?'var(--close)':color==='wrong'?'var(--wrong)':'#444'}}/>
-                              </td>
-                            ))}
+                            {displayCols.map((col,j)=>{
+                              const color = row[col.dataIdx] ?? '#444';
+                              return (
+                                <td key={j} style={{padding:'3px 2px',textAlign:'center'}}>
+                                  <span style={{display:'inline-block',width:'12px',height:'12px',borderRadius:'2px',background:color==='correct'?'var(--correct)':color==='close'?'var(--close)':color==='wrong'?'var(--wrong)':'#444'}}/>
+                                </td>
+                              );
+                            })}
                           </tr>
                         ))}
                     </tbody>
@@ -691,7 +902,7 @@ export default function MultiplayerPage() {
                   fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem',
                 }}>{t('multi.cancelReady')}</button>
               )}
-              <Link href="/multiplayer" style={{ padding: '10px 24px', background: 'transparent', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', fontWeight: 700, textDecoration: 'none' }}>{t('multi.exit')}</Link>
+              <button onClick={resetToMenu} style={{ padding: '10px 24px', background: 'transparent', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem' }}>{t('multi.exit')}</button>
             </div>
           </div>
         )}

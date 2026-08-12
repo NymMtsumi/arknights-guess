@@ -171,6 +171,11 @@ const adminRoutes = registerAdminRoutes({
 });
 
 // ===== HTTP 请求处理 =====
+// 旧统计端点的模块级缓存（带 5 秒 TTL，避免重复轮询时迭代 rooms）
+let statsCache = null;
+let statsCacheTime = 0;
+const STATS_CACHE_TTL = 5000;
+
 async function handleRequest(req, res) {
   // CORS 预检（与 socket/index.js 共用同一个 ALLOWED_ORIGINS 列表，不再使用通配符 *）
   if (req.method === 'OPTIONS') {
@@ -196,9 +201,6 @@ async function handleRequest(req, res) {
   const ip = getClientIP(req);
 
   // 旧统计端点（带 5 秒缓存，避免重复轮询时迭代 rooms）
-  let statsCache = null;
-  let statsCacheTime = 0;
-  const STATS_CACHE_TTL = 5000;
   if (path.startsWith('/stats')) {
     const now = Date.now();
     if (!statsCache || (now - statsCacheTime) > STATS_CACHE_TTL) {

@@ -158,6 +158,38 @@ export function initSchema(db) {
     console.error('[DB] Backfill user_id FAILED — pre-migration games will be invisible to /api/me and /api/history:', e.message);
   }
 
+  // ===== 2.5 修复历史重复邮箱（同一邮箱被多账户占用时，下方唯一索引会建不起来）=====
+  // 邮箱所有写入路径均已 toLowerCase，正常不会有大小写变体；此处仅消除存量重复：
+  // 保留「战绩最多」的账户（平手则最早注册），其余账户清空邮箱（不清空则无法登录该邮箱，且唯一索引无法创建）。
+  try {
+    const dupEmails = db.prepare(`
+      SELECT email FROM users
+      WHERE email IS NOT NULL AND email != ''
+      GROUP BY LOWER(email)
+      HAVING COUNT(*) > 1
+    `).all();
+    for (const { email } of dupEmails) {
+      const keeper = db.prepare(`
+        SELECT u.id FROM users u
+        LEFT JOIN games g ON g.user_id = u.id
+        WHERE LOWER(u.email) = LOWER(?)
+        GROUP BY u.id
+        ORDER BY COUNT(g.id) DESC, u.id ASC
+        LIMIT 1
+      `).get(email);
+      if (!keeper) continue;
+      const cleared = db.prepare(`
+        UPDATE users SET email = NULL, email_verified_at = NULL
+        WHERE LOWER(email) = LOWER(?) AND id != ?
+      `).run(email, keeper.id);
+      if (cleared.changes > 0) {
+        console.log(`[DB] 邮箱 ${email} 被 ${cleared.changes + 1} 个账户占用，保留 id=${keeper.id}，清空其余 ${cleared.changes} 个账户的邮箱`);
+      }
+    }
+  } catch (e) {
+    console.warn('[DB] email dedup failed:', e.message);
+  }
+
   // UNIQUE 索引（兼容旧数据）
   try { db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_display_id ON users(display_id)'); } catch (e) { console.warn('[DB] idx_users_display_id unique index failed:', e.message); }
 

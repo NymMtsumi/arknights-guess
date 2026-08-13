@@ -211,10 +211,22 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
     if (cookiePk && cookiePk !== playerKey) {
       const conflict = db.prepare('SELECT id FROM users WHERE player_key = ? AND id != ?').get(cookiePk, user.id);
       if (!conflict) {
-        // cookie pk 无人认领 → 回填 user_id（不再迁移 player_key！）
-        const backfilled = db.prepare('UPDATE games SET user_id = ? WHERE player_key = ? AND user_id IS NULL').run(user.id, cookiePk);
-        if (backfilled.changes > 0) {
-          console.log(`[login] backfilled user_id=${user.id} for ${backfilled.changes} games from cookie pk=${cookiePk.slice(0, 10)}`);
+        try {
+          // cookie pk 无人认领 → 回填 user_id（不再迁移 player_key！）
+          // 跳过该用户当天已有的每日战绩，避免触发 idx_games_daily_unique (user_id, daily_date) 唯一约束
+          const backfilled = db.prepare(`
+            UPDATE games SET user_id = ?
+            WHERE player_key = ? AND user_id IS NULL
+              AND NOT EXISTS (
+                SELECT 1 FROM games g2
+                WHERE g2.user_id = ? AND g2.daily_date = games.daily_date AND g2.daily_date IS NOT NULL
+              )
+          `).run(user.id, cookiePk, user.id);
+          if (backfilled.changes > 0) {
+            console.log(`[login] backfilled user_id=${user.id} for ${backfilled.changes} games from cookie pk=${cookiePk.slice(0, 10)}`);
+          }
+        } catch (err) {
+          console.error('[login] backfill games failed:', err.message);
         }
       }
     }
@@ -330,7 +342,7 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
       return jsonResponse(res, { error: '验证链接已过期，请重新发送' }, 400);
     }
 
-    const emailConflict = db.prepare("SELECT id FROM users WHERE email = ? AND email_verified_at IS NOT NULL AND id != ?").get(record.email, record.user_id);
+    const emailConflict = db.prepare("SELECT id FROM users WHERE LOWER(email) = LOWER(?) AND email_verified_at IS NOT NULL AND id != ?").get(record.email, record.user_id);
     if (emailConflict) {
       db.prepare('DELETE FROM email_verifications WHERE id = ?').run(record.id);
       return jsonResponse(res, { error: '该邮箱已被其他用户验证' }, 409);

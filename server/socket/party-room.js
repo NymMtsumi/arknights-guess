@@ -172,7 +172,11 @@ export function createPartyRoomModule(deps) {
     socket.join(code);
     registerOnline(socket, code);
 
-    socket.emit('party:created', { roomCode: code });
+    // 与 joinPartyRoom 一致，下发完整房间 + 玩家快照（否则房主前端 onPartyCreated 无 players → 显示 0 人）
+    socket.emit('party:created', {
+      room: { code, hostId: room.hostId, settings: room.settings, started: room.started },
+      players: Array.from(room.players.entries()).map(([id, pl]) => ({ id, name: pl.name, ready: pl.ready, playerKey: pl.playerKey })),
+    });
     ackOk(ack, { roomCode: code });
     console.log(`[派对] 创建房间 ${code} 房主=${playerName}`);
   }
@@ -429,6 +433,9 @@ export function createPartyRoomModule(deps) {
     const player = findPlayerInRoom(room, socket) || room.players.get(socket.id);
     if (!player) return;
     if (player.dcTimer) { clearTimeout(player.dcTimer); player.dcTimer = null; }
+
+    // 先告知离开的玩家本人（必须在 socket.leave 之前发送，否则离开后收不到任何事件 → 前端卡在等待室）
+    socket.emit('party:left', { reason: isTimeout ? 'timeout' : 'left' });
 
     // 等待室阶段离开
     if (!room.started) {

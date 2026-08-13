@@ -1,8 +1,7 @@
 'use client';
 
 // 派对模式主页面 — 使用共享 hooks + 提取后的 handler 模块
-import { useEffect, useRef, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 import { Header } from '@/components/Header';
 import { PartyLobby } from '@/components/party/Lobby';
 import { PartyWaitingRoom } from '@/components/party/WaitingRoom';
@@ -22,18 +21,15 @@ import charactersData from '@/data/characters.json';
 
 const allChars = charactersData as Character[];
 
-/** Suspense 边界包裹：useSearchParams 需要 Suspense 祖先 */
 export default function PartyPage() {
-  return (
-    <Suspense fallback={<div className="page"><Header /><div style={{ textAlign: 'center', padding: '40px' }}>Loading...</div></div>}>
-      <PartyPageContent />
-    </Suspense>
-  );
+  return <PartyPageContent />;
 }
 
 function PartyPageContent() {
   const { t } = useI18n();
-  const searchParams = useSearchParams();
+  // 静态导出（output: "export"）下 useSearchParams 首次渲染为空、不可靠，
+  // 改为与 verify/reset-password/leaderboard 页一致：直接读 window.location.search。
+  const [roomParam, setRoomParam] = useState('');
   // 语言切换后 t 会重建，但 handler 仅在连接时注册一次（闭包捕获首个 t）。
   // 用 ref 保持引用稳定、始终读取最新语言，避免切换语言后 toast 仍是旧语言。
   const tRef = useRef(t);
@@ -105,9 +101,13 @@ function PartyPageContent() {
   }, []);
 
   useEffect(() => {
-    const room = searchParams.get('room');
-    if (room && room.trim()) setStage('lobby');
-  }, [searchParams, setStage]);
+    const params = new URLSearchParams(window.location.search);
+    setRoomParam(params.get('room') || '');
+  }, []);
+
+  useEffect(() => {
+    if (roomParam && roomParam.trim()) setStage('lobby');
+  }, [roomParam, setStage]);
 
   // ── 渲染 ──
   return (
@@ -134,7 +134,7 @@ function PartyPageContent() {
         )}
 
         {/* Lobby */}
-        {stage === 'lobby' && <PartyLobby onBack={() => setStage('menu')} socketRef={socketRef} isConnected={isConnected} initialCode={searchParams.get('room') || ''} />}
+        {stage === 'lobby' && <PartyLobby onBack={() => setStage('menu')} socketRef={socketRef} isConnected={isConnected} initialCode={roomParam} />}
 
         {/* Waiting Room */}
         {stage === 'waiting' && socketRef.current && <PartyWaitingRoom socket={socketRef.current} isConnected={isConnected} />}

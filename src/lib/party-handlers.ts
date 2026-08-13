@@ -39,11 +39,15 @@ const ALL_WRONG: GuessComparisons = {
 //  房间事件
 // ═══════════════════════════════════════════════
 
-export function onPartyCreated(d: { roomCode: string }, ctx: PartyHandlerCtx) {
-  storeSet({ connecting: '', roomCode: d.roomCode });
-  ctx.persistRoomCode(d.roomCode);
+export function onPartyCreated(d: { room: PartyRoom; players: PartyPlayerDTO[] }, ctx: PartyHandlerCtx) {
+  // 房主创建后也收到完整房间 + 玩家快照（与 onPartyJoined 对齐），否则 players 为空 → 显示 0 人
+  storeSet({
+    connecting: '', roomCode: d.room.code,
+    hostId: d.room.hostId, settings: d.room.settings,
+    players: d.players.map(p => ({ id: p.id, name: p.name, ready: p.ready, score: 0, playerKey: p.playerKey })),
+  });
+  ctx.persistRoomCode(d.room.code);
   ctx.savePlayerName(usePartyStore.getState().playerName);
-  usePartyStore.setState({ hostId: usePartyStore.getState().socketId });
   ctx.setStage('waiting');
 }
 
@@ -231,6 +235,14 @@ export function onRoomDissolved(d: { reason?: string }, ctx: PartyHandlerCtx) {
   usePartyStore.setState({ error: ctx.t('party.roomDissolved') });
 }
 
+export function onPartyLeft(ctx: PartyHandlerCtx) {
+  // 本人主动离开：服务端在 socket.leave 前下发 party:left，这里退回菜单（否则离开后收不到 room_dissolved 而卡在等待室）
+  ctx.forgetRoom();
+  ctx.stopCountdown();
+  usePartyStore.getState().resetAll();
+  useGameStore.getState().resetGame();
+}
+
 // ═══════════════════════════════════════════════
 //  连接状态
 // ═══════════════════════════════════════════════
@@ -365,6 +377,7 @@ export function registerAllPartyHandlers(socket: Socket, ctx: PartyHandlerCtx) {
   socket.on('party:round_end', (d) => onRoundEnd(d, ctx));
   socket.on('party:game_end', (d) => onGameEnd(d, ctx));
   socket.on('party:room_dissolved', (d) => onRoomDissolved(d, ctx));
+  socket.on('party:left', () => onPartyLeft(ctx));
 
   // 连接状态
   socket.on('party:player_disconnected', onPlayerDisconnected);

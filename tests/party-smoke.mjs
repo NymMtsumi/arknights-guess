@@ -7,7 +7,8 @@
 //   c. 点分享链接 ?room=CODE 自动进房（而非跳回 lobby）
 //   d. 非房主准备 → 房主开始 → 进入倒计时/游戏中
 //   e. 有人点离开 → 人数正确回落、本人 UI 复位
-//   f. 断线重连 → 他人视角先显示断线、重连（同 player_key）后清除
+//   f. 断线重连（等待室）→ 他人视角先显示断线、重连（同 player_key）后清除
+//   g. 局中断线重连 → 断线计数不虚高 + 重开页面能重进已开始游戏（不再“游戏已开始”）
 //
 // 脚本自行完成：
 //   1) 起后端（临时 DB，零依赖生产配置）
@@ -289,6 +290,27 @@ async function main() {
     } catch {
       check('d+.回合开始进入游戏中', false, '未在 12s 内进入 playing');
     }
+
+    // ── g. 局中断线重连（回归：断线计数不虚高 + 重开页面重进已开始游戏）──
+    console.log('\n[g] 局中断线重连');
+    await B.locator('[data-testid="party-game"]').waitFor({ state: 'visible', timeout: 12_000 });
+    await C.locator('[data-testid="party-game"]').waitFor({ state: 'visible', timeout: 12_000 });
+
+    await B.close();
+    await waitFor(async () => {
+      const el = A.locator('[data-testid="party-disconnected-count"]');
+      return (await el.count()) === 1 && (await el.getAttribute('data-count')) === '1';
+    }, { timeout: WAIT_TIMEOUT, desc: '局内断线计数=1（不虚高为 3）' });
+    check('g.局内断线计数=1（不虚高）', true);
+
+    B = await ctxB.newPage();
+    await B.goto(`${FRONTEND_ORIGIN}/party?room=${code}`, { waitUntil: 'domcontentloaded' });
+    await B.locator('[data-testid="party-game"]').waitFor({ state: 'visible', timeout: WAIT_TIMEOUT });
+    check('g.重开页面重进已开始游戏（不再“游戏已开始”）', true);
+    await waitFor(async () => (await A.locator('[data-testid="party-disconnected-count"]').count()) === 0, {
+      timeout: WAIT_TIMEOUT, desc: '重连后断线计数清除',
+    });
+    check('g.重连后断线计数清除', true);
 
     return 0;
   } catch (e) {

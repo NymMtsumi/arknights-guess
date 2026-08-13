@@ -82,6 +82,7 @@ export function createPartyRoomModule(deps) {
         if (p.dcTimer) { clearTimeout(p.dcTimer); p.dcTimer = null; }
         if (room.hostId === oldSid) room.hostId = socket.id;
         try { socket.join(room.code); } catch {}
+        console.log(`[party] re-key ${oldSid.slice(0,6)} -> ${socket.id.slice(0,6)} (房间${room.code})`);
         return p;
       }
     }
@@ -188,6 +189,22 @@ export function createPartyRoomModule(deps) {
     const code = String(data?.roomCode || '').trim();
     const room = partyRooms.get(code);
     if (!room) { socket.emit('party:error', { code: 'ROOM_NOT_FOUND', message: '房间不存在' }); ackErr(ack, 'ROOM_NOT_FOUND', '房间不存在'); return; }
+
+    // 重连优先：已在房内的玩家（playerKey 稳定跨重连）必须在 started/finished 拒绝之前走重连分支，
+    // 否则开局后重开页面（?room=CODE → party:join）会被误拒为「游戏已开始」。
+    for (const [, p] of room.players) {
+      if (p.playerKey === socket.data.playerKey || p.identityKey === socket.data.identityKey) {
+        if (room.started || room.finished) {
+          // 开局/终局后重连：需要完整状态快照，交给 reconnectPartyRoom（含竞态处理与 MULTI_TAB 兜底）
+          reconnectPartyRoom(socket, data, ack);
+        } else {
+          // 等待室重连：沿用下方 in-place 重连逻辑（含 MULTI_TAB 拒绝）
+          joinAsExistingPlayer(socket, data, ack, room);
+        }
+        return;
+      }
+    }
+
     if (room.started) { socket.emit('party:error', { code: 'GAME_STARTED', message: '游戏已开始，无法加入' }); ackErr(ack, 'GAME_STARTED', '游戏已开始，无法加入'); return; }
     if (room.finished) { socket.emit('party:error', { code: 'GAME_ENDED', message: '游戏已结束' }); ackErr(ack, 'GAME_ENDED', '游戏已结束'); return; }
     if (room.players.size >= MAX_PLAYERS) { socket.emit('party:error', { code: 'ROOM_FULL', message: '房间已满（最多8人）' }); ackErr(ack, 'ROOM_FULL', '房间已满（最多8人）'); return; }
@@ -214,7 +231,24 @@ export function createPartyRoomModule(deps) {
       }
     }
 
-    // 重连检查
+    // 新玩家（昵称服务端生成，忽略客户端传名）
+    const player = makePlayer(socket);
+    room.players.set(socket.id, player);
+    socket.join(code);
+    registerOnline(socket, code);
+
+    broadcast(room, 'party:player_joined', { id: socket.id, name: player.name, ready: false, playerKey: socket.data.playerKey });
+    socket.emit('party:joined', {
+      room: { code: room.code, hostId: room.hostId, settings: room.settings, started: room.started },
+      players: Array.from(room.players.entries()).map(([id, pl]) => ({ id, name: pl.name, ready: pl.ready, playerKey: pl.playerKey })),
+    });
+    ackOk(ack, { roomCode: room.code });
+    console.log(`[派对] ${player.name} 加入房间 ${code} (${room.players.size}/${MAX_PLAYERS})`);
+  }
+
+  // ===== 等待室重连（party:join 命中房内玩家且房间未开始时走这里，含 MULTI_TAB 拒绝）=====
+  function joinAsExistingPlayer(socket, data, ack, room) {
+    const code = room.code;
     for (const [pid, p] of room.players) {
       if (p.playerKey === socket.data.playerKey || p.identityKey === socket.data.identityKey) {
         if (pid !== socket.id) {
@@ -243,20 +277,7 @@ export function createPartyRoomModule(deps) {
         return;
       }
     }
-
-    // 新玩家（昵称服务端生成，忽略客户端传名）
-    const player = makePlayer(socket);
-    room.players.set(socket.id, player);
-    socket.join(code);
-    registerOnline(socket, code);
-
-    broadcast(room, 'party:player_joined', { id: socket.id, name: player.name, ready: false, playerKey: socket.data.playerKey });
-    socket.emit('party:joined', {
-      room: { code: room.code, hostId: room.hostId, settings: room.settings, started: room.started },
-      players: Array.from(room.players.entries()).map(([id, pl]) => ({ id, name: pl.name, ready: pl.ready, playerKey: pl.playerKey })),
-    });
-    ackOk(ack, { roomCode: room.code });
-    console.log(`[派对] ${player.name} 加入房间 ${code} (${room.players.size}/${MAX_PLAYERS})`);
+    ackErr(ack, 'NOT_IN_ROOM', '你不在该房间中');
   }
 
   // ===== 重连 =====
@@ -558,13 +579,17 @@ export function createPartyRoomModule(deps) {
     const room = findPartyRoomByPlayerKey(socket.data.playerKey) || findPartyRoomByIdentityKey(socket.data.identityKey);
     if (!room) return;
 
-    const player = findPlayerInRoom(room, socket) || room.players.get(socket.id);
+    // 只按精确 socket.id 查找，绝不 re-key：
+    // 玩家重连后已被 re-key 到新 socket，旧 socket 的 disconnect 是「陈旧连接」，
+    // 若用 findPlayerInRoom 会把它 re-key 回死 socket 并广播虚假断线 → 断线计数累加。
+    const player = room.players.get(socket.id);
     if (!player) return;
 
     player.lastSocketId = socket.id;
     player.identityKey = socket.data.identityKey;
 
     broadcast(room, 'party:player_disconnected', { playerId: socket.id, playerName: player.name });
+    console.log(`[party] 断线 ${player.name} sid=${socket.id.slice(0,6)} 房间${room.code} 现人数=${room.players.size}`);
 
     player.dcTimer = setTimeout(() => {
       handlePartyLeave(room, socket, true);

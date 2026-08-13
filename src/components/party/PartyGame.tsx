@@ -79,7 +79,7 @@ export function PartyGame({ socket }: PartyGameProps) {
 
       {/* 断线提示 */}
       {disconnectedCount > 0 && (
-        <div style={{
+        <div data-testid="party-disconnected-count" data-count={disconnectedCount} style={{
           textAlign: 'center', marginBottom: '8px',
           color: 'var(--warning)', fontSize: '0.85rem',
         }}>

@@ -150,6 +150,9 @@ export function onGameStarting(
     usePartyStore.setState({
       players: d.players.map(p => ({ id: p.id, name: p.name, ready: p.ready, score: 0, playerKey: p.playerKey })),
     });
+    // 断线名单对账：开局快照重建玩家列表，同步剔除不在列表内的陈旧断线 id
+    const ids = new Set(d.players.map(p => p.id));
+    usePartyStore.setState(s => ({ disconnectedPlayers: s.disconnectedPlayers.filter(id => ids.has(id)) }));
   }
   usePartyStore.setState({ timeLeft: d.countdown });
   ctx.startCountdown(d.countdown);
@@ -303,6 +306,12 @@ export function onReconnectState(d: PartyReconnectState, ctx: PartyHandlerCtx) {
     ...(me ? { playerName: me.name } : {}),
   });
   ctx.persistRoomCode(d.room.code);
+
+  // 断线名单对账：只保留仍在房间内的玩家 id（清除历史重连残留的陈旧 socket.id，避免断线计数虚高）
+  const roomPlayerIds = new Set(d.players.map(p => p.id));
+  usePartyStore.setState(s => ({
+    disconnectedPlayers: s.disconnectedPlayers.filter(id => roomPlayerIds.has(id)),
+  }));
 
   // 恢复累积分数（按 playerKey 精确匹配，回退到名称，避免重名串号）
   if (d.scores) {

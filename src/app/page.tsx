@@ -72,6 +72,13 @@ export default function HomePage() {
             description={t('menu.multiplayerDesc')}
             color="#ff6b6b"
           />
+          <MenuCard
+            href="/party"
+            icon="🎉"
+            label={t('menu.party')}
+            description={t('menu.partyDesc')}
+            color="#7c5cff"
+          />
         </div>
 
         {/* 底部快捷链接 — 紧凑按钮行，参考弗一把设计 */}

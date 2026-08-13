@@ -235,8 +235,13 @@ export function registerAdminRoutes({ app, db, requireAdmin, checkNicknameProfan
       return jsonResponse(res, { error: '不能封禁自己' }, 400);
     }
 
-    const user = db.prepare('SELECT id, username, player_key FROM users WHERE id = ?').get(userId);
+    const user = db.prepare('SELECT id, username, player_key, role FROM users WHERE id = ?').get(userId);
     if (!user) return jsonResponse(res, { error: '用户不存在' }, 404);
+
+    // 保护其他管理员：禁止封禁/解封管理员账号（防止单个被攻破的管理员锁死所有管理员）
+    if (user.role === 'admin') {
+      return jsonResponse(res, { error: '不能封禁或解封管理员账号' }, 403);
+    }
 
     db.prepare('UPDATE users SET banned_at = ? WHERE id = ?').run(body.banned ? new Date().toISOString() : null, userId);
     logAdminAction(admin.userId, body.banned ? 'ban_user' : 'unban_user', 'user', userId, user.username, getClientIP(req));
@@ -308,6 +313,11 @@ export function registerAdminRoutes({ app, db, requireAdmin, checkNicknameProfan
 
     const user = db.prepare('SELECT id, role FROM users WHERE id = ?').get(userId);
     if (!user) return jsonResponse(res, { error: '用户不存在' }, 404);
+
+    // 保护其他管理员：禁止降级其他管理员（防止单个被攻破的管理员移除所有其他管理员）
+    if (user.role === 'admin') {
+      return jsonResponse(res, { error: '不能修改其他管理员的角色' }, 403);
+    }
 
     db.prepare('UPDATE users SET role = ? WHERE id = ?').run(role, userId);
     logAdminAction(admin.userId, 'change_role', 'user', userId, role, getClientIP(req));
@@ -410,6 +420,9 @@ export function registerAdminRoutes({ app, db, requireAdmin, checkNicknameProfan
     const DEPLOY_TOKEN = process.env.DEPLOY_TOKEN || '';
     if (!DEPLOY_TOKEN) {
       return jsonResponse(res, { error: 'DEPLOY_TOKEN 未配置' }, 500);
+    }
+    if (typeof body.token !== 'string') {
+      return jsonResponse(res, { error: '部署令牌无效' }, 403);
     }
     const tokenBuf = Buffer.from(body.token || '');
     const expectedBuf = Buffer.from(DEPLOY_TOKEN);

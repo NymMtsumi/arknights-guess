@@ -2,6 +2,7 @@
 export function initSchema(db) {
   db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');
+  db.pragma('busy_timeout = 5000');
 
   // ===== Schema =====
   db.exec(`
@@ -103,10 +104,10 @@ export function initSchema(db) {
     ['games', 'daily_date', 'TEXT'],
     ['games', 'multi_data', 'TEXT'],
   ]) {
+    const columns = db.prepare(`PRAGMA table_info(${table})`).all();
+    if (columns.some((c) => c.name === col)) continue;
     try { db.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${type}`); } catch (e) {
-      if (!e.message.includes('duplicate column')) {
-        console.warn(`[DB] ALTER TABLE ${table} ADD COLUMN ${col} failed:`, e.message);
-      }
+      console.warn(`[DB] ALTER TABLE ${table} ADD COLUMN ${col} failed:`, e.message);
     }
   }
 

@@ -1,6 +1,6 @@
 // 用户路由：me, sync, link-player-key, update-profile, send-verification, guest-identity, heartbeat, history
 import { randomBytes, createHash } from 'node:crypto';
-import { sanitizeString, parseCookies, parseBody, jsonResponse, deriveGuestName, generateKey, normalizeTimestamp, SMTP_SENDER } from '../utils.js';
+import { sanitizeString, parseCookies, parseBody, jsonResponse, deriveGuestName, generateKey, normalizeTimestamp, getSmtpSender } from '../utils.js';
 
 export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNicknameProfanity, transporter, SITE_URL, onlinePlayers, onlineSockets, ONLINE_TIMEOUT, checkRateLimit, getClientIP, invalidateLeaderboardCache }) {
 
@@ -75,7 +75,7 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
     let finalPk = player_key;
 
     // 确保用户有 pk（生成新的，不迁移旧 pk 的游戏！）
-    if (user && !user.player_key) {
+    if (!user.player_key) {
       const newPk = generateKey();
       const updRes = db.prepare('UPDATE users SET player_key = ? WHERE id = ? AND player_key IS NULL').run(newPk, auth.userId);
       if (updRes.changes > 0) {
@@ -95,13 +95,14 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
         const refreshed = db.prepare('SELECT player_key FROM users WHERE id = ?').get(auth.userId);
         finalPk = refreshed?.player_key || player_key;
       }
-    } else if (user && user.player_key) {
+    } else if (user.player_key) {
       finalPk = user.player_key;
     }
 
     const VALID_DIFFICULTIES = new Set(['easy', 'medium', 'hard']);
     const insert = db.prepare('INSERT INTO games (player_key, user_id, won, guess_count, difficulty, target_name, timestamp, mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
     const insertMany = db.transaction((rows) => {
+      let inserted = 0;
       for (const g of rows) {
         // 仅支持 single/multi；custom/daily 应走 save-game，静默跳过避免模式失真
         if (g.mode !== 'multi' && g.mode !== 'single') continue;
@@ -110,18 +111,19 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
         const guessCount = Math.min(50, Math.max(0, parseInt(g.guessCount) || 0));
         const difficulty = VALID_DIFFICULTIES.has(g.difficulty) ? g.difficulty : 'hard';
         const ts = normalizeTimestamp(g.timestamp);
-        insert.run(finalPk, auth.userId, won, guessCount, difficulty, sanitizeString(g.targetName || '', 100), ts, mode);
+        inserted += insert.run(finalPk, auth.userId, won, guessCount, difficulty, sanitizeString(g.targetName || '', 100), ts, mode).changes;
       }
+      return inserted;
     });
 
     try {
-      insertMany(games);
+      const synced = insertMany(games);
       const extraHeaders = {};
       // 如果生成了新的 pk，用 cookie 告知客户端
       if (finalPk !== player_key) {
         extraHeaders['Set-Cookie'] = `player_key=${finalPk}; SameSite=Lax; Secure; Path=/; Max-Age=94608000; HttpOnly`;
       }
-      return jsonResponse(res, { synced: games.length, player_key: finalPk }, 200, extraHeaders);
+      return jsonResponse(res, { synced, player_key: finalPk }, 200, extraHeaders);
     } catch (err) {
       console.error('[sync] error:', err.message);
       return jsonResponse(res, { error: '同步失败' }, 500);
@@ -304,7 +306,7 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
 
     try {
       await transporter.sendMail({
-        from: SMTP_SENDER,
+        from: getSmtpSender(),
         to: email,
         subject: '验证你的邮箱 - 明日方舟猜干员',
         html: `<div style="max-width:480px;margin:0 auto;font-family:sans-serif"><h2>验证你的邮箱</h2><p>感谢注册！点击下方按钮验证你的邮箱地址：</p><a href="${verifyLink}" style="display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none;font-weight:bold">验证邮箱</a><p style="color:#666;margin-top:20px;font-size:0.85rem">或者复制此链接到浏览器：<br>${verifyLink}</p><p style="color:#999;font-size:0.8rem">此链接1小时内有效。如果你没有注册此账号，请忽略此邮件。</p><p style="color:#999;font-size:0.8rem;margin-top:12px">如果未收到邮件，请检查垃圾邮件箱。</p></div>`,

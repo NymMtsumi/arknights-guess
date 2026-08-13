@@ -15,7 +15,7 @@ try {
   }
 
   const db = new Database(DB_PATH);
-  const ts = new Date().toISOString().replace(/[:T]/g, '-').slice(0, 19);
+  const ts = new Date().toISOString().replace(/[:T]/g, '-').slice(0, 23); // 毫秒精度，避免同一秒内备份互相覆盖
   const filename = `data.db.bak-${ts}`;
   const filepath = path.join(BACKUP_DIR, filename);
 

@@ -12,7 +12,7 @@ import { saveMultiGameStats, saveCustomGameStats, type MultiRoundResult } from '
 import { getUser, getServerUrl, getToken, getPlayerKey } from '@/lib/auth';
 import { useI18n } from '@/lib/i18n';
 import { findCharacterByName } from '@/lib/game-engine';
-import type { Character } from '@/types/character';
+import type { Character, GuessResult } from '@/types/character';
 import charactersData from '@/data/characters.json';
 
 // NOTE: Socket event payloads use `any` types throughout this file.
@@ -33,7 +33,7 @@ const DIFF_KEY_MAP: Record<string, string> = {
   hard: 'multi.difficultyHard',
 };
 
-// 自定义房：属性规范顺序（与服务端 ATTR_KEYS、myColorsRef 一致）及单局时间预设
+// 自定义房：属性规范顺序（与服务端 ATTR_KEYS 一致）及单局时间预设
 const ATTR_KEYS = ['class', 'subclass', 'faction', 'rarity', 'race', 'gender', 'releaseYear', 'position', 'tags'];
 const ATTR_LABEL_KEYS: Record<string, string> = {
   class: 'table.class',
@@ -114,7 +114,6 @@ export default function MultiplayerPage() {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const connectTimer = useRef<NodeJS.Timeout | null>(null);
   const rematchTimer = useRef<NodeJS.Timeout | null>(null);
-  const myColorsRef = useRef<string[][]>([]);
   const roundResultsRef = useRef<MultiRoundResult[]>([]);
   const customConfigRef = useRef<{ attributes: string[]; maxGuesses: number; roundTime: number; difficulty: string } | null>(null);
   const bestOfRef = useRef(5);
@@ -246,17 +245,14 @@ export default function MultiplayerPage() {
       setOppGuessCount(0); setOppGrid([]);
       setISurrendered(false); setOppSurrendered(false);
       setOppDisconnected(false);
-      setRoundEndData(null); myColorsRef.current = [];
+      setRoundEndData(null);
       const me = s.id;
       const opp = d.players.find((p: any) => p.id !== me);
       if (opp) { setOppName(opp.name); setOppWins(opp.wins); }
       const meP = d.players.find((p: any) => p.id === me);
       if (meP) setMyWins(meP.wins);
-      const target = d.target?.name ? findCharacterByName(allChars, d.target.name) : null;
-      if (target) {
-        const existingGuesses = useGameStore.getState().guesses;
-        useGameStore.setState({ status: "playing", target, remainingGuesses: Math.max(0, (d.maxGuesses ?? 8) - existingGuesses.length), difficulty: "hard" });
-      }
+      // 重连后不持有答案（服务端权威）：棋盘由内存状态决定，重新加载则从空棋盘继续
+      useGameStore.setState({ status: "playing", target: null, remainingGuesses: d.maxGuesses ?? 8, difficulty: "hard" });
       if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
       if (hasActiveRound && remaining > 0) {
         timerRef.current = setInterval(() => {
@@ -275,16 +271,14 @@ export default function MultiplayerPage() {
       setOppGuessCount(0); setOppGrid([]);
       setISurrendered(false); setOppSurrendered(false);
       setOppDisconnected(false);
-      setRoundEndData(null); myColorsRef.current = [];
+      setRoundEndData(null);
       const me = s.id;
       const opp = d.players.find((p: any) => p.id !== me);
       if (opp) { setOppName(opp.name); setOppWins(opp.wins); }
       const meP = d.players.find((p: any) => p.id === me);
       if (meP) setMyWins(meP.wins);
-      const target = d.target?.name ? findCharacterByName(allChars, d.target.name) : null;
-      if (target) {
-        useGameStore.setState({ status: 'playing', target, guesses: [], remainingGuesses: d.maxGuesses ?? 8, difficulty: 'hard' });
-      }
+      // 服务端不下发答案：客户端不持有 target，对比结果由服务端回传 guess_result
+      useGameStore.setState({ status: 'playing', target: null, guesses: [], remainingGuesses: d.maxGuesses ?? 8, difficulty: 'hard' });
       if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
       timerRef.current = setInterval(() => {
         setTimeLeft(t => { if (t <= 1) { clearInterval(timerRef.current!); timerRef.current = null; return 0; } return t - 1; });
@@ -292,6 +286,27 @@ export default function MultiplayerPage() {
     });
 
     s.on('opponent_update', (d) => { setOppGuessCount(d.guessCount); if (d.allComparisons?.length) setOppGrid(d.allComparisons); });
+
+    // 服务端回传的猜测结果（对比 + 胜负标记；答案仍保密，仅存服务端）
+    s.on('guess_result', (d) => {
+      const gs = useGameStore.getState();
+      if (gs.status !== 'playing') return;
+      const char = findCharacterByName(allChars, d.name);
+      if (!char) return;
+      if (gs.guesses.some(g => g.character.id === char.id)) return;
+      const result: GuessResult = {
+        character: char,
+        comparisons: d.comparisons,
+        timestamp: Date.now(),
+        ...(d.correct ? { correct: true } : {}),
+        ...(d.isAlter ? { isAlter: true } : {}),
+      };
+      useGameStore.setState({
+        guesses: [...gs.guesses, result],
+        remainingGuesses: typeof d.remainingGuesses === 'number' ? d.remainingGuesses : 0,
+        status: d.correct ? 'won' : (d.exhausted ? 'lost' : 'playing'),
+      });
+    });
     s.on('opponent_surrendered', (d) => { setOppSurrendered(true); });
     s.on('opponent_disconnected', (d) => { setOppDisconnected(true); });
     s.on('opponent_reconnected', (d) => { setOppDisconnected(false); });
@@ -361,7 +376,6 @@ export default function MultiplayerPage() {
       setISurrendered(false); setOppSurrendered(false);
       roundResultsRef.current = [];
       setOppDisconnected(false); setRoundEndData(null);
-      myColorsRef.current = [];
       useGameStore.setState({ status: 'idle', target: null, guesses: [], remainingGuesses: d.maxGuesses ?? 8, difficulty: 'hard' });
     });
 
@@ -398,7 +412,7 @@ export default function MultiplayerPage() {
       setTimeLeft(120);
       setISurrendered(false); setOppSurrendered(false);
       setOppDisconnected(false);
-      setRoundEndData(null); myColorsRef.current = [];
+      setRoundEndData(null);
       setQueuePosition(0); setMatchDifficulty('');
     });
 
@@ -489,23 +503,12 @@ export default function MultiplayerPage() {
 
   const handleGuess = (char: Character) => {
     if (useGameStore.getState().status !== 'playing') return;
-    store.submitGuess(char.name);
-    const s = useGameStore.getState();
-    if (s.guesses.length) {
-      const latest = s.guesses[s.guesses.length - 1];
-      const comp = latest.comparisons;
-      myColorsRef.current = [...myColorsRef.current, [
-        latest.character.id === s.target?.id ? 'correct' : 'wrong',
-        comp.class, comp.subclass, comp.faction, comp.rarity, comp.race,
-        comp.gender, comp.releaseYear, comp.position, comp.tags,
-      ]];
-    }
+    // 本地去重防御（服务端亦去重，防止快速双击重复计数）
+    if (useGameStore.getState().guesses.some(g => g.character.id === char.id)) return;
     const sock = socketRef.current;
-    if (sock?.connected) {
-      sock.emit('guess_update', { guessCount: s.guesses.length, allComparisons: myColorsRef.current });
-      if (s.status === 'won') sock.emit('player_win_round', { targetName: s.target?.name || '' });
-      if (s.status === 'lost') sock.emit('player_exhausted', { targetName: s.target?.name || '' });
-    }
+    if (!sock?.connected) return;
+    // 只发名字：对比在服务端完成，客户端不持有答案（结果由 guess_result 回传）
+    sock.emit('multi:guess', { name: char.name });
   };
 
   const handleSurrender = () => setShowSurrenderConfirm(true);
@@ -514,8 +517,8 @@ export default function MultiplayerPage() {
     const sock = socketRef.current;
     if (!sock?.connected || useGameStore.getState().status !== 'playing') return;
     setISurrendered(true);
-    sock.emit('surrender_round', { targetName: store.target?.name || '' });
-    store.giveUp();
+    sock.emit('surrender_round', {}); // 答案由服务端持有，无需上报 targetName
+    useGameStore.setState({ status: 'lost' });
   };
 
   const handleRematch = () => {
@@ -562,7 +565,6 @@ export default function MultiplayerPage() {
     setOppDisconnected(false);
     setError('');
     setConnecting('');
-    myColorsRef.current = [];
     roundResultsRef.current = [];
     customConfigRef.current = null;
     setDisplayAttributes(null);

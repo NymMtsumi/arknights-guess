@@ -4,6 +4,7 @@ import { useRef, useMemo } from 'react';
 import type { Character, GuessResult, GuessStatus } from '@/types/character';
 import { isAlterRelation } from '@/lib/game-engine';
 import { useI18n } from '@/lib/i18n';
+import { PARTY_ATTR_KEYS as ATTR_KEYS } from '@/lib/party-constants';
 import { ScrollSlider } from './ScrollSlider';
 
 interface GuessTableProps {
@@ -61,8 +62,7 @@ interface ColDef {
   getText: (c: Character) => string;
 }
 
-// 属性列规范顺序（与 myColorsRef / 服务端 ATTR_KEYS 一致）
-const ATTR_KEYS = ['class', 'subclass', 'faction', 'rarity', 'race', 'gender', 'releaseYear', 'position', 'tags'] as const;
+// 属性列规范顺序（单一事实来源 party-constants，与 server/constants.js ATTR_KEYS 一致）
 
 function buildColumns(t: (k: string) => string, hideRarity: boolean, displayAttributes?: string[] | null): ColDef[] {
   const nameCol: ColDef = { key: 'name', label: t('table.name'), getText: (c) => c.name };
@@ -155,8 +155,8 @@ export function GuessTable({ guesses, target, hideRarity, displayAttributes, fla
         </thead>
         <tbody>
           {[...guesses].reverse().map((guess, i) => {
-            const alterMatch = target && isAlterRelation(target, guess.character);
-            const isWinner = target ? guess.character.id === target.id : false;
+            const alterMatch = guess.isAlter === true || (target && isAlterRelation(target, guess.character));
+            const isWinner = guess.correct === true || (target ? guess.character.id === target.id : false);
             const isNewest = i === 0;
             const needsStagger = isWinner || isNewest;
             const rowClass = isWinner ? 'guess-row-winner' : isNewest ? 'guess-row-newest' : '';
@@ -172,7 +172,7 @@ export function GuessTable({ guesses, target, hideRarity, displayAttributes, fla
                     ? { animationDelay: `${colIdx * 0.06}s` }
                     : {};
                   if (col.key === 'name') {
-                    const isCorrect = target && guess.character.id === target.id;
+                    const isCorrect = guess.correct === true || (target && guess.character.id === target.id);
                     if (isCorrect) {
                       return (
                         <td key={col.key} style={{

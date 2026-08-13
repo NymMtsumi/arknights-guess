@@ -2,7 +2,7 @@
 import { randomBytes, createHash } from 'node:crypto';
 import { promises as dns } from 'node:dns';
 import bcrypt from 'bcryptjs';
-import { sanitizeString, parseCookies, parseBody, jsonResponse, generateKey, generateDisplayCode, SMTP_SENDER } from '../utils.js';
+import { sanitizeString, parseCookies, parseBody, jsonResponse, generateKey, generateDisplayCode, getSmtpSender } from '../utils.js';
 
 // 时序防御：固定 bcrypt hash，防止通过响应时间枚举账号
 const TIMING_DEFENSE_HASH = '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy';
@@ -130,7 +130,7 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
 
     try {
       await transporter.sendMail({
-        from: SMTP_SENDER,
+        from: getSmtpSender(),
         to: email,
         subject: '完成注册 - 明日方舟猜干员',
         html: `<div style="max-width:480px;margin:0 auto;font-family:sans-serif"><h2>完成你的注册</h2><p>感谢注册！点击下方按钮完成注册：</p><a href="${verifyLink}" style="display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none;font-weight:bold">完成注册</a><p style="color:#666;margin-top:20px;font-size:0.85rem">或者复制此链接到浏览器：<br>${verifyLink}</p><p style="color:#999;font-size:0.8rem">此链接1小时内有效。如果你没有注册此账号，请忽略此邮件。</p><p style="color:#999;font-size:0.8rem;margin-top:12px">如果未收到邮件，请检查垃圾邮件箱。</p></div>`,
@@ -172,6 +172,8 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
     }
 
     if (user.banned_at) {
+      // 时序防御：即使封禁也执行 bcrypt.compare，防止通过响应时间探测封禁账号
+      try { await bcrypt.compare('timing-defense', TIMING_DEFENSE_HASH); } catch {}
       return jsonResponse(res, { error: '账号已被封禁' }, 403);
     }
 
@@ -242,6 +244,14 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
 
     const decoded = verifyToken(token);
     if (!decoded) return jsonResponse(res, { error: 'token 无效或已过期' }, 401);
+
+    // 重新校验用户状态（与 requireAuth 一致：存在 + banned_at 为空 + token_version 匹配）
+    const user = db.prepare('SELECT banned_at, token_version FROM users WHERE id = ?').get(decoded.userId);
+    if (!user) return jsonResponse(res, { error: '用户不存在' }, 401);
+    if (user.banned_at) return jsonResponse(res, { error: '账号已被封禁' }, 403);
+    if ((decoded.tokenVersion || 0) !== (user.token_version || 0)) {
+      return jsonResponse(res, { error: '密码已更改，请重新登录' }, 401);
+    }
 
     const cookieHeader = `token=${token}; SameSite=None; Secure; HttpOnly; Path=/; Max-Age=2592000`;
     return jsonResponse(res, { ok: true }, 200, { 'Set-Cookie': cookieHeader });
@@ -386,7 +396,7 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
 
     try {
       await transporter.sendMail({
-        from: SMTP_SENDER,
+        from: getSmtpSender(),
         to: email,
         subject: '重置你的密码 - 明日方舟猜干员',
         html: `<div style="max-width:480px;margin:0 auto;font-family:sans-serif"><h2>重置密码</h2><p>你好 ${user.username}，我们收到了重置密码的请求。</p><p>点击下方按钮设置新密码：</p><a href="${resetLink}" style="display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none;font-weight:bold">重置密码</a><p style="color:#666;margin-top:20px;font-size:0.85rem">或者复制此链接到浏览器：<br>${resetLink}</p><p style="color:#999;font-size:0.8rem">此链接1小时内有效。如果你没有请求重置密码，请忽略此邮件。</p></div>`,

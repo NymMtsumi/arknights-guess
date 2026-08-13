@@ -20,6 +20,7 @@ import { createSocketServer } from './socket/index.js';
 import { createRoomManager } from './socket/rooms.js';
 import { createMatchmaking } from './socket/matchmaking.js';
 import { registerGameHandlers } from './socket/game.js';
+import { registerPartyHandlers } from './socket/party.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -113,7 +114,7 @@ console.log('[init] step 4: creating HTTP server...');
 const http = createServer((req, res) => handleRequest(req, res));
 console.log('[init] step 5: creating socket server...');
 const socketServer = createSocketServer(http, { db, verifyToken, generateKey });
-const { io, onlinePlayers, onlineSockets, socketIps, getUserIps, ONLINE_TIMEOUT } = socketServer;
+const { io, onlinePlayers, onlineSockets, socketIps, getUserIps, ONLINE_TIMEOUT, partyRooms, partyRoomPlayerIndex } = socketServer;
 
 // ===== 初始化房间管理 & 匹配 & 游戏 =====
 const roomManager = createRoomManager();
@@ -142,6 +143,16 @@ const gameHandlers = registerGameHandlers({
 
 // 延迟注入：matchmaking 需要 startRound（由 gameHandlers 提供）
 matchmaking.setStartRound(gameHandlers.startRound);
+
+// ===== 初始化派对模式（房间码制 3-8 人）=====
+// 关键：必须 import + 调用 registerPartyHandlers，否则服务端不会加载派对事件处理器（上次失败的根因）
+const partyHandlers = registerPartyHandlers({
+  io,
+  partyRooms, partyRoomPlayerIndex,
+  onlinePlayers, onlineSockets, ONLINE_TIMEOUT,
+  rooms: roomManager.rooms,
+  roomPlayerIndex: roomManager.roomPlayerIndex,
+});
 
 
 // ===== 注册路由处理器 =====
@@ -247,6 +258,15 @@ async function handleRequest(req, res) {
     // Admin (public)
     if (req.method === 'GET' && path === '/api/announcements') return await adminRoutes.handleGetAnnouncements(req, res);
     if (req.method === 'GET' && path === '/api/version') return await adminRoutes.handleVersion(req, res);
+    if (req.method === 'GET' && path === '/api/health') {
+      try {
+        db.prepare('SELECT 1').get();
+        return jsonResponse(res, { ok: true, db: true });
+      } catch (err) {
+        console.error('[health] db check failed:', err.message);
+        return jsonResponse(res, { ok: false, db: false }, 500);
+      }
+    }
 
     // Admin (protected)
     if (req.method === 'GET' && path === '/api/admin/dashboard') return await adminRoutes.handleDashboard(req, res);
@@ -310,10 +330,15 @@ async function handleRequest(req, res) {
 // ===== 统一周期清理（每分钟） =====
 const cleanupInterval = setInterval(() => {
   try { gameHandlers.runPeriodicCleanup(); } catch (e) { console.error('[cleanup] periodicCleanup failed:', e.message); }
+  try { partyHandlers.runPeriodicCleanup(); } catch (e) { console.error('[cleanup] party periodicCleanup failed:', e.message); }
   try { db.pragma('wal_checkpoint(PASSIVE)'); } catch (e) { console.error('[wal] checkpoint failed:', e.message); }
 }, 60_000);
 
 // ===== 启动服务器 =====
+http.on('error', (err) => {
+  console.error('[FATAL] server error:', err.code || err.message);
+  process.exit(1);
+});
 http.listen(PORT, () => console.log(`[init] Server listening on http://localhost:${PORT}`));
 
 // ===== 优雅关闭 =====

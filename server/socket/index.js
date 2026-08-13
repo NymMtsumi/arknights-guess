@@ -104,6 +104,8 @@ export function createSocketServer(http, { db, verifyToken, generateKey }) {
   const onlineSockets = new Map(); // playerKey → Set<socketId>
   const socketIps = new Map();     // socketId → IP (用于封禁时追踪游客)
   const ONLINE_TIMEOUT = 90_000;
+  const partyRooms = new Map();           // code → party room
+  const partyRoomPlayerIndex = new Map(); // playerKey → code
 
   // 记录 socket IP（穿过代理获取真实 IP）
   io.on('connection', (socket) => {
@@ -136,5 +138,5 @@ export function createSocketServer(http, { db, verifyToken, generateKey }) {
     return ips;
   }
 
-  return { io, onlinePlayers, onlineSockets, socketIps, getUserIps, ONLINE_TIMEOUT };
+  return { io, onlinePlayers, onlineSockets, socketIps, getUserIps, ONLINE_TIMEOUT, partyRooms, partyRoomPlayerIndex };
 }

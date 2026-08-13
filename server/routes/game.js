@@ -38,9 +38,15 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
     let difficulty = sanitizeString(body.difficulty || 'hard', 20);
     const targetName = sanitizeString(body.targetName || '', 100);
 
+    // 每日挑战走独立端点 /api/daily/guess（服务端追踪并校验猜测序列），
+    // save-game 不接收 daily 存档，防止伪造每日排行榜
+    if (mode === 'daily') {
+      return jsonResponse(res, { error: '每日挑战请通过 /api/daily/guess 提交' }, 400);
+    }
+
     // 验证 mode 合法性
-    if (!['single', 'multi', 'daily', 'custom'].includes(mode)) {
-      return jsonResponse(res, { error: 'mode 必须是 single、multi、daily 或 custom' }, 400);
+    if (!['single', 'multi', 'custom'].includes(mode)) {
+      return jsonResponse(res, { error: 'mode 必须是 single、multi 或 custom' }, 400);
     }
 
     let timestamp = normalizeTimestamp(body.timestamp);
@@ -77,9 +83,6 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
 
     if (mode === 'multi') {
       if (difficulty !== 'multi') difficulty = 'multi';
-    } else if (mode === 'daily') {
-      // 每日挑战：固定 hard 难度
-      difficulty = 'hard';
     } else if (mode === 'custom') {
       // 自定义房：难度仅影响题库，校验为 easy|medium|hard（同单人）
       if (!['easy', 'medium', 'hard'].includes(difficulty)) {
@@ -106,8 +109,8 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
     if (guessCount < 0) {
       return jsonResponse(res, { error: 'guessCount 不能为负数' }, 400);
     }
-    // 赢了不可能 0 次猜测（单人/每日）；多人/自定义允许 0 次（对手断线直接判负）
-    if (won && guessCount < 1 && (mode === 'single' || mode === 'daily')) {
+    // 赢了不可能 0 次猜测（单人）；多人/自定义允许 0 次（对手断线直接判负）
+    if (won && guessCount < 1 && mode === 'single') {
       return jsonResponse(res, { error: '获胜时 guessCount 至少为 1' }, 400);
     }
     // 自定义房最多 15 次 × 7 小局 = 105，多人 BO7 也可能超过 50，放宽上限
@@ -163,67 +166,18 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
       }
     }
 
-    let dailyDate = null;
-    if (mode === 'daily') {
-      // 计算当天 UTC 日期
-      const now = new Date();
-      dailyDate = now.toISOString().slice(0, 10); // 'YYYY-MM-DD'
-      // 每日模式使用服务端时间做公平 tiebreak，不信任客户端时间戳
-      timestamp = now.toISOString();
-
-      // 验证目标干员与服务器每日目标一致
-      const expectedTarget = pickDailyTarget('hard');
-      if (targetName !== expectedTarget.name) {
-        return jsonResponse(res, { error: '每日目标不匹配，可能已跨日，请刷新重试' }, 400);
-      }
-
-      // 验证猜测次数在合理范围内（1-8）
-      if (guessCount < 1 || guessCount > 8) {
-        return jsonResponse(res, { error: 'guessCount 必须在 1-8 之间' }, 400);
-      }
+    // 防刷榜：单身份单日存档上限（配合 IP 限流兜底）
+    const dayStart = new Date().toISOString().slice(0, 10);
+    const todayCount = userId
+      ? db.prepare('SELECT COUNT(*) AS c FROM games WHERE user_id = ? AND timestamp >= ?').get(userId, dayStart).c
+      : db.prepare('SELECT COUNT(*) AS c FROM games WHERE player_key = ? AND user_id IS NULL AND timestamp >= ?').get(player_key, dayStart).c;
+    if (todayCount > 300) {
+      return jsonResponse(res, { error: '今日存档次数已达上限，请明天再来' }, 429);
     }
 
-    // 防刷榜：非每日模式单身份单日存档上限（配合 IP 限流兜底）
-    if (mode !== 'daily') {
-      const dayStart = new Date().toISOString().slice(0, 10);
-      const todayCount = userId
-        ? db.prepare('SELECT COUNT(*) AS c FROM games WHERE user_id = ? AND timestamp >= ?').get(userId, dayStart).c
-        : db.prepare('SELECT COUNT(*) AS c FROM games WHERE player_key = ? AND user_id IS NULL AND timestamp >= ?').get(player_key, dayStart).c;
-      if (todayCount > 300) {
-        return jsonResponse(res, { error: '今日存档次数已达上限，请明天再来' }, 429);
-      }
-    }
-
-    let result;
-    if (mode === 'daily') {
-      // 每日模式：去重检查 + 写入封装在事务中，防止并发竞态
-      const txnResult = db.transaction(() => {
-        if (userId) {
-          const existing = db.prepare(
-            'SELECT id FROM games WHERE user_id = ? AND daily_date = ?'
-          ).get(userId, dailyDate);
-          if (existing) return { conflict: true };
-        } else {
-          const existing = db.prepare(
-            'SELECT id FROM games WHERE player_key = ? AND daily_date = ? AND user_id IS NULL'
-          ).get(player_key, dailyDate);
-          if (existing) return { conflict: true };
-        }
-
-        return db.prepare(
-          'INSERT INTO games (player_key, user_id, won, guess_count, difficulty, target_name, timestamp, mode, daily_date, multi_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-        ).run(player_key, userId || null, won ? 1 : 0, guessCount, difficulty, targetName, timestamp, mode, dailyDate, multiData);
-      })();
-
-      if (txnResult.conflict) {
-        return jsonResponse(res, { error: '今日已挑战' }, 409);
-      }
-      result = txnResult;
-    } else {
-      result = db.prepare(
-        'INSERT INTO games (player_key, user_id, won, guess_count, difficulty, target_name, timestamp, mode, daily_date, multi_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-      ).run(player_key, userId || null, won ? 1 : 0, guessCount, difficulty, targetName, timestamp, mode, dailyDate, multiData);
-    }
+    const result = db.prepare(
+      'INSERT INTO games (player_key, user_id, won, guess_count, difficulty, target_name, timestamp, mode, daily_date, multi_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).run(player_key, userId || null, won ? 1 : 0, guessCount, difficulty, targetName, timestamp, mode, null, multiData);
 
     const extraHeaders = {};
     if (newPlayerKey) {

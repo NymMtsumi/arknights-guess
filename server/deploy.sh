@@ -6,7 +6,7 @@ set -euo pipefail
 PROJECT_PATH="/opt/liyiba"
 NODE_BIN=$(dirname "$(which node)")
 LOG_FILE="$PROJECT_PATH/deploy.log"
-HEALTH_URL="http://127.0.0.1:${PORT:-3001}/api/version"
+HEALTH_URL="http://127.0.0.1:${PORT:-3001}/api/health"
 PM2_APP="${PM2_APP_NAME:-liyiba}"
 
 log() { echo "[deploy] $(date -Iseconds) $*" >> "$LOG_FILE"; }
@@ -74,7 +74,7 @@ sleep 4
 
 HEALTH_PASSED=0
 for i in 1 2 3; do
-  if curl -fsS --max-time 5 "$HEALTH_URL" > /dev/null 2>&1; then
+  if curl -fsS --max-time 5 "$HEALTH_URL" 2>/dev/null | grep -q '"ok":true'; then
     log " Health check PASSED (attempt $i)"
     HEALTH_PASSED=1
     break
@@ -91,6 +91,12 @@ fi
 # 健康检查全部失败 → 自动回滚
 log "Health check FAILED after 3 attempts — ROLLING BACK to ${OLD_HEAD:0:7}"
 git reset --hard "$OLD_HEAD" >> "$LOG_FILE" 2>&1
+# 回滚后重装旧依赖树，避免旧源码运行在新依赖上（better-sqlite3 是 ABI 敏感的 native 模块，混用会 SIGSEGV）
+if npm ci --production >> "$LOG_FILE" 2>&1; then
+  log " npm ci OK (rollback)"
+else
+  log " npm ci FAILED during rollback — continuing"
+fi
 pm2 restart "$PM2_APP" --update-env >> "$LOG_FILE" 2>&1
 log "=== Deploy ROLLED BACK ==="
 exit 1

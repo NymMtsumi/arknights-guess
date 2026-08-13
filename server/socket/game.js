@@ -2,6 +2,7 @@
 import { sanitizeString } from '../utils.js';
 import { randomTarget } from '../characters.js';
 import { ROUND_TIME, ROUND_TIME_PRESETS, ATTR_KEYS } from '../constants.js';
+import { findCharByName, compareGuess, isAlterRelation, isWin } from '../game-engine.js';
 
 const DISCONNECT = 30_000;
 const DISBAND_COOLDOWN = 120_000; // 解散房间后 120 秒内不能创建新房间
@@ -30,7 +31,9 @@ export function registerGameHandlers({
   function startRound(room) {
     if (room.finished) return;
     if (room._roundTimer) clearTimeout(room._roundTimer);
-    const target = randomTarget(room.difficulty || 'hard');
+    // randomTarget 只返回 {id,name}，服务端对比需要完整干员数据，这里解析成完整对象（仅存服务端，不下发）
+    const raw = randomTarget(room.difficulty || 'hard');
+    const target = findCharByName(raw?.name) || raw;
     room.target = target;
     room.roundSettled = false;
     room.surrendered = new Set();
@@ -38,13 +41,13 @@ export function registerGameHandlers({
     // 跟踪本回合每位玩家的状态
     room._roundPlayers = new Map();
     for (const [sid, p] of room.players) {
-      room._roundPlayers.set(sid, { guessed: false, exhausted: false, surrendered: false });
+      room._roundPlayers.set(sid, { guessed: false, exhausted: false, surrendered: false, guessChain: [], colorRows: [] });
     }
 
     const roundTime = room.roundTime ?? ROUND_TIME;
     const timer = setTimeout(() => {
       // 回合超时 = 平局（双方均未猜出且未放弃）
-      if (room.roundSettled) return; // 防御：player_win_round 已先行结算
+      if (room.roundSettled) return; // 防御：multi:guess 已先行结算
       room.roundSettled = true;
       room._roundStartAt = null;
       io.to(room.code).emit('round_end', {
@@ -57,7 +60,7 @@ export function registerGameHandlers({
 
     io.to(room.code).emit('round_start', {
       startTime: Date.now(), timeLimit: roundTime,
-      score: score(room), target, difficulty: room.difficulty || 'hard',
+      score: score(room), difficulty: room.difficulty || 'hard',
       players: Array.from(room.players.entries()).map(([id, p]) => ({ id, name: p.name, wins: p.wins })),
       ...roomConfig(room),
     });
@@ -137,6 +140,11 @@ export function registerGameHandlers({
           player.lastSocketId = pid;
           existing.players.delete(pid);
           existing.players.set(socket.id, player);
+          // 重连后 socket.id 变化，同步迁移本回合玩家状态映射，否则重连者本回合无法继续猜
+          if (existing._roundPlayers?.has(pid)) {
+            existing._roundPlayers.set(socket.id, existing._roundPlayers.get(pid));
+            existing._roundPlayers.delete(pid);
+          }
           socket.join(existing.code);
           socket.data.roomCode = existing.code;
           socket.to(existing.code).emit('opponent_reconnected', { playerName: player.name });
@@ -153,7 +161,7 @@ export function registerGameHandlers({
               : 0;
             socket.emit('reconnect_state', {
               code: existing.code, bestOf: existing.bestOf, winsNeeded: existing.winsNeeded,
-              score: score(existing), target: existing.target, remainingTime, hasActiveRound,
+              score: score(existing), remainingTime, hasActiveRound,
               difficulty: existing.difficulty || 'hard',
               players: Array.from(existing.players.entries()).map(([id, p]) => ({ id, name: p.name, wins: p.wins })),
               ...roomConfig(existing),
@@ -284,6 +292,10 @@ export function registerGameHandlers({
             p.lastSocketId = pid;
             room.players.delete(pid);
             room.players.set(socket.id, p);
+            if (room._roundPlayers?.has(pid)) {
+              room._roundPlayers.set(socket.id, room._roundPlayers.get(pid));
+              room._roundPlayers.delete(pid);
+            }
             socket.join(code);
             socket.data.roomCode = code;
             roomPlayerIndex.set(socket.data.playerKey, code);
@@ -300,7 +312,7 @@ export function registerGameHandlers({
               socket.emit('reconnect_state', {
                 code, bestOf: room.bestOf, winsNeeded: room.winsNeeded,
                 score: room.players.size >= 2 ? score(room) : '',
-                target: room.target, remainingTime, hasActiveRound,
+                remainingTime, hasActiveRound,
                 difficulty: room.difficulty || 'hard',
                 players: Array.from(room.players.entries()).map(([id, pl]) => ({ id, name: pl.name, wins: pl.wins })),
                 ...roomConfig(room),
@@ -341,63 +353,85 @@ export function registerGameHandlers({
       console.log(`[日志] ${action}`);
     });
 
-    // === guess_update ===
-    socket.on('guess_update', (data) => {
-      const room = rooms.get(socket.data.roomCode);
-      if (!room || room.finished || room.roundSettled) return;
-      if (!room.players.has(socket.id)) return; // 防止 stale roomCode 跨房间数据泄露
-      socket.to(room.code).emit('opponent_update', {
-        guessCount: data?.guessCount ?? 0,
-        allComparisons: data?.allComparisons || [],
-      });
-    });
-
-    // === player_win_round ===
-    socket.on('player_win_round', (data) => {
+    // === multi:guess ===（服务端权威对比：答案绝不下发客户端）
+    socket.on('multi:guess', (data) => {
       try {
-      const room = rooms.get(socket.data.roomCode);
-      if (!room || room.finished || room.roundSettled) return;
-      const player = room.players.get(socket.id);
-      if (!player) return;
+        const room = rooms.get(socket.data.roomCode);
+        if (!room || room.finished || room.roundSettled) return;
+        if (!room.players.has(socket.id)) return; // 防止 stale roomCode 跨房间数据泄露
+        const player = room.players.get(socket.id);
+        if (!room.target || !player) return;
 
-      // 安全校验：上报的答案必须与服务器本回合答案一致，否则忽略（防未收答案直接刷分）
-      if (!room.target || !data?.targetName || String(data.targetName).trim() !== room.target.name) {
-        console.warn(`[game] player_win_round 答案不匹配，忽略: ${socket.id} 上报=${data?.targetName}`);
-        return;
-      }
+        const rawName = sanitizeString(data?.name, 40);
+        if (!rawName) return;
+        const char = findCharByName(rawName);
+        if (!char) return;
+        const guessedName = char.name;
 
-      // 标记猜出状态（防重复上报：同一回合只能赢一次）
-      const rp = room._roundPlayers?.get(socket.id);
-      if (rp?.guessed) return;
-      if (rp) rp.guessed = true;
+        const rp = room._roundPlayers?.get(socket.id);
+        if (!rp) return;
+        // 已猜出/已耗尽 → 本回合不再受理任何猜测（防绕过 maxGuesses 的恶意续猜）
+        if (rp.guessed || rp.exhausted) return;
+        // 去重：同一干员本回合只计一次
+        if (rp.guessChain.includes(guessedName)) return;
 
-      player.wins++;
-      const won = player.wins >= room.winsNeeded;
-      console.log(`[胜] ${player.name} ${player.wins}/${room.winsNeeded}`);
-      endRound(room, socket.id, player.name, data?.targetName || room.target?.name || '', won);
-      } catch (e) { console.error('[game] player_win_round error:', e.message); }
-    });
+        rp.guessChain.push(guessedName);
+        const guessCount = rp.guessChain.length;
+        const maxGuesses = room.maxGuesses ?? 8;
+        const remaining = Math.max(0, maxGuesses - guessCount);
 
-    // === player_exhausted ===
-    socket.on('player_exhausted', (data) => {
-      try {
-      const room = rooms.get(socket.data.roomCode);
-      if (!room || room.finished || room.roundSettled) return;
-      const player = room.players.get(socket.id);
-      if (!player) return;
+        const comparisons = compareGuess(room.target, char);
+        const isAlter = isAlterRelation(room.target, char);
+        const isCorrect = isWin(room.target, char);
 
-      const rp = room._roundPlayers?.get(socket.id);
-      if (rp) rp.exhausted = true;
+        // 对手棋盘颜色行（与前端 ATTR_KEYS / displayCols.dataIdx 顺序一致，含 name 列）
+        const row = [
+          isCorrect ? 'correct' : 'wrong',
+          comparisons.class, comparisons.subclass, comparisons.faction,
+          comparisons.rarity, comparisons.race, comparisons.gender,
+          comparisons.releaseYear, comparisons.position, comparisons.tags,
+        ];
+        rp.colorRows.push(row);
 
-      // 检查双方是否均耗尽 → 平局
-      const otherId = Array.from(room.players.keys()).find(id => id !== socket.id);
-      const otherRp = otherId ? room._roundPlayers?.get(otherId) : null;
-      if (otherRp?.exhausted) {
-        console.log(`[耗尽] 双方次数耗尽 → 平局`);
-        endRound(room, null, '', data?.targetName || room.target?.name || '', false);
-        // 平局不加分
-      }
-      } catch (e) { console.error('[game] player_exhausted error:', e.message); }
+        // 回执给猜测者（不下发答案，仅对比结果 + 胜负标记）
+        socket.emit('guess_result', {
+          name: guessedName,
+          comparisons,
+          correct: isCorrect,
+          isAlter,
+          guessCount,
+          remainingGuesses: remaining,
+          exhausted: !isCorrect && remaining <= 0,
+        });
+
+        // 广播给对手（只发颜色行，不发名字，防止从对手视角反推答案）
+        socket.to(room.code).emit('opponent_update', {
+          guessCount,
+          allComparisons: rp.colorRows,
+        });
+
+        if (isCorrect) {
+          // 已猜出：判胜（防重复上报）
+          if (rp.guessed) return;
+          rp.guessed = true;
+          player.wins++;
+          const won = player.wins >= room.winsNeeded;
+          console.log(`[胜] ${player.name} ${player.wins}/${room.winsNeeded}`);
+          endRound(room, socket.id, player.name, room.target.name, won);
+          return;
+        }
+
+        // 耗尽检查：双方均耗尽 → 平局
+        if (remaining <= 0) {
+          rp.exhausted = true;
+          const otherId = Array.from(room.players.keys()).find(id => id !== socket.id);
+          const otherRp = otherId ? room._roundPlayers?.get(otherId) : null;
+          if (otherRp?.exhausted) {
+            console.log(`[耗尽] 双方次数耗尽 → 平局`);
+            endRound(room, null, '', room.target.name, false);
+          }
+        }
+      } catch (e) { console.error('[game] multi:guess error:', e.message); }
     });
 
     // === surrender_round ===
@@ -418,13 +452,13 @@ export function registerGameHandlers({
       socket.to(room.code).emit('opponent_surrendered', { playerName: player.name });
 
       // 判断胜负：
-      // 注：不存在「对方已猜出」分支——player_win_round 会立即 endRound 置 roundSettled=true，
-      // 此处已因顶部 roundSettled 检查提前返回，故该分支不可达，已移除。
+      // 注：不存在「对方已猜出」分支——multi:guess 猜对会立即 endRound 置 roundSettled=true，
+      // 此处已因顶部 roundSettled 检查提前返回，故该分支不可达。
 
       // 对方已放弃或已耗尽 → 双方弃权/放弃vs耗尽 → 平局
       if (otherRp?.surrendered || otherRp?.exhausted) {
         console.log(`[弃权] 双方弃权/耗尽 → 平局`);
-        endRound(room, null, '', data?.targetName || room.target?.name || '', false);
+        endRound(room, null, '', room.target?.name || '', false);
         return;
       }
 
@@ -434,7 +468,7 @@ export function registerGameHandlers({
       // take the "both surrendered → draw" branch above. This is rare (< ~1ms race window)
       // and the outcome is the same (draw), so it is accepted without a setTimeout defense.
       console.log(`[弃权] ${player.name} 弃权 → 对方未猜出 → 平局`);
-      endRound(room, null, '', data?.targetName || room.target?.name || '', false);
+      endRound(room, null, '', room.target?.name || '', false);
       } catch (e) { console.error('[game] surrender_round error:', e.message); }
     });
 
@@ -622,6 +656,10 @@ export function registerGameHandlers({
       if (player.dcTimer) { clearTimeout(player.dcTimer); player.dcTimer = null; }
       room.players.delete(foundPid);
       room.players.set(socket.id, player);
+      if (room._roundPlayers?.has(foundPid)) {
+        room._roundPlayers.set(socket.id, room._roundPlayers.get(foundPid));
+        room._roundPlayers.delete(foundPid);
+      }
       socket.join(code);
       socket.data.roomCode = code;
       socket.to(code).emit('opponent_reconnected', { playerName: player.name });
@@ -634,7 +672,7 @@ export function registerGameHandlers({
           : 0;
         socket.emit('reconnect_state', {
           code, bestOf: room.bestOf, winsNeeded: room.winsNeeded,
-          score: score(room), target: room.target, remainingTime, hasActiveRound,
+          score: score(room), remainingTime, hasActiveRound,
           difficulty: room.difficulty || 'hard',
           players: Array.from(room.players.entries()).map(([id, p]) => ({ id, name: p.name, wins: p.wins })),
           ...roomConfig(room),

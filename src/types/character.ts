@@ -44,6 +44,10 @@ export interface GuessResult {
   character: Character;
   comparisons: GuessComparisons;
   timestamp: number;
+  /** 服务端判定：本猜测即为答案（派对模式，服务端不下发目标，改由该标记驱动胜者行高亮） */
+  correct?: boolean;
+  /** 服务端判定：本猜测与答案为异格关系（派对模式） */
+  isAlter?: boolean;
 }
 
 /** 难度等级 */

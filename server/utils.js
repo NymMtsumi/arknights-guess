@@ -158,9 +158,12 @@ export function normalizeTimestamp(ts) {
 // 1. 生产环境必须在 .env 中设置 SMTP_FROM='"显示名" <你的QQ号@qq.com>'
 // 2. 如果未设置 SMTP_FROM 但有 SMTP_USER，则自动使用 SMTP_USER 作为发件人
 // 3. 均未设置时回退到 noreply 占位（QQ SMTP 会拒绝发送）
-export const SMTP_SENDER = process.env.SMTP_FROM
-  || (process.env.SMTP_USER ? `"明日方舟猜干员" <${process.env.SMTP_USER}>` : null)
-  || '"明日方舟猜干员" <noreply@arknights-guess.online>';
+// 使用函数延迟求值：模块顶层执行时 process.env 尚未加载 .env 文件，调用时 .env 已就绪
+export function getSmtpSender() {
+  return process.env.SMTP_FROM
+    || (process.env.SMTP_USER ? `"明日方舟猜干员" <${process.env.SMTP_USER}>` : null)
+    || '"明日方舟猜干员" <noreply@arknights-guess.online>';
+}
 
 // ===== 昵称违禁词过滤 =====
 const NICKNAME_FORBIDDEN = new Set([

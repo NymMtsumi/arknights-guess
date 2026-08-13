@@ -129,3 +129,20 @@ export function compareGuess(target, guess) {
 export function isWin(target, guess) {
   return target.id === guess.id || target.name === guess.name;
 }
+
+/** 是否为异格关系（与客户端 src/lib/game-engine.ts 一致） */
+export function isAlterRelation(target, guess) {
+  if (!target || !guess) return false;
+  if (guess.alterBase && guess.alterBase === target.name) return true;
+  if (target.alterBase && target.alterBase === guess.name) return true;
+  if (guess.alterBase && target.alterBase && guess.alterBase === target.alterBase) return true;
+  if (target._alters) {
+    const alters = target._alters.split(',').map(s => s.trim()).filter(Boolean);
+    if (alters.includes(guess.name)) return true;
+  }
+  if (guess._alters) {
+    const alters = guess._alters.split(',').map(s => s.trim()).filter(Boolean);
+    if (alters.includes(target.name)) return true;
+  }
+  return false;
+}

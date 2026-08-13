@@ -359,5 +359,17 @@
   "party.errMultiTab": "You are already connected in another tab",
   "party.errNotInRoom": "You are not in this room",
   "party.errBadName": "Nickname contains forbidden content",
-  "party.errInternal": "Internal server error, please try again"
+  "party.errInternal": "Internal server error, please try again",
+  "party.errReconnect": "Reconnect failed, please rejoin the room",
+  "party.errHostCannotReady": "The host does not need to ready up",
+  "party.errNotHost": "Only the host can do this",
+  "party.errInvalid": "Invalid action",
+  "party.remainingGuesses": "{{n}} left",
+  "party.liveStandings": "Live standings",
+  "party.rulesTitle": "How to play",
+  "party.rulesIntro": "3-8 players compete to guess the same operator; whoever guesses first scores points.",
+  "party.rule1": "The host creates a room and sets difficulty/rounds/attributes; others join by entering the 6-digit code or opening the share link to auto-join.",
+  "party.rule2": "Each round is timed and each player has a fixed number of guesses. Guessing earlier with fewer guesses scores more (1st 5, 2nd 3, 3rd 2, others 1, plus a fewest-guesses bonus).",
+  "party.rule3": "Non-hosts must tap Ready before the host can start. Each round reveals the answer and rankings; the highest total score wins.",
+  "party.rule4": "Disconnects get a 30-second grace to reconnect; exceeding it or leaving counts as quitting. Rooms disband automatically below 3 players."
 }

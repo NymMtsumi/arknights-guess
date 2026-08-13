@@ -1,5 +1,4 @@
 // 派对模式 — 房间管理（创建/加入/离开/踢人/解散/清理）
-import { sanitizeString, checkNicknameProfanity } from '../utils.js';
 import { ATTR_KEYS } from '../constants.js';
 
 const DISCONNECT = 30_000;
@@ -8,6 +7,15 @@ const MIN_PLAYERS = 3;
 const MAX_GUESSES = 8;
 // 每局时长预设（秒，与前端 Lobby 一致；多人对战用毫秒常量，单位不同故不复用 constants.js）
 const PARTY_ROUND_TIMES = [60, 120, 180, 240, 300];
+
+// 由 playerKey 生成确定性 4 位数字昵称（弗一把式匿名房，取消自定义昵称）
+// playerKey 同一玩家跨重连稳定（登录用户派生自账号、游客存 localStorage），故昵称稳定。
+function guestNameFromKey(pk) {
+  let h = 0;
+  const s = String(pk || '');
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return `玩家#${(h % 10000).toString().padStart(4, '0')}`;
+}
 
 // ===== ack 辅助（请求-响应协议，消灭静默失败）=====
 function ackOk(ack, data) { if (typeof ack === 'function') ack({ ok: true, ...(data || {}) }); }
@@ -105,9 +113,10 @@ export function createPartyRoomModule(deps) {
   }
 
   // ===== 创建玩家对象 =====
-  function makePlayer(socket, name) {
+  // 昵称由服务端生成（玩家#XXXX），不再信任客户端传名（取消自定义昵称）
+  function makePlayer(socket) {
     return {
-      name: sanitizeString(name || '玩家', 20),
+      name: guestNameFromKey(socket.data.playerKey),
       wins: 0,
       dcTimer: null,
       lastSocketId: null,
@@ -132,13 +141,6 @@ export function createPartyRoomModule(deps) {
       return;
     }
 
-    const playerName = sanitizeString(data?.playerName || '玩家', 20);
-    const profanity = checkNicknameProfanity(playerName);
-    if (profanity) {
-      socket.emit('party:error', { code: 'BAD_NAME', message: '昵称含违禁内容' });
-      ackErr(ack, 'BAD_NAME', '昵称含违禁内容');
-      return;
-    }
     const difficulty = ['easy', 'medium', 'hard'].includes(data?.difficulty) ? data?.difficulty : 'hard';
     const rounds = [5, 7, 10].includes(data?.rounds) ? data?.rounds : 7;
     const roundTime = PARTY_ROUND_TIMES.includes(data?.roundTime) ? data?.roundTime : 120;
@@ -149,7 +151,7 @@ export function createPartyRoomModule(deps) {
     const room = {
       code,
       hostId: socket.id,
-      players: new Map([[socket.id, makePlayer(socket, playerName)]]),
+      players: new Map([[socket.id, makePlayer(socket)]]),
       settings: { difficulty, rounds, roundTime, attributes, maxGuesses },
       started: false,
       finished: false,
@@ -178,7 +180,7 @@ export function createPartyRoomModule(deps) {
       players: Array.from(room.players.entries()).map(([id, pl]) => ({ id, name: pl.name, ready: pl.ready, playerKey: pl.playerKey })),
     });
     ackOk(ack, { roomCode: code });
-    console.log(`[派对] 创建房间 ${code} 房主=${playerName}`);
+    console.log(`[派对] 创建房间 ${code} 房主=${room.players.get(socket.id)?.name}`);
   }
 
   // ===== 加入房间 =====
@@ -242,32 +244,26 @@ export function createPartyRoomModule(deps) {
       }
     }
 
-    // 新玩家
-    const playerName = sanitizeString(data?.playerName || '玩家', 20);
-    const profanity = checkNicknameProfanity(playerName);
-    if (profanity) {
-      socket.emit('party:error', { code: 'BAD_NAME', message: '昵称含违禁内容' });
-      ackErr(ack, 'BAD_NAME', '昵称含违禁内容');
-      return;
-    }
-    room.players.set(socket.id, makePlayer(socket, playerName));
+    // 新玩家（昵称服务端生成，忽略客户端传名）
+    const player = makePlayer(socket);
+    room.players.set(socket.id, player);
     socket.join(code);
     registerOnline(socket, code);
 
-    broadcast(room, 'party:player_joined', { id: socket.id, name: playerName, ready: false, playerKey: socket.data.playerKey });
+    broadcast(room, 'party:player_joined', { id: socket.id, name: player.name, ready: false, playerKey: socket.data.playerKey });
     socket.emit('party:joined', {
       room: { code: room.code, hostId: room.hostId, settings: room.settings, started: room.started },
       players: Array.from(room.players.entries()).map(([id, pl]) => ({ id, name: pl.name, ready: pl.ready, playerKey: pl.playerKey })),
     });
     ackOk(ack, { roomCode: room.code });
-    console.log(`[派对] ${playerName} 加入房间 ${code} (${room.players.size}/${MAX_PLAYERS})`);
+    console.log(`[派对] ${player.name} 加入房间 ${code} (${room.players.size}/${MAX_PLAYERS})`);
   }
 
   // ===== 重连 =====
-  function reconnectPartyRoom(socket, data) {
+  function reconnectPartyRoom(socket, data, ack) {
     const code = String(data?.roomCode || '').trim();
     const room = partyRooms.get(code);
-    if (!room) { socket.emit('party:error', { code: 'ROOM_NOT_FOUND', message: '房间不存在' }); return; }
+    if (!room) { socket.emit('party:error', { code: 'ROOM_NOT_FOUND', message: '房间不存在' }); ackErr(ack, 'ROOM_NOT_FOUND', '房间不存在'); return; }
 
     let foundPlayer = null;
     let foundOldId = null;
@@ -278,13 +274,14 @@ export function createPartyRoomModule(deps) {
         break;
       }
     }
-    if (!foundPlayer) { socket.emit('party:error', { code: 'NOT_IN_ROOM', message: '你不在该房间中' }); return; }
+    if (!foundPlayer) { socket.emit('party:error', { code: 'NOT_IN_ROOM', message: '你不在该房间中' }); ackErr(ack, 'NOT_IN_ROOM', '你不在该房间中'); return; }
 
     if (foundOldId !== socket.id) {
       const oldSocket = io.sockets.sockets.get(foundOldId);
       if (oldSocket && oldSocket.connected) {
-        socket.emit('party:error', { code: 'MULTI_TAB', message: '你已在其他标签页中连接' });
-        return;
+        // 快速重连竞态：新 socket 的 party:reconnect 先于旧 socket 的 disconnect 事件到达。
+        // 与其拒绝（导致玩家永久卡在「别人视角已断线」），不如主动踢掉旧连接，然后正常 re-key。
+        try { oldSocket.disconnect(true); } catch {}
       }
     }
 
@@ -355,41 +352,49 @@ export function createPartyRoomModule(deps) {
     }
 
     socket.emit('party:reconnect_state', state);
+    ackOk(ack, { roomCode: room.code });
     console.log(`[派对] ${foundPlayer.name} 重连到房间 ${code}`);
   }
 
   // ===== 切换准备 =====
-  function toggleReady(socket) {
+  function toggleReady(socket, ack) {
     const room = findPartyRoomByIdentityKey(socket.data.identityKey);
-    if (!room || room.started) return;
+    if (!room) { ackErr(ack, 'NOT_IN_ROOM', '你不在房间中'); return; }
+    if (room.started) { ackErr(ack, 'GAME_STARTED', '游戏已开始'); return; }
     const player = findPlayerInRoom(room, socket);
-    if (!player || socket.id === room.hostId) return;
+    if (!player) { ackErr(ack, 'NOT_IN_ROOM', '你不在房间中'); return; }
+    if (socket.id === room.hostId) { ackErr(ack, 'HOST_CANNOT_READY', '房主无需准备'); return; }
     player.ready = !player.ready;
     broadcast(room, 'party:player_ready', { playerId: socket.id, ready: player.ready });
+    ackOk(ack, { ready: player.ready });
   }
 
   // ===== 更新设置 =====
-  function updateSettings(socket, data) {
+  function updateSettings(socket, data, ack) {
     const room = findPartyRoomByIdentityKey(socket.data.identityKey);
-    if (!room || room.started || room.finished) return;
-    if (room.hostId !== socket.id) return;
+    if (!room) { ackErr(ack, 'NOT_IN_ROOM', '你不在房间中'); return; }
+    if (room.started || room.finished) { ackErr(ack, 'GAME_STARTED', '游戏已开始，无法修改设置'); return; }
+    if (room.hostId !== socket.id) { ackErr(ack, 'NOT_HOST', '仅房主可修改设置'); return; }
     if (data?.difficulty && ['easy', 'medium', 'hard'].includes(data.difficulty)) room.settings.difficulty = data.difficulty;
     if (data?.rounds && [5, 7, 10].includes(data.rounds)) room.settings.rounds = data.rounds;
     if (data?.roundTime && PARTY_ROUND_TIMES.includes(data.roundTime)) room.settings.roundTime = data.roundTime;
     if (data && Object.prototype.hasOwnProperty.call(data, 'attributes')) room.settings.attributes = sanitizeAttributes(data);
     if (data && Object.prototype.hasOwnProperty.call(data, 'maxGuesses')) room.settings.maxGuesses = sanitizeMaxGuesses(data);
     broadcast(room, 'party:settings_updated', { settings: room.settings });
+    ackOk(ack, { settings: room.settings });
   }
 
   // ===== 开始游戏 =====
-  function startGame(socket) {
+  function startGame(socket, ack) {
     const room = findPartyRoomByIdentityKey(socket.data.identityKey);
-    if (!room || room.started || room.finished) return;
-    if (room.hostId !== socket.id) return;
+    if (!room) { ackErr(ack, 'NOT_IN_ROOM', '你不在房间中'); return; }
+    if (room.started || room.finished) { ackErr(ack, 'GAME_STARTED', '游戏已开始'); return; }
+    if (room.hostId !== socket.id) { ackErr(ack, 'NOT_HOST', '仅房主可开始游戏'); return; }
 
     const onlineCount = [...room.players.values()].filter(p => !p.dcTimer).length;
     if (onlineCount < MIN_PLAYERS) {
       socket.emit('party:error', { code: 'NEED_MORE_PLAYERS', message: `至少需要${MIN_PLAYERS}名玩家`, minPlayers: MIN_PLAYERS });
+      ackErr(ack, 'NEED_MORE_PLAYERS', `至少需要${MIN_PLAYERS}名玩家`, { minPlayers: MIN_PLAYERS });
       return;
     }
     let allReady = true;
@@ -398,6 +403,7 @@ export function createPartyRoomModule(deps) {
     }
     if (!allReady) {
       socket.emit('party:error', { code: 'NOT_ALL_READY', message: '还有玩家未准备' });
+      ackErr(ack, 'NOT_ALL_READY', '还有玩家未准备');
       return;
     }
 
@@ -410,6 +416,7 @@ export function createPartyRoomModule(deps) {
       id, name: pl.name, ready: pl.ready, playerKey: pl.playerKey,
     }));
     broadcast(room, 'party:game_starting', { countdown: 5, players });
+    ackOk(ack, {});
 
     let countdown = 5;
     room._countdownInterval = setInterval(() => {
@@ -504,12 +511,14 @@ export function createPartyRoomModule(deps) {
   }
 
   // ===== 踢人 =====
-  function handlePartyKick(socket, data) {
+  function handlePartyKick(socket, data, ack) {
     const room = findPartyRoomByIdentityKey(socket.data.identityKey);
-    if (!room || room.hostId !== socket.id) return;
+    if (!room) { ackErr(ack, 'NOT_IN_ROOM', '你不在房间中'); return; }
+    if (room.hostId !== socket.id) { ackErr(ack, 'NOT_HOST', '仅房主可踢人'); return; }
     const targetSid = data?.playerId;
     const target = room.players.get(targetSid);
-    if (!target || targetSid === socket.id) return;
+    if (!target) { ackErr(ack, 'NOT_IN_ROOM', '目标玩家不在房间中'); return; }
+    if (targetSid === socket.id) { ackErr(ack, 'INVALID', '不能踢自己'); return; }
 
     if (target.dcTimer) { clearTimeout(target.dcTimer); target.dcTimer = null; }
 
@@ -540,6 +549,7 @@ export function createPartyRoomModule(deps) {
 
     io.to(targetSid).emit('party:kicked');
     broadcast(room, 'party:player_left', { playerId: targetSid, playerName: target.name });
+    ackOk(ack, {});
   }
 
   // ===== 断线处理 =====

@@ -6,6 +6,7 @@ import { useI18n } from '@/lib/i18n';
 import { usePartyStore } from '@/stores/party-store';
 import { HostSettings, type PartyHostSettings } from './Lobby';
 import { PARTY_MIN_PLAYERS, PARTY_MAX_PLAYERS } from '@/lib/party-constants';
+import { partyErrorMessage } from '@/lib/party-handlers';
 import type { Socket } from 'socket.io-client';
 
 interface WaitingRoomProps {
@@ -20,6 +21,7 @@ export function PartyWaitingRoom({ socket, isConnected }: WaitingRoomProps) {
   const players = usePartyStore(s => s.players);
   const settings = usePartyStore(s => s.settings);
   const socketId = usePartyStore(s => s.socketId);
+  const disconnectedPlayers = usePartyStore(s => s.disconnectedPlayers);
   const setSettings = usePartyStore(s => s.setSettings);
   const error = usePartyStore(s => s.error);
   const setError = usePartyStore(s => s.setError);
@@ -31,8 +33,13 @@ export function PartyWaitingRoom({ socket, isConnected }: WaitingRoomProps) {
   const nonHostPlayers = players.filter(p => p.id !== hostId);
   const allReady = nonHostPlayers.every(p => p.ready) && players.length >= PARTY_MIN_PLAYERS;
 
+  // ack 失败统一处理：把服务端错误码映射成 i18n 文案（消灭静默失败）
+  const handleAckError = (res?: { ok?: boolean; code?: string; minPlayers?: number }) => {
+    if (res && res.ok === false) setError(partyErrorMessage(res.code, t, res.minPlayers));
+  };
+
   const handleStart = () => {
-    if (!isHost) return;
+    if (!isHost || !isConnected) return;
     if (players.length < PARTY_MIN_PLAYERS) {
       setError(t('party.needMorePlayers'));
       return;
@@ -42,17 +49,17 @@ export function PartyWaitingRoom({ socket, isConnected }: WaitingRoomProps) {
       return;
     }
     setError('');
-    socket.emit('party:start');
+    socket.emit('party:start', handleAckError);
   };
 
   const handleToggleReady = () => {
-    if (isHost) return;
-    socket.emit('party:toggle_ready');
+    if (isHost || !isConnected) return;
+    socket.emit('party:toggle_ready', handleAckError);
   };
 
   const handleKick = (playerId: string) => {
-    if (!isHost) return;
-    socket.emit('party:kick', { playerId });
+    if (!isHost || !isConnected) return;
+    socket.emit('party:kick', { playerId }, handleAckError);
   };
 
   const handleCopyLink = () => {
@@ -71,7 +78,7 @@ export function PartyWaitingRoom({ socket, isConnected }: WaitingRoomProps) {
 
   const handleSettingsChange = (s: PartyHostSettings) => {
     setSettings(s);
-    socket.emit('party:update_settings', s);
+    socket.emit('party:update_settings', s, handleAckError);
   };
 
   return (
@@ -86,7 +93,7 @@ export function PartyWaitingRoom({ socket, isConnected }: WaitingRoomProps) {
       }}>
         {t('party.waitingTitle')}
       </h2>
-      <div style={{
+      <div data-testid="party-room-code" style={{
         fontFamily: 'monospace', fontSize: '2.5rem', fontWeight: 900,
         color: 'var(--primary)', letterSpacing: '0.15em',
         margin: '12px 0',
@@ -112,7 +119,7 @@ export function PartyWaitingRoom({ socket, isConnected }: WaitingRoomProps) {
         border: '1px solid var(--border)', borderRadius: 'var(--radius)',
         marginBottom: '12px',
       }}>
-        <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '8px' }}>
+        <div data-testid="party-player-count" style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '8px' }}>
           {t('party.players')} ({players.length}/{PARTY_MAX_PLAYERS})
         </div>
         {players.map(p => (
@@ -132,12 +139,21 @@ export function PartyWaitingRoom({ socket, isConnected }: WaitingRoomProps) {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               {p.id !== hostId && (
-                <span style={{
-                  fontSize: '0.8rem', fontWeight: 600,
-                  color: p.ready ? 'var(--correct)' : 'var(--text-light)',
-                }}>
-                  {p.ready ? '✅ ' + t('party.ready') : '⏳ ' + t('party.notReady')}
-                </span>
+                disconnectedPlayers.includes(p.id) ? (
+                  <span data-testid="party-disconnected-badge" style={{
+                    fontSize: '0.8rem', fontWeight: 600,
+                    color: 'var(--warning)',
+                  }}>
+                    🔌 {t('party.statusDisconnected')}
+                  </span>
+                ) : (
+                  <span style={{
+                    fontSize: '0.8rem', fontWeight: 600,
+                    color: p.ready ? 'var(--correct)' : 'var(--text-light)',
+                  }}>
+                    {p.ready ? '✅ ' + t('party.ready') : '⏳ ' + t('party.notReady')}
+                  </span>
+                )
               )}
               {p.id === hostId && (
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-light)' }}>
@@ -207,10 +223,13 @@ export function PartyWaitingRoom({ socket, isConnected }: WaitingRoomProps) {
       <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
         {!isHost && (
           <button
+            data-testid="party-ready"
             onClick={handleToggleReady}
+            disabled={!isConnected}
             style={{
               padding: '12px 28px', fontSize: '1rem', fontWeight: 700,
-              border: 'none', borderRadius: 'var(--radius)', cursor: 'pointer',
+              border: 'none', borderRadius: 'var(--radius)',
+              cursor: isConnected ? 'pointer' : 'default', opacity: isConnected ? 1 : 0.5,
               background: players.find(p => p.id === socketId)?.ready ? 'var(--card-soft)' : 'var(--primary)',
               color: players.find(p => p.id === socketId)?.ready ? 'var(--text-light)' : 'var(--bg)',
             }}
@@ -220,8 +239,9 @@ export function PartyWaitingRoom({ socket, isConnected }: WaitingRoomProps) {
         )}
         {isHost && (
           <button
+            data-testid="party-start"
             onClick={handleStart}
-            disabled={players.length < PARTY_MIN_PLAYERS || !allReady}
+            disabled={!isConnected || players.length < PARTY_MIN_PLAYERS || !allReady}
             style={{
               padding: '12px 28px', fontSize: '1.1rem', fontWeight: 700,
               border: 'none', borderRadius: 'var(--radius)',
@@ -235,12 +255,15 @@ export function PartyWaitingRoom({ socket, isConnected }: WaitingRoomProps) {
           </button>
         )}
         <button
-          onClick={() => socket.emit('party:leave')}
+          data-testid="party-leave"
+          onClick={() => socket.emit('party:leave', handleAckError)}
+          disabled={!isConnected}
           style={{
             padding: '12px 20px', fontSize: '0.9rem',
             background: 'transparent', color: 'var(--text)',
             border: '1px solid var(--border)', borderRadius: 'var(--radius)',
-            cursor: 'pointer', fontWeight: 700,
+            cursor: isConnected ? 'pointer' : 'default',
+            fontWeight: 700, opacity: isConnected ? 1 : 0.5,
           }}
         >
           {t('party.leave')}

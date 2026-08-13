@@ -52,7 +52,7 @@ export function PartyGame({ socket }: PartyGameProps) {
   const inputDisabled = gameStatus !== 'playing' || roundFinished || iExhausted;
 
   return (
-    <div style={{ width: '100%' }}>
+    <div data-testid="party-game" style={{ width: '100%' }}>
       {/* 回合信息和计时器 */}
       <div style={{
         display: 'flex', justifyContent: 'center', alignItems: 'center',

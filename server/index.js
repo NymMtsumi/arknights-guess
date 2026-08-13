@@ -77,7 +77,8 @@ if (!process.env.JWT_SECRET) {
   }
 }
 const APP_VERSION = process.env.APP_VERSION || '2026-08-06-002';
-const DB_PATH = join(__dirname, '..', 'data.db');
+// 测试/CI 可通过 DB_PATH 覆盖数据库路径，生产默认 data.db（冒烟测试需要临时库，避免污染生产数据）
+const DB_PATH = process.env.DB_PATH || join(__dirname, '..', 'data.db');
 
 let transporter = null;
 if (process.env.SMTP_USER && process.env.SMTP_PASS) {

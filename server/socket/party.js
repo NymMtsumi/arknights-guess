@@ -55,32 +55,37 @@ export function registerPartyHandlers({
       }
     });
 
-    // 离开
-    socket.on('party:leave', safe(() => {
+    // 离开（带 ack：不在房间也回执 + 下发 party:left 让客户端幂等复位）
+    socket.on('party:leave', safe((ack) => {
       const r = room.findPartyRoomByIdentityKey(socket.data.identityKey);
-      if (!r) return;
+      if (!r) {
+        socket.emit('party:left', { reason: 'left' });
+        if (typeof ack === 'function') ack({ ok: true });
+        return;
+      }
       room.findPlayerInRoom(r, socket); // 先 re-key
       room.handlePartyLeave(r, socket, false);
+      if (typeof ack === 'function') ack({ ok: true });
     }, 'leave'));
 
     // 踢人
-    socket.on('party:kick', safe((data) => {
-      room.handlePartyKick(socket, data);
+    socket.on('party:kick', safe((data, ack) => {
+      room.handlePartyKick(socket, data, ack);
     }, 'kick'));
 
     // 准备切换
-    socket.on('party:toggle_ready', safe(() => {
-      room.toggleReady(socket);
+    socket.on('party:toggle_ready', safe((ack) => {
+      room.toggleReady(socket, ack);
     }, 'toggle_ready'));
 
     // 更新设置
-    socket.on('party:update_settings', safe((data) => {
-      room.updateSettings(socket, data);
+    socket.on('party:update_settings', safe((data, ack) => {
+      room.updateSettings(socket, data, ack);
     }, 'update_settings'));
 
     // 开始游戏
-    socket.on('party:start', safe(() => {
-      room.startGame(socket);
+    socket.on('party:start', safe((ack) => {
+      room.startGame(socket, ack);
     }, 'start'));
 
     // 猜测（party:guess_result 事件即为响应，无需 ack）
@@ -88,12 +93,13 @@ export function registerPartyHandlers({
       game.handlePartyGuess(socket, data);
     }, 'guess'));
 
-    // 重连
-    socket.on('party:reconnect', (data) => {
-      try { room.reconnectPartyRoom(socket, data); }
+    // 重连（带 ack：失败回 err 码，客户端据此清残留状态退回大厅）
+    socket.on('party:reconnect', (data, ack) => {
+      try { room.reconnectPartyRoom(socket, data, ack); }
       catch (e) {
         console.error('[party] reconnect error:', e.message);
         socket.emit('party:error', { code: 'INTERNAL_ERROR', message: e.message });
+        if (typeof ack === 'function') ack({ ok: false, code: 'INTERNAL_ERROR', message: e.message });
       }
     });
 

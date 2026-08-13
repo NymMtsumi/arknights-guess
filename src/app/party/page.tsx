@@ -30,6 +30,9 @@ function PartyPageContent() {
   // 静态导出（output: "export"）下 useSearchParams 首次渲染为空、不可靠，
   // 改为与 verify/reset-password/leaderboard 页一致：直接读 window.location.search。
   const [roomParam, setRoomParam] = useState('');
+  const [showRules, setShowRules] = useState(false);
+  // 邀请链接自动进房：仅触发一次，防止重复 emit（房间不存在则停留在 lobby 显示错误）
+  const autoJoinRef = useRef(false);
   // 语言切换后 t 会重建，但 handler 仅在连接时注册一次（闭包捕获首个 t）。
   // 用 ref 保持引用稳定、始终读取最新语言，避免切换语言后 toast 仍是旧语言。
   const tRef = useRef(t);
@@ -81,7 +84,15 @@ function PartyPageContent() {
     },
     onReconnect: (s) => {
       const code = usePartyStore.getState().roomCode;
-      if (code) s.emit('party:reconnect', { roomCode: code });
+      if (!code) return;
+      s.emit('party:reconnect', { roomCode: code }, (res: { ok?: boolean; code?: string }) => {
+        // 重连失败（房间已解散/已结束/被拒）：清残留状态退回大厅，通过「上次房间」重新加入
+        if (res && res.ok === false) {
+          usePartyStore.getState().resetAll();
+          useGameStore.getState().resetGame();
+          usePartyStore.setState({ stage: 'lobby', error: t('party.errReconnect') });
+        }
+      });
     },
   });
 
@@ -109,6 +120,25 @@ function PartyPageContent() {
     if (roomParam && roomParam.trim()) setStage('lobby');
   }, [roomParam, setStage]);
 
+  // 邀请链接 ?room=XXXXXX 自动进房（而非只跳 lobby 预填）。
+  // 依赖 isConnected 触发：socket 连上后立即 emit party:join，成功后 onPartyJoined 会把 stage 推到 waiting。
+  useEffect(() => {
+    const code = roomParam && roomParam.trim();
+    if (!code || autoJoinRef.current) return;
+    const socket = socketRef.current;
+    if (!socket || !isConnected) return;
+    // 已手动进入过房间（等待室/游戏中）则不再自动加入
+    const stage = usePartyStore.getState().stage;
+    if (stage === 'waiting' || stage === 'countdown' || stage === 'playing') return;
+
+    autoJoinRef.current = true;
+    usePartyStore.setState({ connecting: 'join' });
+    socket.emit('party:join', { roomCode: code }, (res: { ok?: boolean; code?: string; message?: string }) => {
+      // 失败时只清除 connecting；具体错误文案由 party:error 事件负责（onPartyError → toast）
+      if (res && res.ok === false) usePartyStore.setState({ connecting: '' });
+    });
+  }, [roomParam, isConnected, socketRef]);
+
   // ── 渲染 ──
   return (
     <div className="page">
@@ -127,9 +157,39 @@ function PartyPageContent() {
             <p style={{ color: 'var(--text-light)', fontSize: '0.9rem', marginBottom: '20px' }}>
               {t('party.description')}
             </p>
-            <button onClick={() => setStage('lobby')} style={{ padding: '14px 32px', background: 'var(--primary)', color: 'var(--bg)', border: 'none', borderRadius: 'var(--radius)', fontSize: '1.1rem', fontWeight: 700, cursor: 'pointer' }}>
+            <button data-testid="party-menu-join" onClick={() => setStage('lobby')} style={{ padding: '14px 32px', background: 'var(--primary)', color: 'var(--bg)', border: 'none', borderRadius: 'var(--radius)', fontSize: '1.1rem', fontWeight: 700, cursor: 'pointer' }}>
               {t('party.createJoinRoom')}
             </button>
+
+            {/* 规则面板（可折叠） */}
+            <div style={{ marginTop: '24px', textAlign: 'left' }}>
+              <button
+                onClick={() => setShowRules(!showRules)}
+                style={{
+                  width: '100%', padding: '10px', background: 'var(--card)',
+                  color: 'var(--text)', border: '1px solid var(--border)',
+                  borderRadius: 'var(--radius)', cursor: 'pointer', fontWeight: 700,
+                  fontSize: '0.9rem',
+                }}
+              >
+                📖 {t('party.rulesTitle')} {showRules ? '▲' : '▼'}
+              </button>
+              {showRules && (
+                <div style={{
+                  marginTop: '8px', padding: '14px', background: 'var(--card)',
+                  border: '1px solid var(--border)', borderRadius: 'var(--radius)',
+                  fontSize: '0.85rem', lineHeight: '1.7', color: 'var(--text)',
+                }}>
+                  <p style={{ marginBottom: '8px' }}>{t('party.rulesIntro')}</p>
+                  <ol style={{ paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <li>{t('party.rule1')}</li>
+                    <li>{t('party.rule2')}</li>
+                    <li>{t('party.rule3')}</li>
+                    <li>{t('party.rule4')}</li>
+                  </ol>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -141,7 +201,7 @@ function PartyPageContent() {
 
         {/* Countdown */}
         {stage === 'countdown' && (
-          <div style={{ textAlign: 'center' }}>
+          <div data-testid="party-countdown" style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '4rem', marginBottom: '16px', animation: 'neon-pulse 1s infinite' }}>{timeLeft}</div>
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontStyle: 'italic', fontWeight: 700 }}>{t('party.gettingReady')}</h2>
           </div>

@@ -43,6 +43,17 @@ export interface FinalRankingState {
   roundsWon?: number;
 }
 
+export interface RoundStatusPlayer {
+  playerId: string;
+  playerName: string;
+  playerKey?: string;
+  score: number;        // 累计分
+  guessed: boolean;     // 已猜中
+  exhausted: boolean;   // 次数用尽
+  guessCount: number;   // 已用次数
+  remaining: number;    // 剩余次数
+}
+
 interface PartyState {
   // 连接状态
   stage: PartyStage;
@@ -76,6 +87,7 @@ interface PartyState {
   foundPlayers: { playerId: string; playerName: string; rank: number; guessCount: number }[];
   exhaustedPlayers: string[]; // playerId[]
   disconnectedPlayers: string[]; // playerId[]
+  roundStatus: RoundStatusPlayer[]; // 局内实时排行（剩余次数/累计分）
 
   // Actions — 仅保留被实际调用的
   setStage: (stage: PartyStage) => void;
@@ -89,6 +101,7 @@ interface PartyState {
   addDisconnectedPlayer: (playerId: string) => void;
   removeDisconnectedPlayer: (playerId: string) => void;
   updatePlayerReady: (playerId: string, ready: boolean) => void;
+  setRoundStatus: (players: RoundStatusPlayer[]) => void;
   resetRoundState: () => void;
   resetAll: () => void;
 }
@@ -120,6 +133,7 @@ export const usePartyStore = create<PartyState>((set, get) => ({
   foundPlayers: [],
   exhaustedPlayers: [],
   disconnectedPlayers: [],
+  roundStatus: [],
 
   setStage: (stage) => set({ stage }),
   setConnecting: (s) => set({ connecting: s }),
@@ -148,11 +162,14 @@ export const usePartyStore = create<PartyState>((set, get) => ({
     players: state.players.map(p => p.id === playerId ? { ...p, ready } : p),
   })),
 
+  setRoundStatus: (players) => set({ roundStatus: players }),
+
   resetRoundState: () => set({
     foundPlayers: [],
     exhaustedPlayers: [],
     roundRankings: [],
     totalScores: [],
+    roundStatus: [],
     roundFinished: false,
   }),
 
@@ -178,5 +195,6 @@ export const usePartyStore = create<PartyState>((set, get) => ({
     foundPlayers: [],
     exhaustedPlayers: [],
     disconnectedPlayers: [],
+    roundStatus: [],
   }),
 }));

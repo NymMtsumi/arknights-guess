@@ -65,6 +65,18 @@ node server/index.js  # 单独启动后端（:3001，需要 server/.env）
 | `wrangler.jsonc.archived` | Cloudflare Workers 配置（OpenNext adapter，已废弃归档） |
 | `.github/workflows/deploy.yml` | CI/CD — 检测 server 变更 → webhook VPS |
 
+## 部署前置 gate（共同开发者必读）
+
+每次 push `main`（含共同开发者直接推送）都会触发 `.github/workflows/deploy.yml`，**部署前强制通过两道 gate**：
+
+1. **review（静态审查）** — `npx tsc --noEmit`（前端类型检查）+ `find server -name '*.js' | xargs node --check`（服务端语法检查）
+2. **smoke（行为测试）** — `node tests/party-smoke.mjs`（Playwright 三客户端，覆盖 checklist a–f：建房/加房/分享链接自动进房/准备开始/离开复位/**断线重连**）
+
+- 本地一键复现：`npm run smoke`（自动 build → 跑冒烟）
+- 任一 gate 失败 → 部署被阻止；`workflow_dispatch` 手动触发同样强制过这两道 gate
+- 前端变更（`src/**`）→ 冒烟跑通后 Cloudflare Pages 自动构建；后端变更（`server/**`）→ gate 通过后 webhook 部署 VPS
+- 深度审查（六轮代码审查 skillscoed）为 Claude Code 人工步骤，重要改动建议先跑一次再 push
+
 ## VPS 运维
 ```bash
 ssh -i ~/.ssh/id_ed25519 root@160.236.110.37

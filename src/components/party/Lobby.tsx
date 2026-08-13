@@ -20,8 +20,6 @@ export function PartyLobby({ onBack, socketRef, isConnected, initialCode }: Lobb
   const { t } = useI18n();
   const [joinCode, setJoinCode] = useState(initialCode ?? '');
   const { loadRoomCode } = useRoom();
-  const playerName = usePartyStore(s => s.playerName);
-  const setPlayerName = usePartyStore(s => s.setPlayerName);
   const error = usePartyStore(s => s.error);
   const setError = usePartyStore(s => s.setError);
   const connecting = usePartyStore(s => s.connecting);
@@ -36,11 +34,8 @@ export function PartyLobby({ onBack, socketRef, isConnected, initialCode }: Lobb
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); }, []);
 
-  const isValid = playerName.trim().length > 0 && playerName.trim().length <= 12;
-
   const handleCreate = (difficulty: string, rounds: number, roundTime: number, attributes: string[] | null, maxGuesses: number) => {
     if (!isConnected || !socket) return;
-    if (!isValid) { setError(t('party.enterNick')); return; }
     setError('');
     setSettings({ difficulty, rounds, roundTime, attributes, maxGuesses });
     setConnecting('create');
@@ -51,7 +46,7 @@ export function PartyLobby({ onBack, socketRef, isConnected, initialCode }: Lobb
         usePartyStore.setState({ connecting: '', error: t('party.connectTimeout') });
       }
     }, 30000);
-    socket.emit('party:create', { playerName: playerName.trim(), difficulty, rounds, roundTime, attributes, maxGuesses }, (res: { ok?: boolean; code?: string; message?: string }) => {
+    socket.emit('party:create', { difficulty, rounds, roundTime, attributes, maxGuesses }, (res: { ok?: boolean; code?: string; message?: string }) => {
       // ack 兜底：失败时快速清除 connecting（错误文案由 party:error 事件负责）
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       if (res && res.ok === false) usePartyStore.setState({ connecting: '' });
@@ -60,7 +55,6 @@ export function PartyLobby({ onBack, socketRef, isConnected, initialCode }: Lobb
 
   const handleJoin = (code: string) => {
     if (!isConnected || !socket) return;
-    if (!isValid) { setError(t('party.enterNick')); return; }
     const trimmed = code.trim();
     if (!/^\d{6}$/.test(trimmed)) { setError(t('party.invalidCode')); return; } // Fix: digit validation
     setError('');
@@ -72,7 +66,7 @@ export function PartyLobby({ onBack, socketRef, isConnected, initialCode }: Lobb
         usePartyStore.setState({ connecting: '', error: t('party.connectTimeout') });
       }
     }, 30000);
-    socket.emit('party:join', { roomCode: trimmed, playerName: playerName.trim() }, (res: { ok?: boolean; code?: string; message?: string }) => {
+    socket.emit('party:join', { roomCode: trimmed }, (res: { ok?: boolean; code?: string; message?: string }) => {
       // ack 兜底：失败时快速清除 connecting（错误文案由 party:error 事件负责）
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       if (res && res.ok === false) usePartyStore.setState({ connecting: '' });
@@ -94,20 +88,6 @@ export function PartyLobby({ onBack, socketRef, isConnected, initialCode }: Lobb
         {t('party.description')}
       </p>
 
-      {/* 昵称输入 */}
-      <input
-        value={playerName}
-        onChange={e => setPlayerName(e.target.value)}
-        placeholder={t('party.nickPlaceholder')}
-        style={{
-          width: '100%', maxWidth: '300px', padding: '10px',
-          background: 'var(--input-bg)', color: 'var(--text)',
-          border: '1px solid var(--border)', borderRadius: 'var(--radius)',
-          fontSize: '1rem', textAlign: 'center', marginBottom: '16px',
-        }}
-        maxLength={12}
-      />
-
       {/* 创建房间 */}
       <div style={{
         padding: '16px', background: 'var(--card)',
@@ -126,8 +106,9 @@ export function PartyLobby({ onBack, socketRef, isConnected, initialCode }: Lobb
         />
 
         <button
+          data-testid="party-create"
           onClick={() => handleCreate(settings.difficulty, settings.rounds, settings.roundTime, settings.attributes, settings.maxGuesses)}
-          disabled={!!connecting || !isValid || !isConnected}
+          disabled={!!connecting || !isConnected}
           style={{
             width: '100%', padding: '12px', background: connecting ? 'var(--card-soft)' : 'var(--primary)',
             color: connecting ? 'var(--text-light)' : 'var(--bg)', border: 'none',
@@ -150,6 +131,7 @@ export function PartyLobby({ onBack, socketRef, isConnected, initialCode }: Lobb
           {t('party.joinRoom')}
         </h3>
         <input
+          data-testid="party-join-input"
           value={joinCode}
           onChange={e => setJoinCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
           placeholder={t('party.codePlaceholder')}
@@ -166,7 +148,7 @@ export function PartyLobby({ onBack, socketRef, isConnected, initialCode }: Lobb
         <button
           onClick={() => handleJoin(joinCode)}
           id="party-join-btn"
-          disabled={!!connecting || !isValid || joinCode.length !== 6 || !isConnected}
+          disabled={!!connecting || joinCode.length !== 6 || !isConnected}
           style={{
             width: '100%', padding: '12px', background: connecting ? 'var(--card-soft)' : 'var(--accent)',
             color: connecting ? 'var(--text-light)' : '#fff', border: 'none',

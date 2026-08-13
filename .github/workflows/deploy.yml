@@ -5,11 +5,12 @@ on:
     branches: [main]
     paths:
       - 'server/**'
+      - 'src/**'
+      - 'tests/**'
       - 'package.json'
       - 'package-lock.json'
-      # NOTE: Triggering on root package.json/pnpm-lock.yaml covers shared config changes
-      # (linting, scripts, dependency updates). This may cause a deploy for changes that
-      # don't affect the server runtime, but the trade-off is acceptable for simplicity.
+      # 派对模式横跨前后端：src/** 变更也跑冒烟（集成校验），
+      # 但只有 server/** 变更才真正触发后端部署（见 deploy job 的 paths-filter）。
   workflow_dispatch:
 
 # 防止并发部署导致 git/npm 竞态
@@ -18,10 +19,77 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # ── 前置 gate：双客户端冒烟测试（跑通 checklist a-f 才允许部署）──
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 安装 Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: 构建前端（指向本地测试后端）
+        run: NEXT_PUBLIC_WS_URL=http://localhost:3101 npm run build
+
+      - name: 运行双客户端冒烟测试
+        run: node tests/party-smoke.mjs
+
+  # ── 静态审查 gate：类型 + 服务端语法（共同开发者直接推送也强制过）──
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 前端类型检查
+        run: npx tsc --noEmit
+
+      - name: 服务端语法检查
+        run: find server -name '*.js' -not -path '*/node_modules/*' -print0 | xargs -0 -n1 node --check
+
+  # ── 部署（仅在冒烟 + 审查通过 + 有服务端变更时；手动触发则强制部署）──
   deploy:
+    needs: [smoke, review]
     runs-on: ubuntu-latest
     steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 检测服务端变更
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            server:
+              - 'server/**'
+              - 'package.json'
+              - 'package-lock.json'
+
       - name: 触发 VPS 部署
+        if: steps.changes.outputs.server == 'true' || github.event_name == 'workflow_dispatch'
         env:
           # Domain dependency: ws.arknights-guess.online → VPS nginx → Node :3001
           # Override via vars.DEPLOY_WEBHOOK_URL in repo settings if domain changes

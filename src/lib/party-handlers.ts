@@ -2,7 +2,7 @@
 import type { Socket } from 'socket.io-client';
 import type { Character, GuessComparisons, GuessResult } from '@/types/character';
 import type { PartyRoom, PartyReconnectState, PartyRoundEnd, PartyGameEnd, PartyGuessResult } from '@/lib/party-socket';
-import { usePartyStore, type PartyStage } from '@/stores/party-store';
+import { usePartyStore, type PartyStage, type RoundStatusPlayer } from '@/stores/party-store';
 import { useGameStore } from '@/stores/game-store';
 import { findCharacterByName } from '@/lib/game-engine';
 import { PARTY_MIN_PLAYERS, PARTY_MAX_GUESSES } from '@/lib/party-constants';
@@ -41,13 +41,15 @@ const ALL_WRONG: GuessComparisons = {
 
 export function onPartyCreated(d: { room: PartyRoom; players: PartyPlayerDTO[] }, ctx: PartyHandlerCtx) {
   // 房主创建后也收到完整房间 + 玩家快照（与 onPartyJoined 对齐），否则 players 为空 → 显示 0 人
+  // 昵称由服务端生成（玩家#XXXX），从快照里取自己的名字，不再 savePlayerName（不污染单人模式昵称）
+  const me = d.players.find(p => p.id === usePartyStore.getState().socketId);
   storeSet({
     connecting: '', roomCode: d.room.code,
     hostId: d.room.hostId, settings: d.room.settings,
     players: d.players.map(p => ({ id: p.id, name: p.name, ready: p.ready, score: 0, playerKey: p.playerKey })),
+    ...(me ? { playerName: me.name } : {}),
   });
   ctx.persistRoomCode(d.room.code);
-  ctx.savePlayerName(usePartyStore.getState().playerName);
   ctx.setStage('waiting');
 }
 
@@ -55,13 +57,14 @@ export function onPartyJoined(d: {
   room: PartyRoom;
   players: PartyPlayerDTO[];
 }, ctx: PartyHandlerCtx) {
+  const me = d.players.find(p => p.id === usePartyStore.getState().socketId);
   storeSet({
     connecting: '', roomCode: d.room.code,
     hostId: d.room.hostId, settings: d.room.settings,
     players: d.players.map(p => ({ id: p.id, name: p.name, ready: p.ready, score: 0, playerKey: p.playerKey })),
+    ...(me ? { playerName: me.name } : {}),
   });
   ctx.persistRoomCode(d.room.code);
-  ctx.savePlayerName(usePartyStore.getState().playerName);
   ctx.setStage('waiting');
 }
 
@@ -103,6 +106,16 @@ export function onPartyError(
   d: { code?: string; message: string; minPlayers?: number },
   ctx: PartyHandlerCtx,
 ) {
+  ctx.setTimedError(partyErrorMessage(d.code, ctx.t, d.minPlayers, d.message));
+}
+
+// 服务端错误码 → i18n 文案（供 party:error 事件与 ack 回调复用，避免双份映射漂移）
+export function partyErrorMessage(
+  code: string | undefined,
+  t: (key: string, params?: Record<string, string | number>) => string,
+  minPlayers?: number,
+  fallback?: string,
+): string {
   const errorMap: Record<string, string> = {
     ALREADY_IN_ROOM: 'party.errAlreadyInRoom',
     ROOM_NOT_FOUND: 'party.errRoomNotFound',
@@ -114,11 +127,14 @@ export function onPartyError(
     MULTI_TAB: 'party.errMultiTab',
     NOT_IN_ROOM: 'party.errNotInRoom',
     BAD_NAME: 'party.errBadName',
+    HOST_CANNOT_READY: 'party.errHostCannotReady',
+    NOT_HOST: 'party.errNotHost',
+    INVALID: 'party.errInvalid',
     INTERNAL_ERROR: 'party.errInternal',
   };
-  const key = d.code ? errorMap[d.code] : null;
-  const msg = key ? ctx.t(key, { min: d.minPlayers ?? PARTY_MIN_PLAYERS }) : d.message;
-  ctx.setTimedError(msg);
+  const key = code ? errorMap[code] : null;
+  if (key) return t(key, { min: minPlayers ?? PARTY_MIN_PLAYERS });
+  return fallback || t('party.errInternal');
 }
 
 // ═══════════════════════════════════════════════
@@ -175,6 +191,10 @@ export function onPlayerFound(d: { playerId: string; playerName: string; rank: n
 
 export function onPlayerExhausted(d: { playerId: string }) {
   usePartyStore.getState().addExhaustedPlayer(d.playerId);
+}
+
+export function onRoundStatus(d: { players: RoundStatusPlayer[] }) {
+  usePartyStore.getState().setRoundStatus(d.players || []);
 }
 
 export function onGuessResult(d: PartyGuessResult, ctx: PartyHandlerCtx) {
@@ -275,10 +295,12 @@ export function onInsufficientPlayers(d: { current: number; minimum: number }, c
 
 export function onReconnectState(d: PartyReconnectState, ctx: PartyHandlerCtx) {
   storeSet({ connecting: '' });
+  const me = d.players.find(p => p.id === usePartyStore.getState().socketId);
   usePartyStore.setState({
     roomCode: d.room.code, hostId: d.room.hostId,
     settings: d.room.settings,
     players: d.players.map(p => ({ id: p.id, name: p.name, ready: p.ready ?? false, score: 0, playerKey: p.playerKey })),
+    ...(me ? { playerName: me.name } : {}),
   });
   ctx.persistRoomCode(d.room.code);
 
@@ -373,6 +395,7 @@ export function registerAllPartyHandlers(socket: Socket, ctx: PartyHandlerCtx) {
   socket.on('party:timer_tick', onTimerTick);
   socket.on('party:player_found', onPlayerFound);
   socket.on('party:player_exhausted', onPlayerExhausted);
+  socket.on('party:round_status', onRoundStatus);
   socket.on('party:guess_result', (d) => onGuessResult(d, ctx));
   socket.on('party:round_end', (d) => onRoundEnd(d, ctx));
   socket.on('party:game_end', (d) => onGameEnd(d, ctx));

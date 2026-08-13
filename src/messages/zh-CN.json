@@ -359,5 +359,17 @@
   "party.errMultiTab": "你已在其他标签页中连接",
   "party.errNotInRoom": "你不在该房间中",
   "party.errBadName": "昵称含违禁内容，请更换",
-  "party.errInternal": "服务器内部错误，请重试"
+  "party.errInternal": "服务器内部错误，请重试",
+  "party.errReconnect": "重连失败，请重新加入房间",
+  "party.errHostCannotReady": "房主无需准备",
+  "party.errNotHost": "仅房主可执行此操作",
+  "party.errInvalid": "操作无效",
+  "party.remainingGuesses": "剩余 {{n}} 次",
+  "party.liveStandings": "实时排行",
+  "party.rulesTitle": "游戏规则",
+  "party.rulesIntro": "3-8 名玩家同房竞猜同一名干员，谁先猜出谁得分。",
+  "party.rule1": "房主创建房间并设置难度/回合/词条列；其他玩家输入 6 位房间码加入，也可点分享链接自动进房。",
+  "party.rule2": "每回合限时，每名玩家有固定的猜测次数；越早猜出、用得次数越少，得分越高（第1名 5 分、第2名 3 分、第3名 2 分，其余 1 分，最少次数另有加成）。",
+  "party.rule3": "非房主点「准备」后，房主才可开始；每回合结束揭晓答案与排名，累计分最高者为冠军。",
+  "party.rule4": "断线有 30 秒重连宽限，超时或中途退出则视为离开；人数不足 3 人时房间自动解散。"
 }

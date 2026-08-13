@@ -72,7 +72,32 @@ export function createPartyGameModule(deps) {
       if (secondsLeft <= 0) { clearInterval(room._tickInterval); room._tickInterval = null; }
     }, 'tick'), 1000);
 
+    // 下发本回合实时状态（剩余次数 + 累计分），供前端渲染局内排行榜
+    broadcastRoundStatus(room);
+
     console.log(`[派对] 房间${room.code} 第${round}/${total}回合开始 目标=${room.target.name}`);
+  }
+
+  // ===== 回合实时状态（局内排行榜数据源：每人剩余次数/状态/累计分）=====
+  function broadcastRoundStatus(room) {
+    const maxG = room.settings.maxGuesses ?? MAX_GUESSES;
+    const players = [];
+    for (const [sid, rp] of room.roundPlayers) {
+      const player = room.players.get(sid);
+      if (!player) continue;
+      players.push({
+        playerId: sid,
+        playerName: player.name,
+        playerKey: player.playerKey,
+        score: room.scores.get(player.playerKey) || 0,
+        guessed: rp.guessed,
+        exhausted: rp.exhausted,
+        guessCount: rp.guessCount,
+        remaining: Math.max(0, maxG - rp.guessCount),
+      });
+    }
+    players.sort((a, b) => b.score - a.score);
+    broadcast(room, 'party:round_status', { players });
   }
 
   // ===== 回合结束 =====
@@ -306,6 +331,9 @@ export function createPartyGameModule(deps) {
         socket.emit('party:guess_result', { correct: false, guessCount: rp.guessCount, name: guessedName, comparisons, isAlter });
       }
     }
+
+    // 每次猜测后刷新局内排行榜（剩余次数/状态/累计分）
+    broadcastRoundStatus(room);
   }
 
   return {

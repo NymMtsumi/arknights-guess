@@ -1024,9 +1024,9 @@ html[data-theme="blast-wine"] .menu-arrow { color: var(--primary); }
 
 .menu-grid {
   display: grid;
-  grid-template-columns: 1fr; /* 单列：四个大卡片纵向堆叠 */
+  grid-template-columns: repeat(4, minmax(0, 1fr)); /* 四个大卡片横向排成一行 */
   gap: 14px;
-  max-width: min(var(--content-max), 600px); /* 限制单列宽度，避免卡片被拉得过宽 */
+  max-width: var(--content-max);
   margin: 0 auto;
 }
 
@@ -1178,7 +1178,7 @@ html[data-theme="blast-wine"] .menu-description { color: #aa95a5; }
   html[data-theme="blast"] .home-hero h1,
 html[data-theme="blast-wine"] .home-hero h1 { text-shadow: 3px 3px 0 rgba(40, 200, 204, 0.2); }
   .hero-subtitle { font-size: 0.94rem; }
-  .menu-grid { gap: 10px; }
+  .menu-grid { gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .menu-card { min-height: 128px; padding: 16px 13px; }
   .menu-card-sm { min-height: 78px; padding: 12px 12px; gap: 8px; }
   html[data-theme="blast"] .menu-card,

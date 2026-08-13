@@ -1024,9 +1024,9 @@ html[data-theme="blast-wine"] .menu-arrow { color: var(--primary); }
 
 .menu-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  grid-template-columns: 1fr; /* 单列：四个大卡片纵向堆叠 */
   gap: 14px;
-  max-width: var(--content-max);
+  max-width: min(var(--content-max), 600px); /* 限制单列宽度，避免卡片被拉得过宽 */
   margin: 0 auto;
 }
 

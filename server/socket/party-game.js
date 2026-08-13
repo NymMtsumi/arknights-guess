@@ -72,7 +72,7 @@ export function createPartyGameModule(deps) {
       if (secondsLeft <= 0) { clearInterval(room._tickInterval); room._tickInterval = null; }
     }, 'tick'), 1000);
 
-    console.log(`[派对] 房间${room.code} 第${round}/${total}回合开始 目标=${target.name}`);
+    console.log(`[派对] 房间${room.code} 第${round}/${total}回合开始 目标=${room.target.name}`);
   }
 
   // ===== 回合结束 =====

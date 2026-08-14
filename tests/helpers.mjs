@@ -193,3 +193,12 @@ export async function requirePlaywright() {
     return null;
   }
 }
+
+// 统一创建 zh-CN locale 的浏览器上下文。
+// 关键：CI（ubuntu-latest）上 headless Chromium 的 navigator.language 默认是 en-US，
+// 前端 i18n getStoredLocale() 会据此自动切英文；但静态导出（output: export）预渲染的是
+// 中文文案（构建时 window 不存在 → 回退 zh-CN）。两者不一致 → React 水合时替换 DOM →
+// Playwright 点击报「element was detached from the DOM」。显式固定 zh-CN 消除水合不一致。
+export function newZhContext(browser) {
+  return browser.newContext({ locale: 'zh-CN' });
+}

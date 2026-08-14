@@ -19,7 +19,7 @@ import {
   ROOT, FRONTEND_ORIGIN, WAIT_TIMEOUT,
   check, finish, waitFor, makeDbPath,
   startStaticServer, startBackend, killBackend, waitForBackend, cleanupDb,
-  requireBuild, requirePlaywright,
+  requireBuild, requirePlaywright, newZhContext,
 } from './helpers.mjs';
 
 const DB_PATH = makeDbPath('multiplayer');
@@ -59,19 +59,19 @@ async function main() {
 
     // ── m1 + m2 + m3. 标准房 ──
     console.log('\n[m1] 标准房建房 + 加入');
-    const ctxA = await browser.newContext();
-    const ctxB = await browser.newContext();
+    const ctxA = await newZhContext(browser);
+    const ctxB = await newZhContext(browser);
     const A = await ctxA.newPage();
     const B = await ctxB.newPage();
 
-    await A.goto(`${FRONTEND_ORIGIN}/multiplayer`, { waitUntil: 'domcontentloaded' });
+    await A.goto(`${FRONTEND_ORIGIN}/multiplayer`, { waitUntil: 'load' });
     await A.getByText('创建 / 加入房间').click({ timeout: WAIT_TIMEOUT });
     await A.getByText('创建房间', { exact: true }).click({ timeout: WAIT_TIMEOUT });
     await A.getByText('等待对手加入').waitFor({ state: 'visible', timeout: WAIT_TIMEOUT });
     const code = await readCode(A);
     check('m1.标准房创建成功（4 位房间码）', /^\d{4}$/.test(code), `code=${code}`);
 
-    await B.goto(`${FRONTEND_ORIGIN}/multiplayer`, { waitUntil: 'domcontentloaded' });
+    await B.goto(`${FRONTEND_ORIGIN}/multiplayer`, { waitUntil: 'load' });
     await B.getByText('创建 / 加入房间').click({ timeout: WAIT_TIMEOUT });
     await B.locator('input[placeholder="4位数字房间码"]').fill(code);
     await B.getByText('加入房间', { exact: true }).click({ timeout: WAIT_TIMEOUT });
@@ -99,19 +99,19 @@ async function main() {
 
     // ── m4 + m5. 自定义房 ──
     console.log('\n[m4] 自定义房（属性列过滤）');
-    const ctxC = await browser.newContext();
-    const ctxD = await browser.newContext();
+    const ctxC = await newZhContext(browser);
+    const ctxD = await newZhContext(browser);
     const C = await ctxC.newPage();
     const D = await ctxD.newPage();
 
-    await C.goto(`${FRONTEND_ORIGIN}/multiplayer`, { waitUntil: 'domcontentloaded' });
+    await C.goto(`${FRONTEND_ORIGIN}/multiplayer`, { waitUntil: 'load' });
     await C.getByText('自定义房间').click({ timeout: WAIT_TIMEOUT }); // menu → custom（默认已选 3 属性）
     await C.getByText('创建房间', { exact: true }).click({ timeout: WAIT_TIMEOUT });
     await C.getByText('等待对手加入').waitFor({ state: 'visible', timeout: WAIT_TIMEOUT });
     const code2 = await readCode(C);
     check('m4.自定义房创建成功', /^\d{4}$/.test(code2), `code=${code2}`);
 
-    await D.goto(`${FRONTEND_ORIGIN}/multiplayer`, { waitUntil: 'domcontentloaded' });
+    await D.goto(`${FRONTEND_ORIGIN}/multiplayer`, { waitUntil: 'load' });
     await D.getByText('创建 / 加入房间').click({ timeout: WAIT_TIMEOUT });
     await D.locator('input[placeholder="4位数字房间码"]').fill(code2);
     await D.getByText('加入房间', { exact: true }).click({ timeout: WAIT_TIMEOUT });
@@ -134,13 +134,13 @@ async function main() {
 
     // ── m6. 快速匹配 ──
     console.log('\n[m6] 快速匹配');
-    const ctxE = await browser.newContext();
-    const ctxF = await browser.newContext();
+    const ctxE = await newZhContext(browser);
+    const ctxF = await newZhContext(browser);
     const E = await ctxE.newPage();
     const F = await ctxF.newPage();
 
-    await E.goto(`${FRONTEND_ORIGIN}/multiplayer`, { waitUntil: 'domcontentloaded' });
-    await F.goto(`${FRONTEND_ORIGIN}/multiplayer`, { waitUntil: 'domcontentloaded' });
+    await E.goto(`${FRONTEND_ORIGIN}/multiplayer`, { waitUntil: 'load' });
+    await F.goto(`${FRONTEND_ORIGIN}/multiplayer`, { waitUntil: 'load' });
     await E.getByText('快速匹配').click({ timeout: WAIT_TIMEOUT });
     await F.getByText('快速匹配').click({ timeout: WAIT_TIMEOUT });
     await E.locator('input.game-search-input').waitFor({ state: 'visible', timeout: WAIT_TIMEOUT });

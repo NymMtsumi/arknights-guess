@@ -16,7 +16,7 @@ import {
   ROOT, FRONTEND_ORIGIN, WAIT_TIMEOUT,
   check, finish, waitFor, makeDbPath,
   startStaticServer, startBackend, killBackend, waitForBackend, cleanupDb,
-  requireBuild, requirePlaywright,
+  requireBuild, requirePlaywright, newZhContext,
 } from './helpers.mjs';
 
 const DB_PATH = makeDbPath('solo');
@@ -43,12 +43,12 @@ async function main() {
     await waitForBackend();
     staticServer = await startStaticServer();
     browser = await chromium.launch({ headless: true });
-    const ctx = await browser.newContext();
+    const ctx = await newZhContext(browser);
     const page = await ctx.newPage();
 
     // ── s1. 单人 /game ──
     console.log('\n[s1] 单人模式');
-    await page.goto(`${FRONTEND_ORIGIN}/game`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${FRONTEND_ORIGIN}/game`, { waitUntil: 'load' });
     await page.locator('.menu-card', { hasText: '简单' }).first().click({ timeout: WAIT_TIMEOUT });
     const search1 = page.locator('input.game-search-input');
     await search1.waitFor({ state: 'visible', timeout: WAIT_TIMEOUT });
@@ -63,7 +63,7 @@ async function main() {
 
     // ── s2. 每日 /daily ──
     console.log('\n[s2] 每日挑战');
-    await page.goto(`${FRONTEND_ORIGIN}/daily`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${FRONTEND_ORIGIN}/daily`, { waitUntil: 'load' });
     const search2 = page.locator('input.game-search-input');
     await search2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUT });
     check('s2.进入即 playing（搜索框出现，临时 DB 无记录）', true);
@@ -75,7 +75,7 @@ async function main() {
 
     // ── s3. 排行榜 /leaderboard ──
     console.log('\n[s3] 排行榜');
-    await page.goto(`${FRONTEND_ORIGIN}/leaderboard`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${FRONTEND_ORIGIN}/leaderboard`, { waitUntil: 'load' });
     await page.locator('h1', { hasText: '排行榜' }).waitFor({ state: 'visible', timeout: WAIT_TIMEOUT });
     check('s3.标题「排行榜」渲染', true);
 
@@ -98,7 +98,7 @@ async function main() {
 
     // ── s4. 统计 /stats ──
     console.log('\n[s4] 统计');
-    await page.goto(`${FRONTEND_ORIGIN}/stats`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${FRONTEND_ORIGIN}/stats`, { waitUntil: 'load' });
     await page.locator('h1', { hasText: '游戏统计' }).waitFor({ state: 'visible', timeout: WAIT_TIMEOUT });
     check('s4.标题「游戏统计」渲染', true);
     await page.locator('text=暂无游戏记录').first().waitFor({ state: 'visible', timeout: WAIT_TIMEOUT });

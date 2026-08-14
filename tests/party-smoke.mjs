@@ -23,7 +23,7 @@ import {
   OUT_DIR, BACKEND_PORT, FRONTEND_ORIGIN, WAIT_TIMEOUT,
   check, finish, sleep, waitFor, makeDbPath,
   startStaticServer, startBackend, killBackend, waitForBackend, cleanupDb,
-  requireBuild, requirePlaywright,
+  requireBuild, requirePlaywright, newZhContext,
 } from './helpers.mjs';
 
 const DB_PATH = makeDbPath('party');
@@ -63,16 +63,16 @@ async function main() {
     browser = await chromium.launch({ headless: true });
 
     // 三个隔离 context：A 房主 / B 搜号加入 / C 分享链接加入
-    const ctxA = await browser.newContext();
-    const ctxB = await browser.newContext();
-    const ctxC = await browser.newContext();
+    const ctxA = await newZhContext(browser);
+    const ctxB = await newZhContext(browser);
+    const ctxC = await newZhContext(browser);
     const A = await ctxA.newPage();
     let B = await ctxB.newPage();
     const C = await ctxC.newPage();
 
     // ── a. 建房 → 房主算 1 人 ──
     console.log('\n[a] 房主建房');
-    await A.goto(`${FRONTEND_ORIGIN}/party`, { waitUntil: 'domcontentloaded' });
+    await A.goto(`${FRONTEND_ORIGIN}/party`, { waitUntil: 'load' });
     await enterLobby(A);
     await A.locator('[data-testid="party-create"]').click({ timeout: WAIT_TIMEOUT });
     const count1 = await waitForCount(A, 1);
@@ -82,7 +82,7 @@ async function main() {
 
     // ── b. 二号搜号进房 ──
     console.log('\n[b] 二号搜号进房');
-    await B.goto(`${FRONTEND_ORIGIN}/party`, { waitUntil: 'domcontentloaded' });
+    await B.goto(`${FRONTEND_ORIGIN}/party`, { waitUntil: 'load' });
     await enterLobby(B);
     await B.locator('[data-testid="party-join-input"]').fill(code);
     await B.locator('#party-join-btn').click({ timeout: WAIT_TIMEOUT });
@@ -92,7 +92,7 @@ async function main() {
 
     // ── c. 分享链接自动进房 ──
     console.log('\n[c] 分享链接自动进房');
-    await C.goto(`${FRONTEND_ORIGIN}/party?room=${code}`, { waitUntil: 'domcontentloaded' });
+    await C.goto(`${FRONTEND_ORIGIN}/party?room=${code}`, { waitUntil: 'load' });
     await C.locator('[data-testid="party-room-code"]').waitFor({ state: 'visible', timeout: WAIT_TIMEOUT });
     await waitForCount(C, 3);
     await waitForCount(A, 3);
@@ -106,7 +106,7 @@ async function main() {
     });
     check('f.掉线后他人视角显示断线', true);
     B = await ctxB.newPage(); // 同 context → 复用同一 player_key，触发重连分支
-    await B.goto(`${FRONTEND_ORIGIN}/party?room=${code}`, { waitUntil: 'domcontentloaded' });
+    await B.goto(`${FRONTEND_ORIGIN}/party?room=${code}`, { waitUntil: 'load' });
     await B.locator('[data-testid="party-room-code"]').waitFor({ state: 'visible', timeout: WAIT_TIMEOUT });
     await waitFor(async () => (await A.locator('[data-testid="party-disconnected-badge"]').count()) === 0, {
       timeout: WAIT_TIMEOUT, desc: 'B 重连后 A 侧断线徽标清除',
@@ -163,7 +163,7 @@ async function main() {
     check('g.局内断线计数=1（不虚高）', true);
 
     B = await ctxB.newPage();
-    await B.goto(`${FRONTEND_ORIGIN}/party?room=${code}`, { waitUntil: 'domcontentloaded' });
+    await B.goto(`${FRONTEND_ORIGIN}/party?room=${code}`, { waitUntil: 'load' });
     await B.locator('[data-testid="party-game"]').waitFor({ state: 'visible', timeout: WAIT_TIMEOUT });
     check('g.重开页面重进已开始游戏（不再“游戏已开始”）', true);
     await waitFor(async () => (await A.locator('[data-testid="party-disconnected-count"]').count()) === 0, {

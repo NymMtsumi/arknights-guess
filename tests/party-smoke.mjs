@@ -19,140 +19,16 @@
 // 运行：NEXT_PUBLIC_WS_URL=http://localhost:3101 npm run build && node tests/party-smoke.mjs
 //   或直接：npm run smoke（内部先 build 再测）
 
-import { spawn } from 'node:child_process';
-import { createServer } from 'node:http';
-import { readFile, stat, rm } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { extname, join, normalize, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import os from 'node:os';
+import {
+  OUT_DIR, BACKEND_PORT, FRONTEND_ORIGIN, WAIT_TIMEOUT,
+  check, finish, sleep, waitFor, makeDbPath,
+  startStaticServer, startBackend, killBackend, waitForBackend, cleanupDb,
+  requireBuild, requirePlaywright,
+} from './helpers.mjs';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const ROOT = join(__dirname, '..');
-const OUT_DIR = join(ROOT, 'out');
+const DB_PATH = makeDbPath('party');
 
-const BACKEND_PORT = Number(process.env.SMOKE_BACKEND_PORT || 3101);
-const FRONTEND_PORT = Number(process.env.SMOKE_FRONTEND_PORT || 3100);
-const FRONTEND_ORIGIN = `http://localhost:${FRONTEND_PORT}`;
-const DB_PATH = join(os.tmpdir(), `arknights-guess-smoke-${process.pid}.db`);
-const WAIT_TIMEOUT = 20_000;
-
-// ── 结果收集 ──
-const results = [];
-function check(name, ok, detail = '') {
-  results.push({ name, ok });
-  console.log(`  ${ok ? '✅' : '❌'} ${name}${detail ? ` — ${detail}` : ''}`);
-}
-
-// ═══════════════════════════════════════════════
-//  静态服务器（服务 out/，含 SPA 回退 + 路由相对 _next 资源）
-// ═══════════════════════════════════════════════
-const MIME = {
-  '.html': 'text/html; charset=utf-8',
-  '.js': 'text/javascript; charset=utf-8',
-  '.mjs': 'text/javascript; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.json': 'application/json; charset=utf-8',
-  '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.gif': 'image/gif',
-  '.ico': 'image/x-icon', '.woff': 'font/woff', '.woff2': 'font/woff2',
-  '.ttf': 'font/ttf', '.txt': 'text/plain; charset=utf-8', '.map': 'application/json',
-};
-
-async function resolveFile(urlPath) {
-  const rel = decodeURIComponent((urlPath || '/').split('?')[0]);
-  const outRoot = normalize(OUT_DIR);
-  const candidate = normalize(join(outRoot, rel));
-  if (!candidate.startsWith(outRoot + '\\') && !candidate.startsWith(outRoot + '/') && candidate !== outRoot) {
-    return null; // 路径穿越防护
-  }
-
-  // 1. 精确文件
-  if (existsSync(candidate) && (await stat(candidate)).isFile()) return candidate;
-  // 2. 目录 → index.html（/party → out/party/index.html）
-  if (existsSync(candidate) && (await stat(candidate)).isDirectory()) {
-    const idx = join(candidate, 'index.html');
-    if (existsSync(idx) && (await stat(idx)).isFile()) return idx;
-  }
-  // 3. 文件 + .html 形式
-  const htmlForm = candidate + '.html';
-  if (existsSync(htmlForm) && (await stat(htmlForm)).isFile()) return htmlForm;
-  // 4. 路由相对的 _next 静态资源（/party/_next/... → /_next/...）
-  const nextIdx = rel.indexOf('/_next/');
-  if (nextIdx >= 0) {
-    const stripped = normalize(join(outRoot, rel.slice(nextIdx + 1)));
-    if (existsSync(stripped) && (await stat(stripped)).isFile()) return stripped;
-  }
-  // 5. SPA 回退（客户端深层路由）
-  const rootIdx = join(outRoot, 'index.html');
-  return existsSync(rootIdx) ? rootIdx : null;
-}
-
-function startStaticServer() {
-  const server = createServer(async (req, res) => {
-    try {
-      const file = await resolveFile(req.url || '/');
-      if (!file) { res.writeHead(404, { 'Content-Type': 'text/plain' }); res.end('not found'); return; }
-      const data = await readFile(file);
-      res.writeHead(200, {
-        'Content-Type': MIME[extname(file).toLowerCase()] || 'application/octet-stream',
-        'Cache-Control': 'no-store',
-      });
-      res.end(data);
-    } catch (e) {
-      res.writeHead(500, { 'Content-Type': 'text/plain' });
-      res.end(String(e));
-    }
-  });
-  return new Promise((resolve) => server.listen(FRONTEND_PORT, () => resolve(server)));
-}
-
-// ═══════════════════════════════════════════════
-//  后端（hermetic：临时 DB + dev JWT 回退 + 放行本静态源）
-// ═══════════════════════════════════════════════
-function startBackend() {
-  const child = spawn(process.execPath, ['server/index.js'], {
-    cwd: ROOT,
-    env: {
-      ...process.env,
-      PORT: String(BACKEND_PORT),
-      DB_PATH,
-      NODE_ENV: 'development',
-      ALLOW_DEV_FALLBACK: '1',
-      // 放行本冒烟测试的静态前端源（覆盖默认 allowlist）
-      ALLOWED_ORIGINS: `${FRONTEND_ORIGIN},http://localhost:3000`,
-    },
-    stdio: ['ignore', 'pipe', 'pipe'],
-  });
-  child.stdout.on('data', (d) => process.stdout.write(`[backend] ${d}`));
-  child.stderr.on('data', (d) => process.stderr.write(`[backend] ${d}`));
-  return child;
-}
-
-function killBackend(child) {
-  if (!child || child.exitCode !== null) return;
-  try { child.kill('SIGTERM'); } catch {}
-  // 兜底：2s 后仍未退出则强杀（Windows 上 SIGTERM 不触发优雅关闭）
-  setTimeout(() => {
-    if (child.exitCode === null) { try { child.kill('SIGKILL'); } catch {} }
-  }, 2000).unref();
-}
-
-// ═══════════════════════════════════════════════
-//  工具
-// ═══════════════════════════════════════════════
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-
-async function waitFor(fn, { timeout = WAIT_TIMEOUT, interval = 150, desc = '' } = {}) {
-  const start = Date.now();
-  let lastErr;
-  while (Date.now() - start < timeout) {
-    try { const v = await fn(); if (v) return v; } catch (e) { lastErr = e; }
-    await sleep(interval);
-  }
-  throw new Error(`timeout (${desc})${lastErr ? `: ${lastErr.message}` : ''}`);
-}
-
+// ── party 专属 helper ──
 async function readCount(page) {
   const txt = await page.locator('[data-testid="party-player-count"]').textContent();
   const m = (txt || '').match(/(\d+)\s*\/\s*\d+/);
@@ -173,33 +49,16 @@ async function enterLobby(page) {
 //  主流程
 // ═══════════════════════════════════════════════
 async function main() {
-  // 预检：前端必须已 build（且 NEXT_PUBLIC_WS_URL 指向本后端）
-  if (!existsSync(join(OUT_DIR, 'index.html'))) {
-    console.error(`❌ 未找到 ${join(OUT_DIR, 'index.html')}`);
-    console.error(`   请先构建：NEXT_PUBLIC_WS_URL=http://localhost:${BACKEND_PORT} npm run build`);
-    return 1;
-  }
+  if (!requireBuild()) return 1;
+  const chromium = await requirePlaywright();
+  if (!chromium) return 1;
 
-  let chromium;
-  try {
-    ({ chromium } = await import('playwright'));
-  } catch {
-    console.error('❌ 未安装 playwright。请先运行：npm i -D playwright && npx playwright install chromium');
-    return 1;
-  }
-
-  const backend = startBackend();
+  const backend = startBackend({ dbPath: DB_PATH });
   let staticServer = null;
   let browser = null;
 
   try {
-    console.log(`⏳ 等待后端就绪 http://localhost:${BACKEND_PORT}/api/health ...`);
-    await waitFor(async () => {
-      const r = await fetch(`http://localhost:${BACKEND_PORT}/api/health`);
-      return r.ok;
-    }, { timeout: 25_000, desc: 'backend health' });
-    console.log('✅ 后端就绪');
-
+    await waitForBackend(BACKEND_PORT);
     staticServer = await startStaticServer();
     browser = await chromium.launch({ headless: true });
 
@@ -322,27 +181,12 @@ async function main() {
     if (staticServer) staticServer.close();
     killBackend(backend);
     await sleep(800);
-    await rm(DB_PATH, { force: true }).catch(() => {});
-    await rm(`${DB_PATH}-wal`, { force: true }).catch(() => {});
-    await rm(`${DB_PATH}-shm`, { force: true }).catch(() => {});
+    await cleanupDb(DB_PATH);
   }
 }
 
 // ═══════════════════════════════════════════════
-//  入口：打印汇总，按结果退出
+//  入口
 // ═══════════════════════════════════════════════
 const exitCode = await main();
-const passed = results.filter((r) => r.ok).length;
-console.log('\n' + '═'.repeat(56));
-console.log(`冒烟结果：${passed}/${results.length} 通过`);
-for (const r of results) console.log(`  ${r.ok ? '✅' : '❌'} ${r.name}`);
-if (exitCode !== 0) {
-  console.error('❌ 冒烟测试未通过，阻止部署');
-  process.exit(1);
-} else if (passed !== results.length) {
-  console.error('❌ 有步骤失败，阻止部署');
-  process.exit(1);
-} else {
-  console.log('✅ 全部通过，可部署');
-  process.exit(0);
-}
+finish(exitCode);

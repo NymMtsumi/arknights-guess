@@ -398,7 +398,8 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
 
     if (isDev) {
       console.log('[DEV] 重置密码链接 token=', resetToken.slice(0, 8) + '...');
-      return jsonResponse(res, { ok: true, message: `[DEV] 重置链接已打印到控制台` });
+      // 与 register 的 devVerifyLink 对齐：dev 模式直接返回完整重置链接，便于自动化测试
+      return jsonResponse(res, { ok: true, message: '[DEV] 重置链接已生成', devResetLink: resetLink });
     }
 
     // 生产环境必须配置 SMTP（检查 transporter 对象而非仅 SMTP_PASS，

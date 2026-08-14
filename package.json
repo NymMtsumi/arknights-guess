@@ -9,7 +9,12 @@
     "start": "npx serve out",
     "lint": "eslint",
     "smoke": "bash scripts/smoke.sh",
-    "smoke:test": "node tests/party-smoke.mjs"
+    "smoke:test": "node tests/party-smoke.mjs",
+    "smoke:auth": "node tests/auth-smoke.mjs",
+    "smoke:admin": "node tests/admin-smoke.mjs",
+    "smoke:solo": "node tests/solo-smoke.mjs",
+    "smoke:multiplayer": "node tests/multiplayer-smoke.mjs",
+    "smoke:all": "bash scripts/smoke-all.sh"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

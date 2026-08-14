@@ -70,9 +70,14 @@ node server/index.js  # 单独启动后端（:3001，需要 server/.env）
 每次 push `main`（含共同开发者直接推送）都会触发 `.github/workflows/deploy.yml`，**部署前强制通过两道 gate**：
 
 1. **review（静态审查）** — `npx tsc --noEmit`（前端类型检查）+ `find server -name '*.js' | xargs node --check`（服务端语法检查）
-2. **smoke（行为测试）** — `node tests/party-smoke.mjs`（Playwright 三客户端，覆盖 checklist a–g：建房/加房/分享链接自动进房/准备开始/离开复位/等待室断线重连/**局中断线重连**）
+2. **smoke（行为测试）** — `scripts/smoke-all.sh` 顺序跑 5 个脚本，任一失败即阻断部署：
+   - `tests/auth-smoke.mjs`（认证链路 API 级：注册/验证/登录/忘记密码/重置/旧 token 失效 + 负面用例）
+   - `tests/admin-smoke.mjs`（管理面板 API 级：仪表盘/公告/用户/封禁/角色/令牌/审计/在线 + 权限负面）
+   - `tests/solo-smoke.mjs`（单人/每日/排行榜/统计 UI 级，Playwright）
+   - `tests/multiplayer-smoke.mjs`（标准房/自定义房/快速匹配 UI 级：建房加房/猜测回环/属性列过滤/断线徽标）
+   - `tests/party-smoke.mjs`（派对模式 UI 级回归：建房/加房/分享链接自动进房/准备开始/离开复位/断线重连/**局中断线重连**）
 
-- 本地一键复现：`npm run smoke`（自动 build → 跑冒烟）
+- 本地一键复现：`npm run smoke:all`（自动 build → 顺序跑全部 5 个）；单独跑某个：`npm run smoke:auth` / `smoke:admin` / `smoke:solo` / `smoke:multiplayer` / `smoke`
 - 任一 gate 失败 → 部署被阻止；`workflow_dispatch` 手动触发同样强制过这两道 gate
 - 前端变更（`src/**`）→ 冒烟跑通后 Cloudflare Pages 自动构建；后端变更（`server/**`）→ gate 通过后 webhook 部署 VPS
 - 深度审查（六轮代码审查 skillscoed）为 Claude Code 人工步骤，重要改动建议先跑一次再 push

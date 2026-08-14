@@ -21,6 +21,7 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
   const [loading, setLoading] = useState(false);
   const [sendingVerify, setSendingVerify] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
   const currentUser = typeof window !== 'undefined' ? getUser() : null;
   // 本次登录时返回的 email_verified，避免重新调用 fetchMe
   const [loginEmailVerified, setLoginEmailVerified] = useState<boolean | null>(null);
@@ -89,9 +90,8 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
         setLoading(false);
         return; // 不关闭弹窗，不自动登录
       } else if (mode === 'forgot') {
-        const result = await forgotPassword(username.trim());
-        setMsg(result.message || '如果该邮箱已注册，重置邮件已发送，请查收。如未收到请检查垃圾邮件箱');
-        setLoading(false);
+        await forgotPassword(username.trim());
+        setForgotSent(true);
         return;
       } else {
         const loginData = await login(username.trim(), password);
@@ -309,53 +309,71 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
 
             {mode === 'forgot' ? (
               // ===== 忘记密码模式 =====
-              <>
-                <p style={{ color: 'var(--text-light)', fontSize: '0.85rem', marginBottom: '16px', textAlign: 'center' }}>
-                  输入注册邮箱，我们将发送密码重置链接
-                </p>
-                <input
-                  value={username}
-                  onChange={e => setUsername(e.target.value)}
-                  placeholder="注册邮箱"
-                  style={inpStyle}
-                  maxLength={320}
-                  autoComplete="email"
-                  type="email"
-                  autoFocus
-                />
-
-                {error && (
-                  <p style={{ color: 'var(--danger)', fontSize: '0.85rem', marginBottom: '10px' }}>{error}</p>
-                )}
-                {msg && (
-                  <p style={{ color: 'var(--correct)', fontSize: '0.85rem', marginBottom: '10px', textAlign: 'center' }}>
-                    {msg}
+              forgotSent ? (
+                <div style={{ textAlign: 'center', padding: '6px 0 2px' }}>
+                  <div style={{ fontSize: '2.6rem', lineHeight: 1, marginBottom: '14px' }}>📧</div>
+                  <p style={{ color: 'var(--correct)', fontWeight: 700, fontSize: '0.95rem', margin: '0 0 10px' }}>
+                    重置邮件已发送
                   </p>
-                )}
-
-                <button type="submit" style={btnStyle} disabled={loading}>
-                  {loading ? '发送中...' : '发送重置邮件'}
-                </button>
-
-                <p style={{ color: 'var(--text-light)', fontSize: '0.75rem', marginTop: '12px', textAlign: 'center' }}>
-                  记起来了？
+                  <p style={{ color: 'var(--text-light)', fontSize: '0.85rem', lineHeight: 1.65, margin: '0 0 18px' }}>
+                    已向 <strong style={{ color: 'var(--text)' }}>{username.trim()}</strong> 发送密码重置链接，
+                    请查收收件箱，如未收到请检查垃圾邮件箱。链接 1 小时内有效。
+                  </p>
                   <button
                     type="button"
-                    onClick={() => { setMode('login'); setError(''); setMsg(''); }}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: 'var(--primary)',
-                      cursor: 'pointer',
-                      fontWeight: 700,
-                      padding: '0 4px',
-                      fontSize: '0.75rem',
-                    }}
+                    onClick={() => { setMode('login'); setForgotSent(false); setError(''); setMsg(''); }}
+                    style={btnStyle}
                   >
                     返回登录
                   </button>
-                </p>
-              </>
+                </div>
+              ) : (
+                <>
+                  <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+                    <div style={{ fontSize: '2.4rem', lineHeight: 1, marginBottom: '10px' }}>🔑</div>
+                    <p style={{ color: 'var(--text-light)', fontSize: '0.85rem', lineHeight: 1.6, margin: 0 }}>
+                      输入注册邮箱，我们将发送密码重置链接
+                    </p>
+                  </div>
+
+                  <input
+                    value={username}
+                    onChange={e => setUsername(e.target.value)}
+                    placeholder="注册邮箱"
+                    style={inpStyle}
+                    maxLength={320}
+                    autoComplete="email"
+                    type="email"
+                    autoFocus
+                  />
+
+                  {error && (
+                    <p style={{ color: 'var(--danger)', fontSize: '0.85rem', marginBottom: '10px' }}>{error}</p>
+                  )}
+
+                  <button type="submit" style={btnStyle} disabled={loading}>
+                    {loading ? '发送中...' : '发送重置邮件'}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => { setMode('login'); setForgotSent(false); setError(''); setMsg(''); }}
+                    style={{
+                      width: '100%',
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--text-light)',
+                      cursor: 'pointer',
+                      fontSize: '0.85rem',
+                      fontWeight: 700,
+                      padding: '10px 0 0',
+                      marginTop: '6px',
+                    }}
+                  >
+                    ← 返回登录
+                  </button>
+                </>
+              )
             ) : (
               // ===== 登录/注册模式 =====
               <>
@@ -430,7 +448,7 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
               <p style={{ textAlign: 'center', marginTop: '6px' }}>
                 <button
                   type="button"
-                  onClick={() => { setMode('forgot'); setError(''); setMsg(''); }}
+                  onClick={() => { setMode('forgot'); setForgotSent(false); setError(''); setMsg(''); }}
                   style={{
                     background: 'none',
                     border: 'none',

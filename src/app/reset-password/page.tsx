@@ -70,15 +70,19 @@ export default function ResetPasswordPage() {
 
       {status === 'form' && (
         <div>
+          <div style={{ fontSize: '2.6rem', lineHeight: 1, marginBottom: '12px' }}>🔒</div>
           <h2 style={{
             fontFamily: 'var(--font-display)',
             fontSize: '1.4rem',
             fontStyle: 'italic',
             fontWeight: 900,
-            marginBottom: '20px',
+            margin: '0 0 8px',
           }}>
             重置密码
           </h2>
+          <p style={{ color: 'var(--text-light)', fontSize: '0.9rem', marginBottom: '20px' }}>
+            为你的账号设置一个新密码
+          </p>
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <input
               type="password"

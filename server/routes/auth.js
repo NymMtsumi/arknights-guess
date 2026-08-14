@@ -122,9 +122,10 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
       });
     }
 
-    // 生产环境必须配置 SMTP，否则不能泄露验证链接
-    if (!process.env.SMTP_PASS) {
-      console.error('[register] SMTP_PASS not configured in production');
+    // 生产环境必须配置 SMTP，否则不能泄露验证链接（检查 transporter 对象而非仅 SMTP_PASS，
+    // 避免 SMTP_USER 缺失但 SMTP_PASS 存在时 transporter 为 null 导致的 sendMail 空指针）
+    if (!transporter) {
+      console.error('[register] SMTP not configured (transporter null)');
       return jsonResponse(res, { error: '邮件服务未配置，请稍后再试' }, 500);
     }
 
@@ -400,9 +401,10 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
       return jsonResponse(res, { ok: true, message: `[DEV] 重置链接已打印到控制台` });
     }
 
-    // 生产环境必须配置 SMTP
-    if (!process.env.SMTP_PASS) {
-      console.error('[forgot-pw] SMTP_PASS not configured in production');
+    // 生产环境必须配置 SMTP（检查 transporter 对象而非仅 SMTP_PASS，
+    // 避免 SMTP_USER 缺失但 SMTP_PASS 存在时 transporter 为 null 导致 sendMail 空指针）
+    if (!transporter) {
+      console.error('[forgot-pw] SMTP not configured (transporter null)');
       return jsonResponse(res, { error: '邮件服务未配置，请稍后再试' }, 500);
     }
 

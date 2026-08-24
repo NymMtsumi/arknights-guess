@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
@@ -152,8 +152,8 @@ export default function LeaderboardPage() {
   // 视口高度 = 表头 + 单行×条数 (实际渲染条数不超过 7 时精确匹配，超过则出现滚动条)
   const viewportHeight = HEADER_HEIGHT + ROW_HEIGHT * VISIBLE_ROWS;
 
-  // 是否显示 avgGuesses 列（仅单人模式）
-  const showAvgGuesses = mode === 'single';
+  // 是否显示 avgGuesses 列（单人与多人模式均显示，服务端两种模式都返回 totalGuesses/totalGames）
+  const showAvgGuesses = mode === 'single' || mode === 'multi';
   const isDaily = mode === 'daily';
 
   // 格式化时间戳
@@ -165,14 +165,10 @@ export default function LeaderboardPage() {
   };
 
   // 列宽分配（百分比）
-  const colWidths = useMemo(() => {
-    if (showAvgGuesses) {
-      // rank:8% | player:auto | wins:13% | total:13% | winRate:13% | avgGuess:17%
-      return { rank: '8%', wins: '13%', total: '13%', winRate: '13%', avgGuess: '17%' };
-    }
-    // rank:8% | player:auto | wins:17% | total:17% | winRate:17%
-    return { rank: '8%', wins: '17%', total: '17%', winRate: '17%' };
-  }, [showAvgGuesses]);
+  // 单人与多人模式均展示「平均猜测」列，故经典排行榜固定 6 列：
+  //   rank 给足宽度容纳 🥇+名次，winRate/avgGuess 给足宽度容纳 "100.0%" / "11.84"，
+  //   避免移动端被 text-overflow: ellipsis 截断成 "100.…"。
+  const colWidths = { rank: '16%', wins: '11%', total: '11%', winRate: '17%', avgGuess: '17%' };
 
   // ===== 渲染 =====
   return (
@@ -657,14 +653,33 @@ export default function LeaderboardPage() {
         @media (max-width: 640px) {
           .leaderboard-card {
             border-radius: var(--radius-sm);
+            /* 关键：卡片是 page-scroll 的 flex 子项，去掉内滚动后必须禁止压缩，
+               否则整表被 flex-shrink 压扁 + overflow:hidden 裁掉尾部名次（表现为只显示 47 名） */
+            flex-shrink: 0;
+            /* overflow:hidden 会把卡片变成滚动容器，导致 sticky 表头相对卡片而非页面，
+               移动端改为 visible，让粘性表头相对 .page-scroll 生效（表角裁边影响可忽略） */
+            overflow: visible;
           }
+          /* 移动端不再用固定高度内滚动，整表铺开由页面滚动，保证全部 50 名可见可达 */
           .leaderboard-table-body {
-            max-height: ${HEADER_HEIGHT + ROW_HEIGHT * VISIBLE_ROWS}px !important;
+            max-height: none !important;
+            overflow-y: visible !important;
+          }
+          /* 表头随页面滚动（page-scroll 有 padding-top，sticky 会留下 28px 缝隙），
+             与参考仓库一致：移动端整表自然滚动、无粘性表头 */
+          .leaderboard-table-header {
+            position: static;
           }
           .leaderboard-table-header th,
           .leaderboard-table-body td {
             padding: 8px 3px;
             font-size: 0.72rem;
+          }
+          /* 数值列（胜率/猜测）移动端不裁剪，保证 "100.0%" 完整显示 */
+          .leaderboard-table-body td.lb-stat {
+            white-space: nowrap;
+            overflow: visible;
+            text-overflow: clip;
           }
           .leaderboard-table-header th.lb-th-left,
           .lb-player {

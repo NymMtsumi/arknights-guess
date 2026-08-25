@@ -2,9 +2,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { fetchMe, updateProfile, AuthError, clearAuth, logout } from '@/lib/auth';
 
 export function ProfilePage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [user, setUserState] = useState<any>(null);
@@ -245,7 +247,7 @@ export function ProfilePage() {
           <button onClick={() => setEditing(true)} style={btnStyle}>
             编辑资料
           </button>
-          <button onClick={() => { logout().finally(() => window.location.reload()); }} style={{
+          <button onClick={() => { logout().finally(() => router.push('/')); }} style={{
             ...btnStyle,
             background: 'transparent',
             color: 'var(--danger)',

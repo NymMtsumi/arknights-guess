@@ -41,8 +41,6 @@ const MODES = [
 
 /** 单行高度（px），与 CSS 中 --lb-row-height 保持一致 */
 const ROW_HEIGHT = 44;
-/** 表头高度（px），与 CSS 中 --lb-header-height 保持一致 */
-const HEADER_HEIGHT = 42;
 /** 单屏展示条数 */
 const VISIBLE_ROWS = 7;
 /** 最大加载条数 */
@@ -148,9 +146,6 @@ export default function LeaderboardPage() {
     if (rank === 3) return 'var(--leaderboard-bronze-bg, rgba(205,127,50,0.10))';
     return index % 2 === 0 ? 'transparent' : 'var(--card-soft)';
   };
-
-  // 视口高度 = 表头 + 单行×条数 (实际渲染条数不超过 7 时精确匹配，超过则出现滚动条)
-  const viewportHeight = HEADER_HEIGHT + ROW_HEIGHT * VISIBLE_ROWS;
 
   // 是否显示 avgGuesses 列（单人与多人模式均显示，服务端两种模式都返回 totalGuesses/totalGames）
   const showAvgGuesses = mode === 'single' || mode === 'multi';
@@ -311,7 +306,7 @@ export default function LeaderboardPage() {
                 </table>
               </div>
 
-              <div className="leaderboard-table-body" style={{ maxHeight: `${viewportHeight}px` }}>
+              <div className="leaderboard-table-body">
                 <table>
                   <colgroup>
                     <col style={{ width: '10%' }} />
@@ -375,13 +370,8 @@ export default function LeaderboardPage() {
                 </table>
               </div>
 
-              {/* 可滚动表体，视口高度 = 表头 + 7行 */}
-              <div
-                className="leaderboard-table-body"
-                style={{
-                  maxHeight: `${viewportHeight}px`,
-                }}
-              >
+              {/* 整表铺开由页面滚动，保证全部名次可见（与移动端一致） */}
+              <div className="leaderboard-table-body">
                 <table>
                   <colgroup>
                     <col style={{ width: colWidths.rank }} />
@@ -496,7 +486,10 @@ export default function LeaderboardPage() {
           background: var(--card);
           border: 1px solid var(--border);
           border-radius: var(--radius);
-          overflow: hidden;
+          /* 卡片是 page-scroll 的 flex 子项：禁止压缩 + 去掉裁剪，
+             让整表自然铺开、由页面滚动，确保全部名次可见可达（否则尾部名次被裁掉） */
+          flex-shrink: 0;
+          overflow: visible;
         }
         .leaderboard-empty {
           text-align: center;
@@ -509,11 +502,9 @@ export default function LeaderboardPage() {
           position: relative;
         }
 
-        /* ===== 粘性表头 ===== */
+        /* ===== 表头 ===== */
         .leaderboard-table-header {
-          position: sticky;
-          top: 0;
-          z-index: 2;
+          position: static;
           background: var(--card-soft);
           border-bottom: 2px solid var(--border);
         }
@@ -541,13 +532,9 @@ export default function LeaderboardPage() {
           color: var(--primary);
         }
 
-        /* ===== 可滚动表体 ===== */
+        /* ===== 表体 ===== */
         .leaderboard-table-body {
-          overflow-y: auto;
-          overflow-x: hidden;
-          scroll-behavior: smooth;
-          overscroll-behavior: contain;
-          -webkit-overflow-scrolling: touch;
+          overflow: visible;
         }
         .leaderboard-table-body table {
           width: 100%;
@@ -563,31 +550,6 @@ export default function LeaderboardPage() {
           text-overflow: ellipsis;
           line-height: 1.3;
           border-bottom: 1px solid var(--border);
-        }
-
-        /* ===== 滚动条样式 ===== */
-        .leaderboard-table-body::-webkit-scrollbar {
-          width: 6px;
-        }
-        .leaderboard-table-body::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .leaderboard-table-body::-webkit-scrollbar-thumb {
-          background: rgba(217, 255, 63, 0.28);
-          border-radius: 3px;
-        }
-        .leaderboard-table-body::-webkit-scrollbar-thumb:hover {
-          background: rgba(217, 255, 63, 0.48);
-        }
-        html:not([data-theme="blast"]) .leaderboard-table-body::-webkit-scrollbar-thumb {
-          background: rgba(32, 17, 24, 0.18);
-        }
-        html:not([data-theme="blast"]) .leaderboard-table-body::-webkit-scrollbar-thumb:hover {
-          background: rgba(32, 17, 24, 0.32);
-        }
-        .leaderboard-table-body {
-          scrollbar-width: thin;
-          scrollbar-color: rgba(217, 255, 63, 0.28) transparent;
         }
 
         /* ===== 单元格 ===== */
@@ -653,22 +615,6 @@ export default function LeaderboardPage() {
         @media (max-width: 640px) {
           .leaderboard-card {
             border-radius: var(--radius-sm);
-            /* 关键：卡片是 page-scroll 的 flex 子项，去掉内滚动后必须禁止压缩，
-               否则整表被 flex-shrink 压扁 + overflow:hidden 裁掉尾部名次（表现为只显示 47 名） */
-            flex-shrink: 0;
-            /* overflow:hidden 会把卡片变成滚动容器，导致 sticky 表头相对卡片而非页面，
-               移动端改为 visible，让粘性表头相对 .page-scroll 生效（表角裁边影响可忽略） */
-            overflow: visible;
-          }
-          /* 移动端不再用固定高度内滚动，整表铺开由页面滚动，保证全部 50 名可见可达 */
-          .leaderboard-table-body {
-            max-height: none !important;
-            overflow-y: visible !important;
-          }
-          /* 表头随页面滚动（page-scroll 有 padding-top，sticky 会留下 28px 缝隙），
-             与参考仓库一致：移动端整表自然滚动、无粘性表头 */
-          .leaderboard-table-header {
-            position: static;
           }
           .leaderboard-table-header th,
           .leaderboard-table-body td {

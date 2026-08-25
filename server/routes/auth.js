@@ -28,6 +28,25 @@ async function checkEmailMX(email) {
   }
 }
 
+// ===== 邮箱格式校验（发送邮件前的格式防线，避免向畸形地址空发/错发）=====
+function isValidEmailFormat(email) {
+  if (typeof email !== 'string' || email.length > 320) return false;
+  const atIndex = email.indexOf('@');
+  if (atIndex < 1 || atIndex !== email.lastIndexOf('@')) return false; // 无 @ / 多个 @ / @ 在开头
+  const local = email.slice(0, atIndex);
+  const domain = email.slice(atIndex + 1);
+  if (!local || !domain || local.length > 64 || domain.length > 255) return false;
+  if (/\s/.test(email)) return false; // 含空白
+  // 本地部分：字母数字开头结尾，中间允许 ._%+-
+  if (!/^[a-zA-Z0-9](?:[a-zA-Z0-9._%+-]*[a-zA-Z0-9])?$/.test(local)) return false;
+  // 域部分：字母数字开头结尾，中间允许字母数字、连字符、点
+  if (!/^[a-zA-Z0-9](?:[a-zA-Z0-9.-]*[a-zA-Z0-9])?$/.test(domain)) return false;
+  // TLD：最后一段至少 2 个字母
+  const tld = domain.slice(domain.lastIndexOf('.') + 1);
+  if (!/^[a-zA-Z]{2,}$/.test(tld)) return false;
+  return true;
+}
+
 export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAuth, checkRateLimit, transporter, SITE_URL, getClientIP }) {
 
   // ===== POST /api/register =====
@@ -59,26 +78,21 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
     if (!/^[a-zA-Z0-9_一-鿿]+$/.test(username)) {
       return jsonResponse(res, { error: '用户名只能包含字母、数字、下划线和中文' }, 400);
     }
-    const atIndex = email.indexOf('@');
-    if (atIndex < 1 || email.length > 320) {
-      // atIndex < 1 同时守卫了：不存在 @、@ 在开头（空本地部分）、@ 在末尾（空域部分）
+
+    // 1. 邮箱格式校验（先于任何网络查询/发信，避免向畸形地址空发错发）
+    if (!isValidEmailFormat(email)) {
       return jsonResponse(res, { error: '请输入有效的邮箱地址' }, 400);
     }
 
-    // 验证邮箱域名 MX 记录（防止虚假邮箱）
-    const mxValid = await checkEmailMX(email);
-    if (!mxValid) {
-      return jsonResponse(res, { error: '邮箱域名无效，请使用真实邮箱' }, 400);
+    // 2. 邮箱是否已被注册/占用（先于 MX 查询，避免对已注册邮箱做无用 DNS 解析）
+    const existingEmail = db.prepare("SELECT id FROM users WHERE LOWER(email) = ? AND email_verified_at IS NOT NULL").get(email);
+    if (existingEmail) {
+      // P2 fix: 不透露邮箱是否已注册，返回统一消息
+      return jsonResponse(res, { error: '该邮箱或用户名不可用' }, 409);
     }
 
     const existingUser = db.prepare('SELECT id FROM users WHERE username = ?').get(username);
     if (existingUser) {
-      return jsonResponse(res, { error: '该邮箱或用户名不可用' }, 409);
-    }
-
-    const existingEmail = db.prepare("SELECT id FROM users WHERE LOWER(email) = ? AND email_verified_at IS NOT NULL").get(email);
-    if (existingEmail) {
-      // P2 fix: 不透露邮箱是否已注册，返回统一消息
       return jsonResponse(res, { error: '该邮箱或用户名不可用' }, 409);
     }
 
@@ -87,6 +101,12 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
     ).get(username, email);
     if (existingPending) {
       return jsonResponse(res, { error: '该邮箱或用户名不可用' }, 409);
+    }
+
+    // 3. 验证邮箱域名 MX 记录（防止虚假邮箱；放最后，前面都已通过再发信）
+    const mxValid = await checkEmailMX(email);
+    if (!mxValid) {
+      return jsonResponse(res, { error: '邮箱域名无效，请使用真实邮箱' }, 400);
     }
 
     let password_hash;
@@ -362,7 +382,7 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
 
     const body = await parseBody(req);
     const email = sanitizeString(body.email, 320).toLowerCase();
-    if (!email || !email.includes('@')) {
+    if (!email || !isValidEmailFormat(email)) {
       return jsonResponse(res, { error: '请输入有效的邮箱地址' }, 400);
     }
 
@@ -371,11 +391,12 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
       return jsonResponse(res, { ok: true, message: '如果该邮箱已注册，重置邮件已发送' });
     }
 
+    // 先校验邮箱是否已注册（已验证），未注册直接明确提示，避免发出无效的重置链接
     const user = db.prepare('SELECT id, username, email FROM users WHERE LOWER(email) = ? AND email_verified_at IS NOT NULL').get(email);
     if (!user) {
       // 时序防御：即使未找到也执行 bcrypt（与登录路径一致的防御策略）
       try { await bcrypt.compare('timing-defense', TIMING_DEFENSE_HASH); } catch {}
-      return jsonResponse(res, { ok: true, message: '如果该邮箱已注册，重置邮件已发送' });
+      return jsonResponse(res, { error: '该邮箱尚未注册，请先完成注册' }, 404);
     }
 
     const resetToken = randomBytes(32).toString('hex');

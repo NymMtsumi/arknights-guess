@@ -552,7 +552,7 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
       FROM games g
       INNER JOIN users u ON u.id = g.user_id
       WHERE g.mode = 'daily' AND g.daily_date = ? AND g.won = 1
-      ORDER BY g.guess_count ASC, g.timestamp ASC
+      ORDER BY g.guess_count DESC, g.timestamp ASC
       LIMIT ?
     `).all(dailyDate, limit);
 

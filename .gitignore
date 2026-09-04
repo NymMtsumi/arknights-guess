@@ -33,6 +33,7 @@ yarn-error.log*
 
 # sensitive project info
 PROJECT_CREDENTIALS.md
+HANDOFF-CONFIDENTIAL.md
 
 # vercel
 .vercel
@@ -68,3 +69,7 @@ css-effects/
 cyberpunk-lp/
 party-mode.tar.gz
 party-mode.zip
+
+# python
+__pycache__/
+*.pyc

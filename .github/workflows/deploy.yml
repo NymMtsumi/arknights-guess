@@ -66,6 +66,10 @@ jobs:
       - name: 服务端语法检查
         run: find server -name '*.js' -not -path '*/node_modules/*' -print0 | xargs -0 -n1 node --check
 
+      - name: 干员数据一致性检查
+        # server/characters.json 与 src/data/characters.json 必须字节一致（手动改动也拦）
+        run: node scripts/check-characters.mjs
+
   # ── 部署（仅在冒烟 + 审查通过 + 有服务端变更时；手动触发则强制部署）──
   deploy:
     needs: [smoke, review]

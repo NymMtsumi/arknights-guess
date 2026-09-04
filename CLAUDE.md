@@ -64,6 +64,11 @@ node server/index.js  # 单独启动后端（:3001，需要 server/.env）
 | `next.config.ts` | `output: "export"` + `images: { unoptimized: true }` |
 | `wrangler.jsonc.archived` | Cloudflare Workers 配置（OpenNext adapter，已废弃归档） |
 | `.github/workflows/deploy.yml` | CI/CD — 检测 server 变更 → webhook VPS |
+| `.github/workflows/data-sync.yml` | 干员数据自动同步 — 每天 15:15 (UTC+8) 检测上游，自动追加新干员 |
+| `.github/data-sync-state.json` | 上游已处理 blob sha（bot 提交推进） |
+| `scripts/auto-update.py` | **数据增量同步脚本**（上游检测→PRTS enrich→append 写两文件） |
+| `scripts/maps.py` | 职业/子职业/阵营/星级/种族映射（单一事实源） |
+| `scripts/check-characters.mjs` | 两份 characters.json 字节一致性 + schema gate（CI review 强制） |
 
 ## 部署前置 gate（共同开发者必读）
 
@@ -81,6 +86,23 @@ node server/index.js  # 单独启动后端（:3001，需要 server/.env）
 - 任一 gate 失败 → 部署被阻止；`workflow_dispatch` 手动触发同样强制过这两道 gate
 - 前端变更（`src/**`）→ 冒烟跑通后 Cloudflare Pages 自动构建；后端变更（`server/**`）→ gate 通过后 webhook 部署 VPS
 - 深度审查（六轮代码审查 skillscoed）为 Claude Code 人工步骤，重要改动建议先跑一次再 push
+
+## 干员数据自动同步（data-sync）
+
+干员 roster 存**两份 git 文件**：`server/characters.json`（后端运行时读取，game-engine.js 启动时加载）+ `src/data/characters.json`（前端打包导入）。两者必须**字节一致** —— `node scripts/check-characters.mjs`（已在 deploy.yml review gate 强制）在任何人 push 时拦截漂移。
+
+- **数据源**: Kengxxiao/ArknightsGameData 镜像 `zh_CN/gamedata/excel/character_table.json`（master）。⚠️ **勿用 yuanyan3060 镜像**——已冻结（2021-05）。
+- **排除规则**: 只收「可获取干员」= 有中英文名 + `isNotObtainable=False` + key 不含 token/trap/test/default。预备/盟约 NPC（预备干员·XX、盟约·XX）一律排除；该规则曾在 live 数据上**精确复现现有 425 人**（0 缺失/0 多余）。
+- **同步脚本** `scripts/auto-update.py`（增量）：
+  1. 比较上游 blob sha 与 `.github/data-sync-state.json` 的 `seen`；未变且无挂起 → 短路退出
+  2. 变化 → 下载 → 候选 = 新出现可获取干员
+  3. 新候选走 **PRTS wiki** enrich（种族/性别/所属势力/上线时间/异格/标签兜底；`--proxy` 只用于 GitHub，PRTS 直连）
+  4. race/gender 仍「未知」→ 挂起至 `.github/data-sync-held.json`（含 base entry，重试只查 PRTS），5 次后 force-add
+  5. **append-only 追加**到两文件末尾，**绝不重排** —— 每日挑战 seed 按池内索引取目标，重排会让当日目标漂移；新干员 `popularity` 默认 `normal`（≥6★ 自动进 easy 池）
+- **定时** `.github/workflows/data-sync.yml`: 每天 **15:15 (UTC+8)**（cron `15 7 * * *`）+ `workflow_dispatch` 手动。push 用 **`secrets.ACTIONS_PAT`**（与本人 push 等价 → 触发 deploy.yml 后端部署 + Cloudflare Pages 前端构建；⚠️ GITHUB_TOKEN push 不会触发后续 Actions，必须用 PAT）。
+- **本地**: `npm run data:sync`（真实执行）/ `data:sync:dry`（只打印）/ `data:check`（一致性）。GitHub 访问需 `--proxy http://127.0.0.1:10090`。
+- **维护**: 新职业/子职业/阵营出现时补 `scripts/maps.py`（sync 会打印 WARNING 提示缺失映射）；`scripts/setup-sync-secret.py` 可重建 ACTIONS_PAT secret。
+- **已知小坑**: 新干员当天 15:15 同步部署后，当日已开局玩家的每日目标可能漂移（seed 值落池尾概率 ~1/池大小）；游戏按 name 匹配，id 漂移（暮落 char_512→char_4025）无害。
 
 ## VPS 运维
 ```bash

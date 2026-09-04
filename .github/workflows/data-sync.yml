@@ -1,0 +1,62 @@
+name: 干员数据自动同步
+
+# 每天 15:15 (UTC+8) = 07:15 UTC 检测一次上游 Kengxxiao/ArknightsGameData；
+# 有新增可获取干员则自动追加到 server/characters.json + src/data/characters.json 并推 main。
+# 推送用 secrets.ACTIONS_PAT（与本人 push 等价）→ 自动触发 deploy.yml（后端 VPS）+ Cloudflare Pages（前端）。
+# 数据是 append-only 追加，不重排已有行（保证每日挑战 seed 索引稳定）。
+
+on:
+  schedule:
+    - cron: '15 7 * * *'   # 15:15 UTC+8
+  workflow_dispatch: {}    # 手动触发: Actions → 干员数据自动同步 → Run workflow
+
+permissions:
+  contents: write
+
+# 数据写入只在 main 串行执行，避免两个并发 bot 互相覆盖
+concurrency:
+  group: data-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false   # 不留下 checkout token；push 用下方 ACTIONS_PAT
+
+      - name: 安装 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 检查上游并同步
+        run: python scripts/auto-update.py --apply
+
+      - name: 自检（两文件一致性 + schema）
+        run: python scripts/auto-update.py --validate
+
+      - name: 提交并推送（仅当确有变更）
+        env:
+          ACTIONS_PAT: ${{ secrets.ACTIONS_PAT }}
+        run: |
+          set -euo pipefail
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "✓ 上游无新干员，无变更可提交"
+            exit 0
+          fi
+          if [ -z "${ACTIONS_PAT:-}" ]; then
+            echo "::error::缺少 secrets.ACTIONS_PAT —— 请到 repo Settings → Secrets and variables → Actions 添加"
+            echo "::error::值取本地 ~/.git-credentials-nym 中 :后面的 github_pat_/ghp_ token（需有该仓库 contents:write）"
+            exit 1
+          fi
+          git config user.name "Arknights Data Sync"
+          git config user.email "data-sync@users.noreply.github.com"
+          git add -A server/characters.json src/data/characters.json .github/
+          git commit -m "chore(data): 干员 roster 自动同步 $(date -u +%F)"
+          git push "https://x-access-token:${ACTIONS_PAT}@github.com/${GITHUB_REPOSITORY}.git" HEAD:main
+          echo "✅ 已推送 main（触发后端部署 + 前端构建）"

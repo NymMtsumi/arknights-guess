@@ -261,7 +261,8 @@ def fetch_wikitext_batch(names, opener):
 
 def _clean(v):
     v = v.strip()
-    return "" if v in ("？", "?", "-", "—", "暂无", "未知") else v
+    # 未录入 = PRTS 模板中间态占位（编辑未完成），与 未知/暂无 同等对待，绝不当作真实值
+    return "" if v in ("？", "?", "-", "—", "暂无", "未知", "未录入") else v
 
 
 def _parse_alter(line):
@@ -319,10 +320,10 @@ def gender_to_en(zh):
 
 def apply_prts(entry, info):
     """把 PRTS 解析结果并入 entry；只覆盖「新值非空」的字段。返回是否 race/gender 完整。"""
-    if info["race"] and entry["race"] in ("未知", "Unknown", ""):
+    if info["race"] and entry["race"] in ("未知", "Unknown", "", "未录入"):
         entry["race"] = info["race"]
         entry["raceEn"] = info["race"]          # en 不维护完整词表，沿用中文（同历史）
-    if info["gender"] and entry["gender"] in ("未知", "Unknown", ""):
+    if info["gender"] and entry["gender"] in ("未知", "Unknown", "", "未录入"):
         entry["gender"] = info["gender"]
         entry["genderEn"] = gender_to_en(info["gender"])
     if info["faction"]:
@@ -341,8 +342,8 @@ def apply_prts(entry, info):
 
 def is_complete(entry):
     """race/gender 非未知才算完整（这两项只能靠 PRTS，无法从镜像推导）。"""
-    return entry["race"] not in ("", "未知", "Unknown") and \
-        entry["gender"] not in ("", "未知", "Unknown")
+    return entry["race"] not in ("", "未知", "Unknown", "未录入") and \
+        entry["gender"] not in ("", "未知", "Unknown", "未录入")
 
 
 # ============================================================ 挂起/写入

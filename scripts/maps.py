@@ -22,7 +22,7 @@ PROFESSION_MAP = {
     "WARRIOR":  {"zh": "近卫", "en": "Guard"},
 }
 
-# 子职业（含 2025-2026 新增：巡空者/佣兵/破空者 等）
+# 子职业（含 2025-2026 新增：巡空者/佣兵/裂空炮手 等）
 SUBPROFESSION_MAP = {
     "corecaster":       {"zh": "中坚术师", "en": "Core Caster"},
     "splashcaster":     {"zh": "扩散术师", "en": "Splash Caster"},
@@ -92,10 +92,10 @@ SUBPROFESSION_MAP = {
     "crusher":          {"zh": "重剑手", "en": "Crusher"},
     "primguard":        {"zh": "本源近卫", "en": "Primal Guard"},
     "hammer":           {"zh": "撼地者", "en": "Earthshaker"},
-    "supportiveranger": {"zh": "辅助狙击", "en": "Supportive Ranger"},
+    "supportiveranger": {"zh": "游击手", "en": "Supportive Ranger"},
     "watchman":         {"zh": "巡哨者", "en": "Watchman"},
     "mercenary":        {"zh": "佣兵", "en": "Mercenary"},
-    "skybreaker":       {"zh": "破空者", "en": "Skybreaker"},
+    "skybreaker":       {"zh": "裂空炮手", "en": "Skybreaker"},
 }
 
 # 阵营（按 nationId）

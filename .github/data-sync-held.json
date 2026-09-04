@@ -1,0 +1,122 @@
+{
+  "埃癸斯": {
+    "id": "char_4218_aigis",
+    "name": "埃癸斯",
+    "entry": {
+      "id": "char_4218_aigis",
+      "name": "埃癸斯",
+      "nameEn": "Aegis",
+      "class": "狙击",
+      "classEn": "Sniper",
+      "subclass": "破空者",
+      "subclassEn": "Skybreaker",
+      "faction": "S.E.E.S.",
+      "factionEn": "S.E.E.S.",
+      "rarity": 5,
+      "race": "未知",
+      "raceEn": "Unknown",
+      "gender": "女",
+      "genderEn": "Female",
+      "popularity": "normal",
+      "releaseYear": 2026,
+      "tags": [
+        "群攻"
+      ],
+      "alterBase": "",
+      "position": "高台",
+      "positionEn": "Ranged"
+    },
+    "attempts": 1
+  },
+  "岳羽由加莉": {
+    "id": "char_4219_yukari",
+    "name": "岳羽由加莉",
+    "entry": {
+      "id": "char_4219_yukari",
+      "name": "岳羽由加莉",
+      "nameEn": "Yukari Takeba",
+      "class": "辅助",
+      "classEn": "Supporter",
+      "subclass": "辅助狙击",
+      "subclassEn": "Supportive Ranger",
+      "faction": "S.E.E.S.",
+      "factionEn": "S.E.E.S.",
+      "rarity": 5,
+      "race": "未知",
+      "raceEn": "Unknown",
+      "gender": "女",
+      "genderEn": "Female",
+      "popularity": "normal",
+      "releaseYear": 2026,
+      "tags": [
+        "输出",
+        "支援"
+      ],
+      "alterBase": "",
+      "position": "高台",
+      "positionEn": "Ranged"
+    },
+    "attempts": 1
+  },
+  "结城理": {
+    "id": "char_4217_makoto",
+    "name": "结城理",
+    "entry": {
+      "id": "char_4217_makoto",
+      "name": "结城理",
+      "nameEn": "Makoto Yuki",
+      "class": "特种",
+      "classEn": "Specialist",
+      "subclass": "傀儡师",
+      "subclassEn": "Dollkeeper",
+      "faction": "S.E.E.S.",
+      "factionEn": "S.E.E.S.",
+      "rarity": 6,
+      "race": "未知",
+      "raceEn": "Unknown",
+      "gender": "男",
+      "genderEn": "Male",
+      "popularity": "normal",
+      "releaseYear": 2026,
+      "tags": [
+        "输出",
+        "快速复活",
+        "治疗"
+      ],
+      "alterBase": "",
+      "position": "地面",
+      "positionEn": "Melee"
+    },
+    "attempts": 1
+  },
+  "虎狼丸": {
+    "id": "char_4220_kormr",
+    "name": "虎狼丸",
+    "entry": {
+      "id": "char_4220_kormr",
+      "name": "虎狼丸",
+      "nameEn": "Koromaru",
+      "class": "近卫",
+      "classEn": "Guard",
+      "subclass": "剑豪",
+      "subclassEn": "Swordmaster",
+      "faction": "S.E.E.S.",
+      "factionEn": "S.E.E.S.",
+      "rarity": 1,
+      "race": "佩洛兽亲（据称）",
+      "raceEn": "佩洛兽亲（据称）",
+      "gender": "未知",
+      "genderEn": "Unknown",
+      "popularity": "normal",
+      "releaseYear": 2026,
+      "tags": [
+        "爆发",
+        "控场"
+      ],
+      "alterBase": "",
+      "position": "地面",
+      "positionEn": "Melee"
+    },
+    "attempts": 1
+  }
+}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { getServerUrl, getToken } from '@/lib/auth';
+import { useI18n } from '@/lib/i18n';
 
 interface DashboardData {
   totalUsers: number;
@@ -15,39 +16,8 @@ interface DashboardData {
   version: string;
 }
 
-// ===== 样式 =====
-const cardStyle: React.CSSProperties = {
-  background: 'var(--card)',
-  borderRadius: 'var(--radius)',
-  padding: '20px',
-  marginBottom: '16px',
-};
-
-const statBox: React.CSSProperties = {
-  flex: 1,
-  minWidth: '130px',
-  padding: '16px 18px',
-  borderRadius: 'var(--radius)',
-  border: '1px solid var(--border)',
-  textAlign: 'center',
-};
-
-const thStyle: React.CSSProperties = {
-  textAlign: 'left',
-  padding: '8px 10px',
-  borderBottom: '1px solid var(--border)',
-  fontWeight: 700,
-  fontSize: '0.78rem',
-  color: 'var(--text-light)',
-};
-
-const tdStyle: React.CSSProperties = {
-  padding: '7px 10px',
-  borderBottom: '1px solid var(--border)',
-  fontSize: '0.82rem',
-};
-
 export default function AdminDashboard() {
+  const { t } = useI18n();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -62,7 +32,7 @@ export default function AdminDashboard() {
       });
       if (!res.ok) {
         const d = await res.json();
-        throw new Error(d.error || '加载失败');
+        throw new Error(d.error || t('admin.common.loadFailed'));
       }
       const d: DashboardData = await res.json();
       setData(d);
@@ -70,16 +40,22 @@ export default function AdminDashboard() {
       setError(err.message);
     }
     setLoading(false);
-  }, [baseUrl]);
+  }, [baseUrl, t]);
 
   useEffect(() => { load(); }, [load]);
 
   if (loading) {
-    return <p style={{ textAlign: 'center', color: 'var(--text-light)', padding: '40px' }}>加载中...</p>;
+    return <div className="card"><div className="sk"><i /><i /><i /><i /></div></div>;
   }
 
   if (error) {
-    return <p style={{ textAlign: 'center', color: 'var(--danger)', padding: '40px' }}>{error}</p>;
+    return (
+      <div className="card">
+        <div className="empty">
+          <div className="etx">{error}</div>
+        </div>
+      </div>
+    );
   }
 
   if (!data) return null;
@@ -88,121 +64,127 @@ export default function AdminDashboard() {
     const d = Math.floor(sec / 86400);
     const h = Math.floor((sec % 86400) / 3600);
     const m = Math.floor((sec % 3600) / 60);
-    if (d > 0) return `${d}天 ${h}时`;
-    if (h > 0) return `${h}时 ${m}分`;
-    return `${m}分`;
+    if (d > 0) return t('admin.dashboard.uptimeDaysHours', { d, h });
+    if (h > 0) return t('admin.dashboard.uptimeHoursMins', { h, m });
+    return t('admin.dashboard.uptimeMins', { m });
   };
 
   const modeLabel = (mode: string, difficulty: string) => {
-    if (mode === 'multi') return '多人';
-    if (difficulty === 'hard') return '困难';
-    if (difficulty === 'easy') return '简单';
+    if (mode === 'multi') return t('admin.dashboard.modeMulti');
+    if (difficulty === 'hard') return t('admin.dashboard.modeHard');
+    if (difficulty === 'easy') return t('admin.dashboard.modeEasy');
     return difficulty || '—';
   };
 
+  /* 四个指标共用一条强调色细线（.stat::after），**不**各配一色：
+     给每个数字一种颜色会假造出一个并不存在的分类。唯一的例外是「当前在线」——
+     它带 pulse，因为那是一个会自己变的活值，不是同类计数。 */
+  const stats = [
+    { label: t('admin.dashboard.totalUsers'), value: data.totalUsers, live: false },
+    { label: t('admin.dashboard.newToday'), value: data.newUsersToday, live: false },
+    { label: t('admin.dashboard.totalGames'), value: data.totalGames, live: false },
+    { label: t('admin.dashboard.onlineNow'), value: data.onlineNow, live: true },
+  ];
+
   return (
     <div>
-      {/* 统计卡片 */}
-      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '20px' }}>
-        {[
-          { label: '总用户', value: data.totalUsers, color: 'var(--primary)' },
-          { label: '今日新增', value: data.newUsersToday, color: 'var(--correct)' },
-          { label: '总游戏', value: data.totalGames, color: 'var(--primary-hover)' },
-          { label: '当前在线', value: data.onlineNow, color: '#ff6578' },
-        ].map(s => (
-          <div key={s.label} style={{ ...statBox, borderLeft: `3px solid ${s.color}` }}>
-            <div style={{ fontSize: '1.8rem', fontWeight: 900, color: s.color }}>{s.value}</div>
-            <div style={{ fontSize: '0.78rem', color: 'var(--text-light)', marginTop: '4px' }}>{s.label}</div>
+      <div className="stats">
+        {stats.map((s) => (
+          <div key={s.label} className="stat">
+            <div className="lb">
+              {s.live && <span className="pulse" style={{ display: 'inline-block', marginRight: 6 }} />}
+              {s.label}
+            </div>
+            <div className="vl">{s.value}</div>
           </div>
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+      <div className="console-2col">
         {/* 最近注册 */}
-        <div style={cardStyle}>
-          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontStyle: 'italic', fontWeight: 800, margin: '0 0 12px' }}>
-            最近注册
-          </h3>
+        <div className="card">
+          <div className="card-hd">
+            <h2>{t('admin.dashboard.recentUsers')}</h2>
+            <span className="cnt">{data.recentUsers.length}</span>
+          </div>
           {data.recentUsers.length === 0 ? (
-            <p style={{ color: 'var(--text-light)', fontSize: '0.8rem' }}>暂无数据</p>
+            <div className="empty"><div className="etx">{t('admin.common.noData')}</div></div>
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr>
-                  <th style={thStyle}>用户</th>
-                  <th style={thStyle}>ID</th>
-                  <th style={{ ...thStyle, textAlign: 'right' }}>注册时间</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.recentUsers.map(u => (
-                  <tr key={u.id}>
-                    <td style={tdStyle}><strong>{u.username}</strong></td>
-                    <td style={{ ...tdStyle, color: 'var(--text-light)', fontFamily: 'monospace', fontSize: '0.75rem' }}>{u.displayId || '—'}</td>
-                    <td style={{ ...tdStyle, textAlign: 'right', fontSize: '0.72rem', color: 'var(--text-light)' }}>
-                      {u.createdAt?.slice(0, 16)?.replace('T', ' ')}
-                    </td>
+            <div className="table-wrap">
+              <table className="tbl">
+                <thead>
+                  <tr>
+                    <th>{t('admin.dashboard.colUser')}</th>
+                    <th>{t('admin.dashboard.colId')}</th>
+                    <th className="num">{t('admin.dashboard.colRegisteredAt')}</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {data.recentUsers.map((u) => (
+                    <tr key={u.id}>
+                      <td className="k">{u.username}</td>
+                      <td><span className="mono">{u.displayId || '—'}</span></td>
+                      <td className="num"><span className="mono">{u.createdAt?.slice(0, 16)?.replace('T', ' ')}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
 
         {/* 最近游戏 */}
-        <div style={cardStyle}>
-          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontStyle: 'italic', fontWeight: 800, margin: '0 0 12px' }}>
-            最近游戏
-          </h3>
+        <div className="card">
+          <div className="card-hd">
+            <h2>{t('admin.dashboard.recentGames')}</h2>
+            <span className="cnt">{data.recentGames.length}</span>
+          </div>
           {data.recentGames.length === 0 ? (
-            <p style={{ color: 'var(--text-light)', fontSize: '0.8rem' }}>暂无数据</p>
+            <div className="empty"><div className="etx">{t('admin.common.noData')}</div></div>
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr>
-                  <th style={thStyle}>玩家</th>
-                  <th style={thStyle}>结果</th>
-                  <th style={thStyle}>目标</th>
-                  <th style={{ ...thStyle, textAlign: 'right' }}>模式</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.recentGames.map(g => (
-                  <tr key={g.id}>
-                    <td style={tdStyle}>{g.playerName || g.playerKey || '—'}</td>
-                    <td style={{ ...tdStyle, color: g.won ? 'var(--correct)' : 'var(--danger)', fontWeight: 700 }}>
-                      {g.won ? '✓' : '✗'} {g.guessCount}次
-                    </td>
-                    <td style={{ ...tdStyle, color: 'var(--text-light)', fontSize: '0.78rem' }}>
-                        {g.mode === 'multi' ? `vs ${g.targetName}` : g.targetName}
-                      </td>
-                    <td style={{ ...tdStyle, textAlign: 'right' }}>
-                      <span style={{
-                        fontSize: '0.68rem', padding: '2px 5px', borderRadius: '3px',
-                        background: g.mode === 'multi' ? 'rgba(255,101,120,0.15)' : 'rgba(77,148,255,0.15)',
-                        color: g.mode === 'multi' ? '#ff6578' : '#4d94ff',
-                        fontWeight: 700,
-                      }}>
-                        {modeLabel(g.mode || 'single', g.difficulty)}
-                      </span>
-                    </td>
+            <div className="table-wrap">
+              <table className="tbl">
+                <thead>
+                  <tr>
+                    <th>{t('admin.dashboard.colPlayer')}</th>
+                    <th>{t('admin.dashboard.colResult')}</th>
+                    <th>{t('admin.dashboard.colTarget')}</th>
+                    <th className="num">{t('admin.dashboard.colMode')}</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {data.recentGames.map((g) => (
+                    <tr key={g.id}>
+                      <td className="k">{g.playerName || g.playerKey || '—'}</td>
+                      <td>
+                        <span className={'bdg ' + (g.won ? 'bdg-ok' : 'bdg-dan')}>
+                          {g.won ? '✓' : '✗'} {t('admin.dashboard.guessCount', { count: g.guessCount })}
+                        </span>
+                      </td>
+                      <td>{g.mode === 'multi' ? `vs ${g.targetName}` : g.targetName}</td>
+                      <td className="num">
+                        <span className={'bdg ' + (g.mode === 'multi' ? 'bdg-dan' : 'bdg-mc')}>
+                          {modeLabel(g.mode || 'single', g.difficulty)}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       </div>
 
       {/* 系统信息 */}
-      <div style={{ ...cardStyle, marginTop: '16px' }}>
-        <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontStyle: 'italic', fontWeight: 800, margin: '0 0 10px' }}>
-          系统信息
-        </h3>
-        <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', fontSize: '0.8rem', color: 'var(--text-light)' }}>
-          <span>版本: <code style={{ color: 'var(--text)' }}>{data.version}</code></span>
-          <span>运行时间: <code style={{ color: 'var(--text)' }}>{fmtUptime(data.uptime)}</code></span>
-          <span>数据库: <code style={{ color: 'var(--text)' }}>{data.dbSize} KB</code></span>
+      <div className="card">
+        <div className="card-hd">
+          <h2>{t('admin.dashboard.systemInfo')}</h2>
+        </div>
+        <div className="kv-row">
+          <span>{t('admin.dashboard.version')} <code className="mono">{data.version}</code></span>
+          <span>{t('admin.dashboard.uptime')} <code className="mono">{fmtUptime(data.uptime)}</code></span>
+          <span>{t('admin.dashboard.dbSize')} <code className="mono">{data.dbSize} KB</code></span>
         </div>
       </div>
     </div>

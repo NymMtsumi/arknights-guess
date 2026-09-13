@@ -1,16 +1,24 @@
 // 干员数据加载（复用 game-engine.js 的全量数据，避免重复读取 characters.json）
-import { loadGameEngine, getAllCharacters } from './game-engine.js';
+import { loadGameEngine, reloadGameEngine, getAllCharacters } from './game-engine.js';
 
 let ALL_CHARS = [], EASY_CHARS = [], MED_CHARS = [];
 
-export function loadCharacters() {
+/**
+ * 重建三个池子。
+ * @param {{ force?: boolean }} [opts] force=true 时强制重读 characters.json
+ *   （管理员增删干员后走这条；否则走 game-engine 的一次性加载守卫）。
+ */
+export function loadCharacters({ force = false } = {}) {
   try {
-    loadGameEngine(); // 确保全量数据已加载（内部有 _loaded 守卫，不会重复读文件）
+    if (force) reloadGameEngine();
+    else loadGameEngine();
+    // ⚠️ 每次都用 getAllCharacters() 重新取值，不要在模块级缓存 data ——
+    //    reload 是换引用（见 game-engine.js），缓存下来的会是旧数组。
     const data = getAllCharacters();
     ALL_CHARS = data.map(c => ({ id: c.id, name: c.name }));
     EASY_CHARS = data.filter(c => c.popularity === 'hot' || c.rarity >= 6).map(c => ({ id: c.id, name: c.name }));
     MED_CHARS = data.filter(c => c.popularity === 'hot' || c.popularity === 'normal').map(c => ({ id: c.id, name: c.name }));
-    console.log(`已加载 ${ALL_CHARS.length} 干员`);
+    console.log(`已加载 ${ALL_CHARS.length} 干员${force ? '（强制重载）' : ''}`);
     if (ALL_CHARS.length === 0) console.error('[characters] Failed to load characters — ALL_CHARS is empty');
   } catch (err) {
     console.error('[ERROR] 无法加载干员数据:', err.message);

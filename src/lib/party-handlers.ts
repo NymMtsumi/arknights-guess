@@ -8,7 +8,7 @@ import { findCharacterByName } from '@/lib/game-engine';
 import { PARTY_MIN_PLAYERS, PARTY_MAX_GUESSES } from '@/lib/party-constants';
 
 // ── DTO 子类型 ──
-interface PartyPlayerDTO { id: string; name: string; ready: boolean; playerKey?: string }
+interface PartyPlayerDTO { id: string; name: string; ready: boolean }
 interface RoundPlayerDTO { playerId: string; playerName: string; guessed: boolean; exhausted: boolean; guessCount: number }
 
 // ── 传给每个 handler 的上下文 ──
@@ -46,7 +46,7 @@ export function onPartyCreated(d: { room: PartyRoom; players: PartyPlayerDTO[] }
   storeSet({
     connecting: '', roomCode: d.room.code,
     hostId: d.room.hostId, settings: d.room.settings,
-    players: d.players.map(p => ({ id: p.id, name: p.name, ready: p.ready, score: 0, playerKey: p.playerKey })),
+    players: d.players.map(p => ({ id: p.id, name: p.name, ready: p.ready, score: 0 })),
     ...(me ? { playerName: me.name } : {}),
   });
   ctx.persistRoomCode(d.room.code);
@@ -61,7 +61,7 @@ export function onPartyJoined(d: {
   storeSet({
     connecting: '', roomCode: d.room.code,
     hostId: d.room.hostId, settings: d.room.settings,
-    players: d.players.map(p => ({ id: p.id, name: p.name, ready: p.ready, score: 0, playerKey: p.playerKey })),
+    players: d.players.map(p => ({ id: p.id, name: p.name, ready: p.ready, score: 0 })),
     ...(me ? { playerName: me.name } : {}),
   });
   ctx.persistRoomCode(d.room.code);
@@ -70,7 +70,7 @@ export function onPartyJoined(d: {
 
 export function onPlayerJoined(d: PartyPlayerDTO) {
   usePartyStore.setState(s => ({
-    players: [...s.players, { id: d.id, name: d.name, ready: d.ready, score: 0, playerKey: d.playerKey }],
+    players: [...s.players, { id: d.id, name: d.name, ready: d.ready, score: 0 }],
   }));
 }
 
@@ -148,7 +148,7 @@ export function onGameStarting(
   ctx.setStage('countdown');
   if (d.players) {
     usePartyStore.setState({
-      players: d.players.map(p => ({ id: p.id, name: p.name, ready: p.ready, score: 0, playerKey: p.playerKey })),
+      players: d.players.map(p => ({ id: p.id, name: p.name, ready: p.ready, score: 0 })),
     });
     // 断线名单对账：开局快照重建玩家列表，同步剔除不在列表内的陈旧断线 id
     const ids = new Set(d.players.map(p => p.id));
@@ -302,7 +302,7 @@ export function onReconnectState(d: PartyReconnectState, ctx: PartyHandlerCtx) {
   usePartyStore.setState({
     roomCode: d.room.code, hostId: d.room.hostId,
     settings: d.room.settings,
-    players: d.players.map(p => ({ id: p.id, name: p.name, ready: p.ready ?? false, score: 0, playerKey: p.playerKey })),
+    players: d.players.map(p => ({ id: p.id, name: p.name, ready: p.ready ?? false, score: 0 })),
     ...(me ? { playerName: me.name } : {}),
   });
   ctx.persistRoomCode(d.room.code);
@@ -313,12 +313,15 @@ export function onReconnectState(d: PartyReconnectState, ctx: PartyHandlerCtx) {
     disconnectedPlayers: s.disconnectedPlayers.filter(id => roomPlayerIds.has(id)),
   }));
 
-  // 恢复累积分数（按 playerKey 精确匹配，回退到名称，避免重名串号）
+  // 恢复累积分数（按 playerId 精确匹配，回退到名称，避免重名串号）
+  // ⚠️ 用 playerId（socket.id）而非 playerKey：playerKey 是玩家凭证，服务端不再下发。
+  //    两边同源 —— d.scores 和上面 d.players 都是服务端在**同一次**快照里、
+  //    re-key 之后从 room.players 取的，所以 id 必然对得上，不会因为重连而错位。
   if (d.scores) {
     const players = usePartyStore.getState().players;
     const updated = players.map(pl => {
-      const byKey = d.scores?.find((s: { playerKey: string; playerName: string; score: number }) => s.playerKey === pl.playerKey);
-      const byName = byKey || d.scores?.find((s: { playerName: string; score: number }) => s.playerName === pl.name);
+      const byId = d.scores?.find((s: { playerId: string; playerName: string; score: number }) => s.playerId === pl.id);
+      const byName = byId || d.scores?.find((s: { playerName: string; score: number }) => s.playerName === pl.name);
       return { ...pl, score: byName?.score ?? pl.score };
     });
     usePartyStore.setState({ players: updated });

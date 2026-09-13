@@ -5,18 +5,63 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+// 允许覆盖数据文件路径（生产不设 → 与原来完全一致）。
+// 冒烟测试用它指向临时文件：否则「管理员增删干员」这类用例会改写 git 跟踪的
+// characters.json，与 src/data/characters.json 出现字节差异 → 直接挂掉 CI 的
+// check-characters.mjs 一致性 gate。admin.js 用的是同名变量，两者必须一致。
+export const CHARACTERS_PATH = process.env.CHARACTERS_PATH || join(__dirname, 'characters.json');
+
 let ALL_CHARS = [];
 let _loaded = false;
+
+function readCharactersFile() {
+  const data = JSON.parse(readFileSync(CHARACTERS_PATH, 'utf-8'));
+  // 空数组/非数组一律视为读失败。否则一次「内容被清空」的写入会让池子变空，
+  // 之后每一局 randomTarget 都返回 { id:'', name:'?' }，且不报任何错。
+  if (!Array.isArray(data) || data.length === 0) {
+    throw new Error('characters.json 为空或不是数组');
+  }
+  return data;
+}
 
 export function loadGameEngine() {
   if (_loaded) return;
   try {
-    const data = JSON.parse(readFileSync(join(__dirname, 'characters.json'), 'utf-8'));
-    ALL_CHARS = data;
+    ALL_CHARS = readCharactersFile();
     _loaded = true;
     console.log(`[game-engine] Loaded ${ALL_CHARS.length} characters for server-side comparison`);
   } catch (err) {
     console.error('[game-engine] Failed to load characters.json:', err.message);
+  }
+}
+
+/**
+ * 强制重读 characters.json —— 管理员增删干员后必须走这条。
+ *
+ * ⚠️ 这就是原先的 bug：管理员写入成功后调用的 `reloadCharacters` 接到的是
+ *    `loadCharacters`，而它内部的 `loadGameEngine()` 被上面那个 `_loaded` 守卫挡掉，
+ *    于是 `getAllCharacters()` 原样返回**旧数组**。控制台会照打「已加载 N 干员」，
+ *    看起来像成功了，实际新干员在服务端根本不存在 —— 具体后果：
+ *      · randomTarget / pickDailyTarget 抽不到新干员；
+ *      · findCharByName 找不到新干员 → /api/save-game 的 target 校验（game.js:122）
+ *        直接把「猜中新干员」的这局判为非法请求。
+ *
+ * 失败时**保留旧池**（不清空）：宁可少几个新干员，也不能让全站无干员可用。
+ * 注意这里是**换引用**而不是原地清空 —— 各调用点每次都用模块变量取值，
+ * 原地清空会在换入新数据前留出一个「池子为空」的窗口。
+ *
+ * @returns {boolean} 是否成功换入新数据
+ */
+export function reloadGameEngine() {
+  try {
+    const data = readCharactersFile();
+    ALL_CHARS = data;
+    _loaded = true;
+    console.log(`[game-engine] Reloaded ${ALL_CHARS.length} characters`);
+    return true;
+  } catch (err) {
+    console.error(`[game-engine] reload 失败，继续沿用旧的 ${ALL_CHARS.length} 个干员:`, err.message);
+    return false;
   }
 }
 

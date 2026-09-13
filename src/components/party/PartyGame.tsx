@@ -52,24 +52,16 @@ export function PartyGame({ socket }: PartyGameProps) {
   const inputDisabled = gameStatus !== 'playing' || roundFinished || iExhausted;
 
   return (
-    <div data-testid="party-game" style={{ width: '100%' }}>
+    <div data-testid="party-game" className="w-full">
       {/* 回合信息和计时器 */}
-      <div style={{
-        display: 'flex', justifyContent: 'center', alignItems: 'center',
-        gap: '16px', flexWrap: 'wrap', marginBottom: '12px',
-        padding: '10px 16px', background: 'var(--card)',
-        borderRadius: 'var(--radius)', border: '1px solid var(--border)',
-      }}>
-        <span style={{ fontSize: '0.85rem', color: 'var(--text-light)', fontWeight: 600 }}>
+      <div className="hud justify-center mb-3">
+        <span className="lb2">
           {t('party.round')} {currentRound}/{totalRounds}
         </span>
-        <span style={{
-          fontSize: '1.3rem', fontFamily: 'monospace', fontWeight: 900,
-          color: timeLeft <= 30 ? 'var(--danger)' : 'var(--primary)',
-        }}>
+        <span className={timeLeft <= 30 ? 'n low' : 'n'}>
           {String(Math.floor(timeLeft / 60)).padStart(2, '0')}:{String(timeLeft % 60).padStart(2, '0')}
         </span>
-        <span style={{ fontSize: '0.85rem', color: 'var(--text-light)', fontWeight: 600 }}>
+        <span className="lb2">
           {playerName}
         </span>
       </div>
@@ -79,17 +71,14 @@ export function PartyGame({ socket }: PartyGameProps) {
 
       {/* 断线提示 */}
       {disconnectedCount > 0 && (
-        <div data-testid="party-disconnected-count" data-count={disconnectedCount} style={{
-          textAlign: 'center', marginBottom: '8px',
-          color: 'var(--warning)', fontSize: '0.85rem',
-        }}>
+        <div data-testid="party-disconnected-count" data-count={disconnectedCount} className="formmsg warn justify-center mb-2">
           ⚠ {t('party.playersDisconnected', { count: disconnectedCount })}
         </div>
       )}
 
       {/* 搜索和猜测 */}
       {!roundFinished && (
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+        <div className="flex justify-center mb-3">
           <GameSearch
             onGuess={handleGuess}
             disabled={inputDisabled}
@@ -101,24 +90,14 @@ export function PartyGame({ socket }: PartyGameProps) {
 
       {/* 已猜出提示 */}
       {gameStatus === 'won' && (
-        <div style={{
-          textAlign: 'center', marginBottom: '12px',
-          padding: '10px', background: 'var(--correct-soft, rgba(34,197,94,0.1))',
-          borderRadius: 'var(--radius)', border: '1px solid var(--correct)',
-          color: 'var(--correct)', fontWeight: 700,
-        }}>
+        <div className="formmsg ok bold justify-center mb-3">
           🎉 {t('party.youFoundIt', { count: gameGuesses.length })}
         </div>
       )}
 
       {/* 已耗尽提示 */}
       {iExhausted && (
-        <div style={{
-          textAlign: 'center', marginBottom: '12px',
-          padding: '10px', background: 'var(--wrong-soft, rgba(239,68,68,0.1))',
-          borderRadius: 'var(--radius)', border: '1px solid var(--wrong)',
-          color: 'var(--wrong)', fontWeight: 700,
-        }}>
+        <div className="formmsg err bold justify-center mb-3">
           {t('party.outOfGuesses')}
         </div>
       )}

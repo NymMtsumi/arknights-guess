@@ -1,5 +1,7 @@
 // 派对模式 — 房间管理（创建/加入/离开/踢人/解散/清理）
 import { ATTR_KEYS } from '../constants.js';
+// 名次数组在下发前必须剥掉 playerKey（玩家凭证），见 stripPlayerKey 的注释
+import { stripPlayerKey } from './party-game.js';
 
 const DISCONNECT = 30_000;
 const MAX_PLAYERS = 8;
@@ -178,7 +180,7 @@ export function createPartyRoomModule(deps) {
     // 与 joinPartyRoom 一致，下发完整房间 + 玩家快照（否则房主前端 onPartyCreated 无 players → 显示 0 人）
     socket.emit('party:created', {
       room: { code, hostId: room.hostId, settings: room.settings, started: room.started },
-      players: Array.from(room.players.entries()).map(([id, pl]) => ({ id, name: pl.name, ready: pl.ready, playerKey: pl.playerKey })),
+      players: Array.from(room.players.entries()).map(([id, pl]) => ({ id, name: pl.name, ready: pl.ready })),
     });
     ackOk(ack, { roomCode: code });
     console.log(`[派对] 创建房间 ${code} 房主=${room.players.get(socket.id)?.name}`);
@@ -237,10 +239,10 @@ export function createPartyRoomModule(deps) {
     socket.join(code);
     registerOnline(socket, code);
 
-    broadcast(room, 'party:player_joined', { id: socket.id, name: player.name, ready: false, playerKey: socket.data.playerKey });
+    broadcast(room, 'party:player_joined', { id: socket.id, name: player.name, ready: false });
     socket.emit('party:joined', {
       room: { code: room.code, hostId: room.hostId, settings: room.settings, started: room.started },
-      players: Array.from(room.players.entries()).map(([id, pl]) => ({ id, name: pl.name, ready: pl.ready, playerKey: pl.playerKey })),
+      players: Array.from(room.players.entries()).map(([id, pl]) => ({ id, name: pl.name, ready: pl.ready })),
     });
     ackOk(ack, { roomCode: room.code });
     console.log(`[派对] ${player.name} 加入房间 ${code} (${room.players.size}/${MAX_PLAYERS})`);
@@ -271,7 +273,7 @@ export function createPartyRoomModule(deps) {
         broadcast(room, 'party:player_reconnected', { playerId: socket.id, oldPlayerId: pid, playerName: p.name });
         socket.emit('party:joined', {
           room: { code: room.code, hostId: room.hostId, settings: room.settings, started: room.started },
-          players: Array.from(room.players.entries()).map(([id, pl]) => ({ id, name: pl.name, ready: pl.ready, playerKey: pl.playerKey })),
+          players: Array.from(room.players.entries()).map(([id, pl]) => ({ id, name: pl.name, ready: pl.ready })),
         });
         ackOk(ack, { roomCode: room.code });
         return;
@@ -322,7 +324,7 @@ export function createPartyRoomModule(deps) {
     // 构建完整状态快照
     const state = {
       room: { code: room.code, hostId: room.hostId, settings: room.settings, started: room.started },
-      players: Array.from(room.players.entries()).map(([id, pl]) => ({ id, name: pl.name, ready: pl.ready, playerKey: pl.playerKey })),
+      players: Array.from(room.players.entries()).map(([id, pl]) => ({ id, name: pl.name, ready: pl.ready })),
     };
 
     if (room.started && !room.finished) {
@@ -340,15 +342,22 @@ export function createPartyRoomModule(deps) {
         const pl = room.players.get(id);
         return { playerId: id, playerName: pl?.name || '?', guessed: rp.guessed, exhausted: rp.exhausted, guessCount: rp.guessCount, findOrder: rp.findOrder };
       });
+      // ⚠️ 这里下发的是 playerId（当前 socket.id），不是 playerKey。
+      //    playerKey 是玩家凭证，同房任何人拿到就能顶替别人的游客身份；
+      //    客户端要的只是「把分数挂到本地列表的哪一项上」，
+      //    state.players[].id 同样来自 room.players 的键，两者天然对齐
+      //    （上方 311-312 行已先把重连者的键 re-key 成新 socket.id，再建快照）。
+      //    不要因为「重连后 socket.id 会变」就换回 playerKey —— 变了也无妨，
+      //    因为快照里的 id 和这里的 playerId 是同一时刻同一张表。
       state.scores = Array.from(room.scores.entries()).map(([pk, score]) => {
-        const pl = Array.from(room.players.values()).find(p => p.playerKey === pk);
-        return { playerKey: pk, playerName: pl?.name || '?', score };
+        const found = Array.from(room.players.entries()).find(([, p]) => p.playerKey === pk);
+        return { playerId: found ? found[0] : '', playerName: found ? found[1].name : '?', score };
       });
       if (room.roundFinished && room.roundResults.length > 0) {
         const lastResult = room.roundResults[room.roundResults.length - 1];
-        state.roundRankings = lastResult.rankings;
+        state.roundRankings = lastResult.rankings.map(stripPlayerKey);
         state.totalScores = Array.from(room.players.entries()).map(([sid, pl]) => ({
-          playerId: sid, playerName: pl.name, playerKey: pl.playerKey,
+          playerId: sid, playerName: pl.name,
           score: room.scores.get(pl.playerKey) || 0,
         })).sort((a, b) => b.score - a.score);
       }
@@ -361,7 +370,6 @@ export function createPartyRoomModule(deps) {
         state.finalRankings.push({
           playerId: sid,
           playerName: player.name,
-          playerKey: player.playerKey,
           totalScore: room.scores.get(player.playerKey) || 0,
           roundsWon: room.roundResults.filter(rr =>
             rr.rankings.length > 0 && !rr.rankings[0].didNotGuess && rr.rankings[0].playerKey === player.playerKey
@@ -434,7 +442,7 @@ export function createPartyRoomModule(deps) {
     room.roundResults = [];
 
     const players = Array.from(room.players.entries()).map(([id, pl]) => ({
-      id, name: pl.name, ready: pl.ready, playerKey: pl.playerKey,
+      id, name: pl.name, ready: pl.ready,
     }));
     broadcast(room, 'party:game_starting', { countdown: 5, players });
     ackOk(ack, {});

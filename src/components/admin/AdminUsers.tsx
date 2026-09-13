@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { getServerUrl, getToken } from '@/lib/auth';
+import { useI18n } from '@/lib/i18n';
+import { adminSortMark, ADMIN_PAGE_SIZES } from './ui';
 
 interface AdminUser {
   id: number;
@@ -24,6 +26,7 @@ interface UserPage {
 }
 
 export default function AdminUsers() {
+  const { t } = useI18n();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -35,21 +38,28 @@ export default function AdminUsers() {
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
 
-  const pageSize = 30;
+  /* 排序与页长都由服务端处理 —— 前端排序只能排到当前这一页的 30 行，
+     把 5000 行里的 30 行排一下再标上「已排序」是错的，且看不出错。 */
+  const [sortKey, setSortKey] = useState('created');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [pageSize, setPageSize] = useState(30);
   const baseUrl = getServerUrl();
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const token = getToken();
-      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+      const params = new URLSearchParams({
+        page: String(page), pageSize: String(pageSize),
+        sort: sortKey, dir: sortDir,
+      });
       if (search) params.set('search', search);
       const res = await fetch(`${baseUrl}/api/admin/users?${params}`, {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || '加载失败');
+        throw new Error(data.error || t('admin.common.loadFailed'));
       }
       const data: UserPage = await res.json();
       setUsers(data.users);
@@ -61,7 +71,7 @@ export default function AdminUsers() {
     } finally {
       setLoading(false);
     }
-  }, [baseUrl, page, search]);
+  }, [baseUrl, page, search, sortKey, sortDir, pageSize, t]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -74,9 +84,40 @@ export default function AdminUsers() {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
+  /* 点同一列切方向，点别的列换列并回到 desc。
+     换列必须回 desc：从「创建时间降序」点到「用户名」时，沿用 asc 会让
+     管理员看到一份 A→Z 的列表，但心里预期是「最新的在前」那种默认感。 */
+  const toggleSort = (key: string) => {
+    if (key === sortKey) {
+      setSortDir(d => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortDir('desc');
+    }
+    setPage(1);
+  };
+
+  /* 表格与页长的关系是「先排序再切页」，改页长必须回第 1 页 ——
+     否则停在第 5 页、每页从 30 变 100，会直接落到一个不存在的页码上。 */
+  const changePageSize = (size: number) => { setPageSize(size); setPage(1); };
+
+  /** 生成一个可排序表头 */
+  const sortTh = (key: string, label: string) => {
+    const active = sortKey === key;
+    return (
+      <th
+        className={'so' + (active ? ' on' : '')}
+        onClick={() => toggleSort(key)}
+        title={t('admin.common.sortHint')}
+      >
+        {label} <i>{adminSortMark(active, sortDir)}</i>
+      </th>
+    );
+  };
+
   const toggleBan = async (userId: number, currentBanned: boolean) => {
-    const action = currentBanned ? '解封' : '封禁';
-    if (!window.confirm(`确定${action}该用户？`)) return;
+    const action = currentBanned ? t('admin.users.unban') : t('admin.users.ban');
+    if (!window.confirm(currentBanned ? t('admin.users.unbanConfirm') : t('admin.users.banConfirm'))) return;
     setMsg(''); setError('');
     try {
       const token = getToken();
@@ -86,8 +127,8 @@ export default function AdminUsers() {
         body: JSON.stringify({ banned: !currentBanned }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || '操作失败');
-      setMsg(`${action}成功`);
+      if (!res.ok) throw new Error(data.error || t('admin.common.opFailed'));
+      setMsg(t('admin.users.actionSuccess', { action }));
       await load();
     } catch (err: any) {
       setError(err.message);
@@ -105,8 +146,8 @@ export default function AdminUsers() {
         body: JSON.stringify({ nickname: editingNickname.nickname.trim() }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || '修改失败');
-      setMsg('昵称已修改');
+      if (!res.ok) throw new Error(data.error || t('admin.users.nicknameUpdateFailed'));
+      setMsg(t('admin.users.nicknameUpdated'));
       setEditingNickname(null);
       await load();
     } catch (err: any) {
@@ -116,8 +157,8 @@ export default function AdminUsers() {
 
   const toggleRole = async (userId: number, currentRole: string) => {
     const newRole = currentRole === 'admin' ? 'user' : 'admin';
-    const action = newRole === 'admin' ? '提权为管理员' : '降级为普通用户';
-    if (!window.confirm(`确定将 #${userId} ${action}？`)) return;
+    const action = newRole === 'admin' ? t('admin.users.promote') : t('admin.users.demote');
+    if (!window.confirm(t('admin.users.roleConfirm', { id: userId, action }))) return;
     setMsg(''); setError('');
     try {
       const token = getToken();
@@ -127,8 +168,8 @@ export default function AdminUsers() {
         body: JSON.stringify({ role: newRole }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || '操作失败');
-      setMsg(`${action}成功`);
+      if (!res.ok) throw new Error(data.error || t('admin.common.opFailed'));
+      setMsg(t('admin.users.actionSuccess', { action }));
       await load();
     } catch (err: any) {
       setError(err.message);
@@ -143,218 +184,159 @@ export default function AdminUsers() {
     return `${name[0]}***${name[name.length - 1]}@${domain}`;
   };
 
-  // ===== 样式 =====
-  const cardStyle: React.CSSProperties = {
-    background: 'var(--card)',
-    borderRadius: 'var(--radius)',
-    padding: '20px',
-  };
-
-  const inpStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '8px 12px',
-    background: 'var(--input-bg)',
-    color: 'var(--text)',
-    border: '1px solid var(--border)',
-    borderRadius: 'var(--radius)',
-    fontSize: '0.9rem',
-  };
-
   return (
     <div>
       {/* 搜索 + 统计 */}
-      <div style={{ ...cardStyle, marginBottom: '16px' }}>
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <input
-            value={searchInput}
-            onChange={e => setSearchInput(e.target.value)}
-            placeholder="搜索用户名 / 显示ID / 邮箱..."
-            maxLength={64}
-            style={{ ...inpStyle, flex: 1 }}
-          />
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-light)', whiteSpace: 'nowrap' }}>
-            共 {total} 人
-          </span>
+      <div className="card">
+        <div className="card-hd">
+          <h2>{t('admin.tabUsers')}</h2>
+          <span className="cnt">{t('admin.users.total', { count: total })}</span>
         </div>
+        <input
+          value={searchInput}
+          onChange={e => setSearchInput(e.target.value)}
+          placeholder={t('admin.users.searchPlaceholder')}
+          maxLength={64}
+          className="search-input"
+        />
       </div>
 
       {/* 消息 */}
-      {msg && <p style={{ color: 'var(--correct)', fontSize: '0.8rem', marginBottom: '10px' }}>{msg}</p>}
-      {error && <p style={{ color: 'var(--danger)', fontSize: '0.8rem', marginBottom: '10px' }}>{error}</p>}
+      {msg && <p className="alert alert-ok">{msg}</p>}
+      {error && <p className="alert alert-dan">{error}</p>}
 
       {/* 用户列表 */}
-      <div style={{ ...cardStyle, overflowX: 'auto' }}>
+      <div className="card">
+        <div className="card-hd">
+          <label className="psize">
+            {t('admin.common.pageSizeLabel')}
+            <select
+              value={pageSize}
+              onChange={e => changePageSize(Number(e.target.value))}
+              className="sel"
+            >
+              {ADMIN_PAGE_SIZES.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </label>
+        </div>
         {loading ? (
-          <p style={{ textAlign: 'center', color: 'var(--text-light)', padding: '40px' }}>加载中...</p>
+          <div className="sk"><i /><i /><i /><i /></div>
         ) : users.length === 0 ? (
-          <p style={{ textAlign: 'center', color: 'var(--text-light)', padding: '40px' }}>无匹配用户</p>
+          <div className="empty"><div className="etx">{t('admin.users.noMatch')}</div></div>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-            <thead>
-              <tr style={{ borderBottom: '2px solid var(--border)' }}>
-                <th style={thStyle}>用户</th>
-                <th style={thStyle}>显示ID</th>
-                <th style={thStyle}>昵称</th>
-                <th style={thStyle}>邮箱</th>
-                <th style={thStyle}>角色</th>
-                <th style={thStyle}>状态</th>
-                <th style={thStyle}>操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map(u => (
-                <tr key={u.id} style={{
-                  borderBottom: '1px solid var(--border)',
-                  opacity: u.banned ? 0.5 : 1,
-                }}>
-                  <td style={tdStyle}>
-                    <strong>{u.username}</strong>
-                    <div style={{ fontSize: '0.7rem', color: 'var(--text-light)' }}>#{u.id}</div>
-                  </td>
-                  <td style={tdStyle}>
-                    <code style={{ fontSize: '0.8rem' }}>{u.displayId || '-'}</code>
-                  </td>
-                  <td style={tdStyle}>
-                    {editingNickname?.id === u.id ? (
-                      <div style={{ display: 'flex', gap: '4px' }}>
-                        <input
-                          value={editingNickname.nickname}
-                          onChange={e => setEditingNickname({ ...editingNickname, nickname: e.target.value })}
-                          maxLength={30}
-                          style={{ width: '100px', padding: '4px 6px', fontSize: '0.8rem', background: 'var(--input-bg)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: '3px' }}
-                        />
-                        <button onClick={saveNickname} style={smallBtn}>✓</button>
-                        <button onClick={() => setEditingNickname(null)} style={{ ...smallBtn, background: 'transparent', color: 'var(--text-light)', border: '1px solid var(--border)' }}>✗</button>
-                      </div>
-                    ) : (
-                      <span style={{ cursor: 'pointer' }} onClick={() => setEditingNickname({ id: u.id, nickname: u.nickname || '' })} title="点击编辑">
-                        {u.nickname || <span style={{ color: 'var(--text-light)' }}>—</span>}
+          <div className="table-wrap">
+            <table className="tbl">
+              <thead>
+                <tr>
+                  {sortTh('username', t('admin.users.colUser'))}
+                  <th>{t('admin.users.colDisplayId')}</th>
+                  <th>{t('admin.users.colNickname')}</th>
+                  {sortTh('email', t('admin.users.colEmail'))}
+                  {sortTh('role', t('admin.users.colRole'))}
+                  {sortTh('banned', t('admin.users.colStatus'))}
+                  <th>{t('admin.users.colActions')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map(u => (
+                  <tr key={u.id} className={u.banned ? 'dim' : undefined}>
+                    <td className="k">
+                      {u.username}
+                      <div className="mono">#{u.id}</div>
+                    </td>
+                    <td>
+                      <span className="mono">{u.displayId || '-'}</span>
+                    </td>
+                    <td>
+                      {editingNickname?.id === u.id ? (
+                        <>
+                          <input
+                            value={editingNickname.nickname}
+                            onChange={e => setEditingNickname({ ...editingNickname, nickname: e.target.value })}
+                            maxLength={30}
+                            className="search-input bare"
+                          />
+                          {' '}
+                          <button onClick={saveNickname} className="btn-sm p">✓</button>
+                          {' '}
+                          <button onClick={() => setEditingNickname(null)} className="btn-sm">✗</button>
+                        </>
+                      ) : (
+                        <span className="inline-edit" onClick={() => setEditingNickname({ id: u.id, nickname: u.nickname || '' })} title={t('admin.users.clickToEdit')}>
+                          {u.nickname || '—'}
+                        </span>
+                      )}
+                    </td>
+                    <td>
+                      <span className="mono">{u.email ? maskEmail(u.email) : '—'}</span>
+                      {/* 原来这里是个裸的 "!" —— 没有任何图例，管理员只能靠猜。
+                          换成带文字的徽标后，含义自明，也就不需要额外的图例了。 */}
+                      {u.email && (
+                        <>
+                          {' '}
+                          <span className={'bdg ' + (u.emailVerified ? 'bdg-ok' : 'bdg-warn')}>
+                            {u.emailVerified ? t('admin.users.verified') : t('admin.users.unverified')}
+                          </span>
+                        </>
+                      )}
+                    </td>
+                    <td>
+                      {u.role === 'admin'
+                        ? <span className="bdg bdg-mc">{t('admin.users.roleAdmin')}</span>
+                        : t('admin.users.roleUser')}
+                    </td>
+                    <td>
+                      <span className={'bdg ' + (u.banned ? 'bdg-dan' : 'bdg-ok')}>
+                        {u.banned ? t('admin.users.banned') : t('admin.users.normal')}
                       </span>
-                    )}
-                  </td>
-                  <td style={tdStyle}>
-                    <span style={{ fontSize: '0.8rem' }}>{u.email ? maskEmail(u.email) : '—'}</span>
-                    {u.email && (
-                      <span style={{ marginLeft: '4px', fontSize: '0.65rem', color: u.emailVerified ? 'var(--correct)' : '#f0ad4e' }}>
-                        {u.emailVerified ? '✓' : '!'}
-                      </span>
-                    )}
-                  </td>
-                  <td style={tdStyle}>
-                    <span style={{
-                      fontSize: '0.7rem',
-                      padding: '2px 6px',
-                      borderRadius: '3px',
-                      background: u.role === 'admin' ? 'var(--primary-soft)' : 'var(--input-bg)',
-                      color: u.role === 'admin' ? 'var(--primary-hover)' : 'var(--text-light)',
-                    }}>
-                      {u.role === 'admin' ? '管理员' : '用户'}
-                    </span>
-                  </td>
-                  <td style={tdStyle}>
-                    <span style={{ color: u.banned ? 'var(--danger)' : 'var(--correct)', fontSize: '0.8rem' }}>
-                      {u.banned ? '已封禁' : '正常'}
-                    </span>
-                  </td>
-                  <td style={tdStyle}>
-                    <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                    </td>
+                    <td>
                       <button
                         onClick={() => toggleRole(u.id, u.role)}
-                        style={{
-                          padding: '4px 8px',
-                          fontSize: '0.7rem',
-                          background: u.role === 'admin' ? '#f0ad4e' : 'var(--primary)',
-                          color: u.role === 'admin' ? '#000' : '#fff',
-                          border: 'none',
-                          borderRadius: '3px',
-                          cursor: 'pointer',
-                          fontWeight: 600,
-                        }}
+                        className={'btn-sm ' + (u.role === 'admin' ? 'dan' : 'p')}
                       >
-                        {u.role === 'admin' ? '降级' : '提权'}
+                        {u.role === 'admin' ? t('admin.users.demoteBtn') : t('admin.users.promoteBtn')}
                       </button>
+                      {' '}
                       <button
                         onClick={() => toggleBan(u.id, u.banned)}
-                        style={{
-                          padding: '4px 8px',
-                          fontSize: '0.7rem',
-                          background: u.banned ? 'var(--correct)' : 'var(--danger)',
-                          color: '#fff',
-                          border: 'none',
-                          borderRadius: '3px',
-                          cursor: 'pointer',
-                          fontWeight: 600,
-                        }}
+                        className={'btn-sm ' + (u.banned ? 'p' : 'dan')}
                       >
-                        {u.banned ? '解封' : '封禁'}
+                        {u.banned ? t('admin.users.unban') : t('admin.users.ban')}
                       </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
 
         {/* 分页 */}
         {totalPages > 1 && (
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', marginTop: '16px' }}>
-            <button
-              disabled={page <= 1}
-              onClick={() => setPage(p => Math.max(1, p - 1))}
-              style={{ ...pageBtn, opacity: page <= 1 ? 0.3 : 1 }}
-            >
-              上一页
-            </button>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-light)' }}>
+          <div className="pager">
+            <span className="meta">
               {page} / {totalPages}
             </span>
-            <button
-              disabled={page >= totalPages}
-              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-              style={{ ...pageBtn, opacity: page >= totalPages ? 0.3 : 1 }}
-            >
-              下一页
-            </button>
+            <div className="pgs">
+              <button
+                disabled={page <= 1}
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                className={'pg' + (page <= 1 ? ' dis' : '')}
+              >
+                {t('admin.common.prevPage')}
+              </button>
+              <button
+                disabled={page >= totalPages}
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                className={'pg' + (page >= totalPages ? ' dis' : '')}
+              >
+                {t('admin.common.nextPage')}
+              </button>
+            </div>
           </div>
         )}
       </div>
     </div>
   );
 }
-
-const thStyle: React.CSSProperties = {
-  padding: '10px 8px',
-  textAlign: 'left',
-  fontSize: '0.75rem',
-  fontWeight: 700,
-  color: 'var(--text-light)',
-  textTransform: 'uppercase',
-  whiteSpace: 'nowrap',
-};
-
-const tdStyle: React.CSSProperties = {
-  padding: '8px',
-  verticalAlign: 'middle',
-};
-
-const smallBtn: React.CSSProperties = {
-  padding: '3px 6px',
-  fontSize: '0.7rem',
-  background: 'var(--primary)',
-  color: 'var(--bg)',
-  border: 'none',
-  borderRadius: '3px',
-  cursor: 'pointer',
-  fontWeight: 700,
-};
-
-const pageBtn: React.CSSProperties = {
-  padding: '6px 14px',
-  background: 'var(--input-bg)',
-  color: 'var(--text)',
-  border: '1px solid var(--border)',
-  borderRadius: 'var(--radius)',
-  cursor: 'pointer',
-  fontSize: '0.8rem',
-};

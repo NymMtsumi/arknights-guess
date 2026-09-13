@@ -74,27 +74,17 @@ export function PartyLobby({ onBack, socketRef, isConnected, initialCode }: Lobb
   };
 
   return (
-    <div style={{ textAlign: 'center', maxWidth: '480px' }}>
-      <h1 style={{
-        fontFamily: 'var(--font-display)',
-        fontSize: 'clamp(1.5rem, 4vw, 2rem)',
-        fontStyle: 'italic',
-        fontWeight: 900,
-        marginBottom: '8px',
-      }}>
+    <div className="text-center w-full max-w-[480px]">
+      <h1 className="hero-title">
         🎉 {t('party.title')}
       </h1>
-      <p style={{ color: 'var(--text-light)', fontSize: '0.9rem', marginBottom: '20px' }}>
+      <p className="sec-note" style={{ marginTop: 0, marginBottom: '20px' }}>
         {t('party.description')}
       </p>
 
       {/* 创建房间 */}
-      <div style={{
-        padding: '16px', background: 'var(--card)',
-        border: '1px solid var(--border)', borderRadius: 'var(--radius)',
-        marginBottom: '16px',
-      }}>
-        <h3 style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '12px' }}>
+      <div className="card">
+        <h3 className="card-sub">
           {t('party.createRoom')}
         </h3>
 
@@ -109,25 +99,15 @@ export function PartyLobby({ onBack, socketRef, isConnected, initialCode }: Lobb
           data-testid="party-create"
           onClick={() => handleCreate(settings.difficulty, settings.rounds, settings.roundTime, settings.attributes, settings.maxGuesses)}
           disabled={!!connecting || !isConnected}
-          style={{
-            width: '100%', padding: '12px', background: connecting ? 'var(--card-soft)' : 'var(--primary)',
-            color: connecting ? 'var(--text-light)' : 'var(--bg)', border: 'none',
-            borderRadius: 'var(--radius)', fontSize: '1rem', fontWeight: 700,
-            cursor: connecting ? 'default' : 'pointer', opacity: connecting ? 0.7 : 1,
-            marginTop: '8px',
-          }}
+          className="btn-p w-full mt-2"
         >
           {connecting === 'create' ? t('party.creating') : t('party.createRoom')}
         </button>
       </div>
 
       {/* 加入房间 */}
-      <div style={{
-        padding: '16px', background: 'var(--card)',
-        border: '1px solid var(--border)', borderRadius: 'var(--radius)',
-        marginBottom: '16px',
-      }}>
-        <h3 style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '12px' }}>
+      <div className="card">
+        <h3 className="card-sub">
           {t('party.joinRoom')}
         </h3>
         <input
@@ -135,13 +115,7 @@ export function PartyLobby({ onBack, socketRef, isConnected, initialCode }: Lobb
           value={joinCode}
           onChange={e => setJoinCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
           placeholder={t('party.codePlaceholder')}
-          style={{
-            width: '100%', padding: '10px',
-            background: 'var(--input-bg)', color: 'var(--text)',
-            border: '1px solid var(--border)', borderRadius: 'var(--radius)',
-            fontSize: '1.2rem', textAlign: 'center', fontFamily: 'monospace',
-            letterSpacing: '0.2em', marginBottom: '8px',
-          }}
+          className="search-input code-input mb-2"
           inputMode="numeric"
           maxLength={6}
         />
@@ -149,12 +123,7 @@ export function PartyLobby({ onBack, socketRef, isConnected, initialCode }: Lobb
           onClick={() => handleJoin(joinCode)}
           id="party-join-btn"
           disabled={!!connecting || joinCode.length !== 6 || !isConnected}
-          style={{
-            width: '100%', padding: '12px', background: connecting ? 'var(--card-soft)' : 'var(--accent)',
-            color: connecting ? 'var(--text-light)' : '#fff', border: 'none',
-            borderRadius: 'var(--radius)', fontSize: '1rem', fontWeight: 700,
-            cursor: connecting ? 'default' : 'pointer', opacity: connecting ? 0.7 : 1,
-          }}
+          className="btn-p w-full"
         >
           {connecting === 'join' ? t('party.joining') : t('party.joinRoom')}
         </button>
@@ -162,15 +131,11 @@ export function PartyLobby({ onBack, socketRef, isConnected, initialCode }: Lobb
 
       {/* 上次房间 */}
       {savedCode && (
-        <div style={{
-          padding: '12px', background: 'var(--card-soft)',
-          borderRadius: 'var(--radius)', border: '1px solid var(--primary)',
-          marginBottom: '16px',
-        }}>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-light)', marginBottom: '4px' }}>
+        <div className="card hi mb-4">
+          <p className="sec-note mb-1">
             {t('party.lastRoom')}
           </p>
-          <p style={{ fontSize: '1.3rem', fontFamily: 'monospace', fontWeight: 900, color: 'var(--primary)' }}>
+          <p className="code-big sm">
             {savedCode}
           </p>
           <button
@@ -179,12 +144,7 @@ export function PartyLobby({ onBack, socketRef, isConnected, initialCode }: Lobb
                 socket.emit('party:reconnect', { roomCode: savedCode });
               }
             }}
-            style={{
-              marginTop: '8px', padding: '8px 20px',
-              background: 'var(--primary)', color: 'var(--bg)',
-              border: 'none', borderRadius: 'var(--radius)',
-              fontWeight: 700, cursor: 'pointer',
-            }}
+            className="btn-o btn-sm mt-2"
           >
             {t('party.rejoin')}
           </button>
@@ -192,17 +152,12 @@ export function PartyLobby({ onBack, socketRef, isConnected, initialCode }: Lobb
       )}
 
       {error && (
-        <p style={{ color: 'var(--danger)', fontSize: '0.85rem', marginBottom: '12px' }}>
+        <p className="formmsg err">
           {error}
         </p>
       )}
 
-      <button onClick={onBack} disabled={!!connecting} style={{
-        padding: '8px 20px', background: 'transparent', color: 'var(--text)',
-        border: '1px solid var(--border)', borderRadius: 'var(--radius)',
-        cursor: connecting ? 'default' : 'pointer', fontWeight: 700,
-        opacity: connecting ? 0.5 : 1,
-      }}>
+      <button onClick={onBack} disabled={!!connecting} className="btn-o mt-4">
         {t('party.back')}
       </button>
     </div>
@@ -252,26 +207,19 @@ export function HostSettings({
   };
 
   return (
-    <div style={{ marginBottom: '12px' }}>
+    <div className="mb-3">
       {/* 难度 */}
-      <div style={{ marginBottom: '10px' }}>
-        <span style={{ fontSize: '0.8rem', color: 'var(--text-light)', marginRight: '8px' }}>
+      <div className="cfg-row">
+        <span className="cfg-lb">
           {t('party.difficulty')}:
         </span>
-        <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', marginTop: '4px' }}>
+        <div className="seg">
           {['easy', 'medium', 'hard'].map(d => (
             <button
               key={d}
               disabled={disabled}
               onClick={() => onChange({ ...settings, difficulty: d })}
-              style={{
-                padding: '4px 12px', fontSize: '0.8rem',
-                background: settings.difficulty === d ? 'var(--primary)' : 'transparent',
-                color: settings.difficulty === d ? 'var(--bg)' : 'var(--text)',
-                border: `1px solid ${settings.difficulty === d ? 'var(--primary)' : 'var(--border)'}`,
-                borderRadius: 'var(--radius)', cursor: disabled ? 'default' : 'pointer',
-                fontWeight: settings.difficulty === d ? 700 : 400,
-              }}
+              className={settings.difficulty === d ? 'on' : undefined}
             >
               {t(diffLabels[d])}
             </button>
@@ -280,24 +228,17 @@ export function HostSettings({
       </div>
 
       {/* 回合数 */}
-      <div style={{ marginBottom: '10px' }}>
-        <span style={{ fontSize: '0.8rem', color: 'var(--text-light)', marginRight: '8px' }}>
+      <div className="cfg-row">
+        <span className="cfg-lb">
           {t('party.rounds')}:
         </span>
-        <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', marginTop: '4px' }}>
+        <div className="seg">
           {[5, 7, 10].map(n => (
             <button
               key={n}
               disabled={disabled}
               onClick={() => onChange({ ...settings, rounds: n })}
-              style={{
-                padding: '4px 12px', fontSize: '0.8rem',
-                background: settings.rounds === n ? 'var(--primary)' : 'transparent',
-                color: settings.rounds === n ? 'var(--bg)' : 'var(--text)',
-                border: `1px solid ${settings.rounds === n ? 'var(--primary)' : 'var(--border)'}`,
-                borderRadius: 'var(--radius)', cursor: disabled ? 'default' : 'pointer',
-                fontWeight: settings.rounds === n ? 700 : 400,
-              }}
+              className={settings.rounds === n ? 'on' : undefined}
             >
               {t('party.roundsCount', { n })}
             </button>
@@ -306,24 +247,17 @@ export function HostSettings({
       </div>
 
       {/* 回合时间 */}
-      <div>
-        <span style={{ fontSize: '0.8rem', color: 'var(--text-light)', marginRight: '8px' }}>
+      <div className="cfg-row">
+        <span className="cfg-lb">
           {t('party.roundTime')}:
         </span>
-        <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', marginTop: '4px', flexWrap: 'wrap' }}>
+        <div className="seg">
           {[60, 120, 180, 240, 300].map(s => (
             <button
               key={s}
               disabled={disabled}
               onClick={() => onChange({ ...settings, roundTime: s })}
-              style={{
-                padding: '4px 10px', fontSize: '0.78rem',
-                background: settings.roundTime === s ? 'var(--primary)' : 'transparent',
-                color: settings.roundTime === s ? 'var(--bg)' : 'var(--text)',
-                border: `1px solid ${settings.roundTime === s ? 'var(--primary)' : 'var(--border)'}`,
-                borderRadius: 'var(--radius)', cursor: disabled ? 'default' : 'pointer',
-                fontWeight: settings.roundTime === s ? 700 : 400,
-              }}
+              className={settings.roundTime === s ? 'on' : undefined}
             >
               {t('party.secondsFormat', { s: Math.floor(s / 60) })}
             </button>
@@ -332,24 +266,17 @@ export function HostSettings({
       </div>
 
       {/* 每局猜测次数 */}
-      <div style={{ marginBottom: '10px' }}>
-        <span style={{ fontSize: '0.8rem', color: 'var(--text-light)', marginRight: '8px' }}>
+      <div className="cfg-row">
+        <span className="cfg-lb">
           {t('party.maxGuesses')}:
         </span>
-        <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', marginTop: '4px', flexWrap: 'wrap' }}>
+        <div className="seg">
           {[5, 8, 10, 12, 15].map(n => (
             <button
               key={n}
               disabled={disabled}
               onClick={() => onChange({ ...settings, maxGuesses: n })}
-              style={{
-                padding: '4px 10px', fontSize: '0.78rem',
-                background: settings.maxGuesses === n ? 'var(--primary)' : 'transparent',
-                color: settings.maxGuesses === n ? 'var(--bg)' : 'var(--text)',
-                border: `1px solid ${settings.maxGuesses === n ? 'var(--primary)' : 'var(--border)'}`,
-                borderRadius: 'var(--radius)', cursor: disabled ? 'default' : 'pointer',
-                fontWeight: settings.maxGuesses === n ? 700 : 400,
-              }}
+              className={settings.maxGuesses === n ? 'on' : undefined}
             >
               {n}
             </button>
@@ -358,14 +285,14 @@ export function HostSettings({
       </div>
 
       {/* 词条列 */}
-      <div>
-        <span style={{ fontSize: '0.8rem', color: 'var(--text-light)', marginRight: '8px' }}>
+      <div className="cfg-row">
+        <span className="cfg-lb">
           {t('party.attributes')}:
         </span>
-        <span style={{ fontSize: '0.72rem', color: 'var(--text-light)' }}>
+        <span className="cfg-hint">
           {settings.attributes === null ? t('party.standardColumns') : `${settings.attributes.length}/${ATTR_KEYS.length}`}
         </span>
-        <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', marginTop: '4px', flexWrap: 'wrap' }}>
+        <div className="cfg-ct">
           {ATTR_KEYS.map(a => {
             const on = settings.attributes === null || settings.attributes.includes(a);
             return (
@@ -373,15 +300,7 @@ export function HostSettings({
                 key={a}
                 disabled={disabled}
                 onClick={() => toggleAttr(a)}
-                style={{
-                  padding: '3px 8px', fontSize: '0.72rem',
-                  background: on ? 'var(--primary)' : 'transparent',
-                  color: on ? 'var(--bg)' : 'var(--text)',
-                  border: `1px solid ${on ? 'var(--primary)' : 'var(--border)'}`,
-                  borderRadius: 'var(--radius)', cursor: disabled ? 'default' : 'pointer',
-                  fontWeight: on ? 700 : 400,
-                  opacity: settings.attributes === null ? 0.85 : 1,
-                }}
+                className={on ? 'tchip on' : 'tchip off'}
               >
                 {t(ATTR_LABEL_KEYS[a])}
               </button>
@@ -392,12 +311,7 @@ export function HostSettings({
           <button
             disabled={disabled}
             onClick={() => onChange({ ...settings, attributes: null })}
-            style={{
-              marginTop: '6px', padding: '3px 10px', fontSize: '0.72rem',
-              background: 'transparent', color: 'var(--text-light)',
-              border: '1px solid var(--border)', borderRadius: 'var(--radius)',
-              cursor: disabled ? 'default' : 'pointer',
-            }}
+            className="btn-o btn-sm mt-1.5"
           >
             {t('party.resetStandard')}
           </button>

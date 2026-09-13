@@ -73,3 +73,11 @@ party-mode.zip
 # python
 __pycache__/
 *.pyc
+
+# 本地截图产物（验证/对比用，不是代码）
+/.shots/
+/tests/_shots/
+
+# 一次性探针脚本（本地诊断用，跑完即弃）。
+# ⚠️ 不覆盖 .cjs —— tests/_dns-preload.cjs 是长期保留的沙箱 DNS 垫片。
+/tests/_*.mjs

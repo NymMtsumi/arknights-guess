@@ -7,8 +7,10 @@
 // 坑（已处理）：DNS MX 校验用真实域 gmail.com；限流用递增 X-Real-IP + 随机邮箱/用户名。
 
 import { createRequire } from 'node:module';
+import { readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
 import {
-  BACKEND_PORT, check, finish, makeDbPath,
+  BACKEND_PORT, ROOT, check, finish, makeDbPath,
   startBackend, killBackend, waitForBackend, cleanupDb,
 } from './helpers.mjs';
 
@@ -17,6 +19,20 @@ const Database = require('better-sqlite3');
 
 const DB_PATH = makeDbPath('admin');
 const BASE = `http://localhost:${BACKEND_PORT}`;
+
+// ⚠️ 干员增删用例会**改写数据文件**。必须把它指到临时副本上：
+//    server/characters.json 是 git 跟踪文件，且与 src/data/characters.json 要求字节一致，
+//    直接在原文件上跑这个用例会污染工作树 → CI 的 check-characters.mjs 直接失败。
+//    game-engine.js 与 routes/admin.js 都读 process.env.CHARACTERS_PATH（同名）。
+const CHARS_TMP = DB_PATH.replace(/\.db$/, '-chars.json');
+const REAL_CHARS = join(ROOT, 'server', 'characters.json');
+const realCharsRaw = readFileSync(REAL_CHARS, 'utf8');
+// 只留 3 个真干员（保证 /api/save-game 的既有分支可用），文件名/格式与原文件一致
+writeFileSync(CHARS_TMP, JSON.stringify(JSON.parse(realCharsRaw).slice(0, 3), null, 2), 'utf8');
+process.env.CHARACTERS_PATH = CHARS_TMP;
+
+const TEST_CHAR = '冒烟测试干员';
+const TEST_CHAR_EN = 'SmokeTestOp';
 
 let ipSeq = 0;
 const nextIp = () => `10.0.0.${++ipSeq}`;
@@ -115,6 +131,32 @@ async function main() {
     const online = await api('/api/admin/online', { token: A.jwt });
     check('在线玩家可读', online.status === 200 && typeof online.data?.totalOnline === 'number', `status=${online.status}`);
 
+    // ── 干员增删 → 服务端内存池必须跟着刷新 ──
+    // 这是曾经的真 bug：admin 写完 characters.json 后调的 reloadCharacters 被
+    // game-engine 的 _loaded 守卫挡掉，返回旧数组，但日志照打「已加载 N 干员」。
+    // 观测点选 /api/save-game 的 target 校验（game.js:122 走 findCharByName），
+    // 它对「新干员在不在池子里」有直接、无歧义的反应。
+    console.log('\n[干员增删 → 内存池刷新]');
+    const probePayload = (name) => ({
+      player_key: 'p_smoke_chars', won: true, guessCount: 3, difficulty: 'hard',
+      targetName: name, mode: 'single', timestamp: new Date().toISOString(),
+    });
+
+    const beforeCreate = await api('/api/save-game', { method: 'POST', body: probePayload(TEST_CHAR), token: A.jwt, ip: nextIp() });
+    check('未创建的干员不能作为目标（校验生效）', beforeCreate.status === 400, `status=${beforeCreate.status}`);
+
+    const created = await api('/api/admin/characters', { method: 'POST', body: { name: TEST_CHAR, nameEn: TEST_CHAR_EN, rarity: 5, class: '先锋' }, token: A.jwt });
+    check('管理员创建干员', created.status === 200 && created.data?.ok === true, `status=${created.status}`);
+
+    const afterCreate = await api('/api/save-game', { method: 'POST', body: probePayload(TEST_CHAR), token: A.jwt, ip: nextIp() });
+    check('新建干员立刻可用（reloadCharacters 真的重读了文件）', afterCreate.status === 200, `status=${afterCreate.status} ${JSON.stringify(afterCreate.data)?.slice(0, 120)}`);
+
+    const del = await api(`/api/admin/characters/${encodeURIComponent(TEST_CHAR)}`, { method: 'DELETE', token: A.jwt });
+    check('管理员删除干员', del.status === 200, `status=${del.status}`);
+
+    const afterDelete = await api('/api/save-game', { method: 'POST', body: probePayload(TEST_CHAR), token: A.jwt, ip: nextIp() });
+    check('删除后立刻不可用（池子同步收缩）', afterDelete.status === 400, `status=${afterDelete.status}`);
+
     return 0;
   } catch (e) {
     console.error('\n❌ 管理面板冒烟异常：', e.message);
@@ -122,6 +164,7 @@ async function main() {
   } finally {
     killBackend(backend);
     await cleanupDb(DB_PATH);
+    try { rmSync(CHARS_TMP, { force: true }); } catch {}
   }
 }
 

@@ -1,0 +1,241 @@
+/* ============================================================
+   V12 设计语言 —— 独立模块
+   ============================================================
+   本文件只做四件事：
+     1. 定义 V12 原语令牌（--v12-*）与模式强调色（--col-* / --mc*）
+     2. 按主题（light / blast）覆盖强调色
+     3. 全站表面层（第 5 节）—— 重绑 --bg / --card / --text* / --border / --shadow*，
+        ⚠️ 必须在 html 层级，不能放进 .ui-v12 子树（见第 5 节开头的说明）
+     4. 把现有令牌名（--radius / --radius-sm）在 .ui-v12 子树内重绑到 V12 圆角
+
+   禁止在本文件写组件样式 —— 那是 globals.css 的职责。
+
+   ⚠️ data-ui 是 <html> 上的**字面量 prop**，**不是**脚本设的。
+      曾经由 theme-init 脚本设置（值取自 ui-skin）—— 那个写法在静态导出下
+      必然晚于首帧执行，首帧落回旧 UI，就是「新 UI 闪一下变回旧 UI」的根因。
+      写死成 prop 后从第一个字节就成立，水合前后一致，无窗口期。
+      脚本只独占 data-theme（见 layout.tsx）。
+
+   ── 回退 ──────────────────────────────────────────────
+   只保留「改代码」一条路：
+     1. 删除本文件
+     2. 删除 globals.css 第 2 行的 @import "./v12.css";
+     3. 删除 layout.tsx 里 <html> 上的 data-ui="v12"
+
+   ⚠️ 原先还有一条「运行时开关」：执行 localStorage.setItem('ui-skin','classic')
+      后刷新即整体回退。已移除 —— 它要求 data-ui 由 theme-init 脚本设置，
+      而 next/script 在静态导出里只是往 __next_s 队列塞字符串，执行晚于首帧，
+      于是首帧落回旧 UI，表现为「新 UI 闪一下变回旧 UI」。
+      V12 现在是唯一皮肤，data-ui 写死在 <html> 上，从第一个字节就成立。
+      scripts/check-v12-selector.mjs 第 4 条断言这一行没有被改回脚本设置。
+   ============================================================ */
+
+/* ============================================
+   1. 模式强调色 —— 永远有值，data-mode 只做覆盖
+   ============================================ */
+
+html[data-ui="v12"] {
+  /* 三个玩法的强调色（浅色主题基准） */
+  --col-single: #0e9c94;
+  --col-multi: #4056d4;
+  --col-party: #8b63e0;
+
+  /* ⚠️ --col-classic 必须显式定义 —— 它一度只被引用、从未被声明。
+     引用点有两处（v12-components.css:1653 的菜单卡默认 --mc、:1715 的 .c-classic），
+     缺声明时 --mc 解析成「保证无效值」，连带 --mc-tint 失效，
+     于是 §21.4 那个 @supports 块里的 background/box-shadow 在**计算值阶段整体作废**
+     → 卡片底色回落到初始值 = 完全透明（白昼下最刺眼）。
+     它与 --col-single 是同一个颜色（设计稿只叫它 --col-classic，见 index-v12.html:57/122）。
+     写成别名而非复制色值：这样上面的 blast 覆盖自动跟着生效，不会出现
+     「同一颜色两处定义、改一处漏一处」。 */
+  --col-classic: var(--col-single);
+
+  /* 退化策略：没有 data-mode 的页面（管理面板 / 每日 / 排行榜 / 个人中心）
+     落到单人青绿。绝不在使用点写 var(--mc, #xxx) —— 那样会有 N 处回退要记。 */
+  --mc: var(--col-single);
+
+  /* 派生色：无 color-mix 支持时退化为纯色 / 卡片色，不会变成无效值 */
+  --mc-soft: var(--col-single);
+  --mc-tint: var(--card);
+}
+
+html[data-ui="v12"][data-mode="multi"] {
+  --mc: var(--col-multi);
+}
+
+html[data-ui="v12"][data-mode="party"] {
+  --mc: var(--col-party);
+}
+
+/* color-mix() 必须用 @supports 包住，不能写「两行同名声明」：
+   自定义属性的值永远是合法 token 流，解析期不会被丢弃，
+   后一行在不支持时不会退回前一行，而是让整个属性变成无效值。 */
+@supports (color: color-mix(in srgb, red, blue)) {
+  html[data-ui="v12"] {
+    --mc-soft: color-mix(in srgb, var(--mc) 14%, transparent);
+    --mc-tint: color-mix(in srgb, var(--mc) 6%, var(--card));
+  }
+}
+
+/* ============================================
+   2. 圆角与阴影原语
+   ============================================ */
+
+html[data-ui="v12"] {
+  --v12-r-sm: 7px;
+  --v12-r-md: 12px;
+  --v12-r-lg: 16px;
+  --v12-r-xl: 22px;
+
+  --v12-shadow: 0 12px 28px rgba(32, 17, 24, .10);
+  --v12-shadow-lg: 0 22px 60px rgba(32, 17, 24, .16);
+}
+
+/* ============================================
+   3. 主题矩阵 —— 只覆盖真正需要变的
+   ⚠️ 沿用「部分覆盖」策略：未列出的令牌会回退到 :root（浅色），
+      这是既有行为，不要在这里「顺手补全」——那会夹带视觉变更。
+   ============================================ */
+
+html[data-ui="v12"][data-theme="blast"] {
+  --col-single: #2fc8bf;
+  --col-multi: #8194f8;
+  --col-party: #a98cf0;
+
+  --v12-shadow: 0 18px 42px rgba(0, 0, 0, .28);
+  --v12-shadow-lg: 0 28px 80px rgba(0, 0, 0, .48);
+}
+
+
+/* ============================================
+   4. 应用层 —— 逐页 opt-in
+   ============================================ */
+
+/* ⚠️⚠️ 这个选择器必须是 html[...] 前缀形式，不要「简化」成 .ui-v12 ⚠️⚠️
+   原因：.ui-v12 单独用特异性只有 (0,1,0)，与 :root 打平；
+   而 @import 必须位于文件顶部 → 本文件在 globals.css 之后 → 打平即输，
+   整块变量重绑会静默失效且不报任何错。
+   html[data-ui="v12"] .ui-v12 的特异性是 (0,2,1)，必胜，且不依赖声明顺序。
+   CI 用 scripts/check-v12-selector.mjs 断言这一行未被改坏。 */
+html[data-ui="v12"] .ui-v12 {
+  --radius: var(--v12-r-md);
+  --radius-sm: var(--v12-r-sm);
+  /* 注意：此处不可重绑 --bg / --card / --shadow-* ——
+     它们由 <html> 与 <body> 消费，位于本子树作用域之外，重绑无效。
+     这些令牌改在第 5 节（全站表面层）里于 html 层级覆盖。 */
+}
+
+/* ============================================
+   5. 全站表面层 —— C9 开关
+   ============================================
+   为什么必须写在 html 层级、不能写进 .ui-v12 子树：
+     --bg 被 html{background}（globals.css:130）与 body 的多层径向渐变
+     （globals.css:149-167）消费，这两个元素都是 .ui-v12(<body>) 的
+     **祖先或自身**，不是后代 —— 子树作用域里的重绑对它们无效。
+     所以页面级配色无法逐页灰度，只能一次全站生效（由 data-ui 门控）。
+
+   特异性账（globals.css 在本文件之后，故同特异性=globals 赢）：
+     :root                        (0,1,0)  ← 浅色基准，本文件靠特异性压过它
+     html[data-theme="blast"]     (0,1,1)  ← 与本文件基块打平 → globals 后置胜出
+     html[data-ui="v12"]          (0,1,1)  ← 基块；只对「浅色」有效
+     html[data-ui="v12"][data-theme="..."] (0,2,1) ← 两个暗色主题必须显式列，
+                                                      否则会被 globals 的 blast 块反超
+   结论：暗色主题一律要写 (0,2,1) 形式，漏写不会报错、只会静默失效。 */
+
+/* ---------- 5.1 浅色（V12「白昼 DAY ARCHIVE」） ---------- */
+html[data-ui="v12"] {
+  --bg: #f7f3eb;          /* V12 --bg：比现网 #f3f0ea 更暖更纸感 */
+  --card: #ffffff;        /* ⚠️ 不用 V12 折算值 #fefdf9：与 --bg 的明度差会从
+                             16.0 掉到 10.3，卡片边界发糊。V12 的玻璃感靠
+                             backdrop-filter + inset 高光（组件层的事），
+                             不是靠把 --card 调暗。这里守住可读性。 */
+  --card-soft: #f1ece1;   /* V12 --bg-2 */
+  --input-bg: #ffffff;
+  --border: rgba(34, 52, 54, .13);          /* V12 冷青灰描边（原 rgba(32,17,24,.14) 偏紫红）
+                                               透明度取 .13 而非 V12 的 .10 —— 描边是表格行/
+                                               卡片边的结构提示，不是装饰，不跟着变淡 */
+  --border-strong: rgba(14, 156, 148, .35); /* V12 --line-strong：改用强调青 */
+  --text: #213537;
+  --text-sec: #506a69;
+  --text-light: #5d7370;  /* ⚠️ V12 原值 #849a97 实测对比度只有 2.69:1，
+                             比现网 #90838b 的 3.18:1 还差，属**倒退**。
+                             --text-light 全站 200 处，承载时间戳/提示/表格次要列
+                             等真实信息，不能按装饰色处理。
+                             ── 二次压暗（可读性审计后） ──
+                             第一版压到 #6c827f，实测算下来仍只有 3.69:1（页面上）/
+                             4.02:1（白卡上），**低于小字 AA 4.5:1**。而这一档喂给
+                             .mono(审计日志的 IP/时间戳)、.tbl th(10px 全大写表头)、
+                             .reset .rl(每日重置倒计时)、.prof .id、.pager .meta 等
+                             一批「必须被读到」的位置 —— 用户明确反馈过「很多文字
+                             因为背景的原因难以阅读」。
+                             再压到 #5d7370 = 4.57:1（页面）/ 5.06:1（白卡），达标。
+                             改令牌而不是逐个消费者：这一档有 200 处消费点，
+                             逐点改必然漂移，而且下一次有人加新页面又会漏。
+                             色相保持青灰，与 --text-sec(#506a69) 仍是两档。 */
+  --shadow-sm: 0 3px 10px rgba(42, 62, 62, .07);
+  --shadow:    0 14px 34px rgba(42, 62, 62, .10);  /* V12 --sh-card 的外阴影部分 */
+  --shadow-lg: 0 28px 70px rgba(42, 62, 62, .16);  /* 深青灰投影（原为暖紫红） */
+  --v12-sh-lg-ink: rgba(42, 62, 62, .16);          /* 供 5.4 复用同一档深度 */
+}
+
+/* ---------- 5.2 暗色（V12「暗夜 NIGHT SOFT」） ---------- */
+html[data-ui="v12"][data-theme="blast"] {
+  --bg: #0e1a1d;          /* V12 --bg：青黑，刻意「不压黑」（现网 #0c1517 更死） */
+  --card: #152429;        /* #0e1a1d 上取比 V12 折算值 #142024 亮两档，
+                             把卡片/底色明度差拉回 9.7（现网 9.3、V12 原值仅 6.3） */
+  --card-soft: #101c20;
+  --input-bg: #0a1416;    /* V12 --bg-2 */
+  --border: rgba(140, 196, 198, .16);       /* V12 冷青描边；.13 → .16 补青色偏暗的损失 */
+  --border-strong: rgba(76, 226, 212, .40);
+  --text: #e8f1ef;
+  --text-sec: #9db3b2;
+  --text-light: #7e9c9b;  /* ⚠️ V12 原值 #62807f = 4.15:1，比现网 #8a9396 的 5.90:1 明显倒退
+                             （逼近 AA 线）。提亮回 #7e9c9b = 6.01:1（卡上 5.64:1）。 */
+  --shadow-sm: 0 3px 10px rgba(0, 0, 0, .15);
+  --shadow:    0 18px 44px rgba(0, 0, 0, .34);
+  --shadow-lg: 0 28px 80px rgba(0, 0, 0, .48);
+  --v12-sh-lg-ink: rgba(0, 0, 0, .48);
+}
+
+/* （原 5.3「酒红 blast-wine」整节已随该主题一起删除，编号保持不重排，
+   以免下面注释里引用的「5.2 / 5.3」对不上号。）
+
+   ---------- 5.4 弹窗光晕环 ----------
+   --shadow-lg 的 9 个消费点里有 8 个是弹窗/浮层（AuthDialog / RulesDialog /
+   ChangelogDialog / CreditsDialog / AnnouncementPopup / GameEndDialog /
+   GameSearch 下拉 / multiplayer 结算卡）。V12 的 --sh-pop 正是给这类浮层加的
+   模式色描边 + 外辉光，所以加在这里命中率最高，也让「卡片光效」这条设计
+   语言第一次真正落到共享令牌上，而不必改 9 个组件的内联样式。
+
+   环色复用 --mc，而 --mc 已按 data-mode / data-theme 在第 1、3 节里算好，
+   所以这里不需要再开主题分支 —— 深度靠各主题的 --v12-sh-lg-ink 传进来。
+
+   ⚠️ 必须 @supports 包住：不支持 color-mix 时，「两行同名声明」不会回退，
+      会让 box-shadow 整个变成无效 → 所有弹窗直接没有阴影。
+      与第 1 节 --mc-soft 的写法保持一致。
+
+   ⚠️ 选择器必须把暗色主题也列出来，不能只写 html[data-ui="v12"]：
+      5.2 的特异性是 (0,2,1)，比单个 html[data-ui="v12"] 的 (0,1,1) 高，
+      光靠「写在后面」压不过它 —— 只写基选择器的话，浅色有环、暗色没环，
+      而且不报任何错。（这条是实机核过产物 CSS 才发现的。）
+      （曾有第三个暗色主题 blast-wine，已删除；删除时这里同时摘掉了它那一行。） */
+@supports (color: color-mix(in srgb, red, blue)) {
+  html[data-ui="v12"],
+  html[data-ui="v12"][data-theme="blast"] {
+    --shadow-lg:
+      0 24px 54px var(--v12-sh-lg-ink),
+      0 0 0 1px color-mix(in srgb, var(--mc) 26%, transparent),
+      0 0 40px color-mix(in srgb, var(--mc) 16%, transparent);
+  }
+}
+
+/* ---------- 5.5 <html> 自身的底色 ----------
+   theme-init（layout.tsx:26）用**内联样式**把 <html> 背景钉死在 #f3f0ea / #0c1517。
+   内联样式优先级高于任何选择器，所以这里只能 !important 才能接管。
+   不接管的后果：V12 的 --bg 只作用在 body 上，而 body 有 min-height:100dvh ——
+   移动端下拉回弹时露出的 <html> 底仍是旧主题色，会看到一条突兀的色带。
+
+   这条随 data-ui=classic 一起失效，不需要单独的回退路径。 */
+html[data-ui="v12"] {
+  background: var(--bg) !important;
+}

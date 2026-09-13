@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { getServerUrl, getToken } from '@/lib/auth';
+import { useI18n } from '@/lib/i18n';
+import { adminSortMark, ADMIN_PAGE_SIZES } from './ui';
 
 interface Character {
   id: string;
@@ -23,92 +25,10 @@ interface CharPage {
   totalPages: number;
 }
 
-// ===== 样式 =====
-const cardStyle: React.CSSProperties = {
-  background: 'var(--card)',
-  borderRadius: 'var(--radius)',
-  padding: '20px',
-};
-
-const inpStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '8px 12px',
-  background: 'var(--input-bg)',
-  color: 'var(--text)',
-  border: '1px solid var(--border)',
-  borderRadius: 'var(--radius)',
-  fontSize: '0.9rem',
-};
-
-const thStyle: React.CSSProperties = {
-  padding: '10px 8px',
-  textAlign: 'left',
-  fontSize: '0.75rem',
-  fontWeight: 700,
-  color: 'var(--text-light)',
-  textTransform: 'uppercase',
-  whiteSpace: 'nowrap',
-};
-
-const tdStyle: React.CSSProperties = {
-  padding: '8px',
-  verticalAlign: 'middle',
-};
-
-const btnStyle: React.CSSProperties = {
-  padding: '8px 16px',
-  background: 'var(--primary)',
-  color: 'var(--bg)',
-  border: 'none',
-  borderRadius: 'var(--radius)',
-  fontSize: '0.85rem',
-  fontWeight: 700,
-  cursor: 'pointer',
-};
-
-const smallBtn: React.CSSProperties = {
-  padding: '4px 10px',
-  fontSize: '0.75rem',
-  border: 'none',
-  borderRadius: '3px',
-  cursor: 'pointer',
-  fontWeight: 600,
-};
-
-const pageBtn: React.CSSProperties = {
-  padding: '6px 14px',
-  background: 'var(--input-bg)',
-  color: 'var(--text)',
-  border: '1px solid var(--border)',
-  borderRadius: 'var(--radius)',
-  cursor: 'pointer',
-  fontSize: '0.8rem',
-};
-
-const modalOverlay: React.CSSProperties = {
-  position: 'fixed',
-  inset: 0,
-  background: 'rgba(0,0,0,0.6)',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  zIndex: 1000,
-  padding: '20px',
-};
-
-const modalContent: React.CSSProperties = {
-  background: 'var(--card)',
-  borderRadius: 'var(--radius)',
-  padding: '24px',
-  maxWidth: '560px',
-  width: '100%',
-  maxHeight: '90vh',
-  overflowY: 'auto',
-};
-
 const rarityStars = (r: number): string => '★'.repeat(r) + '☆'.repeat(6 - r);
 
 export default function AdminCharacters() {
+  const { t } = useI18n();
   const [chars, setChars] = useState<Character[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -130,14 +50,19 @@ export default function AdminCharacters() {
   const [importData, setImportData] = useState<any[] | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const pageSize = 30;
+  const [sortKey, setSortKey] = useState('name');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [pageSize, setPageSize] = useState(30);
   const baseUrl = getServerUrl();
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const token = getToken();
-      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+      const params = new URLSearchParams({
+        page: String(page), pageSize: String(pageSize),
+        sort: sortKey, dir: sortDir,
+      });
       if (search) params.set('search', search);
       if (rarityFilter > 0) params.set('rarity', String(rarityFilter));
       const res = await fetch(`${baseUrl}/api/admin/characters?${params}`, {
@@ -145,7 +70,7 @@ export default function AdminCharacters() {
       });
       if (!res.ok) {
         const d = await res.json();
-        throw new Error(d.error || '加载失败');
+        throw new Error(d.error || t('admin.common.loadFailed'));
       }
       const data: CharPage = await res.json();
       setChars(data.characters);
@@ -157,9 +82,32 @@ export default function AdminCharacters() {
     } finally {
       setLoading(false);
     }
-  }, [baseUrl, page, search, rarityFilter]);
+  }, [baseUrl, page, search, rarityFilter, sortKey, sortDir, pageSize, t]);
 
   useEffect(() => { load(); }, [load]);
+
+  /* 干员列表默认按名字升序（A→Z 更符合找人的直觉），其余列表默认按时间降序。
+     所以这里换列时的兜底方向也跟着列走，见 toggleSort。 */
+  const toggleSort = (key: string, defaultDir: 'asc' | 'desc' = 'desc') => {
+    if (key === sortKey) setSortDir(d => (d === 'asc' ? 'desc' : 'asc'));
+    else { setSortKey(key); setSortDir(defaultDir); }
+    setPage(1);
+  };
+
+  const changePageSize = (size: number) => { setPageSize(size); setPage(1); };
+
+  const sortTh = (key: string, label: string, defaultDir: 'asc' | 'desc' = 'desc') => {
+    const active = sortKey === key;
+    return (
+      <th
+        className={'so' + (active ? ' on' : '')}
+        onClick={() => toggleSort(key, defaultDir)}
+        title={t('admin.common.sortHint')}
+      >
+        {label} <i>{adminSortMark(active, sortDir)}</i>
+      </th>
+    );
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -189,7 +137,7 @@ export default function AdminCharacters() {
 
   const submitForm = async () => {
     if (!form.name.trim()) {
-      setError('干员名称不能为空');
+      setError(t('admin.characters.nameRequired'));
       return;
     }
     setMsg(''); setError('');
@@ -222,8 +170,8 @@ export default function AdminCharacters() {
       }
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || '操作失败');
-      setMsg(editTarget ? '干员已更新' : '干员已添加');
+      if (!res.ok) throw new Error(data.error || t('admin.common.opFailed'));
+      setMsg(editTarget ? t('admin.characters.updated') : t('admin.characters.added'));
       setShowForm(false);
       await load();
     } catch (err: any) {
@@ -232,7 +180,7 @@ export default function AdminCharacters() {
   };
 
   const handleDelete = async (name: string) => {
-    if (!window.confirm(`确定删除干员「${name}」？此操作不可撤销。`)) return;
+    if (!window.confirm(t('admin.characters.deleteConfirm', { name }))) return;
     setMsg(''); setError('');
     try {
       const token = getToken();
@@ -241,8 +189,8 @@ export default function AdminCharacters() {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || '删除失败');
-      setMsg(`已删除「${name}」`);
+      if (!res.ok) throw new Error(data.error || t('admin.common.deleteFailed'));
+      setMsg(t('admin.characters.deleted', { name }));
       await load();
     } catch (err: any) {
       setError(err.message);
@@ -257,7 +205,7 @@ export default function AdminCharacters() {
     try {
       const text = await file.text();
       const data = JSON.parse(text);
-      if (!Array.isArray(data)) throw new Error('JSON 必须是数组格式');
+      if (!Array.isArray(data)) throw new Error(t('admin.characters.jsonArrayRequired'));
 
       const token = getToken();
       const res = await fetch(`${baseUrl}/api/admin/characters/import`, {
@@ -266,7 +214,7 @@ export default function AdminCharacters() {
         body: JSON.stringify({ characters: data }),
       });
       const result = await res.json();
-      if (!res.ok) throw new Error(result.error || '导入预览失败');
+      if (!res.ok) throw new Error(result.error || t('admin.characters.previewFailed'));
 
       setImportData(data);
       setImportPreview(result);
@@ -288,8 +236,8 @@ export default function AdminCharacters() {
         body: JSON.stringify({ characters: importData, confirm: true }),
       });
       const result = await res.json();
-      if (!res.ok) throw new Error(result.error || '导入失败');
-      setMsg(`导入成功：${result.imported} 条记录`);
+      if (!res.ok) throw new Error(result.error || t('admin.characters.importFailed'));
+      setMsg(t('admin.characters.importSuccess', { count: result.imported }));
       setImportPreview(null);
       setImportData(null);
       await load();
@@ -308,7 +256,7 @@ export default function AdminCharacters() {
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
-        throw new Error(d.error || `导出失败 (HTTP ${res.status})`);
+        throw new Error(d.error || t('admin.characters.exportFailed', { status: res.status }));
       }
       const data = await res.json();
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -317,190 +265,225 @@ export default function AdminCharacters() {
       a.download = 'characters.json';
       a.click();
       setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-      setMsg('JSON 已导出');
+      setMsg(t('admin.characters.exported'));
     } catch (err: any) {
-      setError(err.message || '导出失败');
+      setError(err.message || t('admin.characters.exportFailedPlain'));
     }
   };
 
   return (
     <div>
       {/* 搜索 + 操作栏 */}
-      <div style={{ ...cardStyle, marginBottom: '16px' }}>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+      <div className="card">
+        {/* 一行控件：词汇表无 .cfg-ct/.bar-actions，借用 .card-hd 的 flex + gap + wrap + 居中 */}
+        <div className="card-hd">
           <input
+            className="search-input bare"
             value={searchInput}
             onChange={e => setSearchInput(e.target.value)}
-            placeholder="搜索干员名/英文名/标签..."
+            placeholder={t('admin.characters.searchPlaceholder')}
             maxLength={64}
-            style={{ ...inpStyle, flex: 1, minWidth: '180px', marginBottom: 0 }}
           />
           <select
+            className="sel"
             value={rarityFilter}
             onChange={e => { setRarityFilter(parseInt(e.target.value)); setPage(1); }}
-            style={{
-              padding: '8px 12px', background: 'var(--input-bg)', color: 'var(--text)',
-              border: '1px solid var(--border)', borderRadius: 'var(--radius)', fontSize: '0.85rem',
-            }}
           >
-            <option value={0}>全部稀有度</option>
-            <option value={6}>★★★★★★ (6星)</option>
-            <option value={5}>★★★★★ (5星)</option>
-            <option value={4}>★★★★ (4星)</option>
-            <option value={3}>★★★ (3星)</option>
-            <option value={2}>★★ (2星)</option>
-            <option value={1}>★ (1星)</option>
+            <option value={0}>{t('admin.characters.allRarity')}</option>
+            {[6, 5, 4, 3, 2, 1].map(n => (
+              <option key={n} value={n}>
+                {rarityStars(n)} {t('admin.characters.raritySuffix', { n })}
+              </option>
+            ))}
           </select>
-          <button onClick={openAdd} style={btnStyle}>+ 添加干员</button>
-          <button onClick={handleExport} style={{ ...btnStyle, background: 'var(--input-bg)', color: 'var(--text)', border: '1px solid var(--border)' }}>
-            导出 JSON
-          </button>
-          <label style={{ ...btnStyle, background: 'var(--input-bg)', color: 'var(--text)', border: '1px solid var(--border)', cursor: 'pointer' }}>
-            JSON 导入
-            <input ref={fileRef} type="file" accept=".json" onChange={handleFileSelect} style={{ display: 'none' }} />
+          <button className="btn-p" onClick={openAdd}>{t('admin.characters.addBtn')}</button>
+          <button className="btn-o" onClick={handleExport}>{t('admin.characters.exportJson')}</button>
+          <label className="btn-o">
+            {t('admin.characters.importJson')}
+            <input ref={fileRef} type="file" accept=".json" onChange={handleFileSelect} hidden />
           </label>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-light)', whiteSpace: 'nowrap' }}>
-            共 {total} 位干员
-          </span>
+          <span className="cnt">{t('admin.characters.total', { count: total })}</span>
         </div>
       </div>
 
       {/* 消息 */}
-      {msg && <p style={{ color: 'var(--correct)', fontSize: '0.8rem', marginBottom: '10px' }}>{msg}</p>}
-      {error && <p style={{ color: 'var(--danger)', fontSize: '0.8rem', marginBottom: '10px' }}>{error}</p>}
+      {msg && <p className="alert alert-ok">{msg}</p>}
+      {error && <p className="alert alert-dan">{error}</p>}
 
-      {/* 导入预览 */}
+      {/* 导入预览 —— 两阶段：① 预览已回（本轮请求结束）② 待确认（点了才发第二次请求）。
+          这里只是外观，两步的分野、confirm 参数、两次 fetch 全部原样保留。 */}
       {importPreview && (
-        <div style={{ ...cardStyle, marginBottom: '16px', border: '1px solid var(--primary)' }}>
-          <h4 style={{ margin: '0 0 10px', fontSize: '0.95rem' }}>导入预览</h4>
-          <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-light)' }}>
-            共 {importPreview.total} 条：<span style={{ color: 'var(--correct)' }}>新增 {importPreview.added}</span>，
-            <span style={{ color: '#f0ad4e' }}>更新 {importPreview.updated}</span>，
-            <span style={{ color: 'var(--danger)' }}>跳过 {importPreview.skipped}</span>
-          </p>
-          <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
-            <button onClick={confirmImport} style={btnStyle}>确认导入</button>
-            <button onClick={() => { setImportPreview(null); setImportData(null); }} style={{ ...btnStyle, background: 'transparent', color: 'var(--text-light)', border: '1px solid var(--border)' }}>
-              取消
+        <div className="card">
+          <div className="card-hd">
+            <h2>{t('admin.characters.importPreview')}</h2>
+          </div>
+          <div className="stage">
+            <span className="sn2 done">1</span>
+            <span className="stx"><b>{t('admin.characters.importTotal', { count: importPreview.total })}</b></span>
+            <span className="sn2 on">2</span>
+            <span className="stx"><b>{t('admin.characters.confirmImport')}</b></span>
+          </div>
+          <div className="tally">
+            <span className="t-add">{t('admin.characters.importAdded', { count: importPreview.added })}</span>
+            <span className="t-upd">{t('admin.characters.importUpdated', { count: importPreview.updated })}</span>
+            <span className="t-skip">{t('admin.characters.importSkipped', { count: importPreview.skipped })}</span>
+          </div>
+          {/* 操作行复用 .tally 的 flex/gap（设计稿的 .bar-actions 未随词汇表落地） */}
+          <div className="tally">
+            <button className="btn-p" onClick={confirmImport}>{t('admin.characters.confirmImport')}</button>
+            <button className="btn-o" onClick={() => { setImportPreview(null); setImportData(null); }}>
+              {t('admin.common.cancel')}
             </button>
           </div>
         </div>
       )}
 
       {/* 干员列表 */}
-      <div style={{ ...cardStyle, overflowX: 'auto' }}>
+      <div className="card">
+        {/* 页长条：留在表格上方（原位置），所以没有并进底部 pager */}
+        <div className="pager">
+          <label className="psize">
+            {t('admin.common.pageSizeLabel')}
+            <select
+              className="sel"
+              value={pageSize}
+              onChange={e => changePageSize(Number(e.target.value))}
+            >
+              {ADMIN_PAGE_SIZES.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </label>
+        </div>
         {loading ? (
-          <p style={{ textAlign: 'center', color: 'var(--text-light)', padding: '40px' }}>加载中...</p>
+          <div className="sk"><i /><i /><i /><i /></div>
         ) : chars.length === 0 ? (
-          <p style={{ textAlign: 'center', color: 'var(--text-light)', padding: '40px' }}>无匹配干员</p>
+          <div className="empty"><div className="etx">{t('admin.characters.noMatch')}</div></div>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-            <thead>
-              <tr style={{ borderBottom: '2px solid var(--border)' }}>
-                <th style={thStyle}>名称</th>
-                <th style={thStyle}>稀有度</th>
-                <th style={thStyle}>职业</th>
-                <th style={thStyle}>阵营</th>
-                <th style={thStyle}>标签</th>
-                <th style={thStyle}>操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              {chars.map(c => (
-                <tr key={c.id || c.name} style={{ borderBottom: '1px solid var(--border)' }}>
-                  <td style={tdStyle}>
-                    <strong>{c.name}</strong>
-                    {c.nameEn && <div style={{ fontSize: '0.7rem', color: 'var(--text-light)' }}>{c.nameEn}</div>}
-                  </td>
-                  <td style={{ ...tdStyle, color: '#f0ad4e', fontWeight: 700, whiteSpace: 'nowrap' }}>
-                    {rarityStars(c.rarity)}
-                  </td>
-                  <td style={tdStyle}>{c.class || '—'}</td>
-                  <td style={tdStyle}>{c.faction || '—'}</td>
-                  <td style={tdStyle}>
-                    <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap' }}>
-                      {(Array.isArray(c.tags) ? c.tags : []).slice(0, 3).map(t => (
-                        <span key={t} style={{ fontSize: '0.65rem', padding: '1px 5px', background: 'var(--input-bg)', borderRadius: '3px', color: 'var(--text-light)' }}>{t}</span>
-                      ))}
-                    </div>
-                  </td>
-                  <td style={tdStyle}>
-                    <div style={{ display: 'flex', gap: '4px' }}>
-                      <button onClick={() => openEdit(c)} style={{ ...smallBtn, background: 'var(--primary)', color: 'var(--bg)' }}>编辑</button>
-                      <button onClick={() => handleDelete(c.name)} style={{ ...smallBtn, background: 'var(--danger)', color: '#fff' }}>删除</button>
-                    </div>
-                  </td>
+          <div className="table-wrap">
+            <table className="tbl">
+              <thead>
+                <tr>
+                  {sortTh('name', t('admin.characters.colName'), 'asc')}
+                  {sortTh('rarity', t('admin.characters.colRarity'))}
+                  <th>{t('admin.characters.colClass')}</th>
+                  <th>{t('admin.characters.colFaction')}</th>
+                  <th>{t('admin.characters.colTags')}</th>
+                  <th>{t('admin.characters.colActions')}</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {chars.map(c => (
+                  <tr key={c.id || c.name}>
+                    <td className="k">
+                      {c.name}
+                      {c.nameEn && <div className="mono">{c.nameEn}</div>}
+                    </td>
+                    <td>
+                      <span className="bdg bdg-warn">{rarityStars(c.rarity)}</span>
+                    </td>
+                    <td>{c.class || '—'}</td>
+                    <td>{c.faction || '—'}</td>
+                    <td>
+                      {/* 行内小件成排：词汇表里只有 .pgs 是「无外边距的 flex 行 + gap」 */}
+                      <div className="pgs">
+                        {(Array.isArray(c.tags) ? c.tags : []).slice(0, 3).map(t => (
+                          <span key={t} className="bdg bdg-no">{t}</span>
+                        ))}
+                      </div>
+                    </td>
+                    <td>
+                      <div className="pgs">
+                        <button className="btn-sm p" onClick={() => openEdit(c)}>{t('admin.common.edit')}</button>
+                        <button className="btn-sm dan" onClick={() => handleDelete(c.name)}>{t('admin.common.delete')}</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
 
         {/* 分页 */}
         {totalPages > 1 && (
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', marginTop: '16px' }}>
-            <button disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))} style={{ ...pageBtn, opacity: page <= 1 ? 0.3 : 1 }}>
-              上一页
-            </button>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-light)' }}>{page} / {totalPages}</span>
-            <button disabled={page >= totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))} style={{ ...pageBtn, opacity: page >= totalPages ? 0.3 : 1 }}>
-              下一页
-            </button>
+          <div className="pager">
+            <span className="meta">{page} / {totalPages}</span>
+            <div className="pgs">
+              <button
+                className={'pg' + (page <= 1 ? ' dis' : '')}
+                disabled={page <= 1}
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+              >
+                {t('admin.common.prevPage')}
+              </button>
+              <button
+                className={'pg' + (page >= totalPages ? ' dis' : '')}
+                disabled={page >= totalPages}
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              >
+                {t('admin.common.nextPage')}
+              </button>
+            </div>
           </div>
         )}
       </div>
 
       {/* 添加/编辑模态框 */}
       {showForm && (
-        <div style={modalOverlay} onClick={e => { if (e.target === e.currentTarget) setShowForm(false); }}>
-          <div style={modalContent}>
-            <h3 style={{ margin: '0 0 16px', fontSize: '1.1rem' }}>{editTarget ? '编辑干员' : '添加干员'}</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              <div>
-                <label style={labelStyle}>名称 *</label>
-                <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} maxLength={64} style={inpStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>英文名</label>
-                <input value={form.nameEn} onChange={e => setForm({ ...form, nameEn: e.target.value })} maxLength={64} style={inpStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>稀有度</label>
-                <select value={form.rarity} onChange={e => setForm({ ...form, rarity: parseInt(e.target.value) })} style={inpStyle}>
-                  {[1,2,3,4,5,6].map(n => <option key={n} value={n}>{rarityStars(n)}</option>)}
-                </select>
-              </div>
-              <div>
-                <label style={labelStyle}>职业</label>
-                <input value={form.class} onChange={e => setForm({ ...form, class: e.target.value })} maxLength={32} style={inpStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>阵营</label>
-                <input value={form.faction} onChange={e => setForm({ ...form, faction: e.target.value })} maxLength={32} style={inpStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>位置</label>
-                <input value={form.position} onChange={e => setForm({ ...form, position: e.target.value })} maxLength={16} style={inpStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>热度</label>
-                <select value={form.popularity} onChange={e => setForm({ ...form, popularity: e.target.value })} style={inpStyle}>
-                  <option value="hot">热门 (hot)</option>
-                  <option value="normal">普通 (normal)</option>
-                  <option value="cold">冷门 (cold)</option>
-                </select>
-              </div>
-              <div>
-                <label style={labelStyle}>标签（逗号分隔）</label>
-                <input value={form.tags} onChange={e => setForm({ ...form, tags: e.target.value })} placeholder="治疗, 爆发..." maxLength={200} style={inpStyle} />
+        <div className="modal-mask" onClick={e => { if (e.target === e.currentTarget) setShowForm(false); }}>
+          <div className="dlg mc">
+            <div className="dt">
+              <span className="di">✎</span>
+              {editTarget ? t('admin.characters.editTitle') : t('admin.characters.addTitle')}
+            </div>
+            <div className="db">
+              {/* 表单两列网格沿用 .console-2col（词汇表里唯一的 1fr 1fr 网格） */}
+              <div className="console-2col">
+                <div>
+                  <label className="cfg-lb">{t('admin.characters.fName')}</label>
+                  <input className="search-input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} maxLength={64} />
+                </div>
+                <div>
+                  <label className="cfg-lb">{t('admin.characters.fNameEn')}</label>
+                  <input className="search-input" value={form.nameEn} onChange={e => setForm({ ...form, nameEn: e.target.value })} maxLength={64} />
+                </div>
+                <div>
+                  <label className="cfg-lb">{t('admin.characters.fRarity')}</label>
+                  <select className="sel" value={form.rarity} onChange={e => setForm({ ...form, rarity: parseInt(e.target.value) })}>
+                    {[1,2,3,4,5,6].map(n => <option key={n} value={n}>{rarityStars(n)}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="cfg-lb">{t('admin.characters.fClass')}</label>
+                  <input className="search-input" value={form.class} onChange={e => setForm({ ...form, class: e.target.value })} maxLength={32} />
+                </div>
+                <div>
+                  <label className="cfg-lb">{t('admin.characters.fFaction')}</label>
+                  <input className="search-input" value={form.faction} onChange={e => setForm({ ...form, faction: e.target.value })} maxLength={32} />
+                </div>
+                <div>
+                  <label className="cfg-lb">{t('admin.characters.fPosition')}</label>
+                  <input className="search-input" value={form.position} onChange={e => setForm({ ...form, position: e.target.value })} maxLength={16} />
+                </div>
+                <div>
+                  <label className="cfg-lb">{t('admin.characters.fPopularity')}</label>
+                  <select className="sel" value={form.popularity} onChange={e => setForm({ ...form, popularity: e.target.value })}>
+                    <option value="hot">{t('admin.characters.popHot')}</option>
+                    <option value="normal">{t('admin.characters.popNormal')}</option>
+                    <option value="cold">{t('admin.characters.popCold')}</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="cfg-lb">{t('admin.characters.fTags')}</label>
+                  <input className="search-input" value={form.tags} onChange={e => setForm({ ...form, tags: e.target.value })} placeholder={t('admin.characters.fTagsPlaceholder')} maxLength={200} />
+                </div>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '16px' }}>
-              <button onClick={() => setShowForm(false)} style={{ ...btnStyle, background: 'transparent', color: 'var(--text-light)', border: '1px solid var(--border)' }}>
-                取消
+            <div className="df">
+              <button className="btn-o" onClick={() => setShowForm(false)}>
+                {t('admin.common.cancel')}
               </button>
-              <button onClick={submitForm} style={btnStyle}>
-                {editTarget ? '保存' : '添加'}
+              <button className="btn-p" onClick={submitForm}>
+                {editTarget ? t('admin.common.save') : t('admin.characters.add')}
               </button>
             </div>
           </div>
@@ -509,11 +492,3 @@ export default function AdminCharacters() {
     </div>
   );
 }
-
-const labelStyle: React.CSSProperties = {
-  display: 'block',
-  fontSize: '0.75rem',
-  fontWeight: 600,
-  color: 'var(--text-light)',
-  marginBottom: '4px',
-};

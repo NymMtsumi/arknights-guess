@@ -2,16 +2,27 @@
 
 import { useEffect, useState } from 'react';
 import { getServerUrl, setToken, setUser } from '@/lib/auth';
+import { useI18n } from '@/lib/i18n';
+
+/* ⚠️ 提示文案**不能在 useEffect 里用 t() 拼好再塞进 state**。
+   I18nProvider 的 locale 首次渲染固定是 'zh-CN'，挂载后才切到 localStorage 里的值
+   （见 src/lib/i18n.tsx 的注释：初值必须是 SSR 值，否则 React #418）。
+   而下面这个 effect 的依赖是 [] —— 它捕获的是**首次渲染**的 t，也就是 zh-CN 的那份。
+   于是英文用户点开验证链接会看到中文提示，且不报任何错。
+   把 t 加进依赖又会重新发一次请求 —— 验证 token 可能是一次性的，绝不能重放。
+   所以这里只存「键 + 参数」，渲染期再解析，见下面的 msg()。 */
+type Msg = { key: string; params?: Record<string, string> } | { text: string } | null;
 
 export default function VerifyPage() {
+  const { t } = useI18n();
   const [status, setStatus] = useState<'loading' | 'ok' | 'error'>('loading');
-  const [msg, setMsg] = useState('');
+  const [msg, setMsg] = useState<Msg>(null);
   const [username, setUsername] = useState('');
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const token = params.get('token');
-    if (!token) { setStatus('error'); setMsg('缺少验证 token'); return; }
+    if (!token) { setStatus('error'); setMsg({ key: 'verify.missingToken' }); return; }
 
     const apiBase = getServerUrl();
     fetch(`${apiBase}/api/verify-email?token=${encodeURIComponent(token)}`)
@@ -19,7 +30,7 @@ export default function VerifyPage() {
       .then(d => {
         if (d.ok) {
           setStatus('ok');
-          setMsg(`邮箱 ${d.email} 验证成功，注册完成！`);
+          setMsg({ key: 'verify.emailVerified', params: { email: d.email || '' } });
           setUsername(d.username || '');
 
           // 自动登录：存储 token 和用户信息
@@ -44,57 +55,36 @@ export default function VerifyPage() {
           }
         } else {
           setStatus('error');
-          setMsg(d.error || '验证失败');
+          // 服务端返回的 error 已经是可直接展示的字符串，优先原样用
+          setMsg(d.error ? { text: d.error } : { key: 'verify.failed' });
         }
       })
-      .catch(() => { setStatus('error'); setMsg('网络错误，请重试'); });
+      .catch(() => { setStatus('error'); setMsg({ key: 'verify.networkError' }); });
   }, []);
 
+  const msgText = msg && ('text' in msg ? msg.text : t(msg.key, msg.params));
+
   return (
-    <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text)' }}>
-      {status === 'loading' && <p>验证中...</p>}
+    <div className="gate" style={{ maxWidth: 480, margin: '48px auto', position: 'relative', zIndex: 1 }}>
+      {status === 'loading' && <p>{t('verify.verifying')}</p>}
       {status === 'ok' && (
         <div>
-          <p style={{ fontSize: '1.5rem', color: 'var(--correct)' }}>✅ {msg}</p>
+          <h2 className="alert-ok">✅ {msgText}</h2>
           {username && (
-            <p style={{ color: 'var(--text-light)', marginTop: '12px', fontSize: '1rem' }}>
-              账号 <strong>{username}</strong> 已创建成功
+            <p>
+              {t('verify.accountCreated', { username })}
             </p>
           )}
-          <p style={{ color: 'var(--text-light)', marginTop: '16px', fontSize: '1rem' }}>
-            已自动登录，即将跳转首页...
+          <p>
+            {t('verify.autoLoginRedirect')}
           </p>
-          <a href="/" style={{
-            display: 'inline-block',
-            marginTop: '20px',
-            padding: '12px 32px',
-            background: 'var(--primary)',
-            color: 'var(--bg)',
-            border: 'none',
-            borderRadius: 'var(--radius)',
-            fontSize: '1.05rem',
-            fontWeight: 700,
-            textDecoration: 'none',
-            cursor: 'pointer',
-          }}>立即前往</a>
+          <a href="/" className="btn-p" style={{ display: 'inline-block', marginTop: 18 }}>{t('verify.goNow')}</a>
         </div>
       )}
       {status === 'error' && (
         <div>
-          <p style={{ fontSize: '1.2rem', color: 'var(--danger)' }}>❌ {msg}</p>
-          <a href="/" style={{
-            display: 'inline-block',
-            marginTop: '20px',
-            padding: '12px 32px',
-            background: 'var(--primary)',
-            color: 'var(--bg)',
-            border: 'none',
-            borderRadius: 'var(--radius)',
-            fontSize: '1.05rem',
-            fontWeight: 700,
-            textDecoration: 'none',
-            cursor: 'pointer',
-          }}>返回首页</a>
+          <h2 className="alert-dan">❌ {msgText}</h2>
+          <a href="/" className="btn-o" style={{ display: 'inline-block', marginTop: 18 }}>{t('verify.backHome')}</a>
         </div>
       )}
     </div>

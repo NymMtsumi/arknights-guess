@@ -7,6 +7,7 @@ import { Header } from '@/components/Header';
 import { GameSearch } from '@/components/GameSearch';
 import { GuessTable } from '@/components/GuessTable';
 import { ScrollSlider } from '@/components/ScrollSlider';
+import { ModeArt } from '@/components/ModeArt';
 import { useGameStore } from '@/stores/game-store';
 import { saveMultiGameStats, saveCustomGameStats, type MultiRoundResult } from '@/lib/stats';
 import { getUser, getServerUrl, getToken, getPlayerKey } from '@/lib/auth';
@@ -48,6 +49,22 @@ const ATTR_LABEL_KEYS: Record<string, string> = {
 };
 const ROUND_TIME_OPTIONS = [30000, 60000, 90000, 120000, 180000, 300000];
 
+// 平局/超时插图的取图序号（public/icons/draw-1..5.png）。
+// ⚠️ 用 hashCode 而不是 Math.random()：这个函数在 render 里跑，用随机数会在
+//    任何一次重渲染时换图（计时器每 100ms setState 一次 → 会疯狂闪烁）。
+//    以「目标名 + 比分 + 服务端给的 reason」为种 → 同一局恒定，不同局大概率不同。
+//    ⚠️ reason 只有超时那一支才有（server/socket/game.js:55 发 'timeout'），
+//       其余平局分支不发该字段，所以这里必须容忍 undefined。
+function drawArtIndex(d: { targetName?: string; score?: number; reason?: string }): number {
+  const seed = `${d.targetName ?? ''}|${d.score ?? 0}|${d.reason ?? ''}`;
+  let h = 2166136261;
+  for (let i = 0; i < seed.length; i++) {
+    h ^= seed.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0) % 5 + 1;
+}
+
 export default function MultiplayerPage() {
   const { t } = useI18n();
   const router = useRouter();
@@ -72,6 +89,12 @@ export default function MultiplayerPage() {
   const [stage, setStage] = useState<Stage>('menu');
   const [socket, setSocket] = useState<Socket | null>(null);
   const [roomCode, setRoomCode] = useState('');
+  // 上次房间码（菜单页「上次房间」卡片用）。
+  // ⚠️ 必须是 state 而不是渲染期直接读 localStorage：静态导出的 HTML 里 localStorage
+  //    读不到（Node 侧抛错被 catch 成 ''），而客户端读得到 → 两边首屏不一致 →
+  //    水合不匹配。改为「首屏一律空、挂载后由 effect 填充」，两边首屏就一致了。
+  //    顺带把原来每渲染 3 次 localStorage 同步读降成 1 次。
+  const [lastRoomCode, setLastRoomCode] = useState('');
   const [playerName, setPlayerName] = useState('');
   const [bestOf, setBestOf] = useState(5);
   const [difficulty, setDifficulty] = useState<string>('hard');
@@ -126,6 +149,7 @@ export default function MultiplayerPage() {
   // Auto-reconnect to saved room on page load
   useEffect(() => {
     const savedCode = loadRoomCode();
+    setLastRoomCode(savedCode); // 菜单页「上次房间」卡片的数据源
     if (!savedCode) return;
     if (socketRef.current?.connected) return;
     const s = connect();
@@ -549,6 +573,7 @@ export default function MultiplayerPage() {
       setSocket(null);
     }
     clearRoomCode();
+    setLastRoomCode(''); // 与 storage 同步清掉，否则菜单页「上次房间」卡片会复活
     roomCodeRef.current = '';
     setStage('menu');
     setRoomCode('');
@@ -578,23 +603,20 @@ export default function MultiplayerPage() {
   const winTarget = bestOf === 3 ? 2 : bestOf === 5 ? 3 : 4;
 
   return (
-    <div className="page">
+    <div className="page" data-mode="multi">
       <Header />
-      <div className="page-scroll" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 'clamp(12px,2vw,28px) var(--page-inline)' }}>
+      <div className="page-scroll flex flex-col items-center">
 
         {/* ===== Menu ===== */}
         {stage === 'menu' && (
-          <div style={{ textAlign: 'center', maxWidth: '450px' }}>
-            <button onClick={() => router.push('/')} style={{
-              padding: '6px 14px', marginBottom: '12px',
-              background: 'transparent', color: 'var(--text-light)',
-              border: '1px solid var(--border)', borderRadius: 'var(--radius)',
-              cursor: 'pointer', fontSize: '0.85rem',
-            }}>
+          <div className="card text-center w-full max-w-[450px]">
+            <button onClick={() => router.push('/')} className="btn-o mb-3">
               ← {t('game.back')}
             </button>
-            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.5rem,4vw,2rem)', fontStyle: 'italic', fontWeight: 900, marginBottom: '16px' }}>⚔️ {t('multi.title')}</h1>
-            <p style={{ color: 'var(--text-light)', fontSize: '0.9rem', marginBottom: '14px' }}>{t('multi.description')}</p>
+            {/* 顶部装饰插画 —— 稿子 index-v12-modes.html:975 的 .mode-art wide */}
+            <ModeArt src="/icons/menu-multi.png" />
+            <h1 className="scr-ttl mb-4">⚔️ {t('multi.title')}</h1>
+            <p className="sec-note mb-3.5">{t('multi.description')}</p>
             <div className="multi-select-row">
               <label className="multi-select-wrapper">
                 <span className="multi-select-label">{t('multi.difficultyLabel')}</span>
@@ -613,67 +635,53 @@ export default function MultiplayerPage() {
                 </select>
               </label>
             </div>
-            <button onClick={handleQuickMatch} disabled={!!connecting} style={{
-              width: '100%', padding: '12px 20px', background: connecting ? 'var(--card-soft)' : 'var(--accent)', color: connecting ? 'var(--text-light)' : '#fff',
-              border: 'none', borderRadius: 'var(--radius)', fontSize: '1.05rem', fontWeight: 700,
-              cursor: connecting ? 'default' : 'pointer', marginTop: '4px', opacity: connecting ? 0.7 : 1,
-            }}>{connecting ? t('multi.connecting') : '⚡ ' + t('multi.quickMatch')}</button>
-            {error && <p style={{ color: 'var(--danger)', fontSize: '0.85rem', marginTop: '8px' }}>{error}</p>}
-            {loadRoomCode() && (
-              <div style={{ width: '100%', maxWidth: '320px', padding: '12px', background: 'var(--card-soft)', borderRadius: 'var(--radius)', border: '1px solid var(--primary)', marginBottom: '12px', marginTop: '12px' }}>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-light)', marginBottom: '4px' }}>📋 {t('multi.lastRoom')}</p>
-                <p style={{ fontSize: '1.3rem', fontFamily: 'monospace', fontWeight: 900, color: 'var(--primary)' }}>{loadRoomCode()}</p>
-                <button onClick={() => { const code = loadRoomCode(); setConnecting('join'); const s = connect(); s.emit('reconnect_room', { code }); s.emit('_log', { action: 'quick_rejoin' }); connectTimer.current = setTimeout(() => { s.disconnect(); setConnecting(''); setError(t('multi.reconnectTimeout')); }, 30000); }} style={{ ...btn, marginTop: '8px', padding: '6px 16px', fontSize: '0.9rem' }}>🚪 {t('multi.quickRejoin')}</button>
+            <button onClick={handleQuickMatch} disabled={!!connecting} className="btn-p w-full mt-1">{connecting ? t('multi.connecting') : '⚡ ' + t('multi.quickMatch')}</button>
+            {error && <p className="formmsg err">{error}</p>}
+            {lastRoomCode && (
+              <div className="card w-full max-w-[320px] mx-auto my-3">
+                <p className="sec-note">📋 {t('multi.lastRoom')}</p>
+                <p className="code-big sm">{lastRoomCode}</p>
+                <button onClick={() => { setConnecting('join'); const s = connect(); s.emit('reconnect_room', { code: lastRoomCode }); s.emit('_log', { action: 'quick_rejoin' }); connectTimer.current = setTimeout(() => { s.disconnect(); setConnecting(''); setError(t('multi.reconnectTimeout')); }, 30000); }} className="btn-o btn-sm mt-2">🚪 {t('multi.quickRejoin')}</button>
               </div>
             )}
-            <button onClick={() => setStage('lobby')} style={{ ...btn, marginTop: '8px' }}>🏠 {t('multi.createJoinRoom')}</button>
-            <button onClick={() => { setError(''); setStage('custom'); }} style={{ ...btn, marginTop: '8px', background: 'var(--card-soft)', color: 'var(--text)', border: '1px solid var(--border)' }}>🎨 {t('multi.custom.title')}</button>
+            <button onClick={() => setStage('lobby')} className="btn-p mt-2">🏠 {t('multi.createJoinRoom')}</button>
+            <button onClick={() => { setError(''); setStage('custom'); }} className="btn-o mt-2">🎨 {t('multi.custom.title')}</button>
           </div>
         )}
 
         {/* ===== Lobby ===== */}
         {stage === 'lobby' && (
-          <div style={{ textAlign: 'center', maxWidth: '400px' }}>
-            <button onClick={() => { setStage('menu'); setError(''); }} style={{
-              padding: '6px 14px', marginBottom: '12px',
-              background: 'transparent', color: 'var(--text-light)',
-              border: '1px solid var(--border)', borderRadius: 'var(--radius)',
-              cursor: 'pointer', fontSize: '0.85rem',
-            }}>
+          <div className="card text-center w-full max-w-[400px]">
+            <button onClick={() => { setStage('menu'); setError(''); }} className="btn-o mb-3">
               ← {t('multi.back')}
             </button>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontStyle: 'italic', marginBottom: '12px' }}>
+            <h2 className="scr-ttl mb-3">
               BO{bestOf} · {t('multi.winFormat', { n: winTarget })}制
             </h2>
-            <div style={{ marginTop: '12px' }}>
-              <button onClick={handleCreate} style={btn} disabled={disbandCooldown > Date.now()}>{t('multi.createRoom')}</button>
+            <div className="mt-3">
+              <button onClick={handleCreate} className="btn-p" disabled={disbandCooldown > Date.now()}>{t('multi.createRoom')}</button>
               {disbandCooldown > Date.now() && (
-                <p style={{ color: 'var(--warning)', fontSize: '0.82rem', marginTop: '6px' }}>
+                <p className="formmsg warn">
                   ⏳ {t('multi.cooldownMsg', { seconds: Math.max(0, Math.ceil((disbandCooldown - Date.now()) / 1000)) })}
                 </p>
               )}
             </div>
-            <div style={{ marginTop: '16px', padding: '12px', borderTop: '1px solid var(--border)' }}>
-              <input value={roomCode} onChange={e => setRoomCode(e.target.value.replace(/\D/g,''))} placeholder={t('multi.roomCodePlaceholder')} style={{ ...inp, marginBottom: '8px' }} maxLength={4} inputMode="numeric" />
-              <button onClick={handleJoin} style={{ ...btn, background: 'var(--accent)' }}>{t('multi.joinRoom')}</button>
+            <div className="div-top">
+              <input value={roomCode} onChange={e => setRoomCode(e.target.value.replace(/\D/g,''))} placeholder={t('multi.roomCodePlaceholder')} className="search-input text-center mb-2" maxLength={4} inputMode="numeric" />
+              <button onClick={handleJoin} className="btn-p">{t('multi.joinRoom')}</button>
             </div>
-            {error && <p style={{ color: 'var(--danger)', fontSize: '0.85rem', marginTop: '12px' }}>{error}</p>}
+            {error && <p className="formmsg err">{error}</p>}
           </div>
         )}
 
         {/* ===== Custom Room ===== */}
         {stage === 'custom' && (
-          <div style={{ textAlign: 'center', maxWidth: '460px', width: '100%' }}>
-            <button onClick={() => { setStage('menu'); setError(''); }} style={{
-              padding: '6px 14px', marginBottom: '12px',
-              background: 'transparent', color: 'var(--text-light)',
-              border: '1px solid var(--border)', borderRadius: 'var(--radius)',
-              cursor: 'pointer', fontSize: '0.85rem',
-            }}>
+          <div className="card text-center w-full max-w-[460px]">
+            <button onClick={() => { setStage('menu'); setError(''); }} className="btn-o mb-3">
               ← {t('multi.back')}
             </button>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontStyle: 'italic', marginBottom: '4px' }}>🎨 {t('multi.custom.title')}</h2>
-            <p style={{ color: 'var(--text-light)', fontSize: '0.82rem', marginBottom: '14px' }}>{t('multi.custom.desc')}</p>
+            <h2 className="scr-ttl mb-1">🎨 {t('multi.custom.title')}</h2>
+            <p className="sec-note mb-3.5">{t('multi.custom.desc')}</p>
 
             <div className="multi-select-row">
               <label className="multi-select-wrapper">
@@ -704,24 +712,18 @@ export default function MultiplayerPage() {
               </label>
             </div>
 
-            <div style={{ marginTop: '14px', textAlign: 'left' }}>
-              <p style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-light)', marginBottom: '8px' }}>
-                {t('multi.custom.attributes')} <span style={{ fontWeight: 400, fontSize: '0.75rem' }}>({customAttrs.length}/9)</span>
+            <div className="mt-3.5 text-left">
+              <p className="cfg-lb">
+                {t('multi.custom.attributes')} <span className="cfg-hint">({customAttrs.length}/9)</span>
               </p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              <div className="flex flex-wrap gap-2">
                 {ATTR_KEYS.map(a => {
                   const on = customAttrs.includes(a);
                   return (
                     <button
                       key={a}
                       onClick={() => setCustomAttrs(prev => on ? prev.filter(x => x !== a) : [...prev, a])}
-                      style={{
-                        padding: '6px 12px', borderRadius: 'var(--radius)', fontSize: '0.82rem', cursor: 'pointer',
-                        background: on ? 'var(--primary)' : 'var(--input-bg)',
-                        color: on ? 'var(--bg)' : 'var(--text)',
-                        border: `1px solid ${on ? 'var(--primary)' : 'var(--border)'}`,
-                        fontWeight: on ? 700 : 400,
-                      }}
+                      className={on ? 'tchip on' : 'tchip off'}
                     >
                       {t(ATTR_LABEL_KEYS[a])}
                     </button>
@@ -733,35 +735,28 @@ export default function MultiplayerPage() {
             <button
               onClick={handleCreateCustom}
               disabled={!!connecting || customAttrs.length < 3}
-              style={{
-                width: '100%', marginTop: '18px', padding: '12px 20px',
-                background: connecting || customAttrs.length < 3 ? 'var(--card-soft)' : 'var(--primary)',
-                color: connecting || customAttrs.length < 3 ? 'var(--text-light)' : 'var(--bg)',
-                border: 'none', borderRadius: 'var(--radius)', fontSize: '1.05rem', fontWeight: 700,
-                cursor: connecting || customAttrs.length < 3 ? 'default' : 'pointer',
-                opacity: connecting || customAttrs.length < 3 ? 0.7 : 1,
-              }}
+              className="btn-p w-full mt-4"
             >
               {connecting ? t('multi.connecting') : t('multi.createRoom')}
             </button>
-            {error && <p style={{ color: 'var(--danger)', fontSize: '0.85rem', marginTop: '8px' }}>{error}</p>}
+            {error && <p className="formmsg err">{error}</p>}
           </div>
         )}
 
         {/* ===== Waiting ===== */}
         {stage === 'waiting' && (
-          <div style={{ textAlign: 'center' }}>
+          <div className="card text-center w-full max-w-[440px]">
             {roomExpireTime > 0 && roomExpireTime - Date.now() <= 0 ? (
               <>
-                <p style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--danger)', marginBottom: '16px' }}>{t('multi.roomExpired')}</p>
-                <button onClick={resetToMenu} style={{ padding: '8px 20px', background: 'var(--primary)', color: 'var(--bg)', border: 'none', borderRadius: 'var(--radius)', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem' }}>{t('multi.back')}</button>
+                <p className="alert alert-dan mb-4">{t('multi.roomExpired')}</p>
+                <button onClick={resetToMenu} className="btn-p">{t('multi.back')}</button>
               </>
             ) : (
               <>
                 <p>⏳ {t('multi.waitingOpponent')}</p>
-                <p style={{ fontSize: '3rem', fontFamily: 'monospace', fontWeight: 900, color: 'var(--primary)', margin: '16px 0' }}>{roomCode}</p>
-                <p style={{ color: 'var(--text-light)' }}>{t('multi.shareRoom', { bo: bestOf })}</p>
-                <p style={{ color: 'var(--text-light)', fontSize: '0.8rem', marginTop: '8px' }}>
+                <p className="code-big">{roomCode}</p>
+                <p className="sec-note">{t('multi.shareRoom', { bo: bestOf })}</p>
+                <p className="sec-note">
                   {t('multi.roomExpireIn', { seconds: Math.max(0, Math.ceil((roomExpireTime - Date.now()) / 1000)) })}
                 </p>
                 <button
@@ -772,17 +767,7 @@ export default function MultiplayerPage() {
                       s.emit('_log', { action: 'disband_room' });
                     }
                   }}
-                  style={{
-                    marginTop: '20px',
-                    padding: '8px 20px',
-                    background: 'transparent',
-                    color: 'var(--danger)',
-                    border: '1px solid var(--danger)',
-                    borderRadius: 'var(--radius)',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    fontSize: '0.9rem',
-                  }}
+                  className="btn-o btn-dan mt-5"
                 >
                   {t('multi.disbandRoom')}
                 </button>
@@ -793,69 +778,65 @@ export default function MultiplayerPage() {
 
         {/* ===== Matchmaking ===== */}
         {stage === 'matchmaking' && (
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '2.5rem', marginBottom: '10px', animation: 'neon-pulse 1.5s infinite' }}>⚡</div>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontStyle: 'italic', fontWeight: 700, marginBottom: '8px' }}>
+          <div className="card text-center w-full max-w-[440px]">
+            <div className="emoji-lg animate-[neon-pulse_1.5s_infinite]">⚡</div>
+            <h2 className="scr-ttl mb-2">
               {t('multi.searching')}
             </h2>
-            <p style={{ color: 'var(--text-light)', fontSize: '0.9rem', marginBottom: '8px' }}>
+            <p className="sec-note mb-2">
               {t('multi.matchDifficultyAndBo', { difficulty: t(DIFF_KEY_MAP[matchDifficulty] || 'multi.difficultyHard'), bo: bestOf })}
             </p>
             {queuePosition > 0 && (
-              <p style={{ color: 'var(--text-light)', fontSize: '0.85rem', marginBottom: '16px' }}>
+              <p className="sec-note mb-4">
                 {t('multi.queuePosition', { position: queuePosition })}
               </p>
             )}
-            <button onClick={handleLeaveQueue} style={{
-              padding: '10px 24px', background: 'transparent', color: 'var(--text)',
-              border: '1px solid var(--border)', borderRadius: 'var(--radius)',
-              fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem',
-            }}>{t('multi.cancelMatch')}</button>
+            <button onClick={handleLeaveQueue} className="btn-o">{t('multi.cancelMatch')}</button>
           </div>
         )}
 
         {/* ===== Playing ===== */}
         {stage === 'playing' && (
-          <div style={{ width: '100%' }}>
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '12px', padding: '10px 12px', background: 'var(--card)', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
-              <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>{playerName} <span style={{ color: 'var(--primary)', fontWeight: 900 }}>{myWins}</span></span>
-              <span style={{ fontSize: '1.2rem', fontFamily: 'monospace', fontWeight: 900, color: timeLeft <= 30 ? 'var(--danger)' : 'var(--primary)' }}>
+          <div className="w-full">
+            <div className="hud mb-3">
+              <span className="lb2">{playerName} <span className="n">{myWins}</span></span>
+              <span className={timeLeft <= 30 ? 'n low' : 'n'}>
                 {String(Math.floor(timeLeft/60)).padStart(2,'0')}:{String(timeLeft%60).padStart(2,'0')}
               </span>
-              <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>{oppName} <span style={{ color: 'var(--accent)', fontWeight: 900 }}>{oppWins}</span></span>
+              <span className="lb2 sp">{oppName} <span className="n">{oppWins}</span></span>
             </div>
             {oppDisconnected && (
-              <div style={{ textAlign: 'center', marginBottom: '8px', color: 'var(--warning)', fontSize: '0.85rem' }}>
+              <div className="formmsg warn justify-center">
                 ⚠ {t('multi.oppDisconnected', { name: oppName })}
               </div>
             )}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
+            <div className="flex justify-center gap-2 mb-3 flex-wrap">
               <GameSearch onGuess={handleGuess} disabled={inputDisabled} guessedIds={guessedIds} target={store.target} remainingGuesses={store.remainingGuesses} />
-              {!inputDisabled && <button onClick={handleSurrender} style={{ padding: '8px 12px', background: 'transparent', color: 'var(--danger)', border: '1px solid var(--danger)', borderRadius: 'var(--radius)', cursor: 'pointer', fontSize: '0.8rem' }}>{t('multi.surrender')}</button>}
-              {iSurrendered && <span style={{ color: 'var(--warning)', fontSize: '0.8rem', alignSelf: 'center' }}>{t('multi.youSurrendered')}</span>}
-              {oppSurrendered && <span style={{ color: 'var(--warning)', fontSize: '0.8rem', alignSelf: 'center' }}>{t('multi.oppSurrendered')}</span>}
+              {!inputDisabled && <button onClick={handleSurrender} className="btn-o btn-dan">{t('multi.surrender')}</button>}
+              {iSurrendered && <span className="bdg bdg-warn self-center">{t('multi.youSurrendered')}</span>}
+              {oppSurrendered && <span className="bdg bdg-warn self-center">{t('multi.oppSurrendered')}</span>}
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-              <div style={{ flex: '1 1 48%', minWidth: '260px' }}>
-                <div style={{ fontWeight: 700, marginBottom: '4px', fontSize: '0.85rem', color: 'var(--primary)' }}>{t('multi.yourGuesses')}</div>
-                <div ref={myBoardScrollRef} style={{ overflowX: 'auto', scrollBehavior: 'smooth' }} className="scroll-slider-container"><GuessTable guesses={store.guesses} target={store.target} hideRarity={difficulty === 'hard'} displayAttributes={displayAttributes} staggerKey={store.guesses.length} /></div>
+            <div className="flex flex-wrap gap-3">
+              <div className="flex-1 basis-[48%] min-w-[260px]">
+                <div className="board-ttl">{t('multi.yourGuesses')}</div>
+                <div ref={myBoardScrollRef} className="scroll-slider-container overflow-x-auto scroll-smooth"><GuessTable guesses={store.guesses} target={store.target} hideRarity={difficulty === 'hard'} displayAttributes={displayAttributes} staggerKey={store.guesses.length} /></div>
                 <ScrollSlider containerRef={myBoardScrollRef} />
               </div>
-              <div style={{ flex: '1 1 48%', minWidth: '260px' }}>
-                <div style={{ fontWeight: 700, marginBottom: '4px', fontSize: '0.85rem', color: 'var(--accent)' }}>{t('multi.oppGuesses', { name: oppName, count: oppGuessCount })}</div>
-                <div ref={oppBoardScrollRef} style={{ overflowX: 'auto', scrollBehavior: 'smooth' }} className="scroll-slider-container">
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.65rem' }}>
-                    <thead><tr>{displayCols.map((c,i)=><th key={i} style={{padding:'3px 2px',fontWeight:600,color:'var(--text-light)',borderBottom:'1px solid var(--border)',whiteSpace:'nowrap'}}>{c.label}</th>)}</tr></thead>
+              <div className="flex-1 basis-[48%] min-w-[260px]">
+                <div className="board-ttl mc">{t('multi.oppGuesses', { name: oppName, count: oppGuessCount })}</div>
+                <div ref={oppBoardScrollRef} className="scroll-slider-container overflow-x-auto scroll-smooth">
+                  <table className="opp-grid">
+                    <thead><tr>{displayCols.map((c,i)=><th key={i}>{c.label}</th>)}</tr></thead>
                     <tbody>
                       {oppGrid.length===0
-                        ? <tr><td colSpan={displayCols.length} style={{padding:'16px',textAlign:'center',color:'var(--text-light)',fontSize:'0.75rem'}}>{t('multi.waitingOppGuess')}</td></tr>
+                        ? <tr><td colSpan={displayCols.length} className="empty">{t('multi.waitingOppGuess')}</td></tr>
                         : [...oppGrid].reverse().map((row,i)=>(
-                          <tr key={i} style={{animation:'surface-enter 0.35s both'}}>
+                          <tr key={i} className="animate-[surface-enter_0.35s_both]">
                             {displayCols.map((col,j)=>{
                               const color = row[col.dataIdx] ?? '#444';
                               return (
-                                <td key={j} style={{padding:'3px 2px',textAlign:'center'}}>
-                                  <span style={{display:'inline-block',width:'12px',height:'12px',borderRadius:'2px',background:color==='correct'?'var(--correct)':color==='close'?'var(--close)':color==='wrong'?'var(--wrong)':'#444'}}/>
+                                <td key={j}>
+                                  <span className={color==='correct'?'opp-dot d-ok':color==='close'?'opp-dot d-cl':color==='wrong'?'opp-dot d-no':'opp-dot'}/>
                                 </td>
                               );
                             })}
@@ -872,52 +853,48 @@ export default function MultiplayerPage() {
 
         {/* ===== Round End ===== */}
         {stage === 'roundEnd' && roundEndData && (
-          <div style={{ textAlign: 'center', maxWidth: '400px', marginTop: '16px' }}>
-            <div style={{ fontSize: '2rem', marginBottom: '6px' }}>
+          <div className="card text-center w-full max-w-[400px] mt-4">
+            {/* 平局 / 超时 → 稿子 modes:1389 的随机插图（draw-1..5 取一张）。
+                只在 winner 为空时出现：赢/输那两种沿用内联 emoji，
+                与 docs/icons-prep.md:32「多人回合横幅保留 emoji」的定稿一致。 */}
+            {!roundEndData.winner && <ModeArt src={`/icons/draw-${drawArtIndex(roundEndData)}.png`} />}
+            <div className="emoji-lg sm">
               {roundEndData.winner ? (roundEndData.winner === socket?.id ? '🎉 ' + t('multi.youWinRound') : '😔 ' + t('multi.oppWinRound')) : '🤝 ' + t('multi.roundDraw')}
             </div>
-            <p style={{ color: 'var(--text-light)', fontSize: '0.85rem' }}>{t('multi.answerWithScore', { name: roundEndData.targetName, score: roundEndData.score })}</p>
+            <p className="sec-note">{t('multi.answerWithScore', { name: roundEndData.targetName, score: roundEndData.score })}</p>
             {roundEndData.matchOver
-              ? <div style={{ marginTop: '12px' }}><p style={{ color: 'var(--text-light)', fontSize: '0.9rem' }}>{t('multi.matchOver', { score: roundEndData.score })}</p></div>
-              : <p style={{ color: 'var(--text-light)', fontSize: '0.8rem' }}>{t('multi.waitingServer')}</p>
+              ? <div className="mt-3"><p className="sec-note">{t('multi.matchOver', { score: roundEndData.score })}</p></div>
+              : <p className="sec-note">{t('multi.waitingServer')}</p>
             }
           </div>
         )}
 
         {/* ===== Match End ===== */}
         {stage === 'matchEnd' && (
-          <div style={{ textAlign: 'center', maxWidth: '400px', marginTop: '16px' }}>
-            <div style={{ fontSize: '2.5rem', marginBottom: '10px' }}>🏆</div>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontStyle: 'italic', fontWeight: 900, whiteSpace: 'pre-line' }}>{endMsg}</h2>
-            <div style={{ marginTop: '16px', display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <button onClick={handleRematch} disabled={rematchReady} style={{
-                padding: '10px 24px', background: rematchReady ? 'var(--card-soft)' : 'var(--primary)',
-                color: rematchReady ? 'var(--text-light)' : 'var(--bg)', border: 'none', borderRadius: 'var(--radius)',
-                fontWeight: 700, cursor: rematchReady ? 'default' : 'pointer', fontSize: '1rem',
-              }}>
+          <div className="card text-center w-full max-w-[400px] mt-4">
+            <div className="emoji-lg">🏆</div>
+            <h2 className="scr-ttl whitespace-pre-line">{endMsg}</h2>
+            <div className="bar-actions justify-center">
+              <button onClick={handleRematch} disabled={rematchReady} className="btn-p">
                 {rematchReady ? '⏳ ' + t('multi.waitingOpp') : '🔄 ' + t('multi.playAgain')}
               </button>
               {rematchReady && (
-                <button onClick={handleCancelRematch} style={{
-                  padding: '10px 24px', background: 'transparent', color: 'var(--text)',
-                  border: '1px solid var(--border)', borderRadius: 'var(--radius)',
-                  fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem',
-                }}>{t('multi.cancelReady')}</button>
+                <button onClick={handleCancelRematch} className="btn-o">{t('multi.cancelReady')}</button>
               )}
-              <button onClick={resetToMenu} style={{ padding: '10px 24px', background: 'transparent', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem' }}>{t('multi.exit')}</button>
+              <button onClick={resetToMenu} className="btn-o">{t('multi.exit')}</button>
             </div>
           </div>
         )}
 
         {/* ===== Surrender Confirm Dialog ===== */}
         {showSurrenderConfirm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }}>
-            <div style={{ background: 'var(--card)', padding: '24px', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow-lg)', textAlign: 'center', maxWidth: '320px' }}>
-              <p style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '8px' }}>{t('multi.confirmSurrenderTitle')}</p>
-              <p style={{ color: 'var(--text-light)', fontSize: '0.85rem', marginBottom: '16px' }}>{t('multi.confirmSurrenderDesc')}</p>
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-                <button onClick={()=>setShowSurrenderConfirm(false)} style={{ padding:'8px 20px', background:'transparent', border:'1px solid var(--border)', borderRadius:'var(--radius)', cursor:'pointer', color:'var(--text)' }}>{t('multi.cancel')}</button>
-                <button onClick={confirmSurrender} style={{ padding:'8px 20px', background:'var(--danger)', color:'#fff', border:'none', borderRadius:'var(--radius)', cursor:'pointer', fontWeight:700 }}>{t('multi.confirmSurrender')}</button>
+          <div className="modal-mask">
+            <div className="dlg dan text-center">
+              <p className="dt justify-center">{t('multi.confirmSurrenderTitle')}</p>
+              <p className="db">{t('multi.confirmSurrenderDesc')}</p>
+              <div className="df justify-center">
+                <button onClick={()=>setShowSurrenderConfirm(false)} className="btn-o">{t('multi.cancel')}</button>
+                <button onClick={confirmSurrender} className="btn-bandan">{t('multi.confirmSurrender')}</button>
               </div>
             </div>
           </div>
@@ -925,11 +902,11 @@ export default function MultiplayerPage() {
 
         {/* ===== Connecting Dialog ===== */}
         {connecting && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }}>
-            <div style={{ background:'var(--card)', padding:'32px', borderRadius:'var(--radius)', textAlign:'center' }}>
-              <div style={{ fontSize:'2rem', marginBottom:'10px', animation:'neon-pulse 1.5s infinite' }}>{connecting==='create'?'🏠':connecting==='quickmatch'?'⚡':'🚪'}</div>
-              <p style={{ fontSize:'1.1rem', fontWeight:700 }}>{connecting==='create' ? t('multi.creating') : connecting==='quickmatch' ? t('multi.searchingOpp') : t('multi.joining')}</p>
-              <p style={{ color:'var(--text-light)', fontSize:'0.8rem', marginTop:'6px' }}>{connecting==='quickmatch' ? t('multi.connectingTimeout60') : t('multi.connectingTimeout30')}</p>
+          <div className="modal-mask">
+            <div className="dlg mc text-center">
+              <div className="emoji-lg sm animate-[neon-pulse_1.5s_infinite]">{connecting==='create'?'🏠':connecting==='quickmatch'?'⚡':'🚪'}</div>
+              <p className="dt justify-center">{connecting==='create' ? t('multi.creating') : connecting==='quickmatch' ? t('multi.searchingOpp') : t('multi.joining')}</p>
+              <p className="db">{connecting==='quickmatch' ? t('multi.connectingTimeout60') : t('multi.connectingTimeout30')}</p>
             </div>
           </div>
         )}
@@ -937,6 +914,3 @@ export default function MultiplayerPage() {
     </div>
   );
 }
-
-const btn: React.CSSProperties = { padding:'12px 28px', background:'var(--primary)', color:'var(--bg)', border:'none', borderRadius:'var(--radius)', fontSize:'1rem', fontWeight:700, cursor:'pointer' };
-const inp: React.CSSProperties = { width:'100%', padding:'10px', background:'var(--input-bg)', color:'var(--text)', border:'1px solid var(--border)', borderRadius:'var(--radius)', fontSize:'1rem', textAlign:'center' };

@@ -3,6 +3,7 @@ import { sanitizeString } from '../utils.js';
 import { randomTarget } from '../characters.js';
 import { ROUND_TIME, ROUND_TIME_PRESETS, ATTR_KEYS } from '../constants.js';
 import { findCharByName, compareGuess, isAlterRelation, isWin } from '../game-engine.js';
+import { createRoomCodeGuard } from './rate-limit.js';
 
 const DISCONNECT = 30_000;
 const DISBAND_COOLDOWN = 120_000; // 解散房间后 120 秒内不能创建新房间
@@ -26,6 +27,8 @@ export function registerGameHandlers({
 }) {
 
   const roomCooldowns = new Map(); // playerKey → expiry timestamp (ms)
+  // 房间码枚举防护：join_room / reconnect_room 都拿房间码当查询键（见 rate-limit.js 顶部注释）
+  const roomCodeGuard = createRoomCodeGuard();
 
   // ===== 回合管理 =====
   function startRound(room) {
@@ -281,6 +284,7 @@ export function registerGameHandlers({
 
     // === join_room ===
     socket.on('join_room', (data) => {
+      if (roomCodeGuard.blocked(socket, (msg) => socket.emit('error_msg', { message: msg }), 'join_room')) return;
       try {
       const code = (data?.code || '').toUpperCase();
       const room = rooms.get(code);
@@ -629,6 +633,7 @@ export function registerGameHandlers({
 
     // === reconnect_room ===
     socket.on('reconnect_room', (data) => {
+      if (roomCodeGuard.blocked(socket, (msg) => socket.emit('room_expired', { message: msg }), 'reconnect_room')) return;
       try {
       const code = (data?.code || '').toUpperCase();
       const room = rooms.get(code);

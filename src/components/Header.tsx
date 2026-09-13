@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useLayoutEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@/lib/i18n';
@@ -9,12 +9,27 @@ import { LanguageSwitcher } from './LanguageSwitcher';
 import { AuthDialog } from './AuthDialog';
 import { getUser, getServerUrl } from '@/lib/auth';
 
+// useLayoutEffect 在服务端预渲染时会告警（"does nothing on the server"），
+// 浏览器用 layout、Node 用 effect 的同构写法回避。每次调用都读到同一个模块级常量。
+const useIsoLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
+
 export function Header() {
   const { t } = useI18n();
   const router = useRouter();
   const [authOpen, setAuthOpen] = useState(false);
   const [guestName, setGuestName] = useState('');
-  const user = typeof window !== 'undefined' ? getUser() : null;
+
+  // ⚠️ 登录态**不能**在渲染期直接读 localStorage。
+  //    静态导出时服务端预渲染这棵组件树，Node 里没有 localStorage → 首屏 HTML 渲染成
+  //    「未登录」；浏览器首帧读到已登录 → 两边 HTML 不一致 → React 报 #418
+  //    （实测 8 条路由里 7 条中招，见 tests/_probe-hydration.mjs）。
+  //    改成「首屏一律按未登录渲染，挂载后再补」。
+  //
+  //    用 layout effect 而不是普通 effect：它在水合提交后、浏览器**首次绘制前**执行，
+  //    所以已登录用户不会多看到一帧「登录」按钮 —— 与修复前的观感一致。
+  const [user, setUser] = useState<ReturnType<typeof getUser>>(null);
+  useIsoLayoutEffect(() => { setUser(getUser()); }, []);
+
   // Stable boolean to avoid re-running the effect on every render
   // (getUser() returns a new object reference each call via JSON.parse)
   const isLoggedIn = !!user;

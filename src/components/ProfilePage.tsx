@@ -4,9 +4,11 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { fetchMe, updateProfile, AuthError, clearAuth, logout } from '@/lib/auth';
+import { useI18n } from '@/lib/i18n';
 
 export function ProfilePage() {
   const router = useRouter();
+  const { t } = useI18n();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [user, setUserState] = useState<any>(null);
@@ -26,15 +28,15 @@ export function ProfilePage() {
       setNickname(data.nickname || '');
     } catch (err: any) {
       if (err instanceof AuthError) {
-        setError('登录已过期，请重新登录');
+        setError(t('profile.sessionExpired'));
         clearAuth();
       } else {
-        setError(err.message || '加载失败');
+        setError(err.message || t('profile.loadFailed'));
       }
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   // 首次加载
   useEffect(() => { loadProfile(); }, [loadProfile]);
@@ -45,54 +47,22 @@ export function ProfilePage() {
     try {
       const result = await updateProfile({ nickname: nickname.trim() || undefined });
       setUserState(result);
-      setMsg('保存成功');
+      setMsg(t('profile.saveSuccess'));
       setEditing(false);
     } catch (err: any) {
-      setError(err.message || '保存失败');
+      setError(err.message || t('profile.saveFailed'));
     } finally {
       setSaving(false);
     }
   };
 
-  // ===== 样式 =====
-  const cardStyle: React.CSSProperties = {
-    maxWidth: '480px',
-    margin: '40px auto',
-    padding: '28px',
-    background: 'var(--card)',
-    borderRadius: 'var(--radius)',
-    boxShadow: 'var(--shadow-lg)',
-  };
-
-  const btnStyle: React.CSSProperties = {
-    padding: '8px 18px',
-    background: 'var(--primary)',
-    color: 'var(--bg)',
-    border: 'none',
-    borderRadius: 'var(--radius)',
-    fontSize: '0.9rem',
-    fontWeight: 700,
-    cursor: 'pointer',
-    marginRight: '10px',
-  };
-
-  const inpStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '8px 12px',
-    background: 'var(--input-bg)',
-    color: 'var(--text)',
-    border: '1px solid var(--border)',
-    borderRadius: 'var(--radius)',
-    fontSize: '0.95rem',
-  };
-
-  const avatarSize = 80;
-
   // ===== 加载中 =====
   if (loading) {
     return (
-      <div style={cardStyle}>
-        <p style={{ textAlign: 'center', color: 'var(--text-light)' }}>加载中...</p>
+      <div className="card" style={{ maxWidth: 480, margin: '40px auto' }}>
+        <div className="empty">
+          <div className="etx">{t('profile.loading')}</div>
+        </div>
       </div>
     );
   }
@@ -100,12 +70,14 @@ export function ProfilePage() {
   // ===== 未登录 =====
   if (error && !user) {
     return (
-      <div style={cardStyle}>
-        <p style={{ textAlign: 'center', color: 'var(--danger)', marginBottom: '16px' }}>{error}</p>
-        <div style={{ textAlign: 'center' }}>
-          <button onClick={() => window.location.reload()} style={btnStyle}>
-            刷新页面
-          </button>
+      <div className="card" style={{ maxWidth: 480, margin: '40px auto' }}>
+        <div className="empty">
+          <div className="alert alert-dan">{error}</div>
+          <div className="bar-actions" style={{ justifyContent: 'center' }}>
+            <button className="btn-p" onClick={() => window.location.reload()}>
+              {t('profile.refresh')}
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -115,100 +87,63 @@ export function ProfilePage() {
 
   // ===== 已登录 → 渲染个人信息 =====
   return (
-    <div style={cardStyle}>
+    <div className="card" style={{ maxWidth: 480, margin: '40px auto' }}>
       {/* 返回首页 */}
-      <Link href="/" style={{
-        display: 'inline-block',
-        color: 'var(--text-light)',
-        fontSize: '0.85rem',
-        textDecoration: 'none',
-        marginBottom: '20px',
-      }}>
-        ← 返回首页
+      <Link href="/" className="btn-o" style={{ display: 'inline-block', marginBottom: '20px' }}>
+        {t('profile.backHome')}
       </Link>
 
       {/* 头像和用户名 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+      <div className="prof" style={{ marginBottom: '24px' }}>
         {/* 首字母头像 */}
-        <div style={{
-          width: avatarSize,
-          height: avatarSize,
-          borderRadius: '50%',
-          background: 'var(--primary-soft)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '2rem',
-          color: 'var(--primary-strong)',
-          fontWeight: 900,
-          border: '2px solid var(--border)',
-        }}>
+        <div className="ava">
           {(user.nickname || user.username || '?').charAt(0).toUpperCase()}
         </div>
 
         <div>
-          <h2 style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: '1.3rem',
-            fontStyle: 'italic',
-            fontWeight: 900,
-            margin: '0 0 4px 0',
-          }}>
-            {user.nickname || user.username}
-          </h2>
-          <p style={{ color: 'var(--text-light)', fontSize: '0.85rem', margin: 0 }}>
+          <div className="nm">{user.nickname || user.username}</div>
+          <div className="id">
             @{user.username}
             {user.displayId && (
-              <span style={{ marginLeft: '8px', fontSize: '0.78rem', color: 'var(--text-light)', background: 'var(--input-bg)', padding: '1px 6px', borderRadius: '3px' }}>
-                #{user.displayId}
-              </span>
+              <span className="mchip">#{user.displayId}</span>
             )}
-          </p>
+          </div>
         </div>
       </div>
 
       {/* 详情 */}
       <div style={{ marginBottom: '20px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
-          <span style={{ color: 'var(--text-light)', fontSize: '0.85rem' }}>邮箱</span>
-          <span style={{ fontSize: '0.85rem' }}>
-            {user.email || '未绑定'}
+        <div className="kv">
+          <span className="lb">{t('profile.email')}</span>
+          <span className="vl">
+            {user.email || t('profile.notBound')}
             {user.email_verified ? (
-              <span style={{ color: 'var(--correct)', marginLeft: '6px', fontSize: '0.75rem' }}>已验证</span>
+              <span className="bdg bdg-ok">{t('profile.verified')}</span>
             ) : user.email ? (
-              <span style={{ color: '#f0ad4e', marginLeft: '6px', fontSize: '0.75rem' }}>未验证</span>
+              <span className="bdg bdg-warn">{t('profile.unverified')}</span>
             ) : null}
           </span>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
-          <span style={{ color: 'var(--text-light)', fontSize: '0.85rem' }}>注册时间</span>
-          <span style={{ fontSize: '0.85rem' }}>{user.created_at?.slice(0, 10) || '-'}</span>
+        <div className="kv">
+          <span className="lb">{t('profile.registeredAt')}</span>
+          <span className="vl mono">{user.created_at?.slice(0, 10) || '-'}</span>
         </div>
       </div>
 
       {/* 游戏统计 */}
       {stats && (
-        <div style={{
-          background: 'var(--input-bg)',
-          borderRadius: 'var(--radius)',
-          padding: '12px 16px',
-          marginBottom: '20px',
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr 1fr',
-          gap: '8px',
-          textAlign: 'center',
-        }}>
-          <div>
-            <div style={{ fontSize: '1.2rem', fontWeight: 800 }}>{stats.totalGames}</div>
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-light)' }}>总局数</div>
+        <div className="stats stats-3" style={{ marginBottom: '20px' }}>
+          <div className="stat">
+            <div className="lb">{t('profile.totalGames')}</div>
+            <div className="vl">{stats.totalGames}</div>
           </div>
-          <div>
-            <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--correct)' }}>{stats.wins}</div>
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-light)' }}>胜利</div>
+          <div className="stat">
+            <div className="lb">{t('profile.wins')}</div>
+            <div className="vl">{stats.wins}</div>
           </div>
-          <div>
-            <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--danger)' }}>{stats.losses}</div>
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-light)' }}>失败</div>
+          <div className="stat">
+            <div className="lb">{t('profile.losses')}</div>
+            <div className="vl">{stats.losses}</div>
           </div>
         </div>
       )}
@@ -216,44 +151,34 @@ export function ProfilePage() {
       {/* 编辑模式 */}
       {editing ? (
         <div>
-          <div style={{ marginBottom: '12px' }}>
-            <label style={{ fontSize: '0.8rem', color: 'var(--text-light)', marginBottom: '4px', display: 'block' }}>昵称</label>
+          <div className="cfg-row">
+            <label className="cfg-lb">{t('profile.nickname')}</label>
             <input
+              className="search-input bare"
               value={nickname}
               onChange={e => setNickname(e.target.value)}
-              placeholder="输入新昵称 (1-30字符)"
-              style={inpStyle}
+              placeholder={t('profile.nicknamePlaceholder')}
               maxLength={30}
             />
           </div>
-          {msg && <p style={{ color: 'var(--correct)', fontSize: '0.8rem', marginBottom: '8px' }}>{msg}</p>}
-          {error && <p style={{ color: 'var(--danger)', fontSize: '0.8rem', marginBottom: '8px' }}>{error}</p>}
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button onClick={handleSave} style={btnStyle} disabled={saving}>
-              {saving ? '保存中...' : '保存'}
+          {msg && <p className="alert alert-ok">{msg}</p>}
+          {error && <p className="alert alert-dan">{error}</p>}
+          <div className="bar-actions">
+            <button className="btn-p" onClick={handleSave} disabled={saving}>
+              {saving ? t('profile.saving') : t('profile.save')}
             </button>
-            <button onClick={() => { setEditing(false); setError(''); setMsg(''); }} style={{
-              ...btnStyle,
-              background: 'transparent',
-              color: 'var(--text-light)',
-              border: '1px solid var(--border)',
-            }}>
-              取消
+            <button className="btn-o" onClick={() => { setEditing(false); setError(''); setMsg(''); }}>
+              {t('common.cancel')}
             </button>
           </div>
         </div>
       ) : (
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button onClick={() => setEditing(true)} style={btnStyle}>
-            编辑资料
+        <div className="bar-actions">
+          <button className="btn-p" onClick={() => setEditing(true)}>
+            {t('profile.editProfile')}
           </button>
-          <button onClick={() => { logout().finally(() => router.push('/')); }} style={{
-            ...btnStyle,
-            background: 'transparent',
-            color: 'var(--danger)',
-            border: '1px solid var(--danger)',
-          }}>
-            退出登录
+          <button className="btn-o btn-dan" onClick={() => { logout().finally(() => router.push('/')); }}>
+            {t('profile.logout')}
           </button>
         </div>
       )}

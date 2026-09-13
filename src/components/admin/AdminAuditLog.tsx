@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { getServerUrl, getToken } from '@/lib/auth';
+import { useI18n } from '@/lib/i18n';
+import { adminSortMark, ADMIN_PAGE_SIZES } from './ui';
 
 interface LogEntry {
   id: number;
@@ -22,64 +24,35 @@ interface LogPage {
   totalPages: number;
 }
 
-const cardStyle: React.CSSProperties = {
-  background: 'var(--card)',
-  borderRadius: 'var(--radius)',
-  padding: '20px',
-  overflowX: 'auto',
-};
+/* 徽标按动作语义归类：新增/解封=ok / 编辑类=mc（管理端强调色）/ 角色与部署=warn /
+   删除与封禁=dan。
 
-const thStyle: React.CSSProperties = {
-  padding: '10px 8px',
-  textAlign: 'left',
-  fontSize: '0.75rem',
-  fontWeight: 700,
-  color: 'var(--text-light)',
-  textTransform: 'uppercase',
-  whiteSpace: 'nowrap',
-};
+   原先颜色是照 blast 主题色板写死的 6 个十六进制字面量，浅色主题下几乎不可读；
+   这里改挂 V12 的 .bdg-* 语义徽标，底色随主题走。代价是原先 primary 与 accent
+   两类色相（编辑 vs 令牌/导入）在徽标词汇表里合并到同一档 —— 设计稿本身也把
+   「创建令牌 / 干员同步」画成 bdg-mc，故按设计稿收敛。
 
-const tdStyle: React.CSSProperties = {
-  padding: '8px',
-  verticalAlign: 'middle',
-  fontSize: '0.82rem',
+   这里只放「不随语言变」的部分（动作 → 徽标类 + 文案键）；label 由组件内的 t() 解析。 */
+const ACTION_META: Record<string, { labelKey: string; cls: string }> = {
+  create_announcement: { labelKey: 'admin.audit.actionCreateAnnouncement', cls: 'bdg-ok' },
+  update_announcement: { labelKey: 'admin.audit.actionUpdateAnnouncement', cls: 'bdg-mc' },
+  delete_announcement: { labelKey: 'admin.audit.actionDeleteAnnouncement', cls: 'bdg-dan' },
+  ban_user: { labelKey: 'admin.audit.actionBanUser', cls: 'bdg-dan' },
+  unban_user: { labelKey: 'admin.audit.actionUnbanUser', cls: 'bdg-ok' },
+  change_nickname: { labelKey: 'admin.audit.actionChangeNickname', cls: 'bdg-mc' },
+  self_change_nickname: { labelKey: 'admin.audit.actionSelfChangeNickname', cls: 'bdg-mc' },
+  change_role: { labelKey: 'admin.audit.actionChangeRole', cls: 'bdg-warn' },
+  create_token: { labelKey: 'admin.audit.actionCreateToken', cls: 'bdg-mc' },
+  revoke_token: { labelKey: 'admin.audit.actionRevokeToken', cls: 'bdg-dan' },
+  create_character: { labelKey: 'admin.audit.actionCreateCharacter', cls: 'bdg-ok' },
+  update_character: { labelKey: 'admin.audit.actionUpdateCharacter', cls: 'bdg-mc' },
+  delete_character: { labelKey: 'admin.audit.actionDeleteCharacter', cls: 'bdg-dan' },
+  import_characters: { labelKey: 'admin.audit.actionImportCharacters', cls: 'bdg-mc' },
+  deploy: { labelKey: 'admin.audit.actionDeploy', cls: 'bdg-warn' },
 };
-
-const pageBtn: React.CSSProperties = {
-  padding: '6px 14px',
-  background: 'var(--input-bg)',
-  color: 'var(--text)',
-  border: '1px solid var(--border)',
-  borderRadius: 'var(--radius)',
-  cursor: 'pointer',
-  fontSize: '0.8rem',
-};
-
-const actionLabels: Record<string, { label: string; color: string; bg: string }> = {
-  create_announcement: { label: '创建公告', color: '#4ade80', bg: 'rgba(74,222,128,0.12)' },
-  update_announcement: { label: '编辑公告', color: '#60a5fa', bg: 'rgba(96,165,250,0.12)' },
-  delete_announcement: { label: '删除公告', color: '#f87171', bg: 'rgba(248,113,113,0.12)' },
-  ban_user: { label: '封禁用户', color: '#f87171', bg: 'rgba(248,113,113,0.12)' },
-  unban_user: { label: '解封用户', color: '#4ade80', bg: 'rgba(74,222,128,0.12)' },
-  change_nickname: { label: '管理员改昵称', color: '#60a5fa', bg: 'rgba(96,165,250,0.12)' },
-  self_change_nickname: { label: '用户自行改昵称', color: '#818cf8', bg: 'rgba(129,140,248,0.12)' },
-  change_role: { label: '角色变更', color: '#fbbf24', bg: 'rgba(251,191,36,0.12)' },
-  create_token: { label: '生成令牌', color: '#a78bfa', bg: 'rgba(167,139,250,0.12)' },
-  revoke_token: { label: '吊销令牌', color: '#f87171', bg: 'rgba(248,113,113,0.12)' },
-  create_character: { label: '新增干员', color: '#4ade80', bg: 'rgba(74,222,128,0.12)' },
-  update_character: { label: '编辑干员', color: '#60a5fa', bg: 'rgba(96,165,250,0.12)' },
-  delete_character: { label: '删除干员', color: '#f87171', bg: 'rgba(248,113,113,0.12)' },
-  import_characters: { label: '导入干员', color: '#a78bfa', bg: 'rgba(167,139,250,0.12)' },
-  deploy: { label: '部署', color: '#fbbf24', bg: 'rgba(251,191,36,0.12)' },
-};
-
-const actionOptions = Object.entries(actionLabels).map(([value, info]) => ({
-  value,
-  label: info.label,
-}));
-actionOptions.unshift({ value: '', label: '全部操作' });
 
 export default function AdminAuditLog() {
+  const { t } = useI18n();
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -88,19 +61,24 @@ export default function AdminAuditLog() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const pageSize = 30;
+  const [sortKey, setSortKey] = useState('created');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [pageSize, setPageSize] = useState(30);
   const baseUrl = getServerUrl();
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const token = getToken();
-      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+      const params = new URLSearchParams({
+        page: String(page), pageSize: String(pageSize),
+        sort: sortKey, dir: sortDir,
+      });
       if (actionFilter) params.set('action', actionFilter);
       const res = await fetch(`${baseUrl}/api/admin/audit-log?${params}`, {
         headers: { 'Authorization': `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error('加载失败');
+      if (!res.ok) throw new Error(t('admin.common.loadFailed'));
       const data: LogPage = await res.json();
       setLogs(data.logs);
       setTotal(data.total);
@@ -111,97 +89,138 @@ export default function AdminAuditLog() {
     } finally {
       setLoading(false);
     }
-  }, [baseUrl, page, actionFilter]);
+  }, [baseUrl, page, actionFilter, sortKey, sortDir, pageSize, t]);
+
+  const toggleSort = (key: string) => {
+    if (key === sortKey) setSortDir(d => (d === 'asc' ? 'desc' : 'asc'));
+    else { setSortKey(key); setSortDir('desc'); }
+    setPage(1);
+  };
+
+  const changePageSize = (size: number) => { setPageSize(size); setPage(1); };
+
+  const sortTh = (key: string, label: string) => {
+    const active = sortKey === key;
+    return (
+      <th
+        className={active ? 'so on' : 'so'}
+        onClick={() => toggleSort(key)}
+        title={t('admin.common.sortHint')}
+      >
+        {label} <i>{adminSortMark(active, sortDir)}</i>
+      </th>
+    );
+  };
 
   useEffect(() => { load(); }, [load]);
 
+  const actionOptions = useMemo(() => [
+    { value: '', label: t('admin.audit.actionAll') },
+    ...Object.entries(ACTION_META).map(([value, m]) => ({ value, label: t(m.labelKey) })),
+  ], [t]);
+
   const getActionBadge = (action: string) => {
-    const info = actionLabels[action];
-    if (!info) return <span style={{ fontSize: '0.7rem', color: 'var(--text-light)' }}>{action}</span>;
-    return (
-      <span style={{
-        fontSize: '0.7rem', padding: '3px 8px', borderRadius: '3px',
-        background: info.bg, color: info.color, fontWeight: 700, whiteSpace: 'nowrap',
-      }}>
-        {info.label}
-      </span>
-    );
+    const info = ACTION_META[action];
+    // 未知动作回退到原始 action 字符串 —— 后端新增动作类型时，
+    // 这里会显示 create_foo 而不是空白，便于排查
+    if (!info) return <span className="bdg bdg-no">{action}</span>;
+    return <span className={'bdg ' + info.cls}>{t(info.labelKey)}</span>;
   };
 
   return (
     <div>
       {/* 筛选栏 */}
-      <div style={{ ...cardStyle, marginBottom: '16px' }}>
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+      <div className="card">
+        <div className="card-hd">
           <select
+            className="sel"
             value={actionFilter}
             onChange={e => { setActionFilter(e.target.value); setPage(1); }}
-            style={{
-              padding: '8px 12px', background: 'var(--input-bg)', color: 'var(--text)',
-              border: '1px solid var(--border)', borderRadius: 'var(--radius)', fontSize: '0.85rem',
-            }}
           >
             {actionOptions.map(o => (
               <option key={o.value} value={o.value}>{o.label}</option>
             ))}
           </select>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-light)' }}>共 {total} 条记录</span>
+          <span className="cnt">{t('admin.audit.total', { count: total })}</span>
         </div>
       </div>
 
-      {error && <p style={{ color: 'var(--danger)', fontSize: '0.8rem', marginBottom: '10px' }}>{error}</p>}
+      {error && <p className="alert alert-dan">{error}</p>}
 
       {/* 日志列表 */}
-      <div style={cardStyle}>
+      <div className="card">
+        <div className="card-hd">
+          <label className="psize">
+            {t('admin.common.pageSizeLabel')}
+            <select
+              className="sel"
+              value={pageSize}
+              onChange={e => changePageSize(Number(e.target.value))}
+            >
+              {ADMIN_PAGE_SIZES.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </label>
+        </div>
         {loading ? (
-          <p style={{ textAlign: 'center', color: 'var(--text-light)', padding: '40px' }}>加载中...</p>
+          <div className="sk"><i /><i /><i /><i /></div>
         ) : logs.length === 0 ? (
-          <p style={{ textAlign: 'center', color: 'var(--text-light)', padding: '40px' }}>暂无操作记录</p>
+          <div className="empty"><div className="etx">{t('admin.audit.empty')}</div></div>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-            <thead>
-              <tr style={{ borderBottom: '2px solid var(--border)' }}>
-                <th style={thStyle}>时间</th>
-                <th style={thStyle}>管理员</th>
-                <th style={thStyle}>操作</th>
-                <th style={thStyle}>目标</th>
-                <th style={thStyle}>详情</th>
-                <th style={thStyle}>IP</th>
-              </tr>
-            </thead>
-            <tbody>
-              {logs.map(l => (
-                <tr key={l.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                  <td style={{ ...tdStyle, fontSize: '0.75rem', color: 'var(--text-light)', whiteSpace: 'nowrap' }}>
-                    {l.createdAt?.slice(0, 16)?.replace('T', ' ')}
-                  </td>
-                  <td style={tdStyle}><strong>{l.adminName}</strong></td>
-                  <td style={tdStyle}>{getActionBadge(l.action)}</td>
-                  <td style={{ ...tdStyle, fontSize: '0.75rem', color: 'var(--text-light)' }}>
-                    {l.targetType ? `${l.targetType}${l.targetId ? ` #${l.targetId}` : ''}` : '—'}
-                  </td>
-                  <td style={{ ...tdStyle, fontSize: '0.75rem', maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {l.detail || '—'}
-                  </td>
-                  <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: '0.7rem', color: 'var(--text-light)' }}>
-                    {l.ip || '—'}
-                  </td>
+          <div className="table-wrap">
+            <table className="tbl">
+              <thead>
+                <tr>
+                  {sortTh('created', t('admin.audit.colTime'))}
+                  {sortTh('actor', t('admin.audit.colAdmin'))}
+                  {sortTh('action', t('admin.audit.colAction'))}
+                  <th>{t('admin.audit.colTarget')}</th>
+                  <th>{t('admin.audit.colDetail')}</th>
+                  {sortTh('ip', t('admin.audit.colIp'))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {logs.map(l => (
+                  <tr key={l.id}>
+                    <td className="mono">
+                      {l.createdAt?.slice(0, 16)?.replace('T', ' ')}
+                    </td>
+                    <td className="k">{l.adminName}</td>
+                    <td>{getActionBadge(l.action)}</td>
+                    <td className="mono">
+                      {l.targetType ? `${l.targetType}${l.targetId ? ` #${l.targetId}` : ''}` : '—'}
+                    </td>
+                    <td className="ellip" title={l.detail || ''}>
+                      {l.detail || '—'}
+                    </td>
+                    {/* 完整 IP —— 审计追溯要按位比对，与在线列表的脱敏 IP 刻意不对称 */}
+                    <td className="mono">{l.ip || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
 
         {/* 分页 */}
         {totalPages > 1 && (
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', marginTop: '16px' }}>
-            <button disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))} style={{ ...pageBtn, opacity: page <= 1 ? 0.3 : 1 }}>
-              上一页
-            </button>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-light)' }}>{page} / {totalPages}</span>
-            <button disabled={page >= totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))} style={{ ...pageBtn, opacity: page >= totalPages ? 0.3 : 1 }}>
-              下一页
-            </button>
+          <div className="pager">
+            <span className="meta">{page} / {totalPages}</span>
+            <div className="pgs">
+              <button
+                className={page <= 1 ? 'pg dis' : 'pg'}
+                disabled={page <= 1}
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+              >
+                {t('admin.common.prevPage')}
+              </button>
+              <button
+                className={page >= totalPages ? 'pg dis' : 'pg'}
+                disabled={page >= totalPages}
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              >
+                {t('admin.common.nextPage')}
+              </button>
+            </div>
           </div>
         )}
       </div>

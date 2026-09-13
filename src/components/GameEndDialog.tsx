@@ -38,6 +38,7 @@ function computeStreak(): { type: 'win' | 'loss' | null; count: number } {
 export function GameEndDialog({ status, target, guessCount, onClose, onNewGame }: GameEndDialogProps) {
   const { t } = useI18n();
   const [streak, setStreak] = useState<{ type: 'win' | 'loss' | null; count: number }>({ type: null, count: 0 });
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === 'won' || status === 'lost') {
@@ -50,143 +51,75 @@ export function GameEndDialog({ status, target, guessCount, onClose, onNewGame }
 
   const won = status === 'won';
 
+  // 结算主图。加载失败退回原来的 emoji（稿子 data-fb 的等价物）。
+  // 用 failedSrc 而不是布尔量：胜负图是两张，切到另一张时失败状态要自动作废。
+  const artSrc = won ? '/icons/result-win.png' : '/icons/result-lose.png';
+  const showArt = failedSrc !== artSrc;
+
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
-    >
-      <div
-        style={{
-          background: 'var(--card)',
-          color: 'var(--text)',
-          border: '1px solid var(--border)',
-          borderRadius: 'var(--radius)',
-          boxShadow: 'var(--shadow-lg)',
-          padding: 'clamp(24px, 5vw, 40px)',
-          maxWidth: '420px',
-          width: '100%',
-          textAlign: 'center',
-        }}
-      >
-        {/* 状态表情 */}
-        <div style={{ fontSize: '4rem', marginBottom: '16px' }}>
-          {won ? '🎉' : '😢'}
+    <div className="modal-mask">
+      {/* end-dlg 是结算弹窗专用的修饰类。
+          ⚠️ 不能把居中写进 .dlg 本身 —— 那是全站 9 个弹窗共用的类
+             （规则/公告/致谢/更新日志/认证/管理/多人/派对都用 'dlg mc'|'dlg dan'），
+             给 .dlg 加 align-items:center 会连它们一起改。 */}
+      <div className={won ? 'dlg mc end-dlg' : 'dlg dan end-dlg'}>
+        {/* 结算主图 —— 稿子 index-v12.html:1035,1043 的 .dialog-img.has-img
+            （108px 圆角井 + 胜负描边光环，样式见 v12-components.css §21.6）。 */}
+        <div
+          className={showArt ? 'dialog-img has-img' : 'dialog-img'}
+          style={{ marginBottom: '16px', flexShrink: 0 }}
+        >
+          {showArt ? (
+            <img
+              className="artimg"
+              src={artSrc}
+              alt=""
+              aria-hidden="true"
+              onError={() => setFailedSrc(artSrc)}
+            />
+          ) : (
+            won ? '🎉' : '😢'
+          )}
         </div>
 
         {/* 标题 */}
-        <h2
-          style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 'clamp(1.5rem, 3vw, 2rem)',
-            fontWeight: 900,
-            fontStyle: 'italic',
-            marginBottom: '12px',
-            color: won ? 'var(--correct)' : 'var(--danger)',
-          }}
-        >
+        <h2 className="dt">
           {won ? t('game.won') : t('game.lost')}
         </h2>
 
         {/* 描述 */}
-        <p style={{ color: 'var(--text-sec)', marginBottom: '20px', fontSize: '0.95rem' }}>
-          {won
-            ? t('game.wonDesc', { name: target.name, count: guessCount })
-            : t('game.lostDesc', { name: target.name })
-          }
-        </p>
-
-        {/* 连胜/连败提示 */}
-        {streak.count >= 2 && (
-          <div className="streak-badge" style={{
-            marginBottom: '16px',
-            padding: '8px 18px',
-            borderRadius: 'var(--radius)',
-            fontSize: '0.95rem',
-            fontWeight: 700,
-            background: streak.type === 'win'
-              ? 'rgba(255, 215, 0, 0.15)'
-              : 'rgba(255, 101, 120, 0.12)',
-            color: streak.type === 'win' ? '#b8860b' : 'var(--danger)',
-            border: `1px solid ${streak.type === 'win' ? 'rgba(255, 215, 0, 0.35)' : 'rgba(255, 101, 120, 0.3)'}`,
-          }}>
-            {streak.type === 'win'
-              ? t('game.streakWin', { count: streak.count })
-              : t('game.streakLoss', { count: streak.count })
+        <div className="db">
+          <p>
+            {won
+              ? t('game.wonDesc', { name: target.name, count: guessCount })
+              : t('game.lostDesc', { name: target.name })
             }
-          </div>
-        )}
+          </p>
 
-        {/* 目标角色信息 */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          gap: '12px',
-          marginBottom: '24px',
-          flexWrap: 'wrap',
-        }}>
-          <span style={{
-            padding: '4px 10px',
-            background: 'var(--primary-soft)',
-            color: 'var(--primary-strong)',
-            borderRadius: 'var(--radius-sm)',
-            fontSize: '0.85rem',
-            fontWeight: 600,
-          }}>
-            {target.class}
-          </span>
-          <span style={{
-            padding: '4px 10px',
-            background: 'var(--primary-soft)',
-            color: 'var(--primary-strong)',
-            borderRadius: 'var(--radius-sm)',
-            fontSize: '0.85rem',
-            fontWeight: 600,
-          }}>
-            {'★'.repeat(target.rarity)}
-          </span>
-          <span style={{
-            padding: '4px 10px',
-            background: 'var(--primary-soft)',
-            color: 'var(--primary-strong)',
-            borderRadius: 'var(--radius-sm)',
-            fontSize: '0.85rem',
-            fontWeight: 600,
-          }}>
-            {target.faction}
-          </span>
+          {/* 连胜/连败提示 */}
+          {streak.count >= 2 && (
+            <span className={`bdg streak-badge ${streak.type === 'win' ? 'bdg-warn' : 'bdg-dan'}`}>
+              {streak.type === 'win'
+                ? t('game.streakWin', { count: streak.count })
+                : t('game.streakLoss', { count: streak.count })
+              }
+            </span>
+          )}
+
+          {/* 目标角色信息 */}
+          <div className="meta-row" style={{ marginTop: '14px' }}>
+            <span className="mchip mc">{target.class}</span>
+            <span className="mchip mc">{'★'.repeat(target.rarity)}</span>
+            <span className="mchip mc">{target.faction}</span>
+          </div>
         </div>
 
         {/* 两个按钮 */}
-        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
-          <button
-            onClick={onClose}
-            style={{
-              padding: '12px 24px',
-              background: 'transparent',
-              color: 'var(--text)',
-              border: '1px solid var(--border)',
-              borderRadius: 'var(--radius)',
-              fontSize: '0.95rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-            }}
-          >
+        <div className="df" style={{ justifyContent: 'center' }}>
+          <button onClick={onClose} className="btn-o">
             {t('game.viewResult')}
           </button>
-          <button
-            onClick={onNewGame}
-            className="btn-shine"
-            style={{
-              padding: '12px 28px',
-              background: 'var(--primary)',
-              color: 'var(--bg)',
-              border: 'none',
-              borderRadius: 'var(--radius)',
-              fontSize: '1rem',
-              fontWeight: 700,
-              cursor: 'pointer',
-            }}
-          >
+          <button onClick={onNewGame} className="btn-p btn-shine">
             {t('game.newGame')}
           </button>
         </div>

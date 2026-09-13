@@ -11,9 +11,8 @@ export interface PartyError {
 
 /** 玩家信息 */
 export interface PartyPlayer {
-  id: string;        // socket id
+  id: string;        // socket id（服务端下发时刻的快照值；重连会在同一份快照里一起刷新）
   name: string;      // 显示名称
-  playerKey?: string; // 稳定身份标识（重连后 socket.id 会变）
   ready?: boolean;
   guessed?: boolean;
   exhausted?: boolean;
@@ -44,7 +43,6 @@ export interface PartyRoom {
 export interface PartyRanking {
   playerId: string;
   playerName: string;
-  playerKey?: string;
   guessCount: number;
   guessChain: string[];
   pointsEarned: number;
@@ -55,7 +53,6 @@ export interface PartyRanking {
 export interface PartyFinalRanking {
   playerId: string;
   playerName: string;
-  playerKey: string;
   totalScore: number;
   roundsWon: number;
 }
@@ -66,7 +63,7 @@ export interface PartyRoundEnd {
   totalRounds: number;
   target: { name: string; id: string };
   rankings: PartyRanking[];
-  totalScores: { playerId: string; playerName: string; playerKey: string; score: number }[];
+  totalScores: { playerId: string; playerName: string; score: number }[];
   isLastRound: boolean;
 }
 
@@ -86,10 +83,10 @@ export interface PartyReconnectState {
   roundFinished?: boolean;
   remainingTime?: number;
   roundPlayers?: { playerId: string; playerName: string; guessed: boolean; exhausted: boolean; guessCount: number; findOrder?: number }[];
-  scores?: { playerKey: string; playerName: string; score: number }[];
+  scores?: { playerId: string; playerName: string; score: number }[];
   roundRankings?: PartyRanking[];
-  totalScores?: { playerId: string; playerName: string; playerKey: string; score: number }[];
-  finalRankings?: { playerId: string; playerName: string; playerKey?: string; totalScore: number; roundsWon?: number }[];
+  totalScores?: { playerId: string; playerName: string; score: number }[];
+  finalRankings?: { playerId: string; playerName: string; totalScore: number; roundsWon?: number }[];
   champion?: PartyFinalRanking | null;
 }
 

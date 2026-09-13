@@ -42,7 +42,14 @@ function getStoredLocale(): Locale {
 }
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>(() => getStoredLocale());
+  // ⚠️ 初次渲染必须用 SSR 的默认值（zh-CN），不能在 useState 初始化式里读 localStorage。
+  // 静态导出时服务端渲染的是 zh-CN；客户端若在首次渲染就读出 'en'，
+  // 两棵树对不上 → React #418（hydration 失败），且会**在每个页面**出现：
+  // 只要 English 用户刷新一次，localStorage 里就存着 'en'。
+  // 换成固定初值后，由下面这个 effect 在挂载后再切到存储的语言，
+  // 配合 context 暴露的 mounted 标志，需要抗闪动的组件（LanguageSwitcher / ThemeToggle）
+  // 可以等挂载完成再渲染。
+  const [locale, setLocaleState] = useState<Locale>('zh-CN');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {

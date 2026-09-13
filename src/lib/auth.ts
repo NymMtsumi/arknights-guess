@@ -273,7 +273,14 @@ export async function login(identifier: string, password: string): Promise<{
     }
 
     // 上传本地未同步的单人游戏（以 user_id 写入）
-    await migrateGuestDataToAccount(data.player_key, oldGuestPk || undefined);
+    // ⚠️ oldGuestPk 只在**确实是游客 pk** 时才传。
+    //    第二次登录时 localStorage 里的 player_key 已经是账户 pk，若照传，
+    //    migrateGuestDataToAccount 的 ownerlessGames 过滤条件
+    //    `r.player_key === oldGuestPk` 会把**上次已迁移的记录**重新圈进来 → 重复上传，
+    //    在 games 表没有唯一索引的前提下刷高统计与排行榜。
+    //    登录时 player_key 已经不匹配的这里是同一个值，所以用 !== 判掉即可。
+    const guestPk = oldGuestPk && oldGuestPk !== data.player_key ? oldGuestPk : undefined;
+    await migrateGuestDataToAccount(data.player_key, guestPk);
   }
 
   return data;
@@ -318,26 +325,47 @@ export async function migrateGuestDataToAccount(accountPlayerKey: string, oldGue
 
     // 提取单人战绩（移除 headers，apiCall 内部处理认证）
     // 注意：custom 模式不在此迁移（单独走 save-game，避免被 /api/sync 误判为 single 丢失）
-    const singleGames = ownerlessGames
-      .filter((r: any) => r.mode !== 'multi' && r.mode !== 'custom' && typeof r.timestamp === 'number')
-      .map((r: any) => ({
+    // ⚠️ 本地单人死亡记录的字段形状见 stats.ts 的 GameRecord —— **它没有 mode 字段**
+    //    （只有 MultiGameRecord 有）。所以这里要显式补上 mode:'single'，否则服务端拿不到
+    //    模式信息；老版本前端漏了这个字段，配合服务端「mode 必须是 single/multi 字面量」
+    //    的判断，整批被跳过却被本地标记成已迁移 → 游客单人战绩静默永久丢失。
+    //    同时记下每条在 ownerlessGames 里的下标，服务端逐行返回结果后好按行标记。
+    const singleIdx: number[] = [];
+    const singleGames: Array<Record<string, unknown>> = [];
+    ownerlessGames.forEach((r: any, i: number) => {
+      if (r.mode === 'multi' || r.mode === 'custom' || typeof r.timestamp !== 'number') return;
+      singleIdx.push(i);
+      singleGames.push({
+        mode: 'single',
         timestamp: new Date(r.timestamp).toISOString(),
         targetName: String(r.targetName || ''),
         won: Boolean(r.won),
         guessCount: Number(r.guessCount) || 0,
         difficulty: String(r.difficulty || 'hard'),
-      }));
+      });
+    });
 
     if (singleGames.length > 0) {
       const data = await apiCall('/api/sync', {
         method: 'POST',
         body: JSON.stringify({ player_key: accountPlayerKey, games: singleGames }),
       });
-      console.log(`[Auth] Migrated ${data.synced || singleGames.length} guest single game(s) to account`);
-      // 标记所有单人记录为已迁移
-      ownerlessGames.forEach((g, i) => {
-        if (g.mode !== 'multi' && g.mode !== 'custom' && typeof g.timestamp === 'number') migratedIndices.add(i);
-      });
+      // 只标记服务端**确认收下**的行。'new' = 新写入，'dup' = 服务器已有（同样算成功）。
+      // 'bad' 或结果缺失（老服务端不返回 results）→ 保留本地记录，下次登录再试。
+      const results: unknown = (data as { results?: unknown }).results;
+      if (Array.isArray(results)) {
+        let kept = 0;
+        results.forEach((st, k) => {
+          if (st === 'new' || st === 'dup') migratedIndices.add(singleIdx[k]);
+          else kept++;
+        });
+        console.log(`[Auth] guest single games: ${results.length - kept} migrated, ${kept} kept local`);
+      } else {
+        // 老服务端：无法逐行确认，只能按 synced 总数判断，全对才标记
+        const ok = Number((data as { synced?: unknown }).synced) === singleGames.length;
+        if (ok) singleIdx.forEach((i) => migratedIndices.add(i));
+        else console.warn(`[Auth] guest single games not confirmed (synced=${(data as { synced?: unknown }).synced}/${singleGames.length}), kept local`);
+      }
     }
 
     // 多人战绩逐条保存，每条即刻标记（单条失败不中断其他保存）

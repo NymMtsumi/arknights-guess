@@ -27,66 +27,43 @@ export function PartyRoundReveal() {
   };
 
   return (
-    <div style={{ width: '100%', maxWidth: '520px', textAlign: 'center' }}>
+    <div className="w-full max-w-[520px] text-center">
       {/* 回合标题 */}
-      <h2 style={{
-        fontFamily: 'var(--font-display)', fontSize: '1.1rem',
-        fontStyle: 'italic', fontWeight: 700, marginBottom: '8px',
-      }}>
+      <h2 className="scr-ttl">
         {t('party.roundResult', { round: currentRound, total: totalRounds })}
       </h2>
 
       {/* 答案 */}
-      <div style={{
-        padding: '12px', background: 'var(--card)',
-        border: '1px solid var(--primary)', borderRadius: 'var(--radius)',
-        marginBottom: '16px',
-      }}>
-        <span style={{ color: 'var(--text-light)', fontSize: '0.85rem' }}>
+      <div className="ansbox hi mb-4">
+        <span className="al">
           {t('party.answer')}:
         </span>
-        <span style={{
-          fontSize: '1.3rem', fontWeight: 900, color: 'var(--primary)',
-          marginLeft: '8px',
-        }}>
+        <span className="av2">
           {targetName || '?'}
         </span>
       </div>
 
       {/* 排名列表 */}
       {found.length > 0 && (
-        <div style={{
-          padding: '12px', background: 'var(--card)',
-          border: '1px solid var(--border)', borderRadius: 'var(--radius)',
-          marginBottom: '12px',
-        }}>
-          <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '8px' }}>
+        <div className="card mb-3">
+          <div className="board-ttl">
             {t('party.roundRankings')}
           </div>
           {found.map((r, i) => (
             <div
               key={r.playerId}
-              style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '8px 12px', marginBottom: '4px',
-                background: i === 0 ? 'var(--accent-soft, rgba(251, 191, 36, 0.1))' : 'var(--card-soft)',
-                borderRadius: 'var(--radius)',
-              }}
+              className={'rk' + (i < 3 ? ` top${i + 1}` : '')}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '1.2rem' }}>{medalEmoji(i)}</span>
-                <span style={{ fontWeight: 700 }}>{r.playerName}</span>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-light)' }}>
+              <span className={'place' + (i === 0 ? ' gold' : i === 1 ? ' silver' : i === 2 ? ' bronze' : '')}>{i + 1}</span>
+              <span className="rk-medal">{medalEmoji(i)}</span>
+              <div>
+                <div className="rk-name">{r.playerName}</div>
+                <div className="rk-sub">
                   {r.guessCount}{t('party.guessesShort')}
                 </div>
-                <div style={{
-                  fontSize: '0.9rem', fontWeight: 700,
-                  color: r.pointsEarned > 0 ? 'var(--correct)' : 'var(--text-light)',
-                }}>
-                  +{r.pointsEarned} {t('party.points')}
-                </div>
+              </div>
+              <div className="rk-pt">
+                +{r.pointsEarned} <small>{t('party.points')}</small>
               </div>
             </div>
           ))}
@@ -95,38 +72,26 @@ export function PartyRoundReveal() {
 
       {/* 未猜出的玩家 */}
       {notFound.length > 0 && (
-        <div style={{
-          padding: '8px 12px', marginBottom: '12px',
-          fontSize: '0.8rem', color: 'var(--text-light)',
-        }}>
+        <div className="sec-note mb-3">
           {notFound.map(r => r.playerName).join(', ')} — {t('party.didNotGuess')}
         </div>
       )}
 
       {/* 累计排名 */}
       {totalScores.length > 0 && (
-        <div style={{
-          padding: '12px', background: 'var(--card)',
-          border: '1px solid var(--border)', borderRadius: 'var(--radius)',
-          marginBottom: '12px',
-        }}>
-          <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '8px' }}>
+        <div className="card mb-3">
+          <div className="board-ttl">
             {t('party.totalStandings')}
           </div>
           {totalScores.map((s, i) => (
             <div
               key={s.playerId}
-              style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '6px 12px', marginBottom: '2px',
-                background: i === 0 ? 'var(--accent-soft, rgba(251,191,36,0.1))' : 'transparent',
-                borderRadius: 'var(--radius)',
-                fontWeight: i === 0 ? 700 : 400,
-              }}
+              className={'rk' + (i < 3 ? ` top${i + 1}` : '')}
             >
-              <span>{i + 1}. {s.playerName}</span>
-              <span style={{ color: 'var(--primary)', fontWeight: 700 }}>
-                {s.score} {t('party.points')}
+              <span className={'place' + (i === 0 ? ' gold' : i === 1 ? ' silver' : i === 2 ? ' bronze' : '')}>{i + 1}</span>
+              <span className="rk-name">{s.playerName}</span>
+              <span className="rk-pt">
+                {s.score} <small>{t('party.points')}</small>
               </span>
             </div>
           ))}
@@ -134,7 +99,7 @@ export function PartyRoundReveal() {
       )}
 
       {/* 提示文字 */}
-      <p style={{ color: 'var(--text-light)', fontSize: '0.8rem' }}>
+      <p className="sec-note">
         {t('party.nextRoundSoon')}
       </p>
     </div>

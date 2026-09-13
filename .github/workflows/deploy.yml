@@ -8,8 +8,16 @@ on:
       - 'src/**'
       - 'tests/**'
       - 'scripts/**'
+      - 'public/**'                 # 图标等静态资源直接进产物，改了必须过哨兵
       - 'package.json'
       - 'package-lock.json'
+      # ⚠️ 构建配置必须列进来：改了它们同样会被 Cloudflare Pages 构建上线，
+      #    但漏在这里 = 本 workflow 根本不触发 = **两道 gate 全部绕过**。
+      #    历史漏项就是这一组（next.config / tsconfig / postcss）。
+      - 'next.config.ts'
+      - 'tsconfig.json'
+      - 'postcss.config.mjs'
+      - '.github/workflows/**'      # gate 自身的改动也要过一次（改错了能立刻发现）
       # 全模块测试横跨前后端：src/** 变更也跑冒烟（集成校验），
       # 但只有 server/** 变更才真正触发后端部署（见 deploy job 的 paths-filter）。
   workflow_dispatch:
@@ -69,6 +77,16 @@ jobs:
       - name: 干员数据一致性检查
         # server/characters.json 与 src/data/characters.json 必须字节一致（手动改动也拦）
         run: node scripts/check-characters.mjs
+
+      - name: V12 选择器哨兵
+        # v12.css 的应用层选择器必须保持 html[data-ui="v12"] .ui-v12；
+        # 被简化成 .ui-v12 会因特异性打平而整块静默失效（不报错），故机器把关
+        run: node scripts/check-v12-selector.mjs
+
+      - name: i18n 键哨兵
+        # 两份语言文件的键集合必须一致（缺一边 = 该语言下直接显示原始键名）；
+        # 顺带报出死键。只加了脚本没接进 CI 的话，等于没加。
+        run: node scripts/check-i18n-keys.mjs
 
   # ── 部署（仅在冒烟 + 审查通过 + 有服务端变更时；手动触发则强制部署）──
   deploy:

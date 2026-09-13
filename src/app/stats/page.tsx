@@ -123,256 +123,175 @@ export default function StatsPage() {
   const winRate = stats.totalGames > 0 ? Math.round((stats.wins / stats.totalGames) * 100) : 0;
   const avgGuesses = stats.wins > 0 ? (stats.totalGuesses / stats.wins).toFixed(1) : '-';
 
-  const thStyle: React.CSSProperties = { padding: '8px 10px', textAlign: 'center', fontWeight: 700, fontSize: '0.8rem', color: 'var(--text-light)', borderBottom: '2px solid var(--border)', whiteSpace: 'nowrap' };
-  const tdStyle: React.CSSProperties = { padding: '8px 10px', textAlign: 'center', whiteSpace: 'nowrap' };
   const historyScrollRef = useRef<HTMLDivElement>(null);
 
   return (
     <div className="page">
       <Header />
-      <div className="page-scroll" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 'clamp(32px, 6vw, 60px)' }}>
-        <h1
-          style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 'clamp(2rem, 4vw, 3rem)',
-            fontStyle: 'italic',
-            fontWeight: 900,
-            letterSpacing: '0.06em',
-            marginBottom: '32px',
-            textAlign: 'center',
-          }}
-        >
-          {t('stats.title')}
-        </h1>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
-          <button onClick={refresh} style={{
-            padding: '4px 14px', background: 'transparent',
-            color: 'var(--text-light)', border: '1px solid var(--border)',
-            borderRadius: 'var(--radius)', cursor: 'pointer', fontSize: '0.8rem',
-          }}>
-            🔄 {t('common.refresh')}
-          </button>
-          {loading && <span style={{ color: 'var(--text-light)', fontSize: '0.8rem' }}>{t('common.loading')}</span>}
-          {serverSynced && !loading && (
-            <span style={{
-              fontSize: '0.78rem', color: 'var(--accent)',
-              background: 'var(--accent-soft, rgba(0,180,216,0.1))',
-              padding: '2px 10px', borderRadius: 'var(--radius)',
-            }}>
-              ☁️ {t('common.synced')}
-            </span>
-          )}
-        </div>
-
-        {!mounted ? (
-          <div style={{ color: 'var(--text-light)' }}>...</div>
-        ) : stats.totalGames === 0 ? (
-          <div style={{ textAlign: 'center', color: 'var(--text-light)' }}>
-            <p style={{ fontSize: '3rem', marginBottom: '16px' }}>📭</p>
-            <p style={{ fontSize: '1.1rem' }}>{t('stats.noData')}</p>
-            <button
-              onClick={() => router.push('/game')}
-              style={{
-                marginTop: '20px',
-                padding: '10px 24px',
-                background: 'var(--primary)',
-                color: 'var(--bg)',
-                border: 'none',
-                borderRadius: 'var(--radius)',
-                fontWeight: 700,
-                cursor: 'pointer',
-                fontSize: '1rem',
-              }}
-            >
-              {t('menu.classic')}
-            </button>
-          </div>
-        ) : (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-            gap: '16px',
-            maxWidth: '600px',
-            width: '100%',
-          }}>
-            {[
-              { label: t('stats.totalGames'), value: String(stats.totalGames), icon: '🎮' },
-              { label: t('stats.wins'), value: String(stats.wins), icon: '🏆' },
-              { label: t('stats.losses'), value: String(stats.losses), icon: '💔' },
-              { label: t('stats.winRate'), value: `${winRate}%`, icon: '📈' },
-              { label: t('stats.avgGuesses'), value: String(avgGuesses), icon: '📊' },
-              { label: t('stats.bestScore'), value: stats.bestScore > 0 ? t('stats.bestScoreValue', { count: stats.bestScore }) : '-', icon: '⭐' },
-            ].map(item => (
-              <div
-                key={item.label}
-                className="menu-card"
-                style={{
-                  '--menu-color': 'var(--accent)',
-                  textAlign: 'center',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '20px',
-                  minHeight: 'auto',
-                } as React.CSSProperties}
-              >
-                <span style={{ fontSize: '2rem' }}>{item.icon}</span>
-                <span style={{ fontSize: 'clamp(1.5rem, 3vw, 2rem)', fontWeight: 900, color: 'var(--text)' }}>
-                  {item.value}
+      <div className="page-scroll">
+        <div style={{ maxWidth: 'var(--content-max)', margin: '0 auto' }}>
+          <div className="panel-hd">
+            <div>
+              <h1>{t('stats.title')}</h1>
+            </div>
+            <div className="bar-actions">
+              <button className="btn-o" onClick={refresh}>
+                🔄 {t('common.refresh')}
+              </button>
+              {loading && <span className="bdg bdg-no">{t('common.loading')}</span>}
+              {serverSynced && !loading && (
+                <span className="bdg bdg-ok">
+                  ☁️ {t('common.synced')}
                 </span>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-light)' }}>{item.label}</span>
-              </div>
-            ))}
+              )}
+            </div>
           </div>
-        )}
 
-        {/* 最近战绩 */}
-        {mounted && (
-          <div style={{ maxWidth: '720px', width: '100%', marginTop: '32px' }}>
-            <h2 style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: 'clamp(1.2rem, 2vw, 1.5rem)',
-              fontStyle: 'italic',
-              fontWeight: 800,
-              letterSpacing: '0.04em',
-              marginBottom: '14px',
-              color: 'var(--text)',
-            }}>
-              📋 {t('stats.recentGames', { count: 80 })}
-            </h2>
-            {history.length === 0 ? (
-              <p style={{ color: 'var(--text-light)', fontSize: '0.9rem' }}>{t('stats.emptyHistory')}</p>
-            ) : (
-            <>
-            <div ref={historyScrollRef} style={{ overflowX: 'auto', scrollBehavior: 'smooth' }} className="scroll-slider-container">
-              <table className="game-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-                <thead>
-                  <tr>
-                    <th style={thStyle}>#</th>
-                    <th style={{ ...thStyle, textAlign: 'left' }}>{t('stats.table.targetOpponent')}</th>
-                    <th style={thStyle}>{t('stats.table.mode')}</th>
-                    <th style={thStyle}>{t('stats.table.result')}</th>
-                    <th style={thStyle}>{t('stats.table.details')}</th>
-                    <th style={thStyle}>{t('stats.table.time')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {history.map((rec, i) => {
-                    const multi = isMultiRecord(rec);
-                    const isCustom = multi && rec.mode === 'custom';
-                    return (
-                      <>
-                        <tr
-                          key={rec.timestamp + '-' + i}
-                          onClick={() => multi && toggleExpand(i)}
-                          style={{
-                            background: rec.won ? 'var(--primary-soft)' : 'transparent',
-                            borderBottom: '1px solid var(--border)',
-                            cursor: multi ? 'pointer' : 'default',
-                          }}
-                        >
-                          <td style={tdStyle}>{i + 1}</td>
-                          <td style={{ ...tdStyle, textAlign: 'left', fontWeight: 600 }}>
-                            {multi ? (
-                              <span>{rec.opponentName} <span style={{ color: 'var(--text-light)', fontSize: '0.75rem' }}>(BO{rec.bestOf})</span></span>
-                            ) : (
-                              (rec as GameRecord).targetName
-                            )}
-                          </td>
-                          <td style={tdStyle}>
-                            <span style={{
-                              fontSize: '0.7rem',
-                              padding: '1px 6px',
-                              borderRadius: '3px',
-                              background: isCustom ? 'var(--primary-soft)' : multi ? 'var(--accent-soft, rgba(0,180,216,0.1))' : 'var(--input-bg)',
-                              color: isCustom ? 'var(--primary)' : multi ? 'var(--accent)' : 'var(--text-light)',
-                            }}>
-                              {isCustom ? t('stats.diffCustom') : multi ? t('stats.diffMulti') : t((rec as GameRecord).difficulty === 'easy' ? 'stats.diffEasy' : (rec as GameRecord).difficulty === 'medium' ? 'stats.diffMedium' : 'stats.diffHard')}
-                            </span>
-                          </td>
-                          <td style={{ ...tdStyle, color: rec.won ? 'var(--correct)' : 'var(--danger)', fontWeight: 700 }}>
-                            {rec.won ? '✅' : '❌'}
-                          </td>
-                          <td style={tdStyle}>
-                            {multi ? (
-                              <span style={{ fontSize: '0.8rem' }}>
-                                {rec.myScore}:{rec.opponentScore}
-                                {expanded.has(i) ? ' ▲' : ' ▼'}
+          {!mounted ? (
+            <div className="gate" style={{ marginTop: 16 }}>
+              <div className="spin" />
+              <p>...</p>
+            </div>
+          ) : stats.totalGames === 0 ? (
+            <div className="gate" style={{ marginTop: 16 }}>
+              <div className="gic">📭</div>
+              <p>{t('stats.noData')}</p>
+              <div className="bar-actions" style={{ justifyContent: 'center' }}>
+                <button className="btn-p" onClick={() => router.push('/game')}>
+                  {t('menu.classic')}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="stats stats-3" style={{ marginTop: 16 }}>
+              {[
+                { label: t('stats.totalGames'), value: String(stats.totalGames), icon: '🎮' },
+                { label: t('stats.wins'), value: String(stats.wins), icon: '🏆' },
+                { label: t('stats.losses'), value: String(stats.losses), icon: '💔' },
+                { label: t('stats.winRate'), value: `${winRate}%`, icon: '📈' },
+                { label: t('stats.avgGuesses'), value: String(avgGuesses), icon: '📊' },
+                { label: t('stats.bestScore'), value: stats.bestScore > 0 ? t('stats.bestScoreValue', { count: stats.bestScore }) : '-', icon: '⭐' },
+              ].map(item => (
+                <div key={item.label} className="stat">
+                  <div className="lb">{item.icon} {item.label}</div>
+                  <div className="vl">{item.value}</div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* 最近战绩 */}
+          {mounted && (
+            <div className="card">
+              <div className="card-hd">
+                <h2>📋 {t('stats.recentGames', { count: 80 })}</h2>
+              </div>
+              {history.length === 0 ? (
+                <div className="empty">
+                  <div className="etx">{t('stats.emptyHistory')}</div>
+                </div>
+              ) : (
+              <>
+              <div ref={historyScrollRef} style={{ scrollBehavior: 'smooth' }} className="table-wrap scroll-slider-container">
+                <table className="tbl">
+                  <thead>
+                    <tr>
+                      <th className="num">#</th>
+                      <th>{t('stats.table.targetOpponent')}</th>
+                      <th>{t('stats.table.mode')}</th>
+                      <th>{t('stats.table.result')}</th>
+                      <th>{t('stats.table.details')}</th>
+                      <th>{t('stats.table.time')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {history.map((rec, i) => {
+                      const multi = isMultiRecord(rec);
+                      const isCustom = multi && rec.mode === 'custom';
+                      return (
+                        <>
+                          <tr
+                            key={rec.timestamp + '-' + i}
+                            onClick={() => multi && toggleExpand(i)}
+                            style={{ cursor: multi ? 'pointer' : 'default' }}
+                          >
+                            <td className="num">{i + 1}</td>
+                            <td className="k">
+                              {multi ? (
+                                <span>{rec.opponentName} <span className="mono">(BO{rec.bestOf})</span></span>
+                              ) : (
+                                (rec as GameRecord).targetName
+                              )}
+                            </td>
+                            <td>
+                              <span className={multi && !isCustom ? 'bdg bdg-mc' : 'bdg bdg-no'}>
+                                {isCustom ? t('stats.diffCustom') : multi ? t('stats.diffMulti') : t((rec as GameRecord).difficulty === 'easy' ? 'stats.diffEasy' : (rec as GameRecord).difficulty === 'medium' ? 'stats.diffMedium' : 'stats.diffHard')}
                               </span>
-                            ) : (
-                              t('stats.table.guessesCount', { count: (rec as GameRecord).guessCount })
-                            )}
-                          </td>
-                          <td style={{ ...tdStyle, color: 'var(--text-light)', fontSize: '0.78rem' }}>
-                            {new Date(rec.timestamp).toLocaleDateString(locale === 'zh-CN' ? 'zh-CN' : 'en-US')}
-                          </td>
-                        </tr>
-                        {/* 展开的小局详情 */}
-                        {multi && expanded.has(i) && (
-                          <tr key={`exp-${i}`}>
-                            <td colSpan={6} style={{ padding: '0' }}>
-                              <div style={{
-                                background: 'var(--input-bg)',
-                                padding: '8px 16px',
-                                borderBottom: '2px solid var(--accent-soft, rgba(0,180,216,0.15))',
-                              }}>
-                                {isCustom && rec.custom && (
-                                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 18px', padding: '6px 0', fontSize: '0.78rem', color: 'var(--text-light)', borderBottom: '1px solid var(--border)' }}>
-                                    <span>🎨 {t('stats.custom.attributes')}: {rec.custom.attributes.map(a => t(`table.${a === 'releaseYear' ? 'year' : a}`)).join(' / ')}</span>
-                                    <span>{t('stats.custom.maxGuesses')}: {rec.custom.maxGuesses}</span>
-                                    <span>{t('stats.custom.roundTime')}: {Math.round(rec.custom.roundTime / 1000)}s</span>
-                                  </div>
-                                )}
-                                {rec.rounds.map((rd, ri) => (
-                                  <div key={ri} style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '12px',
-                                    padding: '4px 0',
-                                    fontSize: '0.8rem',
-                                    borderBottom: ri < rec.rounds.length - 1 ? '1px solid var(--border)' : 'none',
-                                  }}>
-                                    <span style={{ fontWeight: 700, minWidth: '40px' }}>{t('stats.table.round', { n: ri + 1 })}</span>
-                                    <span style={{ color: rd.won ? 'var(--correct)' : 'var(--danger)', fontWeight: 700 }}>
-                                      {rd.won ? '✅' : '❌'}
-                                    </span>
-                                    <span style={{ flex: 1 }}>{rd.targetName}</span>
-                                    <span style={{ color: 'var(--text-light)' }}>{t('stats.table.guessNTimes', { count: rd.guessCount })}</span>
-                                  </div>
-                                ))}
-                              </div>
+                            </td>
+                            <td>
+                              <span className={rec.won ? 'bdg bdg-ok' : 'bdg bdg-dan'}>
+                                {rec.won ? '✅' : '❌'}
+                              </span>
+                            </td>
+                            <td>
+                              {multi ? (
+                                <span>
+                                  {rec.myScore}:{rec.opponentScore}
+                                  {expanded.has(i) ? ' ▲' : ' ▼'}
+                                </span>
+                              ) : (
+                                t('stats.table.guessesCount', { count: (rec as GameRecord).guessCount })
+                              )}
+                            </td>
+                            <td className="num mono">
+                              {new Date(rec.timestamp).toLocaleDateString(locale === 'zh-CN' ? 'zh-CN' : 'en-US')}
                             </td>
                           </tr>
-                        )}
-                      </>
-                    );
-                  })}
-                </tbody>
-              </table>
+                          {/* 展开的小局详情 */}
+                          {multi && expanded.has(i) && (
+                            <tr key={`exp-${i}`}>
+                              <td colSpan={6} style={{ padding: 0 }}>
+                                <div className="row-detail">
+                                  {isCustom && rec.custom && (
+                                    <div className="kv-row">
+                                      <span>🎨 {t('stats.custom.attributes')}: {rec.custom.attributes.map(a => t(`table.${a === 'releaseYear' ? 'year' : a}`)).join(' / ')}</span>
+                                      <span>{t('stats.custom.maxGuesses')}: {rec.custom.maxGuesses}</span>
+                                      <span>{t('stats.custom.roundTime')}: {Math.round(rec.custom.roundTime / 1000)}s</span>
+                                    </div>
+                                  )}
+                                  {rec.rounds.map((rd, ri) => (
+                                    <div key={ri} className="kv-row">
+                                      <span>{t('stats.table.round', { n: ri + 1 })}</span>
+                                      <span className={rd.won ? 'bdg bdg-ok' : 'bdg bdg-dan'}>
+                                        {rd.won ? '✅' : '❌'}
+                                      </span>
+                                      <span>{rd.targetName}</span>
+                                      <span>{t('stats.table.guessNTimes', { count: rd.guessCount })}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <ScrollSlider containerRef={historyScrollRef} />
+              </>
+              )}
             </div>
-            <ScrollSlider containerRef={historyScrollRef} />
-            </>
-            )}
-          </div>
-        )}
+          )}
 
-        <button
-          onClick={() => router.push('/')}
-          style={{
-            marginTop: '28px',
-            padding: '8px 20px',
-            background: 'transparent',
-            color: 'var(--text-light)',
-            border: '1px solid var(--border)',
-            borderRadius: 'var(--radius)',
-            cursor: 'pointer',
-          }}
-        >
-          {t('game.back')}
-        </button>
-        <Footer />
+          <div className="bar-actions" style={{ justifyContent: 'center' }}>
+            <button className="btn-o" onClick={() => router.push('/')}>
+              {t('game.back')}
+            </button>
+          </div>
+          <Footer />
+        </div>
       </div>
     </div>
   );

@@ -91,89 +91,48 @@ export function ChangelogDialog({ open, onClose }: ChangelogDialogProps) {
   const hasApiData = apiOk && announcements.length > 0;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.7)' }}
-      onClick={onClose}
-    >
-      <div
-        className="relative max-w-lg w-full max-h-[80vh] overflow-y-auto p-6 rounded-lg"
-        style={{
-          background: 'var(--card)',
-          color: 'var(--text)',
-          boxShadow: 'var(--shadow-lg)',
-          border: '1px solid var(--border)',
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          onClick={onClose}
-          className="absolute top-3 right-3 text-[var(--text-light)] hover:text-[var(--text)] text-xl leading-none"
-          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px' }}
-        >
-          ✕
-        </button>
+    <div className="modal-mask" onClick={onClose}>
+      <div className="dlg mc" onClick={(e) => e.stopPropagation()}>
+        <div className="mdl">
+          <div className="mhd">
+            <h2>{t('changelog.title')}</h2>
+            <button onClick={onClose} className="x">
+              ✕
+            </button>
+          </div>
 
-        <h2
-          style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: '1.5rem',
-            fontStyle: 'italic',
-            fontWeight: 900,
-            letterSpacing: '0.06em',
-            color: 'var(--primary)',
-            marginBottom: '20px',
-          }}
-        >
-          {t('changelog.title')}
-        </h2>
-
-        {hasApiData ? (
-          announcements.map((a) => (
-            <div key={a.id} style={{ marginBottom: '18px' }}>
-              <div style={{
-                fontSize: '0.82rem',
-                fontWeight: 700,
-                color: 'var(--text-light)',
-                marginBottom: '4px',
-                borderBottom: '1px solid var(--border)',
-                paddingBottom: '4px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'baseline',
-              }}>
-                <span>{a.title}</span>
-                <span style={{ fontWeight: 400, fontSize: '0.75rem' }}>
-                  {new Date(a.created_at).toLocaleDateString('zh-CN')}
-                </span>
-              </div>
-              <div
-                style={{ margin: 0, fontSize: '0.9rem', lineHeight: 1.7, color: 'var(--text-sec)' }}
-                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(a.content) }}
-              />
+          {hasApiData ? (
+            <div className="log">
+              {announcements.map((a) => (
+                <div key={a.id} className="ent">
+                  <div className="d2 flex items-baseline justify-between gap-3">
+                    <span>{a.title}</span>
+                    <span>
+                      {new Date(a.created_at).toLocaleDateString('zh-CN')}
+                    </span>
+                  </div>
+                  <div
+                    className="anc"
+                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(a.content) }}
+                  />
+                </div>
+              ))}
             </div>
-          ))
-        ) : (
-          HISTORICAL_CHANGELOG.map((entry) => (
-            <div key={entry.date} style={{ marginBottom: '18px' }}>
-              <div style={{
-                fontSize: '0.82rem',
-                fontWeight: 700,
-                color: 'var(--text-light)',
-                marginBottom: '6px',
-                borderBottom: '1px solid var(--border)',
-                paddingBottom: '4px',
-              }}>
-                {entry.date}
-              </div>
-              <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '0.9rem', lineHeight: 1.7, color: 'var(--text-sec)' }}>
-                {entry.items.map((item, i) => (
-                  <li key={i}>{item}</li>
-                ))}
-              </ul>
+          ) : (
+            <div className="log">
+              {HISTORICAL_CHANGELOG.map((entry) => (
+                <div key={entry.date} className="ent">
+                  <div className="d2">{entry.date}</div>
+                  <ul>
+                    {entry.items.map((item, i) => (
+                      <li key={i}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
             </div>
-          ))
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

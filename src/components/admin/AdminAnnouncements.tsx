@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { getServerUrl, getToken } from '@/lib/auth';
+import { useI18n } from '@/lib/i18n';
 
 interface Announcement {
   id: number;
@@ -12,6 +13,7 @@ interface Announcement {
 }
 
 export default function AdminAnnouncements() {
+  const { t } = useI18n();
   const [items, setItems] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
   const [title, setTitle] = useState('');
@@ -45,7 +47,7 @@ export default function AdminAnnouncements() {
 
   const publish = async () => {
     if (!title.trim() || !content.trim()) {
-      setError('标题和内容不能为空');
+      setError(t('admin.announcements.titleRequired'));
       return;
     }
     setPublishing(true); setMsg(''); setError('');
@@ -57,23 +59,23 @@ export default function AdminAnnouncements() {
         body: JSON.stringify({ title: title.trim(), content: content.trim(), is_popup: isPopup }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || '发布失败');
+      if (!res.ok) throw new Error(data.error || t('admin.announcements.publishFailed'));
       setTitle(''); setContent(''); setIsPopup(false);
-      setMsg('公告已发布');
+      setMsg(t('admin.announcements.published'));
       await load();
     } catch (err: any) {
-      setError(err.message || '发布失败');
+      setError(err.message || t('admin.announcements.publishFailed'));
     } finally {
       setPublishing(false);
     }
   };
 
   const remove = async (id: number) => {
-    if (!window.confirm('确定删除此公告？')) return;
+    if (!window.confirm(t('admin.announcements.deleteConfirm'))) return;
     try {
       const token = getToken();
       if (!token) {
-        setError('未登录或登录已过期，请刷新页面重新登录');
+        setError(t('admin.announcements.notLoggedIn'));
         return;
       }
       const res = await fetch(`${baseUrl}/api/admin/announcements/${id}`, {
@@ -84,17 +86,17 @@ export default function AdminAnnouncements() {
         // 尝试解析服务器错误消息
         let serverMsg = '';
         try { const d = await res.json(); serverMsg = d.error || ''; } catch {}
-        throw new Error(serverMsg || `删除失败 (HTTP ${res.status})`);
+        throw new Error(serverMsg || t('admin.announcements.deleteFailedHttp', { status: res.status }));
       }
-      setMsg('公告已删除');
+      setMsg(t('admin.announcements.deleted'));
       await load();
     } catch (err: any) {
       // 区分网络错误和服务器错误
       const msg = err.message || '';
       if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
-        setError('网络连接失败，请检查网络后重试');
+        setError(t('admin.announcements.networkError'));
       } else {
-        setError(msg || '删除失败');
+        setError(msg || t('admin.common.deleteFailed'));
       }
     }
   };
@@ -116,7 +118,7 @@ export default function AdminAnnouncements() {
 
   const saveEdit = async () => {
     if (!editTitle.trim() || !editContent.trim()) {
-      setError('标题和内容不能为空');
+      setError(t('admin.announcements.titleRequired'));
       return;
     }
     setPublishing(true); setMsg(''); setError('');
@@ -128,131 +130,100 @@ export default function AdminAnnouncements() {
         body: JSON.stringify({ title: editTitle.trim(), content: editContent.trim(), is_popup: editIsPopup }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || '更新失败');
-      setMsg('公告已更新');
+      if (!res.ok) throw new Error(data.error || t('admin.announcements.updateFailed'));
+      setMsg(t('admin.announcements.updated'));
       setEditingId(null);
       await load();
     } catch (err: any) {
-      setError(err.message || '更新失败');
+      setError(err.message || t('admin.announcements.updateFailed'));
     } finally {
       setPublishing(false);
     }
   };
 
-  // ===== 样式 =====
-  const cardStyle: React.CSSProperties = {
-    background: 'var(--card)',
-    borderRadius: 'var(--radius)',
-    padding: '20px',
-    marginBottom: '20px',
-  };
-
-  const inpStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '8px 12px',
-    background: 'var(--input-bg)',
-    color: 'var(--text)',
-    border: '1px solid var(--border)',
-    borderRadius: 'var(--radius)',
-    fontSize: '0.95rem',
-    marginBottom: '10px',
-  };
-
-  const btnStyle: React.CSSProperties = {
-    padding: '8px 18px',
-    background: 'var(--primary)',
-    color: 'var(--bg)',
-    border: 'none',
-    borderRadius: 'var(--radius)',
-    fontSize: '0.85rem',
-    fontWeight: 700,
-    cursor: 'pointer',
-  };
-
-  const dangerBtn: React.CSSProperties = {
-    ...btnStyle,
-    background: 'var(--danger)',
-    padding: '4px 10px',
-    fontSize: '0.75rem',
-  };
-
   return (
     <div>
       {/* 发布表单 */}
-      <div style={cardStyle}>
-        <h3 style={{ margin: '0 0 16px', fontSize: '1rem' }}>发布新公告</h3>
-        <input
-          value={title}
-          onChange={e => setTitle(e.target.value)}
-          placeholder="公告标题"
-          maxLength={128}
-          style={inpStyle}
-        />
-        <textarea
-          value={content}
-          onChange={e => setContent(e.target.value)}
-          placeholder="公告内容（支持 HTML）"
-          maxLength={10000}
-          rows={4}
-          style={{ ...inpStyle, resize: 'vertical' }}
-        />
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-light)' }}>
+      <div className="card">
+        <div className="card-hd">
+          <h2>{t('admin.announcements.newTitle')}</h2>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <input
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            placeholder={t('admin.announcements.titlePlaceholder')}
+            maxLength={128}
+            className="search-input"
+          />
+          <textarea
+            value={content}
+            onChange={e => setContent(e.target.value)}
+            placeholder={t('admin.announcements.contentPlaceholder')}
+            maxLength={10000}
+            rows={4}
+            className="search-input"
+          />
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 12 }}>
+          <label className="cfg-ck">
             <input type="checkbox" checked={isPopup} onChange={e => setIsPopup(e.target.checked)} />
-            弹窗公告
+            {t('admin.announcements.isPopup')}
           </label>
-          <button onClick={publish} style={btnStyle} disabled={publishing}>
-            {publishing ? '发布中...' : '发布'}
+          <button onClick={publish} className="btn-p" disabled={publishing}>
+            {publishing ? t('admin.announcements.publishing') : t('admin.announcements.publish')}
           </button>
         </div>
-        {msg && <p style={{ color: 'var(--correct)', fontSize: '0.8rem', marginTop: '10px' }}>{msg}</p>}
-        {error && <p style={{ color: 'var(--danger)', fontSize: '0.8rem', marginTop: '10px' }}>{error}</p>}
+        {msg && <p className="alert alert-ok">{msg}</p>}
+        {error && <p className="alert alert-dan">{error}</p>}
       </div>
 
       {/* 已有公告 */}
-      <div style={cardStyle}>
-        <h3 style={{ margin: '0 0 16px', fontSize: '1rem' }}>已有公告 ({items.length})</h3>
+      <div className="card">
+        <div className="card-hd">
+          <h2>{t('admin.announcements.existing', { count: items.length })}</h2>
+        </div>
         {loading ? (
-          <p style={{ color: 'var(--text-light)' }}>加载中...</p>
+          <div className="sk"><i /><i /><i /><i /></div>
         ) : items.length === 0 ? (
-          <p style={{ color: 'var(--text-light)' }}>暂无公告</p>
+          <div className="empty">
+            <div className="etx">{t('admin.announcements.empty')}</div>
+          </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div>
             {items.map(item => (
-              <div key={item.id} style={{
-                padding: '12px',
-                background: editingId === item.id ? 'var(--card)' : 'var(--input-bg)',
-                borderRadius: 'var(--radius)',
-                border: editingId === item.id ? '1px solid var(--primary)' : '1px solid var(--border)',
-              }}>
+              // 编辑中的那条加 .on 高亮：编辑表单和展示态长得很像，不标出来分不清在改哪条
+              <div key={item.id} className={editingId === item.id ? 'card on' : 'card'}>
                 {editingId === item.id ? (
                   /* 编辑模式 */
                   <div>
-                    <input
-                      value={editTitle}
-                      onChange={e => setEditTitle(e.target.value)}
-                      placeholder="公告标题"
-                      maxLength={128}
-                      style={{ width: '100%', padding: '8px 12px', background: 'var(--input-bg)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', fontSize: '0.9rem', marginBottom: '8px' }}
-                    />
-                    <textarea
-                      value={editContent}
-                      onChange={e => setEditContent(e.target.value)}
-                      placeholder="公告内容（支持 HTML）"
-                      maxLength={10000}
-                      rows={4}
-                      style={{ width: '100%', padding: '8px 12px', background: 'var(--input-bg)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', fontSize: '0.9rem', resize: 'vertical', marginBottom: '8px' }}
-                    />
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-light)' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <input
+                        value={editTitle}
+                        onChange={e => setEditTitle(e.target.value)}
+                        placeholder={t('admin.announcements.titlePlaceholder')}
+                        maxLength={128}
+                        className="search-input"
+                      />
+                      <textarea
+                        value={editContent}
+                        onChange={e => setEditContent(e.target.value)}
+                        placeholder={t('admin.announcements.contentPlaceholder')}
+                        maxLength={10000}
+                        rows={4}
+                        className="search-input"
+                      />
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 12 }}>
+                      <label className="cfg-ck">
                         <input type="checkbox" checked={editIsPopup} onChange={e => setEditIsPopup(e.target.checked)} />
-                        弹窗公告
+                        {t('admin.announcements.isPopup')}
                       </label>
-                      <button onClick={saveEdit} style={btnStyle} disabled={publishing}>
-                        {publishing ? '保存中...' : '保存'}
+                      <button onClick={saveEdit} className="btn-p" disabled={publishing}>
+                        {publishing ? t('admin.common.saving') : t('admin.common.save')}
                       </button>
-                      <button onClick={cancelEdit} style={{ ...btnStyle, background: 'transparent', color: 'var(--text-light)', border: '1px solid var(--border)' }}>
-                        取消
+                      <button onClick={cancelEdit} className="btn-o">
+                        {t('admin.common.cancel')}
                       </button>
                     </div>
                   </div>
@@ -261,20 +232,20 @@ export default function AdminAnnouncements() {
                   <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                       <div>
-                        <strong style={{ fontSize: '0.9rem' }}>{item.title}</strong>
+                        <strong>{item.title}</strong>
                         {item.is_popup && (
-                          <span style={{ marginLeft: '8px', fontSize: '0.7rem', background: '#f0ad4e', color: '#000', padding: '1px 5px', borderRadius: '3px' }}>弹窗</span>
+                          <span className="bdg bdg-mc" style={{ marginLeft: 8 }}>{t('admin.announcements.popupBadge')}</span>
                         )}
-                        <span style={{ marginLeft: '8px', fontSize: '0.7rem', color: 'var(--text-light)' }}>
+                        <span className="mono" style={{ marginLeft: 8 }}>
                           {item.created_at?.slice(0, 16)?.replace('T', ' ')}
                         </span>
                       </div>
-                      <div style={{ display: 'flex', gap: '6px' }}>
-                        <button onClick={() => startEdit(item)} style={{ ...dangerBtn, background: 'var(--primary)', padding: '4px 10px', fontSize: '0.75rem' }}>编辑</button>
-                        <button onClick={() => remove(item.id)} style={dangerBtn}>删除</button>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button onClick={() => startEdit(item)} className="btn-sm p">{t('admin.common.edit')}</button>
+                        <button onClick={() => remove(item.id)} className="btn-sm dan">{t('admin.common.delete')}</button>
                       </div>
                     </div>
-                    <p style={{ margin: '6px 0 0', fontSize: '0.8rem', color: 'var(--text-light)', wordBreak: 'break-all' }}>
+                    <p className="sec-note" style={{ wordBreak: 'break-all' }}>
                       {item.content.length > 200 ? item.content.slice(0, 200) + '...' : item.content}
                     </p>
                   </div>

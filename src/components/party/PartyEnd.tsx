@@ -30,32 +30,21 @@ export function PartyEnd() {
   };
 
   return (
-    <div style={{ width: '100%', maxWidth: '520px', textAlign: 'center' }}>
+    <div className="w-full max-w-[520px] text-center">
       {/* 标题 */}
-      <div style={{ fontSize: '3rem', marginBottom: '10px' }}>🏆</div>
-      <h2 style={{
-        fontFamily: 'var(--font-display)', fontSize: '1.5rem',
-        fontStyle: 'italic', fontWeight: 900, marginBottom: '8px',
-      }}>
+      <div className="emoji-lg">🏆</div>
+      <h2 className="scr-ttl">
         {t('party.gameOver')}
       </h2>
 
       {/* 冠军 */}
       {champion && (
-        <div style={{
-          padding: '16px', marginBottom: '16px',
-          background: 'var(--accent-soft, rgba(251, 191, 36, 0.15))',
-          border: '2px solid var(--accent)',
-          borderRadius: 'var(--radius)',
-        }}>
-          <div style={{ fontSize: '2rem', marginBottom: '4px' }}>👑</div>
-          <div style={{
-            fontSize: '1.3rem', fontWeight: 900,
-            color: 'var(--accent)', marginBottom: '4px',
-          }}>
+        <div className="champ-card mb-4">
+          <div className="champ-tro">👑</div>
+          <div className="champ-name">
             {champion.playerName}
           </div>
-          <div style={{ fontSize: '0.9rem', color: 'var(--text)' }}>
+          <div className="champ-tags">
             {t('party.champion', { score: champion.totalScore })}
           </div>
         </div>
@@ -63,44 +52,27 @@ export function PartyEnd() {
 
       {/* 最终排名 */}
       {finalRankings.length > 0 && (
-        <div style={{
-        padding: '16px', background: 'var(--card)',
-        border: '1px solid var(--border)', borderRadius: 'var(--radius)',
-        marginBottom: '16px',
-      }}>
-        <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '10px' }}>
+        <div className="card mb-4">
+        <div className="board-ttl">
           {t('party.finalStandings')}
         </div>
         {finalRankings.map((r, i) => (
           <div
             key={r.playerId}
-            style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '10px 14px', marginBottom: '4px',
-              background: i === 0 ? 'var(--accent-soft, rgba(251,191,36,0.1))'
-                : i === 1 ? 'var(--card-soft)'
-                : 'transparent',
-              borderRadius: 'var(--radius)',
-              border: i === 0 ? '1px solid var(--accent)' : 'none',
-            }}
+            className={'rk' + (i < 3 ? ` top${i + 1}` : '')}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '1.3rem' }}>{medalEmoji(i)}</span>
-              <span style={{ fontWeight: i <= 2 ? 700 : 400, fontSize: '1rem' }}>
-                {i + 1}. {r.playerName}
-              </span>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{
-                fontSize: '1rem', fontWeight: 700, color: 'var(--primary)',
-              }}>
-                {r.totalScore} {t('party.points')}
-              </div>
+            <span className={'place' + (i === 0 ? ' gold' : i === 1 ? ' silver' : i === 2 ? ' bronze' : '')}>{i + 1}</span>
+            <span className="rk-medal">{medalEmoji(i)}</span>
+            <div>
+              <div className="rk-name">{r.playerName}</div>
               {(r.roundsWon ?? 0) > 0 && (
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-light)' }}>
+                <div className="rk-sub">
                   {t('party.roundsWon', { n: r.roundsWon! })}
                 </div>
               )}
+            </div>
+            <div className="rk-pt">
+              {r.totalScore} <small>{t('party.points')}</small>
             </div>
           </div>
         ))}
@@ -109,11 +81,7 @@ export function PartyEnd() {
 
       <button
         onClick={handleExit}
-        style={{
-          padding: '12px 32px', background: 'var(--primary)', color: 'var(--bg)',
-          border: 'none', borderRadius: 'var(--radius)', fontWeight: 700,
-          fontSize: '1rem', cursor: 'pointer',
-        }}
+        className="btn-p"
       >
         {t('party.backToMenu')}
       </button>

@@ -39,100 +39,47 @@ export function CreditsDialog({ open, onClose, type }: CreditsDialogProps) {
     : t('credits.acknowledgementsSubtitle');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }}>
-      <div
-        style={{
-          background: 'var(--card)',
-          padding: '28px',
-          borderRadius: 'var(--radius)',
-          boxShadow: 'var(--shadow-lg)',
-          maxWidth: '440px',
-          width: '100%',
-          maxHeight: '80vh',
-          overflowY: 'auto',
-        }}
-      >
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h2 style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: '1.3rem',
-            fontStyle: 'italic',
-            fontWeight: 900,
-            margin: 0,
-          }}>
-            {title}
-          </h2>
-          <button
-            onClick={onClose}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: 'var(--text-light)',
-              fontSize: '1.4rem',
-              cursor: 'pointer',
-              padding: '4px 8px',
-              lineHeight: 1,
-            }}
-          >
-            ✕
-          </button>
+    <div className="modal-mask">
+      <div className="dlg mc sm">
+        <div className="mdl">
+          {/* Header */}
+          <div className="mhd">
+            <h2>{title}</h2>
+            <button onClick={onClose} className="x">
+              ✕
+            </button>
+          </div>
+
+          <p className="sec-note">{subtitle}</p>
+
+          {/* List */}
+          {entries.length > 0 ? (
+            <div>
+              {entries.map((entry, i) => (
+                <a
+                  key={i}
+                  href={entry.bilibiliUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="dev"
+                >
+                  <span>🎮</span>
+                  <div>
+                    <div className="dn">{entry.name}</div>
+                    {entry.role && <div className="dr">{entry.role}</div>}
+                  </div>
+                  <span className="bdg bdg-mc ml-auto">{t('credits.bilibiliLabel')}</span>
+                </a>
+              ))}
+            </div>
+          ) : (
+            <div className="empty">
+              <div className="emoj">🏗️</div>
+              <p className="etx">{t('credits.emptyTitle')}</p>
+              <p className="ehint">{t('credits.emptySubtitle')}</p>
+            </div>
+          )}
         </div>
-
-        <p style={{ color: 'var(--text-light)', fontSize: '0.9rem', marginBottom: '20px' }}>
-          {subtitle}
-        </p>
-
-        {/* List */}
-        {entries.length > 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {entries.map((entry, i) => (
-              <a
-                key={i}
-                href={entry.bilibiliUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  padding: '10px 14px',
-                  background: 'var(--card-soft)',
-                  borderRadius: 'var(--radius)',
-                  textDecoration: 'none',
-                  color: 'var(--text)',
-                  border: '1px solid var(--border)',
-                  transition: 'border-color 0.2s, background 0.2s',
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.borderColor = 'var(--primary)';
-                  e.currentTarget.style.background = 'var(--primary-soft)';
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.borderColor = 'var(--border)';
-                  e.currentTarget.style.background = 'var(--card-soft)';
-                }}
-              >
-                <span style={{ fontSize: '1.2rem' }}>🎮</span>
-                <span style={{ fontWeight: 700, flex: 1 }}>{entry.name}</span>
-                {entry.role && (
-                  <span style={{ color: 'var(--text-light)', fontSize: '0.85rem' }}>{entry.role}</span>
-                )}
-                <span style={{ color: 'var(--primary)', fontSize: '0.8rem' }}>{t('credits.bilibiliLabel')}</span>
-              </a>
-            ))}
-          </div>
-        ) : (
-          <div style={{
-            textAlign: 'center',
-            padding: '40px 20px',
-            color: 'var(--text-light)',
-          }}>
-            <p style={{ fontSize: '3rem', margin: '0 0 12px' }}>🏗️</p>
-            <p>{t('credits.emptyTitle')}</p>
-            <p style={{ fontSize: '0.8rem', marginTop: '8px' }}>{t('credits.emptySubtitle')}</p>
-          </div>
-        )}
       </div>
     </div>
   );

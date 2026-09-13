@@ -1,6 +1,7 @@
 // 用户路由：me, sync, link-player-key, update-profile, send-verification, guest-identity, heartbeat, history
 import { randomBytes, createHash } from 'node:crypto';
-import { sanitizeString, parseCookies, parseBody, jsonResponse, deriveGuestName, generateKey, normalizeTimestamp, getSmtpSender } from '../utils.js';
+import { sanitizeString, parseCookies, parseBody, jsonResponse, deriveGuestName, parseLocale, generateKey, normalizeTimestamp, getSmtpSender } from '../utils.js';
+import { backfillGamesUserId } from '../db.js';
 
 export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNicknameProfanity, transporter, SITE_URL, onlinePlayers, onlineSockets, ONLINE_TIMEOUT, checkRateLimit, getClientIP, invalidateLeaderboardCache }) {
 
@@ -85,9 +86,10 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
           // 只有当前用户能认领且没有其他用户绑定了这个 pk
           const pkConflict = db.prepare('SELECT id FROM users WHERE player_key = ? AND id != ?').get(player_key, auth.userId);
           if (!pkConflict) {
-            const backfilled = db.prepare('UPDATE games SET user_id = ? WHERE player_key = ? AND user_id IS NULL').run(auth.userId, player_key);
-            if (backfilled.changes > 0) {
-              console.log(`[sync] backfilled user_id=${auth.userId} for ${backfilled.changes} games from pk=${player_key.slice(0, 10)}`);
+            // 唯一约束守卫见 db.js:backfillGamesUserId 的注释
+            const changes = backfillGamesUserId(db, auth.userId, player_key);
+            if (changes > 0) {
+              console.log(`[sync] backfilled user_id=${auth.userId} for ${changes} games from pk=${player_key.slice(0, 10)}`);
             }
           }
         }
@@ -101,29 +103,60 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
 
     const VALID_DIFFICULTIES = new Set(['easy', 'medium', 'hard']);
     const insert = db.prepare('INSERT INTO games (player_key, user_id, won, guess_count, difficulty, target_name, timestamp, mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+    // 幂等去重：games 上没有唯一索引，重复调用 /api/sync 会把同一局反复写进去，
+    // 从而刷高 /api/me 的统计与排行榜。整行内容一致才算重复 —— 只有真正重传
+    // 才会命中，两局确实同分的不同对局 timestamp 不同，不会误判。
+    const exists = db.prepare(`
+      SELECT 1 FROM games
+      WHERE user_id = ? AND mode = ? AND timestamp = ? AND target_name = ?
+        AND difficulty = ? AND guess_count = ? AND won = ?
+      LIMIT 1
+    `);
+
+    // ⚠️ 返回**逐行结果**，不是只返回一个总数。
+    //    客户端要按这个结果决定哪些本地记录可以标记「已迁移」并删掉副本 ——
+    //    原先客户端不看结果、无条件标记全部，导致被跳过的记录**本地删了、服务器没有**，
+    //    静默永久丢档（游客单人战绩就是这么丢的）。
+    //    'new' = 新写入；'dup' = 服务器已有（同样算迁移成功）；'bad' = 不接受的模式，客户端应保留本地记录。
     const insertMany = db.transaction((rows) => {
+      const results = [];
       let inserted = 0;
+      let duplicates = 0;
       for (const g of rows) {
-        // 仅支持 single/multi；custom/daily 应走 save-game，静默跳过避免模式失真
-        if (g.mode !== 'multi' && g.mode !== 'single') continue;
-        const mode = g.mode === 'multi' ? 'multi' : 'single';
+        // 只接受 single / multi；daily / custom 走各自的 save-game 通道。
+        // ⚠️ 缺 mode 按 single 处理：客户端单人历史记录**本来就没有 mode 字段**
+        //    （见 src/lib/stats.ts 的 GameRecord），老版本前端也在这样发。
+        //    原先这里写成「必须是 'single' 或 'multi' 字面量」→ 缺字段 = 全部跳过，
+        //    配合客户端无条件标记，就是那次丢档事故的直接原因。
+        const rawMode = g.mode === undefined || g.mode === null ? 'single' : g.mode;
+        if (rawMode !== 'multi' && rawMode !== 'single') { results.push('bad'); continue; }
         const won = !!g.won ? 1 : 0;
         const guessCount = Math.min(50, Math.max(0, parseInt(g.guessCount) || 0));
         const difficulty = VALID_DIFFICULTIES.has(g.difficulty) ? g.difficulty : 'hard';
+        const targetName = sanitizeString(g.targetName || '', 100);
         const ts = normalizeTimestamp(g.timestamp);
-        inserted += insert.run(finalPk, auth.userId, won, guessCount, difficulty, sanitizeString(g.targetName || '', 100), ts, mode).changes;
+
+        if (exists.get(auth.userId, rawMode, ts, targetName, difficulty, guessCount, won)) {
+          duplicates++;
+          results.push('dup');
+          continue;
+        }
+        inserted += insert.run(finalPk, auth.userId, won, guessCount, difficulty, targetName, ts, rawMode).changes;
+        results.push('new');
       }
-      return inserted;
+      return { results, inserted, duplicates };
     });
 
     try {
-      const synced = insertMany(games);
+      const { results, inserted, duplicates } = insertMany(games);
       const extraHeaders = {};
       // 如果生成了新的 pk，用 cookie 告知客户端
       if (finalPk !== player_key) {
         extraHeaders['Set-Cookie'] = `player_key=${finalPk}; SameSite=Lax; Secure; Path=/; Max-Age=94608000; HttpOnly`;
       }
-      return jsonResponse(res, { synced, player_key: finalPk }, 200, extraHeaders);
+      // synced 保持旧语义（真正新写入的行数），客户端老版本仍能读到；
+      // results 是新契约，逐行对应请求数组。
+      return jsonResponse(res, { synced: inserted, duplicates, results, player_key: finalPk }, 200, extraHeaders);
     } catch (err) {
       console.error('[sync] error:', err.message);
       return jsonResponse(res, { error: '同步失败' }, 500);
@@ -164,9 +197,10 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
       // 回填旧 pk 的 ownerless 游戏的 user_id（不改 player_key！）
       const pkConflict = db.prepare('SELECT id FROM users WHERE player_key = ? AND id != ?').get(oldPk, auth.userId);
       if (!pkConflict) {
-        const backfilled = db.prepare('UPDATE games SET user_id = ? WHERE player_key = ? AND user_id IS NULL').run(auth.userId, oldPk);
-        if (backfilled.changes > 0) {
-          console.log(`[link-pk] backfilled user_id=${auth.userId} for ${backfilled.changes} games from pk=${oldPk.slice(0, 10)}`);
+        // 唯一约束守卫见 db.js:backfillGamesUserId 的注释
+        const changes = backfillGamesUserId(db, auth.userId, oldPk);
+        if (changes > 0) {
+          console.log(`[link-pk] backfilled user_id=${auth.userId} for ${changes} games from pk=${oldPk.slice(0, 10)}`);
         }
       }
       return jsonResponse(res, { success: true, player_key: finalPk });
@@ -179,8 +213,9 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
       if (conflict) {
         return jsonResponse(res, { error: '该游戏数据已绑定其他账户' }, 409);
       }
-      const backfilled = db.prepare('UPDATE games SET user_id = ? WHERE player_key = ? AND user_id IS NULL').run(auth.userId, oldPk);
-      console.log(`[link-pk] user=${auth.userId} backfilled ${backfilled.changes} ownerless games from pk=${oldPk.slice(0, 10)}`);
+      // 唯一约束守卫见 db.js:backfillGamesUserId 的注释
+      const backfilled = backfillGamesUserId(db, auth.userId, oldPk);
+      console.log(`[link-pk] user=${auth.userId} backfilled ${backfilled} ownerless games from pk=${oldPk.slice(0, 10)}`);
       return jsonResponse(res, { success: true, player_key: currentUser.player_key });
     }
 
@@ -304,6 +339,15 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
 
     const verifyLink = `${SITE_URL}/verify?token=${verifyToken_}`;
 
+    // 与 register / forgot-password 对齐：SMTP 未配置时 transporter 为 null，
+    // 早返回比等 sendMail 抛 TypeError 被 catch 兜成「邮件发送失败」更准确
+    // （后者会让运维误判成「SMTP 配了但发不出去」）。
+    if (!transporter) {
+      db.prepare('DELETE FROM email_verifications WHERE user_id = ?').run(auth.userId);
+      console.error('[send-verification] SMTP not configured (transporter null)');
+      return jsonResponse(res, { error: '邮件服务未配置，请稍后再试' }, 500);
+    }
+
     try {
       await transporter.sendMail({
         from: getSmtpSender(),
@@ -328,15 +372,17 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
     }
     const cookies = parseCookies(req.headers.cookie || '');
     let guestKey = cookies.guest_id || '';
+    // 名字生成后会被广播给同房玩家，语言只能在这一刻定死 —— 见 utils.js 的注释
+    const locale = parseLocale(req.headers['accept-language']);
 
     if (guestKey && typeof guestKey === 'string' && guestKey.startsWith('g_') && guestKey.length > 10) {
-      const displayName = deriveGuestName(guestKey);
+      const displayName = deriveGuestName(guestKey, locale);
       console.log(`[guest] existing key=${guestKey.slice(0, 10)} name=${displayName}`);
       return jsonResponse(res, { key: guestKey, displayName });
     }
 
     guestKey = 'g_' + randomBytes(12).toString('base64url');
-    const displayName = deriveGuestName(guestKey);
+    const displayName = deriveGuestName(guestKey, locale);
     const cookieHeader = `guest_id=${guestKey}; SameSite=Lax; Secure; Path=/; Max-Age=94608000; HttpOnly`;
     console.log(`[guest] new key=${guestKey.slice(0, 10)} name=${displayName}`);
     return jsonResponse(res, { key: guestKey, displayName }, 200, {
@@ -367,7 +413,7 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
       userId = existing.userId;
     } else {
       const userRow = db.prepare('SELECT id, username, nickname FROM users WHERE player_key = ?').get(playerKey);
-      displayName = userRow?.nickname || userRow?.username || deriveGuestName(playerKey);
+      displayName = userRow?.nickname || userRow?.username || deriveGuestName(playerKey, parseLocale(req.headers['accept-language']));
       username = userRow?.username || null;
       userId = userRow?.id || null;
     }

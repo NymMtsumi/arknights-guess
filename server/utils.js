@@ -51,6 +51,53 @@ export function getClientIP(req) {
   return '127.0.0.1';
 }
 
+// 状态变更方法之外的方法不需要 CSRF 门
+const CSRF_SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+
+/**
+ * CSRF 前置门 —— 只对 POST/PUT/PATCH/DELETE 生效，返回 null 表示放行，否则返回拒绝原因。
+ *
+ * 背景（这道门存在的原因）：
+ *   token cookie 是 `SameSite=None`（必须如此：前端在 www.*、API 在 ws.*，跨站请求
+ *   不带 cookie 就登录不了），所以**浏览器会自动把凭证带上任何跨站请求**。
+ *   而 CORS 只能挡住「读取响应」，挡不住「请求被执行」——
+ *   一个跨站页面只要发一个**简单请求**（GET/HEAD/POST + Content-Type 为
+ *   application/x-www-form-urlencoded、multipart/form-data 或 text/plain 之一），
+ *   浏览器就不会发预检，请求直接打到 handler 上，cookie 照样携带。
+ *   服务端 parseBody 又不看 Content-Type，只要 body 是合法 JSON 就照单全收 →
+ *   攻击者用 `Content-Type: text/plain` + JSON body 就能替已登录用户发起写操作。
+ *
+ * 两条独立判据，任一不过即拒：
+ *   1. 带了 Origin、但不在 allowlist 里 → 跨站发起的写请求。
+ *      非浏览器客户端（curl / 冒烟脚本 / GitHub Actions 的部署 webhook）不发 Origin，
+ *      这里不拦 —— 它们本来就不共享浏览器 cookie，不是 CSRF 的载体。
+ *   2. 带了 body、但 Content-Type 不是 application/json → 上面那三种「简单请求」
+ *      类型之一，说明它刻意绕过了预检。要求 JSON 就等于强制它走预检，
+ *      而预检是受 allowlist 约束的。
+ *      ⚠️ 无 body 的请求不拦：跨站空 body POST 什么也改不了
+ *         （parseBody 得到 {}，各 handler 都要求具体字段）。
+ *         例如 `POST /api/logout` 就是无 body、无 Content-Type 的调用方。
+ */
+export function csrfReject(req) {
+  if (CSRF_SAFE_METHODS.has(req.method)) return null;
+
+  const origin = req.headers.origin;
+  if (origin && !getAllowedOrigins().includes(origin)) {
+    return `来源不被允许：${origin}`;
+  }
+
+  const len = req.headers['content-length'];
+  const hasBody = (len !== undefined && len !== '0') || !!req.headers['transfer-encoding'];
+  if (hasBody) {
+    // 只取分号前的 media type，"application/json; charset=utf-8" 也算通过
+    const ct = String(req.headers['content-type'] || '').split(';')[0].trim().toLowerCase();
+    if (ct !== 'application/json') {
+      return `Content-Type 必须为 application/json（收到 ${ct || '空'}）`;
+    }
+  }
+  return null;
+}
+
 // 解析 JSON 请求体（Body 大小限制 1MB，读取超时 30s）
 export function parseBody(req) {
   return new Promise((resolve) => {
@@ -103,10 +150,33 @@ export function jsonResponse(res, data, status = 200, extraHeaders = {}) {
   res.end(body);
 }
 
-// 游客显示名
-export function deriveGuestName(key) {
+/* 从 Accept-Language 解析出界面语言，只区分中/英两档，与前端 Locale 类型对齐。
+   兜底是 'zh-CN'，与客户端一致（src/lib/i18n.tsx 的 getStoredLocale 解析不出时同样是 zh-CN）。
+   始终返回确定的字符串、绝不返回 null：null 会被当成「有值」传下去，
+   反而绕过 deriveGuestName 的 `= 'zh-CN'` 默认参数（默认参数只对 undefined 生效）。 */
+export function parseLocale(acceptLanguage) {
+  if (typeof acceptLanguage !== 'string' || !acceptLanguage) return 'zh-CN';
+  const lower = acceptLanguage.toLowerCase();
+  if (lower.includes('zh')) return 'zh-CN';
+  if (/^[a-z]{2}/.test(lower)) return 'en';
+  return 'zh-CN';
+}
+
+/* 游客显示名。
+   ⚠️ 这个名字是**共享身份**，不是纯展示文本：src/hooks/usePlayerName.ts 会把它
+   当作玩家的 playerName，随组队请求广播给同房其他玩家，而他们的界面语言未知。
+   所以不可能「返回结构体、由各自的客户端本地化」—— 必须在这里定成唯一一个字符串。
+   唯一有资格决定它是哪种语言的人，就是游客自己（Accept-Language）。
+
+   ⚠️ 已知取舍：名字由 (key, locale) 纯函数导出，没有落库。
+   同一游客换浏览器/换系统语言后，重新派生出的名字前缀会跟着变。
+   这对一次性占位名可以接受（游客随时可以自己改昵称）；
+   若将来要求跨设备稳定，就得在首次生成时把结果连同 guest_id 一起持久化。 */
+export function deriveGuestName(key, locale = 'zh-CN') {
   const code = createHash('sha256').update(key + 'display').digest('hex').slice(0, 5).toUpperCase();
-  return `访客#${code}`;
+  // 不加空格：'Guest #A1B2C' 恰好 12 字符，正好顶到 usePlayerName 的 MAX_LENGTH=12，
+  // 没有任何余量，将来格式一变就会被静默截断、还少一位校验码。中文侧本来也无空格。
+  return locale === 'en' ? `Guest#${code}` : `访客#${code}`;
 }
 
 // 唯一显示编号（基于 userId + 盐值，确保跨重启稳定）

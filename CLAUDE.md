@@ -16,7 +16,15 @@
 | 数据库 | SQLite (`better-sqlite3`)，路径 `/opt/liyiba/data.db` |
 | 认证 | JWT (`jsonwebtoken` + `bcryptjs`) + `player_key` Cookie |
 | 邮件 | nodemailer → QQ SMTP (`smtp.qq.com:465`) |
-| i18n | next-intl (zh-CN, en) |
+| i18n | **自建 React Context**（`src/lib/i18n.tsx`，约 86 行），非 next-intl |
+
+> ⚠️ `package.json` 里的 `next-intl` **没有任何地方 import**（grep 零命中），
+> 是遗留依赖。实际实现是 `src/lib/i18n.tsx` 的自建 Context：
+> 扁平点号键（`admin.users.colName`）+ `{{param}}` 字符串替换。
+>
+> **不支持 ICU 语法**。写 `{count, plural, one {...} other {...}}` 不会被解析，
+> 会**原样显示在界面上**且不报错。复数/选择要自己拼：
+> 用 `t('key', { count })` 配合两侧 JSON 里写死的措辞，或按数量选不同的键。
 
 ## 域名 & 部署架构
 ```
@@ -74,15 +82,19 @@ node server/index.js  # 单独启动后端（:3001，需要 server/.env）
 
 每次 push `main`（含共同开发者直接推送）都会触发 `.github/workflows/deploy.yml`，**部署前强制通过两道 gate**：
 
-1. **review（静态审查）** — `npx tsc --noEmit`（前端类型检查）+ `find server -name '*.js' | xargs node --check`（服务端语法检查）
-2. **smoke（行为测试）** — `scripts/smoke-all.sh` 顺序跑 5 个脚本，任一失败即阻断部署：
+1. **review（静态审查）** — `npx tsc --noEmit`（前端类型检查）+ `find server -name '*.js' | xargs node --check`（服务端语法检查）+ 三道哨兵：`scripts/check-characters.mjs`（两份干员数据字节一致）、`scripts/check-v12-selector.mjs`、`scripts/check-i18n-keys.mjs`
+2. **smoke（行为测试）** — `scripts/smoke-all.sh` 顺序跑 6 个脚本，任一失败即阻断部署：
    - `tests/auth-smoke.mjs`（认证链路 API 级：注册/验证/登录/忘记密码/重置/旧 token 失效 + 负面用例）
    - `tests/admin-smoke.mjs`（管理面板 API 级：仪表盘/公告/用户/封禁/角色/令牌/审计/在线 + 权限负面）
    - `tests/solo-smoke.mjs`（单人/每日/排行榜/统计 UI 级，Playwright）
    - `tests/multiplayer-smoke.mjs`（标准房/自定义房/快速匹配 UI 级：建房加房/猜测回环/属性列过滤/断线徽标）
    - `tests/party-smoke.mjs`（派对模式 UI 级回归：建房/加房/分享链接自动进房/准备开始/离开复位/断线重连/**局中断线重连**）
+   - `tests/routes-smoke.mjs`（全路由横切：11 路由 × 2 主题，逐页查 pageerror / 图标 404 / 破图 —— 接住「改 A 页弄挂 B 页」）
 
-- 本地一键复现：`npm run smoke:all`（自动 build → 顺序跑全部 5 个）；单独跑某个：`npm run smoke:auth` / `smoke:admin` / `smoke:solo` / `smoke:multiplayer` / `smoke`
+- ⚠️ `deploy.yml` 的 `on.push.paths` 必须涵盖**所有会被 Pages 构建上线**的输入
+  （`src/**` `public/**` `next.config.ts` `tsconfig.json` `postcss.config.mjs` …）。
+  漏一项 = 改它时本 workflow 根本不触发 = 两道 gate 全绕过，但站点照样发布。
+- 本地一键复现：`npm run smoke:all`（自动 build → 顺序跑全部 6 个）；单独跑某个：`npm run smoke:auth` / `smoke:admin` / `smoke:solo` / `smoke:multiplayer` / `smoke`（派对）/ `smoke:routes`；静态哨兵：`npm run check:i18n` / `check:contrast` / `check:sort` / `data:check`
 - 任一 gate 失败 → 部署被阻止；`workflow_dispatch` 手动触发同样强制过这两道 gate
 - 前端变更（`src/**`）→ 冒烟跑通后 Cloudflare Pages 自动构建；后端变更（`server/**`）→ gate 通过后 webhook 部署 VPS
 - 深度审查（六轮代码审查 skillscoed）为 Claude Code 人工步骤，重要改动建议先跑一次再 push

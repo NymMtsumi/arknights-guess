@@ -16,12 +16,25 @@ import AdminAuditLog from '@/components/admin/AdminAuditLog';
 
 type Tab = 'dashboard' | 'characters' | 'announcements' | 'users' | 'guests' | 'online' | 'tokens' | 'auditLog';
 
+/** tab 表 —— 顺序即展示顺序。图标只做辨识，不承载语义。 */
+const TABS: { id: Tab; icon: string; label: string }[] = [
+  { id: 'dashboard', icon: '📊', label: 'admin.tabDashboard' },
+  { id: 'characters', icon: '🎮', label: 'admin.tabCharacters' },
+  { id: 'announcements', icon: '📢', label: 'admin.tabAnnouncements' },
+  { id: 'users', icon: '👤', label: 'admin.tabUsers' },
+  { id: 'guests', icon: '🎭', label: 'admin.tabGuests' },
+  { id: 'online', icon: '🟢', label: 'admin.tabOnline' },
+  { id: 'tokens', icon: '🔑', label: 'admin.tabTokens' },
+  { id: 'auditLog', icon: '📋', label: 'admin.tabAuditLog' },
+];
+
 export default function AdminPage() {
   const { t } = useI18n();
   const router = useRouter();
   const [tab, setTab] = useState<Tab>('dashboard');
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [adminName, setAdminName] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -34,6 +47,7 @@ export default function AdminPage() {
       const data = await fetchMe();
       if (data.role === 'admin') {
         setIsAdmin(true);
+        setAdminName(data.nickname || data.username);
       } else {
         setError(t('admin.noPermission'));
       }
@@ -78,73 +92,27 @@ export default function AdminPage() {
     }
   };
 
-  // ===== 样式 =====
-  const pageStyle: React.CSSProperties = {
-    maxWidth: '960px',
-    margin: '40px auto',
-    padding: '24px',
+  const renderTab = (which: Tab) => {
+    switch (which) {
+      case 'dashboard': return <AdminDashboard />;
+      case 'characters': return <AdminCharacters />;
+      case 'announcements': return <AdminAnnouncements />;
+      case 'users': return <AdminUsers />;
+      case 'guests': return <AdminGuests />;
+      case 'online': return <AdminOnline />;
+      case 'tokens': return <AdminTokens />;
+      case 'auditLog': return <AdminAuditLog />;
+    }
   };
 
-  const headerStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: '24px',
-  };
-
-  const titleStyle: React.CSSProperties = {
-    fontFamily: 'var(--font-display)',
-    fontSize: '1.5rem',
-    fontStyle: 'italic',
-    fontWeight: 900,
-    margin: 0,
-  };
-
-  const tabsStyle: React.CSSProperties = {
-    display: 'flex',
-    gap: '4px',
-    marginBottom: '24px',
-    borderBottom: '2px solid var(--border)',
-    overflowX: 'auto',
-    flexWrap: 'nowrap',
-    WebkitOverflowScrolling: 'touch',
-  };
-
-  const tabBtnBase: React.CSSProperties = {
-    padding: '10px 20px',
-    border: 'none',
-    background: 'transparent',
-    color: 'var(--text-light)',
-    fontSize: '0.9rem',
-    fontWeight: 600,
-    cursor: 'pointer',
-    borderBottom: '2px solid transparent',
-    marginBottom: '-2px',
-    transition: 'all 0.15s',
-  };
-
-  const tabBtnActive: React.CSSProperties = {
-    ...tabBtnBase,
-    color: 'var(--text)',
-    borderBottomColor: 'var(--primary)',
-  };
-
-  const btnStyle: React.CSSProperties = {
-    padding: '8px 16px',
-    background: 'var(--primary)',
-    color: 'var(--bg)',
-    border: 'none',
-    borderRadius: 'var(--radius)',
-    fontSize: '0.85rem',
-    fontWeight: 700,
-    cursor: 'pointer',
-  };
-
-  // ===== 加载中 =====
+  // ===== 校验中 =====
   if (loading) {
     return (
-      <div style={pageStyle}>
-        <p style={{ textAlign: 'center', color: 'var(--text-light)' }}>{t('admin.verifying')}</p>
+      <div className="ui-v12 ui-admin" style={shell}>
+        <div className="gate">
+          <div className="spin" />
+          <p>{t('admin.verifying')}</p>
+        </div>
       </div>
     );
   }
@@ -152,27 +120,14 @@ export default function AdminPage() {
   // ===== 无权限 =====
   if (!isAdmin) {
     return (
-      <div style={pageStyle}>
-        <div style={{
-          textAlign: 'center',
-          padding: '60px 20px',
-          background: 'var(--card)',
-          borderRadius: 'var(--radius)',
-        }}>
-          <p style={{ fontSize: '3rem', margin: '0 0 16px' }}>🔒</p>
-          <h2 style={{ margin: '0 0 8px' }}>{t('admin.accessDenied')}</h2>
-          <p style={{ color: 'var(--text-light)', margin: '0 0 20px' }}>{error || t('admin.accessDeniedDesc')}</p>
-          <a href="/" style={{
-            display: 'inline-block',
-            padding: '10px 24px',
-            background: 'var(--primary)',
-            color: 'var(--bg)',
-            textDecoration: 'none',
-            borderRadius: 'var(--radius)',
-            fontWeight: 700,
-          }}>
+      <div className="ui-v12 ui-admin" style={shell}>
+        <div className="gate">
+          <div className="gic">🔒</div>
+          <h2>{t('admin.accessDenied')}</h2>
+          <p>{error || t('admin.accessDeniedDesc')}</p>
+          <Link href="/" className="btn-p" style={{ display: 'inline-block', marginTop: 20, textDecoration: 'none' }}>
             {t('game.back')}
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -180,58 +135,55 @@ export default function AdminPage() {
 
   // ===== 管理员面板 =====
   return (
-    <div style={pageStyle}>
-      <div style={headerStyle}>
-        <h1 style={titleStyle}>⚙️ {t('admin.panelTitle')}</h1>
-        <Link href="/" style={{
-          padding: '8px 16px',
-          background: 'var(--input-bg)',
-          color: 'var(--text)',
-          border: '1px solid var(--border)',
-          borderRadius: 'var(--radius)',
-          textDecoration: 'none',
-          fontSize: '0.85rem',
-          fontWeight: 600,
-        }}>
-          ← {t('game.back')}
-        </Link>
+    <div className="ui-v12 ui-admin" style={shell}>
+      <div className="panel-hd">
+        <div>
+          <h1>⚙️ {t('admin.panelTitle')}</h1>
+          <div className="sub">{t('admin.panelSub')}</div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div className="whoami">
+            <span className="pulse" />
+            <b>{adminName}</b>
+          </div>
+          <Link href="/" className="btn-o" style={{ textDecoration: 'none' }}>
+            ← {t('game.back')}
+          </Link>
+        </div>
       </div>
 
-      <div style={tabsStyle}>
-        <button style={tab === 'dashboard' ? tabBtnActive : tabBtnBase} onClick={() => handleTabChange('dashboard')}>
-          📊 {t('admin.tabDashboard')}
-        </button>
-        <button style={tab === 'characters' ? tabBtnActive : tabBtnBase} onClick={() => handleTabChange('characters')}>
-          🎮 {t('admin.tabCharacters')}
-        </button>
-        <button style={tab === 'announcements' ? tabBtnActive : tabBtnBase} onClick={() => handleTabChange('announcements')}>
-          📢 {t('admin.tabAnnouncements')}
-        </button>
-        <button style={tab === 'users' ? tabBtnActive : tabBtnBase} onClick={() => handleTabChange('users')}>
-          👤 {t('admin.tabUsers')}
-        </button>
-        <button style={tab === 'guests' ? tabBtnActive : tabBtnBase} onClick={() => handleTabChange('guests')}>
-          🎭 {t('admin.tabGuests')}
-        </button>
-        <button style={tab === 'online' ? tabBtnActive : tabBtnBase} onClick={() => handleTabChange('online')}>
-          🟢 {t('admin.tabOnline')}
-        </button>
-        <button style={tab === 'tokens' ? tabBtnActive : tabBtnBase} onClick={() => handleTabChange('tokens')}>
-          🔑 {t('admin.tabTokens')}
-        </button>
-        <button style={tab === 'auditLog' ? tabBtnActive : tabBtnBase} onClick={() => handleTabChange('auditLog')}>
-          📋 {t('admin.tabAuditLog')}
-        </button>
-      </div>
+      <div className="console" style={{ marginTop: 18 }}>
+        <nav className="rail">
+          <div className="rail-hd">{t('admin.panelTitle')}</div>
+          {TABS.map((tb) => (
+            <button
+              key={tb.id}
+              type="button"
+              className={tab === tb.id ? 'on' : undefined}
+              aria-current={tab === tb.id ? 'page' : undefined}
+              onClick={() => handleTabChange(tb.id)}
+            >
+              <span aria-hidden="true">{tb.icon}</span>
+              <span>{t(tb.label)}</span>
+            </button>
+          ))}
+        </nav>
 
-      {tab === 'dashboard' && <AdminDashboard />}
-      {tab === 'characters' && <AdminCharacters />}
-      {tab === 'announcements' && <AdminAnnouncements />}
-      {tab === 'users' && <AdminUsers />}
-      {tab === 'guests' && <AdminGuests />}
-      {tab === 'online' && <AdminOnline />}
-      {tab === 'tokens' && <AdminTokens />}
-      {tab === 'auditLog' && <AdminAuditLog />}
+        <div className="panes">
+          {TABS.map((tb) => (
+            <div key={tb.id} className={'view' + (tab === tb.id ? ' on' : '')}>
+              {tab === tb.id && renderTab(tb.id)}
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
+
+/** 面板外壳。比公开页宽 —— 216px 的 rail 之外还要放得下多列表格。 */
+const shell: React.CSSProperties = {
+  maxWidth: '1200px',
+  margin: '40px auto',
+  padding: '24px',
+};

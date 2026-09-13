@@ -62,6 +62,9 @@ function migrateData(): void {
     //   - 修复 stats 中某些字段可能为字符串的问题
     //   - 修复 history 中可能缺少字段的旧记录
     if (storedVersion < 2) {
+      // 只要有一处迁移失败，就不推进版本号（下面统一判定）
+      let migratedOk = true;
+
       // 迁移 stats
       try {
         const rawStats = localStorage.getItem(STATS_KEY);
@@ -77,7 +80,10 @@ function migrateData(): void {
             localStorage.setItem(STATS_KEY, JSON.stringify(stats));
           }
         }
-      } catch {}
+      } catch (err) {
+        console.warn('[DataMigration] stats 迁移失败，保留原数据：', err);
+        migratedOk = false;
+      }
 
       // 迁移 history
       try {
@@ -88,11 +94,16 @@ function migrateData(): void {
             const migrated = history
               .filter(r => r && typeof r === 'object')
               .map((r: any) => {
-                // 转换旧字段（如果缺失）
-                if (r.mode === 'multi') {
+                // ⚠️ 'custom' 也是 MultiGameRecord（见 MultiGameRecord.mode 的类型），
+                //    必须与 'multi' 走同一分支。早前只判 'multi'，自定义房记录会掉进
+                //    单人分支被重写成 {timestamp,won,guessCount,difficulty,targetName} ——
+                //    丢 mode / custom（属性列、最大次数、回合时限、难度）/ bestOf / 比分 /
+                //    rounds / player_key，且**不可逆**（本地历史没有服务端副本可复原）。
+                if (r.mode === 'multi' || r.mode === 'custom') {
                   return {
+                    ...r,
                     timestamp: Number(r.timestamp) || Date.now(),
-                    mode: 'multi' as const,
+                    mode: r.mode,
                     won: Boolean(r.won),
                     bestOf: Number(r.bestOf) || 0,
                     myScore: Number(r.myScore) || 0,
@@ -105,19 +116,36 @@ function migrateData(): void {
                     })) : [],
                   };
                 }
+                // 认不出的形态（未来新增的 mode 等）原样保留：迁移的职责是补字段，
+                // 不是把不认识的数据改坏。
+                if (r.mode && r.mode !== 'single') return r;
                 return {
+                  ...r,
                   timestamp: Number(r.timestamp) || Date.now(),
                   won: Boolean(r.won),
                   guessCount: Number(r.guessCount) || 0,
                   difficulty: String(r.difficulty || 'hard'),
                   targetName: String(r.targetName || r.name || ''),
                 };
-              })
-              .slice(0, MAX_HISTORY);
+              });
+            // ⚠️ 这里**不做** slice(0, MAX_HISTORY)：迁移是「修字段」，截断是写入路径的职责
+            //    （appendHistory / setHistory 每次写入都已按 MAX_HISTORY 截断）。
+            //    在迁移里顺手截断的后果：老用户升级一次就永久丢掉第 80 条以外的历史。
             localStorage.setItem(HISTORY_KEY, JSON.stringify(migrated));
           }
         }
-      } catch {}
+      } catch (err) {
+        // 原来的空 catch 让「写坏了」和「写完了」结局相同 —— 下面那句 VERSION_KEY 照写不误，
+        // 半迁移状态被标记成已完成，用户再也修不回来。
+        console.warn('[DataMigration] history 迁移失败，保留原数据：', err);
+        migratedOk = false;
+      }
+
+      // ⚠️ 只有全部成功才推进版本号；失败就停在旧版本，下次加载自动重试。
+      if (!migratedOk) {
+        console.warn(`[DataMigration] 未完成，版本号保持 v${storedVersion}`);
+        return;
+      }
     }
 
     // 标记当前版本

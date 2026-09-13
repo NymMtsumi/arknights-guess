@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "./v12.css";
+@import "./v12-components.css";
 
 /* ============================================
    主题：浅色（Light）
@@ -14,9 +16,15 @@
   --text-sec: #5f5058;
   --text-light: #90838b;
   --input-bg: #ffffff;
-  --primary: #0d8a8e;
+  /* ⚠️ --primary 是**实心按钮的底色**，而按钮文字用的是 --bg (#f3f0ea)。
+     原来的 #0d8a8e 与该文字只有 3.66:1，低于 WCAG AA 正文要求的 4.5:1；
+     换成白字也救不了（#fff 在 #0d8a8e 上只有 4.16:1）—— 只能把底色压暗。
+     #0b7579 是保持色相不变、刚好越过 AA 的最近一档（4.81:1）。
+     反过来，--primary 当**文字**用在浅色底上时对比度同样受益（3.66 → 4.81）。
+     深色主题不吃这一档：blast 显式声明了自己的 --primary (#28C8CC)。 */
+  --primary: #0b7579;
   --primary-hover: #0a6f73;
-  --primary-soft: rgba(13, 138, 142, .18);
+  --primary-soft: rgba(11, 117, 121, .18);
   --primary-strong: #074d50;
   --success: #0e7a4b;
   --warning: #ad5f00;
@@ -145,7 +153,7 @@ body {
 }
 
 /* 浅色主题的 body 背景 */
-html:not([data-theme="blast"]):not([data-theme="blast-wine"]) body {
+html:not([data-theme="blast"]) body {
   background:
     radial-gradient(circle at 50% -8%, rgba(13, 138, 142, .08), transparent 36rem),
     radial-gradient(circle at 92% 10%, rgba(40, 200, 204, .05), transparent 20rem),
@@ -194,8 +202,7 @@ button, a {
   background: rgba(13, 138, 142, 0.45);
 }
 
-html[data-theme="blast"] ::selection,
-html[data-theme="blast-wine"] ::selection {
+html[data-theme="blast"] ::selection {
   background: rgba(40, 200, 204, 0.25);
 }
 
@@ -250,7 +257,7 @@ html[data-theme="blast"] .page-scroll {
   background: rgba(255, 255, 255, 0.04);
 }
 
-html:not([data-theme="blast"]):not([data-theme="blast-wine"]) *::-webkit-scrollbar-track {
+html:not([data-theme="blast"]) *::-webkit-scrollbar-track {
   background: rgba(32, 17, 24, 0.04);
 }
 
@@ -259,7 +266,7 @@ html:not([data-theme="blast"]):not([data-theme="blast-wine"]) *::-webkit-scrollb
   border-radius: 0;
 }
 
-html:not([data-theme="blast"]):not([data-theme="blast-wine"]) *::-webkit-scrollbar-thumb {
+html:not([data-theme="blast"]) *::-webkit-scrollbar-thumb {
   background: rgba(13, 138, 142, 0.38);
 }
 
@@ -287,7 +294,7 @@ html {
   touch-action: none;
 }
 
-html:not([data-theme="blast"]):not([data-theme="blast-wine"]) .scroll-slider-track {
+html:not([data-theme="blast"]) .scroll-slider-track {
   background: rgba(32, 17, 24, 0.08);
 }
 
@@ -307,7 +314,7 @@ html:not([data-theme="blast"]):not([data-theme="blast-wine"]) .scroll-slider-tra
   -webkit-user-select: none;
 }
 
-html:not([data-theme="blast"]):not([data-theme="blast-wine"]) .scroll-slider-thumb {
+html:not([data-theme="blast"]) .scroll-slider-thumb {
   background: rgba(13, 138, 142, 0.45);
 }
 
@@ -319,7 +326,7 @@ html:not([data-theme="blast"]):not([data-theme="blast-wine"]) .scroll-slider-thu
     box-shadow: 0 0 10px rgba(40, 200, 204, 0.25);
   }
 
-  html:not([data-theme="blast"]):not([data-theme="blast-wine"]) .scroll-slider-thumb:hover {
+  html:not([data-theme="blast"]) .scroll-slider-thumb:hover {
     background: rgba(13, 138, 142, 0.7);
     box-shadow: 0 0 10px rgba(13, 138, 142, 0.2);
   }
@@ -333,7 +340,7 @@ html:not([data-theme="blast"]):not([data-theme="blast-wine"]) .scroll-slider-thu
   cursor: grabbing;
 }
 
-html:not([data-theme="blast"]):not([data-theme="blast-wine"]) .scroll-slider-thumb:active {
+html:not([data-theme="blast"]) .scroll-slider-thumb:active {
   background: rgba(13, 138, 142, 0.85);
   box-shadow: 0 0 14px rgba(13, 138, 142, 0.28);
 }
@@ -343,7 +350,7 @@ html:not([data-theme="blast"]):not([data-theme="blast-wine"]) .scroll-slider-thu
   .scroll-slider-track:hover .scroll-slider-thumb:not(:active) {
     background: rgba(40, 200, 204, 0.5);
   }
-  html:not([data-theme="blast"]):not([data-theme="blast-wine"]) .scroll-slider-track:hover .scroll-slider-thumb:not(:active) {
+  html:not([data-theme="blast"]) .scroll-slider-track:hover .scroll-slider-thumb:not(:active) {
     background: rgba(13, 138, 142, 0.55);
   }
 }
@@ -362,7 +369,7 @@ html:not([data-theme="blast"]):not([data-theme="blast-wine"]) .scroll-slider-thu
     background: rgba(40, 200, 204, 0.48);
   }
 
-  html:not([data-theme="blast"]):not([data-theme="blast-wine"]) .scroll-slider-thumb {
+  html:not([data-theme="blast"]) .scroll-slider-thumb {
     background: rgba(13, 138, 142, 0.5);
   }
 
@@ -373,7 +380,7 @@ html:not([data-theme="blast"]):not([data-theme="blast-wine"]) .scroll-slider-thu
     box-shadow: 0 0 18px rgba(40, 200, 204, 0.4);
   }
 
-  html:not([data-theme="blast"]):not([data-theme="blast-wine"]) .scroll-slider-thumb:active {
+  html:not([data-theme="blast"]) .scroll-slider-thumb:active {
     background: rgba(13, 138, 142, 0.88);
     box-shadow: 0 0 16px rgba(13, 138, 142, 0.3);
   }
@@ -643,8 +650,7 @@ html:not([data-theme="blast"]):not([data-theme="blast-wine"]) .scroll-slider-thu
   box-shadow: 0 0 14px rgba(255, 101, 120, 0.3) !important;
 }
 
-html[data-theme="blast"] .game-search-input.low-guesses:focus,
-html[data-theme="blast-wine"] .game-search-input.low-guesses:focus {
+html[data-theme="blast"] .game-search-input.low-guesses:focus {
   box-shadow: 0 0 16px rgba(255, 101, 120, 0.35) !important;
 }
 
@@ -677,8 +683,7 @@ html[data-theme="blast-wine"] .game-search-input.low-guesses:focus {
   }
 }
 
-html[data-theme="blast"] .header-bar::after,
-html[data-theme="blast-wine"] .header-bar::after {
+html[data-theme="blast"] .header-bar::after {
   content: '';
   position: absolute;
   bottom: 0;
@@ -720,8 +725,7 @@ html[data-theme="blast-wine"] .header-bar::after {
   animation: kicker-enter 0.55s 0.08s cubic-bezier(0.2, 0.72, 0.25, 1) both;
 }
 
-html[data-theme="blast"] .hero-kicker,
-html[data-theme="blast-wine"] .hero-kicker {
+html[data-theme="blast"] .hero-kicker {
   color: var(--primary-strong);
   border-left-color: var(--primary);
   text-shadow: 0 0 14px rgba(40, 200, 204, 0.25);
@@ -740,7 +744,7 @@ html[data-theme="blast"] .home-hero {
   clip-path: none;
 }
 
-html:not([data-theme="blast"]):not([data-theme="blast-wine"]) .home-hero {
+html:not([data-theme="blast"]) .home-hero {
   background:
     linear-gradient(90deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.88)),
     radial-gradient(circle at 74% 46%, rgba(13, 138, 142, 0.15), transparent 24rem),
@@ -750,8 +754,7 @@ html:not([data-theme="blast"]):not([data-theme="blast-wine"]) .home-hero {
   clip-path: none;
 }
 
-html[data-theme="blast"] .home-hero::before,
-html[data-theme="blast-wine"] .home-hero::before {
+html[data-theme="blast"] .home-hero::before {
   content: '';
   position: absolute;
   top: -130px;
@@ -768,8 +771,7 @@ html[data-theme="blast-wine"] .home-hero::before {
   pointer-events: none;
 }
 
-html[data-theme="blast"] .home-hero::after,
-html[data-theme="blast-wine"] .home-hero::after {
+html[data-theme="blast"] .home-hero::after {
   content: '';
   position: absolute;
   right: 0;
@@ -791,9 +793,8 @@ html[data-theme="blast-wine"] .home-hero::after {
   margin-bottom: 8px;
 }
 
-html[data-theme="blast"] .hero-subtitle,
-html[data-theme="blast-wine"] .hero-subtitle { color: #fff; text-shadow: 0 0 16px rgba(40, 200, 204, 0.12); }
-html:not([data-theme="blast"]):not([data-theme="blast-wine"]) .hero-subtitle { color: var(--text-sec); }
+html[data-theme="blast"] .hero-subtitle { color: #fff; text-shadow: 0 0 16px rgba(40, 200, 204, 0.12); }
+html:not([data-theme="blast"]) .hero-subtitle { color: var(--text-sec); }
 
 .muted {
   position: relative;
@@ -804,7 +805,7 @@ html:not([data-theme="blast"]):not([data-theme="blast-wine"]) .hero-subtitle { c
 }
 
 html[data-theme="blast"] .muted { color: #99a2a5; }
-html:not([data-theme="blast"]):not([data-theme="blast-wine"]) .muted { color: var(--text-light); }
+html:not([data-theme="blast"]) .muted { color: var(--text-light); }
 
 .home-hero h1 {
   position: relative;
@@ -819,8 +820,7 @@ html:not([data-theme="blast"]):not([data-theme="blast-wine"]) .muted { color: va
   animation: title-enter 0.62s 0.12s cubic-bezier(0.18, 0.8, 0.24, 1) both;
 }
 
-html[data-theme="blast"] .home-hero h1,
-html[data-theme="blast-wine"] .home-hero h1 {
+html[data-theme="blast"] .home-hero h1 {
   color: #fff;
   text-shadow: 5px 5px 0 rgba(40, 200, 204, 0.2), 10px 10px 34px rgba(0, 0, 0, 0.42);
   transform: skewX(-4deg);
@@ -829,7 +829,7 @@ html[data-theme="blast-wine"] .home-hero h1 {
     title-glow 3s 1.8s ease-in-out infinite;
 }
 
-html:not([data-theme="blast"]):not([data-theme="blast-wine"]) .home-hero h1 {
+html:not([data-theme="blast"]) .home-hero h1 {
   color: var(--text);
   text-shadow: 2px 2px 0 rgba(13, 138, 142, 0.15);
   transform: skewX(-2deg);
@@ -884,13 +884,12 @@ html[data-theme="blast"] .menu-card {
   color: #fff;
 }
 
-html:not([data-theme="blast"]):not([data-theme="blast-wine"]) .menu-card {
+html:not([data-theme="blast"]) .menu-card {
   background: var(--card);
   box-shadow: var(--shadow);
 }
 
-html[data-theme="blast"] .menu-card::before,
-html[data-theme="blast-wine"] .menu-card::before {
+html[data-theme="blast"] .menu-card::before {
   content: '';
   position: absolute;
   top: 0;
@@ -901,8 +900,7 @@ html[data-theme="blast-wine"] .menu-card::before {
   box-shadow: 0 0 20px color-mix(in srgb, var(--menu-color, var(--primary)) 35%, transparent);
 }
 
-html[data-theme="blast"] .menu-card::after,
-html[data-theme="blast-wine"] .menu-card::after {
+html[data-theme="blast"] .menu-card::after {
   content: '';
   position: absolute;
   inset: -60% auto -60% -65%;
@@ -914,7 +912,7 @@ html[data-theme="blast-wine"] .menu-card::after {
 }
 
 /* 非 Blast 主题也加上光线扫过 */
-html:not([data-theme="blast"]):not([data-theme="blast-wine"]) .menu-card::after {
+html:not([data-theme="blast"]) .menu-card::after {
   content: '';
   position: absolute;
   inset: -60% auto -60% -65%;
@@ -927,8 +925,7 @@ html:not([data-theme="blast"]):not([data-theme="blast-wine"]) .menu-card::after 
 
 /* hover 时光线扫过 */
 html[data-theme="blast"] .menu-card:hover::after,
-html[data-theme="blast-wine"] .menu-card:hover::after,
-html:not([data-theme="blast"]):not([data-theme="blast-wine"]) .menu-card:hover::after {
+html:not([data-theme="blast"]) .menu-card:hover::after  {
   left: 100%;
 }
 
@@ -942,7 +939,7 @@ html[data-theme="blast"] .menu-card:hover {
   transform: translateY(-4px);
 }
 
-html:not([data-theme="blast"]):not([data-theme="blast-wine"]) .menu-card:hover {
+html:not([data-theme="blast"]) .menu-card:hover {
   border-color: var(--border-strong);
   box-shadow:
     0 0 18px color-mix(in srgb, var(--menu-color, var(--primary)) 22%, transparent),
@@ -951,8 +948,7 @@ html:not([data-theme="blast"]):not([data-theme="blast-wine"]) .menu-card:hover {
   transform: translateY(-2px);
 }
 
-html[data-theme="blast"] .menu-card:hover .menu-icon,
-html[data-theme="blast-wine"] .menu-card:hover .menu-icon {
+html[data-theme="blast"] .menu-card:hover .menu-icon {
   background: color-mix(in srgb, var(--menu-color, var(--primary)) 28%, transparent);
   box-shadow: 0 0 24px color-mix(in srgb, var(--menu-color, var(--primary)) 22%, transparent);
   transform: translateY(-3px) skewX(-4deg) rotate(-2deg);
@@ -974,12 +970,11 @@ html[data-theme="blast-wine"] .menu-card:hover .menu-icon {
   transition: transform 0.3s ease;
 }
 
-html[data-theme="blast"] .menu-icon,
-html[data-theme="blast-wine"] .menu-icon {
+html[data-theme="blast"] .menu-icon {
   background: color-mix(in srgb, var(--menu-color, var(--primary)) 18%, transparent);
 }
 
-html:not([data-theme="blast"]):not([data-theme="blast-wine"]) .menu-icon {
+html:not([data-theme="blast"]) .menu-icon {
   background: var(--primary-soft);
 }
 
@@ -996,10 +991,9 @@ html:not([data-theme="blast"]):not([data-theme="blast-wine"]) .menu-icon {
 }
 
 html[data-theme="blast"] .menu-description { color: #99a2a5; }
-html:not([data-theme="blast"]):not([data-theme="blast-wine"]) .menu-description { color: var(--text-sec); }
+html:not([data-theme="blast"]) .menu-description { color: var(--text-sec); }
 
-html[data-theme="blast"] .menu-arrow,
-html[data-theme="blast-wine"] .menu-arrow { color: var(--primary); }
+html[data-theme="blast"] .menu-arrow { color: var(--primary); }
 
 /* 小卡片变体 — 高度降低，更紧凑 */
 .menu-card-sm {
@@ -1105,84 +1099,26 @@ html[data-theme="blast-wine"] .menu-arrow { color: var(--primary); }
 }
 
 /* ============================================
-   主题变体：Blast Wine（紫红暗色，原始 Blast）
-   ============================================ */
-html[data-theme="blast-wine"] {
-  --bg: #160a13;
-  --card: #281520;
-  --card-soft: #20101a;
-  --input-bg: #170b13;
-  --text: #f8f5f7;
-  --text-sec: #c9bac5;
-  --text-light: #95818f;
-  color-scheme: dark;
-}
-
-html[data-theme="blast-wine"] {
-  background-color: #160a13;
-}
-
-html[data-theme="blast-wine"] body {
-  background:
-    radial-gradient(circle at 82% -12%, rgba(10, 74, 77, 0.35), transparent 32rem),
-    radial-gradient(circle at 4% 88%, rgba(5, 46, 48, 0.28), transparent 26rem),
-    radial-gradient(circle at 50% 50%, rgba(40, 200, 204, 0.04), transparent 40rem),
-    repeating-linear-gradient(118deg, transparent 0 92px, rgba(255, 255, 255, 0.018) 92px 93px),
-    var(--bg);
-}
-
-html[data-theme="blast-wine"] body::before {
-  background:
-    radial-gradient(circle at 28% 34%, rgba(40, 200, 204, 0.06), transparent 16%),
-    radial-gradient(circle at 68% 58%, rgba(240, 160, 64, 0.04), transparent 20%),
-    radial-gradient(circle at 78% 72%, rgba(162, 129, 255, 0.08), transparent 18%);
-}
-
-html[data-theme="blast-wine"] .page {
-  background:
-    linear-gradient(180deg, rgba(44, 19, 36, 0.2), transparent 42%),
-    transparent;
-}
-
-html[data-theme="blast-wine"] .page-scroll {
-  background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px) 0 0 / 72px 72px,
-    linear-gradient(rgba(255, 255, 255, 0.014) 1px, transparent 1px) 0 0 / 72px 72px;
-}
-
-html[data-theme="blast-wine"] .home-hero {
-  background:
-    linear-gradient(90deg, rgba(24, 9, 19, 0.2), rgba(24, 9, 19, 0.82)),
-    radial-gradient(circle at 74% 46%, rgba(126, 49, 96, 0.38), transparent 28rem),
-    repeating-linear-gradient(125deg, transparent 0 46px, rgba(255, 255, 255, 0.025) 46px 47px),
-    #25111f;
-  box-shadow: 0 26px 70px rgba(0, 0, 0, 0.36);
-  clip-path: polygon(0 0, calc(100% - 34px) 0, 100% 34px, 100% 100%, 34px 100%, 0 calc(100% - 34px));
-}
-
-html[data-theme="blast-wine"] .menu-card {
-  background: linear-gradient(145deg, rgba(49, 25, 41, 0.98), rgba(31, 14, 26, 0.98));
-}
-
-html[data-theme="blast-wine"] .menu-card:hover {
-  background: linear-gradient(145deg, rgba(62, 32, 52, 0.98), rgba(36, 16, 30, 0.98));
-}
-
-html[data-theme="blast-wine"] .muted { color: #aa95a5; }
-
-html[data-theme="blast-wine"] .menu-description { color: #aa95a5; }
+   主题变体：Blast Wine（酒红暗色）—— 已删除
+   ============================================
+   这一节曾定义第三个主题 blast-wine（「同一套 blast 强调色 + 酒红表面」）。
+   按需求整体移除，随之删掉的还有散落各处的 `html[data-theme="blast-wine"]`
+   选择器、`html:not([data-theme="blast"]):not([data-theme="blast-wine"])`
+   里的第二个 :not（酒红没了之后它恒真，属等价改写）以及 ThemeToggle 上的
+   酒红切换按钮。现在只有 light / blast 两个主题。
+   ⚠️ 老用户 localStorage 里的 ui-theme 可能仍是 'blast-wine'，
+      use-theme.ts 与 layout.tsx 的 theme-init 都保留了把它归并到 blast 的分支 ——
+      删掉那条分支会让系统偏好浅色的老用户每次加载先闪一下白。 */
 
 @media (max-width: 640px) {
   .home-hero { min-height: 275px; }
   .home-hero h1 { font-size: clamp(3.2rem, 18vw, 4.6rem); }
-  html[data-theme="blast"] .home-hero h1,
-html[data-theme="blast-wine"] .home-hero h1 { text-shadow: 3px 3px 0 rgba(40, 200, 204, 0.2); }
+  html[data-theme="blast"] .home-hero h1 { text-shadow: 3px 3px 0 rgba(40, 200, 204, 0.2); }
   .hero-subtitle { font-size: 0.94rem; }
   .menu-grid { gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .menu-card { min-height: 128px; padding: 16px 13px; }
   .menu-card-sm { min-height: 78px; padding: 12px 12px; gap: 8px; }
-  html[data-theme="blast"] .menu-card,
-  html[data-theme="blast-wine"] .menu-card {
+  html[data-theme="blast"] .menu-card {
     clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
   }
   .menu-icon { width: 43px; height: 43px; }
@@ -1203,11 +1139,8 @@ html[data-theme="blast-wine"] .home-hero h1 { text-shadow: 3px 3px 0 rgba(40, 20
   .menu-arrow { right: 14px; bottom: 14px; }
 }
 
-/* ============================================
-   RulesDialog 组件
-   ============================================ */
-html[data-theme="blast"] .rules-title,
-html[data-theme="blast-wine"] .rules-title { color: var(--primary); }
+/* RulesDialog 的暗色标题改色规则已删除 —— V12 里标题是 .mhd h2（--text），
+   主题色由 .dlg.mc 的顶边色条承担，.rules-title 迁移后已无调用点。 */
 
 /* ============================================
    多人对战 Select 下拉 — 项目电竞风格
@@ -1257,7 +1190,7 @@ html[data-theme="blast-wine"] .rules-title { color: var(--primary); }
   position: relative;
 }
 
-html:not([data-theme="blast"]):not([data-theme="blast-wine"]) .multi-select {
+html:not([data-theme="blast"]) .multi-select {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6' stroke='%23074d50' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
 

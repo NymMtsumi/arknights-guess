@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { register, login, forgotPassword, syncGames, linkPlayerKey, getUser, getPlayerKey, logout, apiCall } from '@/lib/auth';
 import { loadHistory } from '@/lib/stats';
+import { useI18n } from '@/lib/i18n';
 
 interface AuthDialogProps {
   open: boolean;
@@ -12,6 +13,7 @@ interface AuthDialogProps {
 
 export function AuthDialog({ open, onClose }: AuthDialogProps) {
   const router = useRouter();
+  const { t } = useI18n();
   const [mode, setMode] = useState<'login' | 'register' | 'forgot'>('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -35,7 +37,7 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
         if (raw) {
           const data = JSON.parse(raw);
           if (Date.now() - data.ts < 600_000 && data.username) { // 10分钟内有效
-            setVerifySuccessMsg(`✅ 邮箱 ${data.email || ''} 验证成功！请用账号 ${data.username} 登录`);
+            setVerifySuccessMsg(t('auth.verifySuccess', { email: data.email || '', username: data.username }));
             setMode('login');
           }
           localStorage.removeItem('arknights-verify-success');
@@ -58,7 +60,7 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
     setSendingVerify(true); setMsg(''); setError('');
     try {
       await apiCall('/api/send-verification', { method: 'POST', body: JSON.stringify({ email: currentUser?.email || '' }) });
-      setMsg('验证邮件已发送，请查收。如未收到请检查垃圾邮件箱');
+      setMsg(t('auth.verifySent'));
     } catch (e: any) { setError(e.message); }
     setSendingVerify(false);
   };
@@ -68,16 +70,16 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
     setError(''); setMsg('');
 
     if (!username.trim() || (!password && mode !== 'forgot')) {
-      setError(mode === 'forgot' ? '请填写邮箱' : '请填写邮箱和密码');
+      setError(mode === 'forgot' ? t('auth.emailRequired') : t('auth.emailPasswordRequired'));
       return;
     }
     // Client-side password length check (server-side enforces >= 8 as well)
     if ((mode === 'register' || mode === 'login') && password.length < 8) {
-      setError('密码至少需要8个字符');
+      setError(t('auth.passwordTooShort'));
       return;
     }
     if (mode === 'register' && !email.trim()) {
-      setError('请填写邮箱');
+      setError(t('auth.emailRequired'));
       return;
     }
 
@@ -86,7 +88,7 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
       if (mode === 'register') {
         // 先发验证邮件再创建账号（新流程）
         const result = await register(username.trim(), password, email.trim());
-        setMsg(result.message || '验证邮件已发送，请查收邮件并点击链接完成注册。如未收到请检查垃圾邮件箱');
+        setMsg(result.message || t('auth.verifySentRegister'));
         setLoading(false);
         return; // 不关闭弹窗，不自动登录
       } else if (mode === 'forgot') {
@@ -125,7 +127,7 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
       // Force reload to update UI across components
       window.location.reload();
     } catch (err: any) {
-      setError(err.message || '操作失败');
+      setError(err.message || t('auth.opFailed'));
     } finally {
       setLoading(false);
     }
@@ -137,210 +139,108 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
     window.location.reload();
   };
 
-  const inpStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '10px',
-    background: 'var(--input-bg)',
-    color: 'var(--text)',
-    border: '1px solid var(--border)',
-    borderRadius: 'var(--radius)',
-    fontSize: '1rem',
-    marginBottom: '10px',
-  };
-
-  const btnStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '10px',
-    background: 'var(--primary)',
-    color: 'var(--bg)',
-    border: 'none',
-    borderRadius: 'var(--radius)',
-    fontSize: '1rem',
-    fontWeight: 700,
-    cursor: loading ? 'wait' : 'pointer',
-    opacity: loading ? 0.7 : 1,
-  };
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }}>
-      <div style={{
-        background: 'var(--card)',
-        padding: '28px',
-        borderRadius: 'var(--radius)',
-        boxShadow: 'var(--shadow-lg)',
-        maxWidth: '380px',
-        width: '100%',
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h2 style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: '1.3rem',
-            fontStyle: 'italic',
-            fontWeight: 900,
-            margin: 0,
-          }}>
-            {currentUser ? `你好, ${currentUser.username}` : (mode === 'login' ? '登录' : mode === 'register' ? '注册' : '忘记密码')}
+    <div className="modal-mask">
+      <div className="dlg mc">
+        <div className="card-hd">
+          <h2>
+            {currentUser ? t('auth.hello', { name: currentUser.username }) : (mode === 'login' ? t('auth.login') : mode === 'register' ? t('auth.register') : t('auth.forgot'))}
           </h2>
           <button
             onClick={onClose}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: 'var(--text-light)',
-              fontSize: '1.4rem',
-              cursor: 'pointer',
-              padding: '4px 8px',
-              lineHeight: 1,
-            }}
+            className="btn-sm"
           >
             ✕
           </button>
         </div>
 
         {currentUser ? (
-          <div>
-            <p style={{ color: 'var(--text-light)', fontSize: '0.9rem', marginBottom: '16px' }}>
-              已登录账号 · 游戏数据自动同步
+          <div className="db">
+            <p className="sec-note">
+              {t('auth.loggedInHint')}
             </p>
             {/* 邮箱未验证提示 */}
             {currentUser.email && loginEmailVerified !== true && (
-              <div style={{
-                background: '#fff8e1',
-                color: '#8a6d14',
-                padding: '10px 12px',
-                borderRadius: 'var(--radius)',
-                marginBottom: '14px',
-                fontSize: '0.82rem',
-                lineHeight: 1.5,
-              }}>
-                ⚠ 邮箱尚未验证。
+              <div className="formmsg warn">
+                {t('auth.emailUnverified')}
                 <button
                   type="button"
                   onClick={handleSendVerify}
                   disabled={sendingVerify}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--primary)',
-                    cursor: 'pointer',
-                    fontWeight: 700,
-                    padding: 0,
-                    marginLeft: '4px',
-                    fontSize: '0.82rem',
-                    textDecoration: 'underline',
-                  }}
+                  className="lnk"
                 >
-                  {sendingVerify ? '发送中...' : '发送验证邮件'}
+                  {sendingVerify ? t('auth.sending') : t('auth.sendVerifyEmail')}
                 </button>
               </div>
             )}
             {msg && (
-              <p style={{ color: 'var(--correct)', fontSize: '0.82rem', marginBottom: '10px', textAlign: 'center' }}>
+              <p className="formmsg ok">
                 {msg}
               </p>
             )}
             {/* 个人中心 */}
-            <button onClick={() => { router.push('/profile'); }} style={{
-              ...btnStyle,
-              marginBottom: '10px',
-            }}>
-              个人中心
+            <button onClick={() => { router.push('/profile'); }} className="btn-p" style={{ width: '100%', marginBottom: 10 }}>
+              {t('auth.profile')}
             </button>
-            <button onClick={handleLogout} style={{
-              ...btnStyle,
-              background: 'transparent',
-              color: 'var(--danger)',
-              border: '1px solid var(--danger)',
-            }}>
-              退出登录
+            <button onClick={handleLogout} className="btn-o btn-dan" style={{ width: '100%' }}>
+              {t('auth.logout')}
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className="db" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {verifySuccessMsg && (
-              <p style={{
-                color: 'var(--correct)',
-                fontSize: '0.9rem',
-                marginBottom: '14px',
-                textAlign: 'center',
-                padding: '10px',
-                background: 'rgba(25, 154, 96, 0.1)',
-                borderRadius: 'var(--radius)',
-                border: '1px solid var(--correct)',
-                whiteSpace: 'pre-line',
-              }}>{verifySuccessMsg}</p>
+              <p className="formmsg ok" style={{ whiteSpace: 'pre-line' }}>{verifySuccessMsg}</p>
             )}
-            <div style={{ display: 'flex', gap: '0', marginBottom: '16px' }}>
+            <div className="seg">
               <button
                 type="button"
                 onClick={() => setMode('login')}
-                style={{
-                  flex: 1,
-                  padding: '8px',
-                  background: mode === 'login' ? 'var(--primary-soft)' : 'transparent',
-                  color: mode === 'login' ? 'var(--primary-strong)' : 'var(--text-light)',
-                  border: `1px solid ${mode === 'login' ? 'var(--primary)' : 'var(--border)'}`,
-                  borderRadius: 'var(--radius) 0 0 var(--radius)',
-                  fontWeight: mode === 'login' ? 700 : 400,
-                  cursor: 'pointer',
-                  fontSize: '0.9rem',
-                }}
+                className={mode === 'login' ? 'on' : undefined}
               >
-                登录
+                {t('auth.login')}
               </button>
               <button
                 type="button"
                 onClick={() => setMode('register')}
-                style={{
-                  flex: 1,
-                  padding: '8px',
-                  background: mode === 'register' ? 'var(--primary-soft)' : 'transparent',
-                  color: mode === 'register' ? 'var(--primary-strong)' : 'var(--text-light)',
-                  border: `1px solid ${mode === 'register' ? 'var(--primary)' : 'var(--border)'}`,
-                  borderRadius: '0 var(--radius) var(--radius) 0',
-                  fontWeight: mode === 'register' ? 700 : 400,
-                  cursor: 'pointer',
-                  fontSize: '0.9rem',
-                }}
+                className={mode === 'register' ? 'on' : undefined}
               >
-                注册
+                {t('auth.register')}
               </button>
             </div>
 
             {mode === 'forgot' ? (
               // ===== 忘记密码模式 =====
               forgotSent ? (
-                <div style={{ textAlign: 'center', padding: '6px 0 2px' }}>
-                  <div style={{ fontSize: '2.6rem', lineHeight: 1, marginBottom: '14px' }}>📧</div>
-                  <p style={{ color: 'var(--correct)', fontWeight: 700, fontSize: '0.95rem', margin: '0 0 10px' }}>
-                    重置邮件已发送
+                <div>
+                  <div className="di">📧</div>
+                  <p className="formmsg ok">
+                    {t('auth.resetSentTitle')}
                   </p>
-                  <p style={{ color: 'var(--text-light)', fontSize: '0.85rem', lineHeight: 1.65, margin: '0 0 18px' }}>
-                    已向 <strong style={{ color: 'var(--text)' }}>{username.trim()}</strong> 发送密码重置链接，
-                    请查收收件箱，如未收到请检查垃圾邮件箱。链接 1 小时内有效。
+                  <p className="sec-note">
+                    {t('auth.resetSentBody', { email: username.trim() })}
                   </p>
                   <button
                     type="button"
                     onClick={() => { setMode('login'); setForgotSent(false); setError(''); setMsg(''); }}
-                    style={btnStyle}
+                    className="btn-p"
                   >
-                    返回登录
+                    {t('auth.backToLogin')}
                   </button>
                 </div>
               ) : (
                 <>
-                  <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-                    <div style={{ fontSize: '2.4rem', lineHeight: 1, marginBottom: '10px' }}>🔑</div>
-                    <p style={{ color: 'var(--text-light)', fontSize: '0.85rem', lineHeight: 1.6, margin: 0 }}>
-                      输入注册邮箱，我们将发送密码重置链接
+                  <div>
+                    <div className="di">🔑</div>
+                    <p className="sec-note">
+                      {t('auth.resetHint')}
                     </p>
                   </div>
 
                   <input
                     value={username}
                     onChange={e => setUsername(e.target.value)}
-                    placeholder="注册邮箱"
-                    style={inpStyle}
+                    placeholder={t('auth.resetEmailPlaceholder')}
+                    className="search-input"
                     maxLength={320}
                     autoComplete="email"
                     type="email"
@@ -348,29 +248,19 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
                   />
 
                   {error && (
-                    <p style={{ color: 'var(--danger)', fontSize: '0.85rem', marginBottom: '10px' }}>{error}</p>
+                    <p className="formmsg err">{error}</p>
                   )}
 
-                  <button type="submit" style={btnStyle} disabled={loading}>
-                    {loading ? '发送中...' : '发送重置邮件'}
+                  <button type="submit" className="btn-p" disabled={loading}>
+                    {loading ? t('auth.sending') : t('auth.sendResetEmail')}
                   </button>
 
                   <button
                     type="button"
                     onClick={() => { setMode('login'); setForgotSent(false); setError(''); setMsg(''); }}
-                    style={{
-                      width: '100%',
-                      background: 'none',
-                      border: 'none',
-                      color: 'var(--text-light)',
-                      cursor: 'pointer',
-                      fontSize: '0.85rem',
-                      fontWeight: 700,
-                      padding: '10px 0 0',
-                      marginTop: '6px',
-                    }}
+                    className="lnk"
                   >
-                    ← 返回登录
+                    {t('auth.backToLoginArrow')}
                   </button>
                 </>
               )
@@ -381,8 +271,8 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
               <input
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                placeholder="邮箱（用于验证）"
-                style={inpStyle}
+                placeholder={t('auth.emailForVerifyPlaceholder')}
+                className="search-input"
                 autoComplete="email"
                 type="email"
               />
@@ -390,8 +280,8 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
             <input
               value={username}
               onChange={e => setUsername(e.target.value)}
-              placeholder={mode === 'register' ? '用户名 (2-20个字符)' : '邮箱'}
-              style={inpStyle}
+              placeholder={mode === 'register' ? t('auth.usernamePlaceholder') : t('auth.emailPlaceholder')}
+              className="search-input"
               maxLength={mode === 'register' ? 20 : 320}
               autoComplete={mode === 'register' ? 'username' : 'email'}
             />
@@ -399,67 +289,51 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              placeholder="密码 (至少8个字符)"
-              style={inpStyle}
+              placeholder={t('auth.passwordPlaceholder')}
+              className="search-input"
               maxLength={100}
               autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
             />
 
             {error && (
-              <p style={{ color: 'var(--danger)', fontSize: '0.85rem', marginBottom: '10px' }}>{error}</p>
+              <p className="formmsg err">{error}</p>
             )}
 
             {syncing && (
-              <p style={{ color: 'var(--text-light)', fontSize: '0.8rem', marginBottom: '10px' }}>
-                正在同步历史数据...
+              <p className="sec-note">
+                {t('auth.syncingHistory')}
               </p>
             )}
 
             {msg && (
-              <p style={{ color: 'var(--correct)', fontSize: '0.85rem', marginBottom: '10px', textAlign: 'center' }}>
+              <p className="formmsg ok">
                 {msg}
               </p>
             )}
 
-            <button type="submit" style={btnStyle} disabled={loading}>
-              {loading ? '处理中...' : (mode === 'login' ? '登录' : '注册')}
+            <button type="submit" className="btn-p" disabled={loading}>
+              {loading ? t('auth.processing') : (mode === 'login' ? t('auth.login') : t('auth.register'))}
             </button>
 
-            <p style={{ color: 'var(--text-light)', fontSize: '0.75rem', marginTop: '12px', textAlign: 'center' }}>
-              {mode === 'login' ? '还没有账号？' : '已有账号？'}
+            <p className="sec-note">
+              {mode === 'login' ? t('auth.noAccount') : t('auth.hasAccount')}
               <button
                 type="button"
                 onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--primary)',
-                  cursor: 'pointer',
-                  fontWeight: 700,
-                  padding: '0 4px',
-                  fontSize: '0.75rem',
-                }}
+                className="lnk"
               >
-                {mode === 'login' ? '立即注册' : '去登录'}
+                {mode === 'login' ? t('auth.registerNow') : t('auth.goLogin')}
               </button>
             </p>
 
             {mode === 'login' && (
-              <p style={{ textAlign: 'center', marginTop: '6px' }}>
+              <p className="sec-note">
                 <button
                   type="button"
                   onClick={() => { setMode('forgot'); setForgotSent(false); setError(''); setMsg(''); }}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--text-light)',
-                    cursor: 'pointer',
-                    fontSize: '0.75rem',
-                    textDecoration: 'underline',
-                    padding: 0,
-                  }}
+                  className="lnk"
                 >
-                  忘记密码？
+                  {t('auth.forgotLink')}
                 </button>
               </p>
             )}

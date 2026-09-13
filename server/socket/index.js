@@ -1,6 +1,7 @@
 // Socket.IO 初始化、身份中间件、在线追踪
 import { Server } from 'socket.io';
-import { parseCookies, deriveGuestName, getAllowedOrigins } from '../utils.js';
+import { parseCookies, deriveGuestName, parseLocale, getAllowedOrigins } from '../utils.js';
+import { backfillGamesUserId } from '../db.js';
 
 export function createSocketServer(http, { db, verifyToken, generateKey }) {
   const allowedOrigins = getAllowedOrigins();
@@ -51,18 +52,11 @@ export function createSocketServer(http, { db, verifyToken, generateKey }) {
             const conflict = db.prepare('SELECT id FROM users WHERE player_key = ? AND id != ?').get(cookiePk, user.id);
             if (!conflict) {
               try {
-                // 跳过该用户当天已有的每日战绩，避免触发 idx_games_daily_unique (user_id, daily_date) 唯一约束
-                // （否则回填抛错会被外层 catch 吞掉 → 静默降级为游客登录）
-                const backfilled = db.prepare(`
-                  UPDATE games SET user_id = ?
-                  WHERE player_key = ? AND user_id IS NULL
-                    AND NOT EXISTS (
-                      SELECT 1 FROM games g2
-                      WHERE g2.user_id = ? AND g2.daily_date = games.daily_date AND g2.daily_date IS NOT NULL
-                    )
-                `).run(user.id, cookiePk, user.id);
-                if (backfilled.changes > 0) {
-                  console.log(`[socket] backfilled user_id=${user.id} for ${backfilled.changes} games from cookie pk=${cookiePk.slice(0, 10)}`);
+                // 唯一约束守卫见 db.js:backfillGamesUserId 的注释
+                // （回填抛错会被外层 catch 吞掉 → 静默降级为游客登录）
+                const changes = backfillGamesUserId(db, user.id, cookiePk);
+                if (changes > 0) {
+                  console.log(`[socket] backfilled user_id=${user.id} for ${changes} games from cookie pk=${cookiePk.slice(0, 10)}`);
                 }
               } catch (err) {
                 console.error('[socket] backfill games failed:', err.message);
@@ -107,7 +101,8 @@ export function createSocketServer(http, { db, verifyToken, generateKey }) {
       }
       socket.data.userId = userRow?.id || null;
       socket.data.username = userRow?.username || null;
-      socket.data.displayName = userRow?.nickname || userRow?.username || deriveGuestName(socket.data.playerKey);
+      socket.data.displayName = userRow?.nickname || userRow?.username
+        || deriveGuestName(socket.data.playerKey, parseLocale(socket.handshake.headers['accept-language']));
     } catch { /* ignore */ }
     next();
   });

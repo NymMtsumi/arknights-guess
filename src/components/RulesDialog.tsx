@@ -13,105 +13,75 @@ export function RulesDialog({ open, onClose }: RulesDialogProps) {
   if (!open) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.7)' }}
-      onClick={onClose}
-    >
-      <div
-        className="relative max-w-lg w-full max-h-[85vh] overflow-y-auto p-6 rounded-lg"
-        style={{
-          background: 'var(--card)',
-          color: 'var(--text)',
-          boxShadow: 'var(--shadow-lg)',
-          border: '1px solid var(--border)',
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* 关闭按钮 */}
-        <button
-          onClick={onClose}
-          className="absolute top-3 right-3 text-[var(--text-light)] hover:text-[var(--text)] text-xl leading-none"
-          aria-label="Close"
-        >
-          ✕
-        </button>
-
-        <h2
-          className="rules-title text-2xl font-extrabold mb-4 italic tracking-wide"
-          style={{
-            fontFamily: 'var(--font-display)',
-            color: 'var(--primary)',
-            letterSpacing: '0.06em',
-          }}
-        >
-          {t('rules.title')}
-        </h2>
-
-        <p className="mb-4 text-sm" style={{ color: 'var(--text-sec)' }}>
-          {t('rules.intro')}
-        </p>
-
-        {/* 如何游戏 */}
-        <h3 className="text-lg font-bold mb-2">{t('rules.howTo')}</h3>
-        <ol
-          className="list-decimal list-inside mb-5 space-y-1 text-sm"
-          style={{ color: 'var(--text-sec)' }}
-        >
-          <li>{t('rules.step1')}</li>
-          <li>{t('rules.step2')}</li>
-          <li>{t('rules.step3')}</li>
-          <li>{t('rules.step4')}</li>
-          <li>{t('rules.step5')}</li>
-        </ol>
-
-        {/* 颜色含义 */}
-        <h3 className="text-lg font-bold mb-2">{t('rules.colors')}</h3>
-        <div className="space-y-2 mb-5 text-sm">
-          <div className="flex items-center gap-3">
-            <span
-              className="inline-block w-4 h-4 rounded-sm flex-shrink-0"
-              style={{ background: 'var(--correct)' }}
-            />
-            <span style={{ color: 'var(--correct)' }}><strong>{t('rules.correct')}</strong></span>
-            <span style={{ color: 'var(--text-light)' }}>— {t('rules.correctDesc')}</span>
+    <div className="modal-mask" onClick={onClose}>
+      <div className="dlg mc" onClick={(e) => e.stopPropagation()}>
+        <div className="mdl">
+          {/* 关闭按钮 */}
+          <div className="mhd">
+            <h2>{t('rules.title')}</h2>
+            <button onClick={onClose} className="x" aria-label="Close">
+              ✕
+            </button>
           </div>
-          <div className="flex items-center gap-3">
-            <span
-              className="inline-block w-4 h-4 rounded-sm flex-shrink-0"
-              style={{ background: 'var(--close)' }}
-            />
-            <span style={{ color: 'var(--close)' }}><strong>{t('rules.close')}</strong></span>
-            <span style={{ color: 'var(--text-light)' }}>— {t('rules.closeDesc')}</span>
+
+          <p className="sec-note">{t('rules.intro')}</p>
+
+          {/* 如何游戏 */}
+          <div className="msec">
+            <h3>{t('rules.howTo')}</h3>
+            <ol className="steps">
+              <li>{t('rules.step1')}</li>
+              <li>{t('rules.step2')}</li>
+              <li>{t('rules.step3')}</li>
+              <li>{t('rules.step4')}</li>
+              <li>{t('rules.step5')}</li>
+            </ol>
           </div>
-          <div className="flex items-center gap-3">
-            <span
-              className="inline-block w-4 h-4 rounded-sm flex-shrink-0"
-              style={{ background: 'var(--wrong)' }}
-            />
-            <span style={{ color: 'var(--wrong)' }}><strong>{t('rules.wrong')}</strong></span>
-            <span style={{ color: 'var(--text-light)' }}>— {t('rules.wrongDesc')}</span>
+
+          {/* 颜色含义 */}
+          <div className="msec">
+            <h3>{t('rules.colors')}</h3>
+            <div>
+              <div className="crow">
+                <span className="sw2 sw-ok" />
+                <span className="cn2 k-ok">
+                  <strong>{t('rules.correct')}</strong>
+                </span>
+                <span className="cd2">— {t('rules.correctDesc')}</span>
+              </div>
+              <div className="crow">
+                <span className="sw2 sw-warn" />
+                <span className="cn2 k-warn">
+                  <strong>{t('rules.close')}</strong>
+                </span>
+                <span className="cd2">— {t('rules.closeDesc')}</span>
+              </div>
+              <div className="crow">
+                <span className="sw2 sw-no" />
+                <span className="cn2 k-no">
+                  <strong>{t('rules.wrong')}</strong>
+                </span>
+                <span className="cd2">— {t('rules.wrongDesc')}</span>
+              </div>
+            </div>
           </div>
+
+          {/* 接近判定规则 */}
+          <div className="msec">
+            <h3>{t('rules.closeRules')}</h3>
+            <ul className="rlist">
+              <li>{t('rules.closeRuleRarity')}</li>
+              <li>{t('rules.closeRuleSubclass')}</li>
+              <li>{t('rules.closeRuleFaction')}</li>
+              <li>{t('rules.closeRuleYear')}</li>
+              <li>{t('rules.closeRuleTags')}</li>
+              <li>{t('rules.closeRulePosition')}</li>
+              <li>{t('rules.closeRuleAlter')}</li>
+            </ul>
+          </div>
+
+          <p className="tip">💡 {t('rules.tip')}</p>
         </div>
-
-        {/* 接近判定规则 */}
-        <h3 className="text-md font-bold mb-2">{t('rules.closeRules')}</h3>
-        <ul
-          className="list-disc list-inside mb-4 text-sm space-y-1"
-          style={{ color: 'var(--text-sec)' }}
-        >
-          <li>{t('rules.closeRuleRarity')}</li>
-          <li>{t('rules.closeRuleSubclass')}</li>
-          <li>{t('rules.closeRuleFaction')}</li>
-          <li>{t('rules.closeRuleYear')}</li>
-          <li>{t('rules.closeRuleTags')}</li>
-          <li>{t('rules.closeRulePosition')}</li>
-          <li>{t('rules.closeRuleAlter')}</li>
-        </ul>
-
-        <p className="text-xs italic" style={{ color: 'var(--primary)' }}>
-          💡 {t('rules.tip')}
-        </p>
       </div>
     </div>
   );

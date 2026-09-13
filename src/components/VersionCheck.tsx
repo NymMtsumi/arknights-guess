@@ -22,10 +22,14 @@ export function VersionCheck() {
     const checkVersion = async () => {
       try {
         const base = getServerUrl();
-        const res = await fetch(`${base}/api/version`, {
-          cache: 'no-store',
-          headers: { 'Cache-Control': 'no-cache' },
-        });
+        // ⚠️ 不要在这里加任何自定义请求头（曾经有一行 headers:{'Cache-Control':'no-cache'}）。
+        // 前端与 API 跨域（生产 www.* → ws.*，本地 :3000 → :3001），GET 只要带自定义头
+        // 就**不再是简单请求**，浏览器会先发 OPTIONS 预检，而服务端
+        // Access-Control-Allow-Headers 只放行 Content-Type / Authorization
+        // → 预检失败、请求被拦在浏览器里，版本提示永远不弹，且只在 control 台留一行 CORS。
+        // 防 HTTP 缓存用下面的 fetch 选项 cache:'no-store' 就够了 —— 那是浏览器层语义，
+        // 不占请求头、不触发预检。
+        const res = await fetch(`${base}/api/version`, { cache: 'no-store' });
         if (!res.ok) return;
 
         const data = await res.json();

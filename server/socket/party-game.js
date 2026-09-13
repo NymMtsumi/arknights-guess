@@ -15,6 +15,15 @@ function safeTick(fn, label) {
   };
 }
 
+/* 名次对象内部带 playerKey（计分和 roundsWon 判定要用它，且它跨重连稳定），
+   但它**等同于玩家凭证** —— server/socket/index.js 的握手允许用 pk 认领游客身份。
+   同房任意玩家收到全房 pk 后就能顶替别人，所以下发给客户端的名次数组必须先过这一层。
+   服务端内部存的 roundResults[].rankings 保留 playerKey，只在 emit 前剥。 */
+export function stripPlayerKey(r) {
+  const { playerKey, ...rest } = r;
+  return rest;
+}
+
 export function createPartyGameModule(deps) {
   const { io, partyRooms, partyRoomPlayerIndex, onlinePlayers, broadcast, findPlayerInRoom } = deps;
 
@@ -88,7 +97,6 @@ export function createPartyGameModule(deps) {
       players.push({
         playerId: sid,
         playerName: player.name,
-        playerKey: player.playerKey,
         score: room.scores.get(player.playerKey) || 0,
         guessed: rp.guessed,
         exhausted: rp.exhausted,
@@ -182,7 +190,6 @@ export function createPartyGameModule(deps) {
       totalScores.push({
         playerId: sid,
         playerName: player.name,
-        playerKey: player.playerKey,
         score: room.scores.get(player.playerKey) || 0,
       });
     }
@@ -194,7 +201,7 @@ export function createPartyGameModule(deps) {
       round,
       totalRounds: total,
       target: { name: room.target.name, id: room.target.id },
-      rankings: roomRankings,
+      rankings: roomRankings.map(stripPlayerKey),
       totalScores,
       isLastRound,
     });
@@ -225,7 +232,6 @@ export function createPartyGameModule(deps) {
       finalRankings.push({
         playerId: sid,
         playerName: player.name,
-        playerKey: player.playerKey,
         totalScore: room.scores.get(player.playerKey) || 0,
         roundsWon: room.roundResults.filter(rr =>
           rr.rankings.length > 0 && !rr.rankings[0].didNotGuess && rr.rankings[0].playerKey === player.playerKey

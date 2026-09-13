@@ -1,6 +1,7 @@
 // 派对模式 — 事件路由（薄层，委托给 party-room.js 和 party-game.js）
 import { createPartyRoomModule } from './party-room.js';
 import { createPartyGameModule } from './party-game.js';
+import { createRoomCodeGuard } from './rate-limit.js';
 
 export function registerPartyHandlers({
   io, partyRooms, partyRoomPlayerIndex,
@@ -32,6 +33,16 @@ export function registerPartyHandlers({
     catch (e) { console.error(`[party] ${label} error:`, e.message); }
   };
 
+  // 房间码枚举防护：party:join / party:reconnect 都拿房间码当查询键，
+  // 失败原因可判别（房间不存在 vs 你不在该房间中）→ 是枚举预言机。
+  const codeGuard = createRoomCodeGuard();
+
+  // 超限时统一回绝：既发 party:error（顶栏提示），也回 ack（调用方 await 才不会挂住）
+  const throttled = (socket, ack, event) => codeGuard.blocked(socket, (msg) => {
+    socket.emit('party:error', { code: 'RATE_LIMITED', message: msg });
+    if (typeof ack === 'function') ack({ ok: false, code: 'RATE_LIMITED', message: msg });
+  }, event);
+
   // ── Socket 事件路由 ──
   io.on('connection', (socket) => {
 
@@ -47,6 +58,7 @@ export function registerPartyHandlers({
 
     // 加入房间（带 ack）
     socket.on('party:join', (data, ack) => {
+      if (throttled(socket, ack, 'party:join')) return;
       try { room.joinPartyRoom(socket, data, ack); }
       catch (e) {
         console.error('[party] join error:', e.message);
@@ -95,6 +107,7 @@ export function registerPartyHandlers({
 
     // 重连（带 ack：失败回 err 码，客户端据此清残留状态退回大厅）
     socket.on('party:reconnect', (data, ack) => {
+      if (throttled(socket, ack, 'party:reconnect')) return;
       try { room.reconnectPartyRoom(socket, data, ack); }
       catch (e) {
         console.error('[party] reconnect error:', e.message);

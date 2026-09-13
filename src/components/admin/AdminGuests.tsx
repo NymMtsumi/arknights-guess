@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { getServerUrl, getToken } from '@/lib/auth';
+import { useI18n } from '@/lib/i18n';
+import { adminSortMark, ADMIN_PAGE_SIZES } from './ui';
 
 interface GuestInfo {
   playerKey: string;
@@ -20,6 +22,7 @@ interface GuestPage {
 }
 
 export default function AdminGuests() {
+  const { t } = useI18n();
   const [guests, setGuests] = useState<GuestInfo[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -30,21 +33,26 @@ export default function AdminGuests() {
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
 
-  const pageSize = 30;
+  const [sortKey, setSortKey] = useState('lastSeen');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [pageSize, setPageSize] = useState(30);
   const baseUrl = getServerUrl();
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const token = getToken();
-      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+      const params = new URLSearchParams({
+        page: String(page), pageSize: String(pageSize),
+        sort: sortKey, dir: sortDir,
+      });
       if (search) params.set('search', search);
       const res = await fetch(`${baseUrl}/api/admin/guests?${params}`, {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || '加载失败');
+        throw new Error(data.error || t('admin.common.loadFailed'));
       }
       const data: GuestPage = await res.json();
       setGuests(data.guests);
@@ -56,7 +64,7 @@ export default function AdminGuests() {
     } finally {
       setLoading(false);
     }
-  }, [baseUrl, page, search]);
+  }, [baseUrl, page, search, sortKey, sortDir, pageSize, t]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -68,135 +76,127 @@ export default function AdminGuests() {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  // ===== 样式 =====
-  const cardStyle: React.CSSProperties = {
-    background: 'var(--card)',
-    borderRadius: 'var(--radius)',
-    padding: '20px',
+  const toggleSort = (key: string) => {
+    if (key === sortKey) setSortDir(d => (d === 'asc' ? 'desc' : 'asc'));
+    else { setSortKey(key); setSortDir('desc'); }
+    setPage(1);
   };
 
-  const inpStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '8px 12px',
-    background: 'var(--input-bg)',
-    color: 'var(--text)',
-    border: '1px solid var(--border)',
-    borderRadius: 'var(--radius)',
-    fontSize: '0.9rem',
+  const changePageSize = (size: number) => { setPageSize(size); setPage(1); };
+
+  const sortTh = (key: string, label: string) => {
+    const active = sortKey === key;
+    return (
+      <th
+        className={'so' + (active ? ' on' : '')}
+        onClick={() => toggleSort(key)}
+        title={t('admin.common.sortHint')}
+      >
+        {label} <i>{adminSortMark(active, sortDir)}</i>
+      </th>
+    );
   };
 
   return (
     <div>
       {/* 搜索 + 统计 */}
-      <div style={{ ...cardStyle, marginBottom: '16px' }}>
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <input
-            value={searchInput}
-            onChange={e => setSearchInput(e.target.value)}
-            placeholder="搜索游客显示名..."
-            maxLength={64}
-            style={{ ...inpStyle, flex: 1 }}
-          />
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-light)', whiteSpace: 'nowrap' }}>
-            共 {total} 名游客
-          </span>
+      <div className="card">
+        <div className="card-hd">
+          <h2>{t('admin.tabGuests')}</h2>
+          <span className="cnt">{t('admin.guests.total', { count: total })}</span>
         </div>
+        <input
+          value={searchInput}
+          onChange={e => setSearchInput(e.target.value)}
+          placeholder={t('admin.guests.searchPlaceholder')}
+          maxLength={64}
+          className="search-input"
+        />
       </div>
 
-      {msg && <p style={{ color: 'var(--correct)', fontSize: '0.8rem', marginBottom: '10px' }}>{msg}</p>}
-      {error && <p style={{ color: 'var(--danger)', fontSize: '0.8rem', marginBottom: '10px' }}>{error}</p>}
+      {msg && <p className="alert alert-ok">{msg}</p>}
+      {error && <p className="alert alert-dan">{error}</p>}
 
       {/* 游客列表 */}
-      <div style={{ ...cardStyle, overflowX: 'auto' }}>
+      <div className="card">
+        <div className="card-hd">
+          <label className="psize">
+            {t('admin.common.pageSizeLabel')}
+            <select
+              value={pageSize}
+              onChange={e => changePageSize(Number(e.target.value))}
+              className="sel"
+            >
+              {ADMIN_PAGE_SIZES.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </label>
+        </div>
         {loading ? (
-          <p style={{ textAlign: 'center', color: 'var(--text-light)', padding: '40px' }}>加载中...</p>
+          <div className="sk"><i /><i /><i /><i /></div>
         ) : guests.length === 0 ? (
-          <p style={{ textAlign: 'center', color: 'var(--text-light)', padding: '40px' }}>无匹配游客</p>
+          <div className="empty"><div className="etx">{t('admin.guests.noMatch')}</div></div>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-            <thead>
-              <tr style={{ borderBottom: '2px solid var(--border)' }}>
-                <th style={thStyle}>显示名</th>
-                <th style={thStyle}>总局数</th>
-                <th style={thStyle}>胜场</th>
-                <th style={thStyle}>胜率</th>
-                <th style={thStyle}>最近活跃</th>
-              </tr>
-            </thead>
-            <tbody>
-              {guests.map((g, i) => (
-                <tr key={g.playerKey} style={{ borderBottom: '1px solid var(--border)' }}>
-                  <td style={tdStyle}>
-                    <strong>{g.displayName}</strong>
-                  </td>
-                  <td style={tdStyle}>{g.totalGames}</td>
-                  <td style={tdStyle}>
-                    <span style={{ color: 'var(--correct)', fontWeight: 700 }}>{g.wins}</span>
-                  </td>
-                  <td style={tdStyle}>
-                    {g.totalGames > 0
-                      ? `${Math.round((g.wins / g.totalGames) * 100)}%`
-                      : '—'}
-                  </td>
-                  <td style={tdStyle}>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-light)' }}>
-                      {g.lastSeen?.slice(0, 16)?.replace('T', ' ') || '—'}
-                    </span>
-                  </td>
+          <div className="table-wrap">
+            <table className="tbl">
+              <thead>
+                <tr>
+                  {/* 访客名是 deriveGuestName(player_key) 在服务端算出来的，SQL 排不了，
+                      所以这一列故意不给排序 —— 给一个点了没反应的按钮比不给更糟。 */}
+                  <th>{t('admin.guests.colName')}</th>
+                  {sortTh('totalGames', t('admin.guests.colTotalGames'))}
+                  {sortTh('wins', t('admin.guests.colWins'))}
+                  <th>{t('admin.guests.colWinRate')}</th>
+                  {sortTh('lastSeen', t('admin.guests.colLastSeen'))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {guests.map((g, i) => (
+                  <tr key={g.playerKey}>
+                    <td className="k">{g.displayName}</td>
+                    <td className="num">{g.totalGames}</td>
+                    <td className="num">{g.wins}</td>
+                    <td className="num">
+                      {g.totalGames > 0
+                        ? `${Math.round((g.wins / g.totalGames) * 100)}%`
+                        : '—'}
+                    </td>
+                    <td>
+                      <span className="mono">
+                        {g.lastSeen?.slice(0, 16)?.replace('T', ' ') || '—'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
 
         {/* 分页 */}
         {totalPages > 1 && (
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', marginTop: '16px' }}>
-            <button
-              disabled={page <= 1}
-              onClick={() => setPage(p => Math.max(1, p - 1))}
-              style={{ ...pageBtn, opacity: page <= 1 ? 0.3 : 1 }}
-            >
-              上一页
-            </button>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-light)' }}>
+          <div className="pager">
+            <span className="meta">
               {page} / {totalPages}
             </span>
-            <button
-              disabled={page >= totalPages}
-              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-              style={{ ...pageBtn, opacity: page >= totalPages ? 0.3 : 1 }}
-            >
-              下一页
-            </button>
+            <div className="pgs">
+              <button
+                disabled={page <= 1}
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                className={'pg' + (page <= 1 ? ' dis' : '')}
+              >
+                {t('admin.common.prevPage')}
+              </button>
+              <button
+                disabled={page >= totalPages}
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                className={'pg' + (page >= totalPages ? ' dis' : '')}
+              >
+                {t('admin.common.nextPage')}
+              </button>
+            </div>
           </div>
         )}
       </div>
     </div>
   );
 }
-
-const thStyle: React.CSSProperties = {
-  padding: '10px 8px',
-  textAlign: 'left',
-  fontSize: '0.75rem',
-  fontWeight: 700,
-  color: 'var(--text-light)',
-  textTransform: 'uppercase',
-  whiteSpace: 'nowrap',
-};
-
-const tdStyle: React.CSSProperties = {
-  padding: '8px',
-  verticalAlign: 'middle',
-};
-
-const pageBtn: React.CSSProperties = {
-  padding: '6px 14px',
-  background: 'var(--input-bg)',
-  color: 'var(--text)',
-  border: '1px solid var(--border)',
-  borderRadius: 'var(--radius)',
-  cursor: 'pointer',
-  fontSize: '0.8rem',
-};

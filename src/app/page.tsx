@@ -49,85 +49,96 @@ export default function HomePage() {
         {/* 英雄区 */}
         <HeroSection />
 
-        {/* 大卡片 — 主要游戏入口 */}
+        {/* 大卡片 — 主要游戏入口
+            插画与英文副标来自稿子 index-v12.html:923-943；卡色变体类（c-daily 等）
+            决定 --mc（v12-components.css §21.4）。
+            iconFallback 是稿子 data-fb 的等价物：图片挂掉时退回原来的 emoji。 */}
         <div className="menu-grid" style={{ marginBottom: '36px' }}>
           <MenuCard
             href="/daily"
-            icon="📅"
+            icon="/icons/menu-daily.png"
+            iconFallback="📅"
             label={t('menu.daily')}
-            description={t('menu.dailyDesc')}
+            tag={t('menu.dailyTag')}
+            variant="c-daily"
             color="#ff9500"
           />
           <MenuCard
             href="/game"
-            icon="🎯"
+            icon="/icons/menu-classic.png"
+            iconFallback="🎯"
             label={t('menu.classic')}
-            description={t('menu.classicDesc')}
+            tag={t('menu.classicTag')}
+            variant="c-classic"
             color="var(--primary)"
           />
           <MenuCard
             href="/multiplayer"
-            icon="⚔️"
+            icon="/icons/menu-multi.png"
+            iconFallback="⚔️"
             label={t('menu.multiplayer')}
-            description={t('menu.multiplayerDesc')}
+            tag={t('menu.multiplayerTag')}
+            variant="c-multi"
             color="#ff6b6b"
           />
           <MenuCard
             href="/party"
-            icon="🎉"
+            icon="/icons/menu-party.png"
+            iconFallback="🎉"
             label={t('menu.party')}
-            description={t('menu.partyDesc')}
+            tag={t('menu.partyTag')}
+            variant="c-party"
             color="#7c5cff"
           />
         </div>
 
-        {/* 底部快捷链接 — 紧凑按钮行，参考弗一把设计 */}
+        {/* 底部快捷链接 — 稿子 index-v12.html:949-958 的玻璃胶囊行 */}
         <div className="bottom-bar">
-          <Link href="/leaderboard" className="bottom-bar-btn">
-            🏆 {t('menu.leaderboard')}
+          <Link href="/leaderboard" className="bchip">
+            <span className="enu">🏆</span> {t('menu.leaderboard')}
           </Link>
-          <Link href="/stats" className="bottom-bar-btn">
-            📊 {t('menu.stats')}
+          <Link href="/stats" className="bchip">
+            <span className="enu">📊</span> {t('menu.stats')}
           </Link>
           <button
-            className="bottom-bar-btn"
+            className="bchip"
             onClick={makeClickHandler(rulesTimer, setRulesOpen)}
           >
-            📋 {t('menu.rules')}
+            <span className="enu">📋</span> {t('menu.rules')}
           </button>
           <button
-            className="bottom-bar-btn"
+            className="bchip"
             onClick={makeClickHandler(changelogTimer, setChangelogOpen)}
           >
-            📝 {t('menu.changelog')}
+            <span className="enu">📝</span> {t('menu.changelog')}
           </button>
           <button
-            className="bottom-bar-btn"
+            className="bchip"
             onClick={makeClickHandler(devTimer, setDevCreditsOpen)}
           >
-            👨‍💻 {t('menu.developers')}
+            <span className="enu">👨‍💻</span> {t('menu.developers')}
           </button>
           <button
-            className="bottom-bar-btn"
+            className="bchip"
             onClick={makeClickHandler(thanksTimer, setThanksOpen)}
           >
-            💚 {t('menu.acknowledgements')}
+            <span className="enu">💚</span> {t('menu.acknowledgements')}
           </button>
           <a
             href="https://github.com/NymMtsumi/arknights-guess"
-            className="bottom-bar-btn"
+            className="bchip"
             target="_blank"
             rel="noopener noreferrer"
           >
-            🐙 GitHub
+            <span className="enu">🐙</span> GitHub
           </a>
           <a
             href="https://space.bilibili.com/1327884464"
-            className="bottom-bar-btn"
+            className="bchip"
             target="_blank"
             rel="noopener noreferrer"
           >
-            📺 B站
+            <span className="enu">📺</span> B站
           </a>
         </div>
       </div>

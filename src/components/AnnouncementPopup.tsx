@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import DOMPurify from 'dompurify';
 import { apiCall } from '@/lib/auth';
+import { useI18n } from '@/lib/i18n';
 import type { Announcement } from './ChangelogDialog';
 
 const DISMISSED_KEY = 'arknights-dismissed-announcements';
@@ -24,6 +25,7 @@ function dismissAnnouncement(id: number) {
 }
 
 export function AnnouncementPopup() {
+  const { t, locale } = useI18n();
   const [popups, setPopups] = useState<Announcement[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -61,98 +63,47 @@ export function AnnouncementPopup() {
   if (!current) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-[60] flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.7)' }}
-    >
-      <div
-        className="relative max-w-md w-full max-h-[75vh] overflow-y-auto p-6 rounded-lg animate-surface"
-        style={{
-          background: 'var(--card)',
-          color: 'var(--text)',
-          boxShadow: 'var(--shadow-lg)',
-          border: '1px solid var(--border)',
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* 关闭按钮 */}
-        <button
-          onClick={() => handleClose(current.id)}
-          className="absolute top-3 right-3 text-[var(--text-light)] hover:text-[var(--text)] text-xl leading-none"
-          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px' }}
-        >
-          ✕
-        </button>
-
-        {/* 标题 */}
-        <h2
-          style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: '1.3rem',
-            fontStyle: 'italic',
-            fontWeight: 900,
-            letterSpacing: '0.04em',
-            color: 'var(--primary-strong)',
-            marginBottom: '14px',
-            paddingRight: '28px',
-          }}
-        >
-          📢 {current.title}
-        </h2>
-
-        {/* 内容 — 支持 HTML */}
-        <div
-          style={{ fontSize: '0.92rem', lineHeight: 1.7, color: 'var(--text-sec)' }}
-          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(current.content) }}
-        />
-
-        {/* 底部 */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginTop: '20px',
-          paddingTop: '14px',
-          borderTop: '1px solid var(--border)',
-          fontSize: '0.78rem',
-          color: 'var(--text-light)',
-        }}>
-          <span>{new Date(current.created_at).toLocaleDateString('zh-CN')}</span>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            {popups.length > 1 && currentIndex < popups.length - 1 && (
-              <button
-                onClick={() => handleClose(current.id)}
-                style={{
-                  background: 'transparent',
-                  border: '1px solid var(--border)',
-                  color: 'var(--text-light)',
-                  padding: '6px 14px',
-                  borderRadius: 'var(--radius)',
-                  cursor: 'pointer',
-                  fontSize: '0.82rem',
-                }}
-              >
-                下一条
-              </button>
-            )}
-            <button
-              onClick={() => {
-                // 关闭所有剩余弹窗
-                popups.slice(currentIndex).forEach(p => dismissAnnouncement(p.id));
-                setPopups([]);
-              }}
-              style={{
-                background: 'transparent',
-                border: '1px solid var(--border)',
-                color: 'var(--text-light)',
-                padding: '6px 14px',
-                borderRadius: 'var(--radius)',
-                cursor: 'pointer',
-                fontSize: '0.82rem',
-              }}
-            >
-              不再显示
+    <div className="modal-mask top">
+      <div className="dlg mc sm animate-surface">
+        <div className="mdl">
+          {/* 关闭按钮 */}
+          <div className="mhd">
+            <h2>📢 {current.title}</h2>
+            <button onClick={() => handleClose(current.id)} className="x">
+              ✕
             </button>
+          </div>
+
+          {/* 内容 — 支持 HTML */}
+          <div
+            className="anc"
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(current.content) }}
+          />
+
+          {/* 底部 */}
+          <div className="mfoot">
+            {/* 日期跟随界面语言，不再写死 zh-CN —— 英文用户此前会看到中文格式的日期 */}
+            <span className="d3">{new Date(current.created_at).toLocaleDateString(locale)}</span>
+            <div className="flex gap-2">
+              {popups.length > 1 && currentIndex < popups.length - 1 && (
+                <button
+                  onClick={() => handleClose(current.id)}
+                  className="btn-o"
+                >
+                  {t('announcement.next')}
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  // 关闭所有剩余弹窗
+                  popups.slice(currentIndex).forEach(p => dismissAnnouncement(p.id));
+                  setPopups([]);
+                }}
+                className="btn-p"
+              >
+                {t('announcement.dismissAll')}
+              </button>
+            </div>
           </div>
         </div>
       </div>

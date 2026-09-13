@@ -14,10 +14,14 @@
     "smoke:admin": "node tests/admin-smoke.mjs",
     "smoke:solo": "node tests/solo-smoke.mjs",
     "smoke:multiplayer": "node tests/multiplayer-smoke.mjs",
+    "smoke:routes": "node tests/routes-smoke.mjs",
     "smoke:all": "bash scripts/smoke-all.sh",
     "data:sync": "python scripts/auto-update.py --apply",
     "data:sync:dry": "python scripts/auto-update.py --dry-run",
-    "data:check": "node scripts/check-characters.mjs"
+    "data:check": "node scripts/check-characters.mjs",
+    "check:sort": "node tests/sort-whitelist-check.mjs",
+    "check:contrast": "node tests/contrast-check.mjs",
+    "check:i18n": "node scripts/check-i18n-keys.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

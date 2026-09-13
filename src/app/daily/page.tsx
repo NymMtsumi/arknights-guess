@@ -131,15 +131,14 @@ export default function DailyPage() {
     return (
       <div className="page">
         <Header />
-        <div className="page-scroll" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingTop: 'clamp(60px, 10vw, 120px)' }}>
-          <div style={{ fontSize: '2.5rem', marginBottom: '16px' }}>⚠️</div>
-          <p style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--danger)', marginBottom: '24px' }}>{error || t('common.error')}</p>
-          <button onClick={() => window.location.reload()} style={{
-            padding: '10px 24px', background: 'var(--primary)', color: 'var(--bg)',
-            border: 'none', borderRadius: 'var(--radius)', fontWeight: 700, cursor: 'pointer', fontSize: '1rem',
-          }}>
-            {t('common.refresh')}
-          </button>
+        <div className="page-scroll">
+          <div className="gate" style={{ maxWidth: 520, margin: '0 auto' }}>
+            <div className="gic">⚠️</div>
+            <h2 className="alert-dan">{error || t('common.error')}</h2>
+            <button className="btn-p" style={{ marginTop: 20 }} onClick={() => window.location.reload()}>
+              {t('common.refresh')}
+            </button>
+          </div>
         </div>
         <Footer />
       </div>
@@ -151,9 +150,11 @@ export default function DailyPage() {
     return (
       <div className="page">
         <Header />
-        <div className="page-scroll" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingTop: 'clamp(60px, 10vw, 120px)' }}>
-          <div style={{ fontSize: '2.5rem', marginBottom: '16px', animation: 'neon-pulse 1.5s infinite' }}>📅</div>
-          <p style={{ fontSize: '1.2rem', fontWeight: 700 }}>{t('common.loading')}</p>
+        <div className="page-scroll">
+          <div className="gate" style={{ maxWidth: 520, margin: '0 auto' }}>
+            <div className="spin" />
+            <p>{t('common.loading')}</p>
+          </div>
         </div>
         <Footer />
       </div>
@@ -165,69 +166,53 @@ export default function DailyPage() {
     return (
       <div className="page">
         <Header />
-        <div className="page-scroll" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 'clamp(32px, 6vw, 60px)' }}>
-          <h1 style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 'clamp(1.8rem, 4vw, 2.5rem)',
-            fontStyle: 'italic',
-            fontWeight: 900,
-            letterSpacing: '0.06em',
-            marginBottom: '8px',
-            textAlign: 'center',
-          }}>
-            📅 {t('daily.alreadyPlayed')}
-          </h1>
-          <p style={{ color: 'var(--text-light)', marginBottom: '24px', textAlign: 'center' }}>
-            {t('daily.alreadyPlayedDesc')}
-          </p>
-
-          {/* 今日成绩 */}
-          {previousResult && (
-            <div style={{
-              background: 'var(--card)',
-              border: '1px solid var(--border)',
-              borderRadius: 'var(--radius)',
-              padding: '20px 28px',
-              textAlign: 'center',
-              marginBottom: '24px',
-              maxWidth: '360px',
-              width: '100%',
-            }}>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-light)', marginBottom: '4px' }}>{t('daily.yourResult')}</p>
-              <p style={{ fontSize: '2rem', fontWeight: 900, color: previousResult.won ? 'var(--correct)' : 'var(--danger)' }}>
-                {previousResult.won ? t('daily.won') : t('daily.lost')}
-              </p>
-              <p style={{ fontSize: '0.9rem', color: 'var(--text-light)' }}>
-                {t('daily.guesses', { count: previousResult.guessCount })}
-              </p>
-              {target && (
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-light)', marginTop: '8px' }}>
-                  {t('daily.answer')}：{target.name}
-                </p>
-              )}
+        <div className="page-scroll">
+          <div className="view-daily" style={{ maxWidth: 'var(--content-max)', margin: '0 auto' }}>
+            <div className="panel-hd">
+              <div>
+                <h1>📅 {t('daily.alreadyPlayed')}</h1>
+                <div className="sub">{t('daily.alreadyPlayedDesc')}</div>
+              </div>
             </div>
-          )}
 
-          {/* 倒计时 */}
-          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-light)', marginBottom: '4px' }}>{t('daily.nextReset')}</p>
-            <p style={{ fontSize: '1.8rem', fontFamily: 'monospace', fontWeight: 900, color: 'var(--primary)' }}>{countdown}</p>
-          </div>
+            {/* 今日成绩 */}
+            {previousResult && (
+              <div className="card">
+                <div className="card-hd">
+                  <h2>{t('daily.yourResult')}</h2>
+                </div>
 
-          {/* 操作按钮 */}
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
-            <button onClick={() => router.push('/leaderboard?mode=daily')} style={{
-              padding: '10px 24px', background: 'var(--primary)', color: 'var(--bg)',
-              border: 'none', borderRadius: 'var(--radius)', fontWeight: 700, cursor: 'pointer', fontSize: '1rem',
-            }}>
-              🏆 {t('daily.viewLeaderboard')}
-            </button>
-            <button onClick={handleBackToHome} style={{
-              padding: '10px 24px', background: 'transparent', color: 'var(--text)',
-              border: '1px solid var(--border)', borderRadius: 'var(--radius)', fontWeight: 700, cursor: 'pointer', fontSize: '1rem',
-            }}>
-              ← {t('game.back')}
-            </button>
+                <div className={previousResult.won ? 'verdict' : 'verdict no'}>
+                  <span className="vi">{previousResult.won ? '✓' : '✕'}</span>
+                  <div>
+                    <div className="vt">{previousResult.won ? t('daily.won') : t('daily.lost')}</div>
+                    <div className="vs">{t('daily.guesses', { count: previousResult.guessCount })}</div>
+                  </div>
+                </div>
+
+                {target && (
+                  <div className="ansbox">
+                    <span className="al">{t('daily.answer')}</span>
+                    <span className="av2">{target.name}</span>
+                    <span className="ae">{target.nameEn}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 倒计时 */}
+            <div className="reset">
+              <div className="rl">{t('daily.nextReset')}</div>
+              <div className="rv">{countdown}</div>
+            </div>
+
+            {/* 操作按钮 */}
+            <div className="bar-actions">
+              <button className="btn-p" onClick={() => router.push('/leaderboard?mode=daily')}>
+                🏆 {t('daily.viewLeaderboard')}
+              </button>
+              <button className="btn-o" onClick={handleBackToHome}>← {t('game.back')}</button>
+            </div>
           </div>
         </div>
         <Footer />
@@ -240,81 +225,42 @@ export default function DailyPage() {
     <div className="page">
       <Header />
 
-      <div className="page-scroll" style={{ paddingTop: 'clamp(16px, 2vw, 24px)' }}>
-        {/* 游戏状态栏 */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '12px',
-          marginBottom: '20px',
-          maxWidth: 'var(--content-max)',
-          margin: '0 auto 20px',
-        }}>
-          <button
-            onClick={handleBackToHome}
-            style={{
-              padding: '6px 14px',
-              background: 'transparent',
-              color: 'var(--text-light)',
-              border: '1px solid var(--border)',
-              borderRadius: 'var(--radius)',
-              cursor: 'pointer',
-              fontSize: '0.85rem',
-            }}
-          >
-            ← {t('game.back')}
-          </button>
+      <div className="page-scroll">
+        <div className="view-daily" style={{ maxWidth: 'var(--content-max)', margin: '0 auto' }}>
+          {/* 游戏状态栏 */}
+          <div className="hud" style={{ marginBottom: 20 }}>
+            <button className="btn-o" onClick={handleBackToHome}>
+              ← {t('game.back')}
+            </button>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             {/* 每日挑战标签 */}
-            <span style={{
-              fontWeight: 700, fontSize: '0.85rem', color: 'var(--primary)',
-              background: 'var(--card-soft)', padding: '4px 10px', borderRadius: 'var(--radius)',
-              border: '1px solid var(--primary)',
-            }}>
+            <span className="bdg bdg-mc">
               📅 {t('menu.daily')}
             </span>
 
-            {/* 剩余次数 */}
-            {status === 'playing' && (
-              <span style={{
-                fontWeight: 700,
-                fontSize: '1.1rem',
-                color: remainingGuesses <= 3 ? 'var(--danger)' : 'var(--text)',
-              }}>
-                {remainingGuesses <= 3
-                  ? <span style={{ animation: 'urgent-pulse 1.2s ease-in-out infinite' }}>{t('game.guessesLeft', { count: remainingGuesses })}</span>
-                  : t('game.guessesLeft', { count: remainingGuesses })
-                }
-              </span>
-            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginLeft: 'auto' }}>
+              {/* 剩余次数 */}
+              {status === 'playing' && (
+                <span className={remainingGuesses <= 3 ? 'bdg bdg-dan' : 'bdg bdg-no'}>
+                  {remainingGuesses <= 3
+                    ? <span style={{ animation: 'urgent-pulse 1.2s ease-in-out infinite' }}>{t('game.guessesLeft', { count: remainingGuesses })}</span>
+                    : t('game.guessesLeft', { count: remainingGuesses })
+                  }
+                </span>
+              )}
 
-            {status === 'won' && <span style={{ color: 'var(--correct)', fontWeight: 700 }}>🎉 {t('guessCorrect')}</span>}
-            {status === 'lost' && <span style={{ color: 'var(--danger)', fontWeight: 700 }}>{t('outOfGuesses')}</span>}
+              {status === 'won' && <span className="bdg bdg-ok">🎉 {t('guessCorrect')}</span>}
+              {status === 'lost' && <span className="bdg bdg-dan">{t('outOfGuesses')}</span>}
 
-            {status === 'playing' && (
-              <button
-                onClick={giveUp}
-                style={{
-                  padding: '6px 14px',
-                  background: 'transparent',
-                  color: 'var(--danger)',
-                  border: '1px solid var(--danger)',
-                  borderRadius: 'var(--radius)',
-                  cursor: 'pointer',
-                  fontSize: '0.85rem',
-                }}
-              >
-                {t('game.giveUp')}
-              </button>
-            )}
+              {status === 'playing' && (
+                <button className="btn-o btn-dan" onClick={giveUp}>
+                  {t('game.giveUp')}
+                </button>
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* 搜索输入 */}
-        <div style={{ maxWidth: 'var(--content-max)', margin: '0 auto' }}>
+          {/* 搜索输入 */}
           <div style={{ display: 'flex', justifyContent: 'center', flexDirection: 'column', alignItems: 'center' }}>
             <GameSearch
               onGuess={handleGuess}
@@ -324,45 +270,14 @@ export default function DailyPage() {
               remainingGuesses={remainingGuesses}
             />
             {guessError && (
-              <div style={{
-                color: 'var(--danger)',
-                fontSize: '0.85rem',
-                marginTop: '4px',
-                padding: '6px 14px',
-                background: 'var(--card-soft)',
-                borderRadius: 'var(--radius)',
-                border: '1px solid var(--danger)',
-                animation: 'fadeIn 0.2s ease',
-              }}>
+              <div className="alert alert-dan">
                 ⚠ {guessError}
               </div>
             )}
             {authError && (
-              <div style={{
-                color: 'var(--danger)',
-                fontSize: '0.9rem',
-                marginTop: '12px',
-                padding: '12px 20px',
-                background: 'var(--card-soft)',
-                borderRadius: 'var(--radius)',
-                border: '1px solid var(--danger)',
-                textAlign: 'center',
-                animation: 'fadeIn 0.2s ease',
-              }}>
-                <p style={{ margin: '0 0 8px 0' }}>登录已过期，请重新登录后继续游戏</p>
-                <button
-                  onClick={() => router.push('/')}
-                  style={{
-                    padding: '6px 20px',
-                    background: 'var(--primary)',
-                    color: 'var(--bg)',
-                    border: 'none',
-                    borderRadius: 'var(--radius)',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    fontSize: '0.85rem',
-                  }}
-                >
+              <div className="alert alert-dan" style={{ textAlign: 'center' }}>
+                <p>登录已过期，请重新登录后继续游戏</p>
+                <button className="btn-p" style={{ marginTop: 10 }} onClick={() => router.push('/')}>
                   返回首页登录
                 </button>
               </div>
@@ -373,32 +288,24 @@ export default function DailyPage() {
           <GuessTable guesses={guesses} target={target} hideRarity flashTrigger={flashTrigger} staggerKey={guesses.length} />
 
           {guesses.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-light)' }}>
-              <p style={{ fontSize: '1.1rem', marginBottom: '8px' }}>
+            <div className="empty">
+              <div className="etx">
                 {t('searchHint')}
-              </p>
-              <p style={{ fontSize: '0.85rem' }}>
+              </div>
+              <div className="ehint">
                 {t('remainingGuesses', { count: remainingGuesses })}
-              </p>
+              </div>
+            </div>
+          )}
+
+          {/* 游戏结束后的按钮 */}
+          {dialogClosed && (status === 'won' || status === 'lost') && (
+            <div className="bar-actions" style={{ justifyContent: 'center' }}>
+              <button className="btn-p btn-shine" onClick={() => router.push('/leaderboard?mode=daily')}>🏆 {t('daily.viewLeaderboard')}</button>
+              <button className="btn-o" onClick={handleBackToHome}>← {t('game.back')}</button>
             </div>
           )}
         </div>
-
-        {/* 游戏结束后的按钮 */}
-        {dialogClosed && (status === 'won' || status === 'lost') && (
-          <div style={{ textAlign: 'center', marginTop: '20px', display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button onClick={() => router.push('/leaderboard?mode=daily')} className="btn-shine" style={{
-              padding: '12px 32px', background: 'var(--primary)', color: 'var(--bg)',
-              border: 'none', borderRadius: 'var(--radius)', fontSize: '1rem',
-              fontWeight: 700, cursor: 'pointer',
-            }}>🏆 {t('daily.viewLeaderboard')}</button>
-            <button onClick={handleBackToHome} style={{
-              padding: '12px 32px', background: 'transparent', color: 'var(--text)',
-              border: '1px solid var(--border)', borderRadius: 'var(--radius)',
-              fontWeight: 700, cursor: 'pointer', fontSize: '1rem',
-            }}>← {t('game.back')}</button>
-          </div>
-        )}
       </div>
 
       {/* 结算弹窗 */}

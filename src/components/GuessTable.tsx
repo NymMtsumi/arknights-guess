@@ -19,23 +19,20 @@ interface GuessTableProps {
   staggerKey?: number;
 }
 
-function StatusCell({ status, children, width, extraStyle }: { status: GuessStatus; children: React.ReactNode; width?: string; extraStyle?: React.CSSProperties }) {
+/** 比较结果 → V12 语义格类（正确 / 接近 / 失准），配色由 .gcell.ok/.warn/.no 提供 */
+const STATUS_CLASS: Record<GuessStatus, string> = {
+  correct: 'ok',
+  close: 'warn',
+  wrong: 'no',
+};
+
+/** 走 .gcell.num 的等宽数字列（设计稿 index-v12-game.html:812/815） */
+const NUMERIC_COLS = new Set(['rarity', 'releaseYear']);
+
+function StatusCell({ status, children, width, numeric, extraStyle }: { status: GuessStatus; children: React.ReactNode; width?: string; numeric?: boolean; extraStyle?: React.CSSProperties }) {
   return (
-    <td
-      style={{
-        width: width || undefined,
-        background: `var(--${status})`,
-        color: status === 'wrong' ? 'var(--text-light)' : '#fff',
-        fontWeight: status !== 'wrong' ? 700 : 400,
-        padding: '10px 12px',
-        textAlign: 'center',
-        fontSize: '0.9rem',
-        whiteSpace: 'nowrap',
-        transition: 'background 0.25s',
-        ...extraStyle,
-      }}
-    >
-      {children}
+    <td style={{ width: width || undefined, ...extraStyle }}>
+      <div className={`gcell ${STATUS_CLASS[status] || 'no'}${numeric ? ' num' : ''}`}>{children}</div>
     </td>
   );
 }
@@ -131,23 +128,17 @@ export function GuessTable({ guesses, target, hideRarity, displayAttributes, fla
     <div>
       <div
         ref={scrollRef}
-        style={{
-          overflowX: 'auto',
-          marginBottom: '0',
-          scrollBehavior: 'smooth',
-        }}
-        className="scroll-slider-container"
+        style={{ scrollBehavior: 'smooth' }}
+        className="table-wrap scroll-slider-container"
       >
-      <table className="game-table" style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse', fontSize: '0.9rem', minWidth: `${totalWidth}px` }}>
+      {/* ⚠️ `game-table` 不是样式类，是**测试契约**：tests/solo-smoke.mjs:59,61 与
+          tests/multiplayer-smoke.mjs:85,125 用它定位这张表。V12 的语义类是
+          `.guess-table`，但契约类必须一起留着 —— 改名会让部署 gate 直接失败。 */}
+      <table className="guess-table game-table op" style={{ width: '100%', tableLayout: 'fixed', minWidth: `${totalWidth}px` }}>
         <thead>
           <tr>
             {columns.map((col, i) => (
-              <th key={col.key} style={{
-                width: colPcts[i],
-                padding: '10px 12px', textAlign: 'center', fontWeight: 700,
-                fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.05em',
-                color: 'var(--text-light)', borderBottom: '2px solid var(--border)', whiteSpace: 'nowrap',
-              }}>
+              <th key={col.key} className="zh" style={{ width: colPcts[i] }}>
                 {col.label}
               </th>
             ))}
@@ -173,40 +164,10 @@ export function GuessTable({ guesses, target, hideRarity, displayAttributes, fla
                     : {};
                   if (col.key === 'name') {
                     const isCorrect = guess.correct === true || (target && guess.character.id === target.id);
-                    if (isCorrect) {
-                      return (
-                        <td key={col.key} style={{
-                          width: colPcts[colIdx],
-                          padding: '10px 12px', textAlign: 'center', fontWeight: 700,
-                          fontSize: '0.9rem', whiteSpace: 'nowrap',
-                          color: '#fff', background: 'var(--correct)',
-                          ...cellStyle,
-                        }}>
-                          {col.getText(guess.character)}
-                        </td>
-                      );
-                    }
-                    if (alterMatch) {
-                      return (
-                        <td key={col.key} style={{
-                          width: colPcts[colIdx],
-                          padding: '10px 12px', textAlign: 'center', fontWeight: 700,
-                          fontSize: '0.9rem', whiteSpace: 'nowrap',
-                          color: '#fff', background: 'var(--close)',
-                          ...cellStyle,
-                        }}>
-                          {col.getText(guess.character)}
-                        </td>
-                      );
-                    }
+                    const nameClass = isCorrect ? 'gcell ok' : alterMatch ? 'gcell warn' : 'gcell name';
                     return (
-                      <td key={col.key} style={{
-                        width: colPcts[colIdx],
-                        padding: '10px 12px', textAlign: 'center', fontWeight: 700,
-                        color: 'var(--text)', fontSize: '0.9rem', whiteSpace: 'nowrap',
-                        ...cellStyle,
-                      }}>
-                        {col.getText(guess.character)}
+                      <td key={col.key} style={{ width: colPcts[colIdx], ...cellStyle }}>
+                        <div className={nameClass}>{col.getText(guess.character)}</div>
                       </td>
                     );
                   }
@@ -214,7 +175,7 @@ export function GuessTable({ guesses, target, hideRarity, displayAttributes, fla
                   const statusKey = col.key as keyof GuessResult['comparisons'];
                   if (guess.comparisons && statusKey in guess.comparisons) {
                     return (
-                      <StatusCell key={col.key} status={guess.comparisons[statusKey] as GuessStatus} width={colPcts[colIdx]} extraStyle={cellStyle}>
+                      <StatusCell key={col.key} status={guess.comparisons[statusKey] as GuessStatus} width={colPcts[colIdx]} numeric={NUMERIC_COLS.has(col.key)} extraStyle={cellStyle}>
                         {col.getText(guess.character)}
                       </StatusCell>
                     );
@@ -226,13 +187,6 @@ export function GuessTable({ guesses, target, hideRarity, displayAttributes, fla
           })}
         </tbody>
       </table>
-      <style>{`
-        html[data-theme="blast"] .game-table tr { border-color: rgba(255,255,255,0.1); background: #190c15; }
-        html[data-theme="blast"] .game-table td:first-child { background: #2a1723; }
-        html:not([data-theme="blast"]) .game-table tr { background: var(--card); border-bottom: 1px solid var(--border); }
-        .game-table td { border: 1px solid var(--border); border-radius: 3px; }
-        @media (max-width: 640px) { .game-table td, .game-table th { padding: 8px 4px; font-size: 0.75rem; } }
-      `}</style>
       </div>
       <ScrollSlider containerRef={scrollRef} />
     </div>

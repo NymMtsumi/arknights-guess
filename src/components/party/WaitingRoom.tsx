@@ -82,102 +82,73 @@ export function PartyWaitingRoom({ socket, isConnected }: WaitingRoomProps) {
   };
 
   return (
-    <div style={{ textAlign: 'center', maxWidth: '520px' }}>
+    <div className="text-center max-w-[520px]">
       {/* 房间码 */}
-      <h2 style={{
-        fontFamily: 'var(--font-display)',
-        fontSize: '1.1rem',
-        fontStyle: 'italic',
-        fontWeight: 700,
-        marginBottom: '8px',
-      }}>
+      <h2 className="scr-ttl">
         {t('party.waitingTitle')}
       </h2>
-      <div data-testid="party-room-code" style={{
-        fontFamily: 'monospace', fontSize: '2.5rem', fontWeight: 900,
-        color: 'var(--primary)', letterSpacing: '0.15em',
-        margin: '12px 0',
-      }}>
+      <div data-testid="party-room-code" className="code-big my-3">
         {roomCode}
       </div>
 
       {/* 复制邀请链接 */}
       <button
         onClick={handleCopyLink}
-        style={{
-          padding: '6px 16px', background: 'var(--card-soft)', color: 'var(--text)',
-          border: '1px solid var(--border)', borderRadius: 'var(--radius)',
-          cursor: 'pointer', fontSize: '0.85rem', marginBottom: '16px',
-        }}
+        className="btn-o btn-sm mb-4"
       >
         {copySuccess ? '✅ ' + t('party.copied') : '📋 ' + t('party.copyLink')}
       </button>
 
       {/* 玩家列表 */}
-      <div style={{
-        padding: '12px', background: 'var(--card)',
-        border: '1px solid var(--border)', borderRadius: 'var(--radius)',
-        marginBottom: '12px',
-      }}>
-        <div data-testid="party-player-count" style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '8px' }}>
+      <div className="card mb-3">
+        <div data-testid="party-player-count" className="font-bold text-sm mb-2">
           {t('party.players')} ({players.length}/{PARTY_MAX_PLAYERS})
         </div>
-        {players.map(p => (
-          <div
-            key={p.id}
-            style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '8px 12px', marginBottom: '4px',
-              background: 'var(--card-soft)', borderRadius: 'var(--radius)',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {p.id === hostId && (
-                <span style={{ fontSize: '0.75rem', color: 'var(--accent)' }}>👑</span>
-              )}
-              <span style={{ fontWeight: 600 }}>{p.name}</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {p.id !== hostId && (
-                disconnectedPlayers.includes(p.id) ? (
-                  <span data-testid="party-disconnected-badge" style={{
-                    fontSize: '0.8rem', fontWeight: 600,
-                    color: 'var(--warning)',
-                  }}>
-                    🔌 {t('party.statusDisconnected')}
-                  </span>
-                ) : (
-                  <span style={{
-                    fontSize: '0.8rem', fontWeight: 600,
-                    color: p.ready ? 'var(--correct)' : 'var(--text-light)',
-                  }}>
-                    {p.ready ? '✅ ' + t('party.ready') : '⏳ ' + t('party.notReady')}
-                  </span>
-                )
-              )}
-              {p.id === hostId && (
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-light)' }}>
-                  {t('party.host')}
-                </span>
-              )}
+        {players.map(p => {
+          const isMe = p.id === socketId;
+          const disconnected = disconnectedPlayers.includes(p.id);
+          return (
+            <div key={p.id} className={`prow${isMe ? ' you' : ''}`}>
+              {/* 稿子（index-v12-modes.html:1588-1596）这里放的是 emoji 头像；
+                  线上没有头像数据，改用名字首字 —— 是玩家自己的信息，不是编的装饰。 */}
+              <span className={`avatar${disconnected ? ' off' : ''}`} aria-hidden="true">
+                {p.name.slice(0, 1)}
+              </span>
+              <div className="pname">
+                {p.name}
+                {p.id === hostId && (
+                  <span className="tag host">{t('party.host')}</span>
+                )}
+              </div>
+              <span className="pstate">
+                {/* 房主没有 ready 开关（服务端视其恒为就绪），原来就不给房主渲染状态标，
+                    这里保持不变 —— 否则房主行会一直显示「未准备」。 */}
+                {p.id !== hostId && (
+                  disconnected ? (
+                    <span data-testid="party-disconnected-badge" className="st-off">
+                      🔌 {t('party.statusDisconnected')}
+                    </span>
+                  ) : (
+                    <span className={p.ready ? 'pill on' : 'st-not'}>
+                      {p.ready ? '✅ ' + t('party.ready') : '⏳ ' + t('party.notReady')}
+                    </span>
+                  )
+                )}
+              </span>
               {isHost && p.id !== hostId && (
                 <button
                   onClick={() => handleKick(p.id)}
-                  style={{
-                    padding: '2px 8px', fontSize: '0.7rem',
-                    background: 'transparent', color: 'var(--danger)',
-                    border: '1px solid var(--danger)', borderRadius: 'var(--radius)',
-                    cursor: 'pointer',
-                  }}
+                  className="kick-x"
+                  title={t('party.kick')}
                 >
-                  {t('party.kick')}
+                  ✕
                 </button>
               )}
             </div>
-          </div>
-        ))}
+          );
+        })}
         {players.length < PARTY_MIN_PLAYERS && (
-          <p style={{ fontSize: '0.8rem', color: 'var(--warning)', marginTop: '8px' }}>
+          <p className="formmsg warn">
             {t('party.minPlayers', { current: players.length, min: PARTY_MIN_PLAYERS })}
           </p>
         )}
@@ -185,19 +156,10 @@ export function PartyWaitingRoom({ socket, isConnected }: WaitingRoomProps) {
 
       {/* 房主设置面板 */}
       {isHost && (
-        <div style={{
-          padding: '12px', background: 'var(--card)',
-          border: '1px solid var(--border)', borderRadius: 'var(--radius)',
-          marginBottom: '12px',
-        }}>
+        <div className="card mb-3">
           <button
             onClick={() => setShowSettings(!showSettings)}
-            style={{
-              width: '100%', padding: '8px', background: 'transparent',
-              color: 'var(--text)', border: '1px solid var(--border)',
-              borderRadius: 'var(--radius)', cursor: 'pointer',
-              fontWeight: 700, fontSize: '0.9rem', marginBottom: showSettings ? '12px' : '0',
-            }}
+            className={showSettings ? 'btn-o w-full mb-3' : 'btn-o w-full'}
           >
             ⚙️ {t('party.roomSettings')} {showSettings ? '▲' : '▼'}
           </button>
@@ -208,10 +170,7 @@ export function PartyWaitingRoom({ socket, isConnected }: WaitingRoomProps) {
       )}
 
       {/* 当前设置摘要 */}
-      <div style={{
-        display: 'flex', gap: '12px', justifyContent: 'center',
-        fontSize: '0.8rem', color: 'var(--text-light)', marginBottom: '12px',
-      }}>
+      <div className="cfg-hint flex gap-3 justify-center mb-3">
         <span>{t('party.difficulty')}: {t(`party.difficulty${settings.difficulty.charAt(0).toUpperCase() + settings.difficulty.slice(1)}`)}</span>
         <span>·</span>
         <span>{t('party.roundsCount', { n: settings.rounds })}</span>
@@ -220,19 +179,13 @@ export function PartyWaitingRoom({ socket, isConnected }: WaitingRoomProps) {
       </div>
 
       {/* 操作按钮 */}
-      <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
+      <div className="flex gap-2.5 justify-center flex-wrap">
         {!isHost && (
           <button
             data-testid="party-ready"
             onClick={handleToggleReady}
             disabled={!isConnected}
-            style={{
-              padding: '12px 28px', fontSize: '1rem', fontWeight: 700,
-              border: 'none', borderRadius: 'var(--radius)',
-              cursor: isConnected ? 'pointer' : 'default', opacity: isConnected ? 1 : 0.5,
-              background: players.find(p => p.id === socketId)?.ready ? 'var(--card-soft)' : 'var(--primary)',
-              color: players.find(p => p.id === socketId)?.ready ? 'var(--text-light)' : 'var(--bg)',
-            }}
+            className={players.find(p => p.id === socketId)?.ready ? 'btn-o' : 'btn-p'}
           >
             {players.find(p => p.id === socketId)?.ready ? t('party.cancelReady') : t('party.readyUp')}
           </button>
@@ -242,14 +195,7 @@ export function PartyWaitingRoom({ socket, isConnected }: WaitingRoomProps) {
             data-testid="party-start"
             onClick={handleStart}
             disabled={!isConnected || players.length < PARTY_MIN_PLAYERS || !allReady}
-            style={{
-              padding: '12px 28px', fontSize: '1.1rem', fontWeight: 700,
-              border: 'none', borderRadius: 'var(--radius)',
-              cursor: players.length >= PARTY_MIN_PLAYERS && allReady ? 'pointer' : 'default',
-              background: players.length >= PARTY_MIN_PLAYERS && allReady ? 'var(--accent)' : 'var(--card-soft)',
-              color: players.length >= PARTY_MIN_PLAYERS && allReady ? '#fff' : 'var(--text-light)',
-              opacity: players.length >= PARTY_MIN_PLAYERS && allReady ? 1 : 0.6,
-            }}
+            className={players.length >= PARTY_MIN_PLAYERS && allReady ? 'btn-p' : 'btn-o'}
           >
             🚀 {t('party.startGame')}
           </button>
@@ -258,20 +204,14 @@ export function PartyWaitingRoom({ socket, isConnected }: WaitingRoomProps) {
           data-testid="party-leave"
           onClick={() => socket.emit('party:leave', handleAckError)}
           disabled={!isConnected}
-          style={{
-            padding: '12px 20px', fontSize: '0.9rem',
-            background: 'transparent', color: 'var(--text)',
-            border: '1px solid var(--border)', borderRadius: 'var(--radius)',
-            cursor: isConnected ? 'pointer' : 'default',
-            fontWeight: 700, opacity: isConnected ? 1 : 0.5,
-          }}
+          className="btn-o"
         >
           {t('party.leave')}
         </button>
       </div>
 
       {error && (
-        <p style={{ color: 'var(--danger)', fontSize: '0.85rem', marginTop: '12px' }}>
+        <p className="alert alert-dan">
           {error}
         </p>
       )}

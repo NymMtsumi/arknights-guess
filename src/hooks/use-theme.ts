@@ -2,24 +2,22 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-export type Theme = 'light' | 'blast' | 'blast-wine';
+// 主题只剩两个：light 与 blast（青黑）。
+// 曾经有第三个 blast-wine（酒红），已整体删除 —— 见下方 LEGACY_WINE 的迁移说明。
+export type Theme = 'light' | 'blast';
 
 const STORAGE_KEY = 'ui-theme';
-const DARK_VARIANT_KEY = 'ui-dark-variant';
 const DEFAULT_THEME: Theme = 'blast';
+
+// 已删除的酒红主题的遗留存值。老用户 localStorage 里可能还留着 'blast-wine'，
+// 必须继续认它并归并到 blast —— 否则下面的 'light' / 'blast' 两个分支都不匹配
+// → 掉到系统偏好 → 系统偏好是浅色的酒红用户每次加载都会莫名变成浅色主题。
+// ⚠️ layout.tsx 的 theme-init 内联脚本里有一份逐字对应的判断，改这里必须同步改那里。
+const LEGACY_WINE = 'blast-wine';
 
 function getSystemTheme(): 'light' | 'blast' {
   if (typeof window === 'undefined') return 'blast';
   return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'blast';
-}
-
-function getStoredDarkVariant(): 'blast' | 'blast-wine' {
-  if (typeof window === 'undefined') return 'blast';
-  try {
-    const stored = localStorage.getItem(DARK_VARIANT_KEY);
-    if (stored === 'blast' || stored === 'blast-wine') return stored;
-  } catch { /* ignore */ }
-  return 'blast';
 }
 
 function getStoredTheme(): Theme {
@@ -27,7 +25,8 @@ function getStoredTheme(): Theme {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored === 'light') return 'light';
-    if (stored === 'blast' || stored === 'blast-wine') return getStoredDarkVariant();
+    // 含遗留的 'blast-wine'：它是暗色，归并到 blast，不能让它掉进系统偏好分支
+    if (stored === 'blast' || stored === LEGACY_WINE) return 'blast';
   } catch { /* ignore */ }
   return getSystemTheme();
 }
@@ -39,7 +38,7 @@ function applyTheme(theme: Theme) {
     document.documentElement.style.background = '#f3f0ea';
   } else {
     document.documentElement.style.colorScheme = 'dark';
-    document.documentElement.style.background = theme === 'blast-wine' ? '#160a13' : '#0c1517';
+    document.documentElement.style.background = '#0c1517';
   }
 }
 
@@ -60,28 +59,18 @@ export function useTheme() {
     applyTheme(newTheme);
     try {
       localStorage.setItem(STORAGE_KEY, newTheme);
-      // 记住暗色变体偏好
-      if (newTheme === 'blast' || newTheme === 'blast-wine') {
-        localStorage.setItem(DARK_VARIANT_KEY, newTheme);
-      }
     } catch { /* ignore */ }
   }, []);
 
   const toggleTheme = useCallback(() => {
-    // 循环：light → blast → blast-wine → light → ...
-    const order: Theme[] = ['light', 'blast', 'blast-wine'];
+    // 循环：light → blast → light → ...
+    const order: Theme[] = ['light', 'blast'];
     const idx = order.indexOf(theme);
     const next = order[(idx + 1) % order.length];
     setTheme(next);
   }, [theme, setTheme]);
 
-  /** 仅在暗色模式间切换（blast ⇄ blast-wine），保持 light 时不变 */
-  const toggleDarkVariant = useCallback(() => {
-    if (theme === 'light') return;
-    setTheme(theme === 'blast' ? 'blast-wine' : 'blast');
-  }, [theme, setTheme]);
-
   const isDark = theme !== 'light';
 
-  return { theme, setTheme, toggleTheme, toggleDarkVariant, isDark, mounted };
+  return { theme, setTheme, toggleTheme, isDark, mounted };
 }

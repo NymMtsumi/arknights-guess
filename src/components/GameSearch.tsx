@@ -143,7 +143,7 @@ export function GameSearch({ onGuess, disabled, guessedIds, remainingGuesses }: 
   const formatRarity = (r: number) => '★'.repeat(r) + '☆'.repeat(6 - r);
 
   return (
-    <div ref={containerRef} style={{ position: 'relative', maxWidth: '500px', width: '100%', marginBottom: '20px' }}>
+    <div ref={containerRef} className="search-box">
       <input
         ref={inputRef}
         type="text"
@@ -155,47 +155,24 @@ export function GameSearch({ onGuess, disabled, guessedIds, remainingGuesses }: 
         onFocus={() => { if (query.trim() && results.length > 0) setShowDropdown(true); }}
         placeholder="输入干员名字或拼音..."
         disabled={disabled}
-        className={`game-search-input${remainingGuesses !== undefined && remainingGuesses <= 3 ? ' low-guesses' : ''}${shaking ? ' shake' : ''}`}
+        className={`search-input game-search-input${remainingGuesses !== undefined && remainingGuesses <= 3 ? ' low-guesses' : ''}${shaking ? ' shake' : ''}`}
         onAnimationEnd={() => setShaking(false)}
-        style={{
-          width: '100%', padding: '12px 16px', background: 'var(--input-bg)', color: 'var(--text)',
-          border: remainingGuesses !== undefined && remainingGuesses <= 3 ? '1px solid var(--danger)' : '1px solid var(--border)',
-          borderRadius: 'var(--radius)', fontSize: '1rem', outline: 'none',
-          transition: 'border-color 0.2s',
-        }}
       />
-      <style>{`
-        .game-search-input:focus { border-color: var(--primary) !important; box-shadow: 0 0 0 3px var(--primary-soft); }
-        html[data-theme="blast"] .game-search-input:focus { box-shadow: 0 0 12px rgba(217, 255, 63, 0.18); }
-      `}</style>
 
       {showDropdown && (
-        <div style={{
-          position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 20, marginTop: '4px',
-          background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)',
-          boxShadow: 'var(--shadow-lg)', maxHeight: '320px', overflowY: 'auto',
-        }}>
+        <div className="search-dropdown" style={{ maxHeight: '320px', overflowY: 'auto' }}>
           {results.map((char, i) => (
             <button
               key={char.id}
               onClick={() => selectChar(char)}
               disabled={disabled}
-              style={{
-                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '10px 16px', background: i === selectedIndex ? 'var(--primary-soft)' : 'transparent',
-                color: 'var(--text)', border: 'none', cursor: disabled ? 'default' : 'pointer',
-                textAlign: 'left', fontSize: '0.95rem', transition: 'background 0.15s',
-                opacity: disabled ? 0.5 : 1,
-              }}
+              className={i === selectedIndex ? 'opt active' : 'opt'}
+              style={{ width: '100%', border: 'none', background: 'transparent', textAlign: 'left' }}
               onMouseEnter={() => setSelectedIndex(i)}
             >
-              <span style={{ fontWeight: 600 }}>{char.name}</span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ color: 'var(--text-light)', fontSize: '0.82rem' }}>{char.class}</span>
-                <span style={{ color: 'var(--primary)', fontSize: '0.75rem', fontFamily: 'monospace' }}>
-                  {formatRarity(char.rarity)}
-                </span>
-              </span>
+              <b>{char.name}</b>
+              <span className="od">{char.class}</span>
+              <span className="od">{formatRarity(char.rarity)}</span>
             </button>
           ))}
         </div>

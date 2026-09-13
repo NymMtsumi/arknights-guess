@@ -6,7 +6,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createTransport } from 'nodemailer';
 import Database from 'better-sqlite3';
-import { generateKey, getClientIP, jsonResponse, checkNicknameProfanity, getAllowedOrigins } from './utils.js';
+import { generateKey, getClientIP, jsonResponse, checkNicknameProfanity, getAllowedOrigins, csrfReject } from './utils.js';
 import { initSchema } from './db.js';
 import { createAuth } from './auth.js';
 import { loadCharacters } from './characters.js';
@@ -178,7 +178,10 @@ const userRoutes = registerUserRoutes({
 const adminRoutes = registerAdminRoutes({
   app: {}, db, requireAdmin, checkNicknameProfanity,
   onlinePlayers, onlineSockets, socketIps, getUserIps, ONLINE_TIMEOUT, APP_VERSION,
-  reloadCharacters: loadCharacters,
+  // ⚠️ 必须 force：管理员写完 characters.json 后要的是「重读文件」，
+  //    而 loadCharacters() 不带参时会被 game-engine 的 _loaded 守卫挡掉，
+  //    原样返回旧数组 —— 新干员在服务端不存在，且日志看上去一切正常。
+  reloadCharacters: () => loadCharacters({ force: true }),
   invalidateLeaderboardCache: gameRoutes.invalidateLeaderboardCache,
 });
 
@@ -207,27 +210,40 @@ async function handleRequest(req, res) {
   // 存储请求 origin 供 jsonResponse 动态匹配 CORS
   res._requestOrigin = req.headers.origin || '';
 
+  // CSRF 前置门：状态变更请求必须是「同源 + JSON」。理由见 utils.js:csrfReject 的注释。
+  // ⚠️ 放在路由分发**之前**、CORS 之后：CORS 只管响应能不能被读，
+  //    而 CSRF 要挡的是请求被执行，两者缺一不可。
+  const csrf = csrfReject(req);
+  if (csrf) {
+    console.warn(`[csrf] 拒绝 ${req.method} ${(req.url || '').split('?')[0]}：${csrf}`);
+    return jsonResponse(res, { error: csrf }, 403);
+  }
+
   const url = req.url || '';
   // 标准化路径（去掉 query string，防止 ?v= 等参数导致路由匹配失败）
   const path = (() => { try { return new URL(url, 'http://localhost').pathname; } catch { return url.split('?')[0]; } })();
   const ip = getClientIP(req);
 
-  // 旧统计端点（带 5 秒缓存，避免重复轮询时迭代 rooms）
-  if (path.startsWith('/stats')) {
-    const now = Date.now();
-    if (!statsCache || (now - statsCacheTime) > STATS_CACHE_TTL) {
-      statsCache = {
-        connections: io.engine.clientsCount,
-        rooms: roomManager.rooms.size,
-        playing: Array.from(roomManager.rooms.values()).filter(r => r.started && !r.finished).length,
-      };
-      statsCacheTime = now;
-    }
-    return jsonResponse(res, statsCache);
-  }
-
   // ===== 路由分发（统一 try/catch 防止 handler 抛异常导致请求挂起） =====
   try {
+    // 旧统计端点（带 5 秒缓存，避免重复轮询时迭代 rooms）
+    // ⚠️ 必须留在 try **之内**：它原先在 try 之前，而 io.engine.clientsCount /
+    //    rooms 迭代一旦抛异常，只有 process.on('unhandledRejection') 会接住 ——
+    //    那个处理器只打日志、不响应、不退出，请求会**永久挂起**。
+    //    /stats 是 health-check.sh 与 deploy.sh 的健康探针，挂起 = 部署脚本误判。
+    if (path.startsWith('/stats')) {
+      const now = Date.now();
+      if (!statsCache || (now - statsCacheTime) > STATS_CACHE_TTL) {
+        statsCache = {
+          connections: io.engine.clientsCount,
+          rooms: roomManager.rooms.size,
+          playing: Array.from(roomManager.rooms.values()).filter(r => r.started && !r.finished).length,
+        };
+        statsCacheTime = now;
+      }
+      return jsonResponse(res, statsCache);
+    }
+
     // Auth
     if (req.method === 'POST' && path === '/api/register') return await authRoutes.handleRegister(req, res, ip);
     if (req.method === 'POST' && path === '/api/login') return await authRoutes.handleLogin(req, res, ip);

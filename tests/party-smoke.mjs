@@ -171,6 +171,89 @@ async function main() {
     });
     check('g.重连后断线计数清除', true);
 
+    // ── h. 凭证不外泄：派对载荷里绝不能出现别人的 player_key ──
+    // player_key 是玩家凭证：server/socket/index.js 的握手接受 auth.pk / query.pk，
+    // 谁拿到谁的 pk 就能顶替那个游客的身份。旧代码把全房 pk 放在
+    // party:created / player_joined / round_status / round_end 等载荷里广播给同房所有人。
+    // 这条断言用裸 socket 客户端收全量事件、递归扫值，比 grep 更能挡住「换个字段名又漏回来」。
+    console.log('\n[h] 派对载荷不含 player_key');
+    const { io } = await import('socket.io-client');
+    const conn = (label) => new Promise((resolve, reject) => {
+      const s = io(BACKEND_PORT === 0 ? '' : `http://localhost:${BACKEND_PORT}`, {
+        transports: ['websocket'], forceNew: true,
+        auth: { pk: `p_smokeLEAK${label}${'x'.repeat(6)}` },
+      });
+      s.on('connect', () => resolve(s));
+      s.on('connect_error', reject);
+      setTimeout(() => reject(new Error(`${label} 连接超时`)), WAIT_TIMEOUT);
+    });
+
+    const seen = [];   // 收集所有收到的载荷
+    const sink = (label) => (s) => {
+      s.onAny((ev, payload) => {
+        if (ev === 'set_cookie') return; // 服务端只给自己下发自己的 pk，是正常路径
+        seen.push({ label, ev, payload });
+      });
+    };
+
+    // ⚠️ 必须凑够 MIN_PLAYERS=3 并真的开局：只建房不加人的话收不到
+    //    party:round_status / round_end，而「没收到载荷」会让下面的断言**假通过**。
+    //    所以末尾有一条「样本覆盖」断言，缺了它会直接判失败。
+    const s1 = await conn('A');
+    const s2 = await conn('B');
+    const s3 = await conn('C');
+    sink('A')(s1); sink('B')(s2); sink('C')(s3);
+
+    const emitAck = (s, ev, data) => new Promise((resolve) => {
+      s.timeout(WAIT_TIMEOUT).emit(ev, data, (err, resp) => resolve(err ? null : resp));
+    });
+
+    const created = await emitAck(s1, 'party:create', { difficulty: 'hard', rounds: 3, roundTime: 60 });
+    const leakCode = created?.roomCode;
+    check('h.裸客户端建房成功', !!leakCode, `resp=${JSON.stringify(created)}`);
+    await emitAck(s2, 'party:join', { roomCode: leakCode });
+    await emitAck(s3, 'party:join', { roomCode: leakCode });
+    await sleep(400);
+    await emitAck(s2, 'party:toggle_ready', {});
+    await emitAck(s3, 'party:toggle_ready', {});
+    await emitAck(s1, 'party:start', {});
+    await sleep(1200);
+
+    // 递归找任何看起来像 player_key 的值（p_ / g_ 前缀 + 够长）
+    const isCred = (v) => typeof v === 'string' && /^[pg]_[A-Za-z0-9_-]{8,}$/.test(v);
+    const hits = [];
+    const walk = (v, path) => {
+      if (isCred(v)) { hits.push(path); return; }
+      if (Array.isArray(v)) return v.forEach((x, i) => walk(x, `${path}[${i}]`));
+      if (v && typeof v === 'object') {
+        for (const [k, val] of Object.entries(v)) walk(val, `${path}.${k}`);
+      }
+    };
+    for (const { label, ev, payload } of seen) walk(payload, `${label}:${ev}`);
+
+    check('h.收到过派对载荷（样本非空，断言才有意义）', seen.length >= 3, `events=${seen.length} [${[...new Set(seen.map(s => s.ev))].join(',')}]`);
+    // 覆盖闸：必须真的跑到「局内实时状态」这一步，否则上面那条「不含凭证」是假通过
+    const evs = new Set(seen.map(s => s.ev));
+    check('h.确实跑到了局内载荷（round_status / round_end）', evs.has('party:round_status') || evs.has('party:round_end'), `events=[${[...evs].join(',')}]`);
+    check('h.载荷中不含任何 player_key 形式的凭证', hits.length === 0, hits.slice(0, 6).join(' | '));
+
+    // ── i. 房间码枚举被限流 ──
+    // 6 位房间码只有 10^6 种，而 party:join 失败会明确回「房间不存在」——
+    // 不设限的话一条连接几分钟就能扫完，扫到就挤进陌生人的房间。
+    // 用**新建的连接**发一串必失败的 join，必须在若干次之后被 RATE_LIMITED 挡住。
+    console.log('\n[i] 房间码枚举限流');
+    const s4 = await conn('D');
+    let limited = null;
+    for (let i = 0; i < 40; i++) {
+      const r = await emitAck(s4, 'party:join', { roomCode: '000000' });
+      if (r && r.code === 'RATE_LIMITED') { limited = i; break; }
+    }
+    check('i.连续枚举房间码会被限流', limited !== null, limited === null ? '40 次全放行' : `第 ${limited + 1} 次被拒`);
+    // 断言「是限流拒的」而不是「因为房间不存在拒的」：两者错误码不同
+    const after = await emitAck(s4, 'party:join', { roomCode: '000000' });
+    check('i.限流状态下后续请求仍被拒（不是偶发）', after?.code === 'RATE_LIMITED', `resp=${JSON.stringify(after)}`);
+    s4.close();
+
     return 0;
   } catch (e) {
     console.error('\n❌ 冒烟测试异常：', e.message);

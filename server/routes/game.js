@@ -380,6 +380,18 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
       newPlayerKey = player_key;
     }
 
+    // 未认证时拒绝用「已注册用户」的 pk 提交每日猜测 —— 与 handleSaveGame 的同名守卫对齐
+    // （见上文「未认证（无 token / token 无效）：拒绝写入已注册用户的 pk」）。
+    // 不对称的后果：拿到他人 p_ 键就能替对方占掉当日挑战，对方再来会收到 409「今日已挑战」。
+    // ⚠️ 登录用户不受影响：上面的 token 分支已把 player_key 换成账号权威 pk 且 userId 非空，
+    //    守卫直接跳过；未被认领的游客 pk 也不在 users 表里，同样放行。
+    if (!userId) {
+      const pkOwner = db.prepare('SELECT id FROM users WHERE player_key = ?').get(player_key);
+      if (pkOwner) {
+        return jsonResponse(res, { error: '请先登录' }, 401);
+      }
+    }
+
     const extraHeaders = {};
     if (newPlayerKey) {
       extraHeaders['Set-Cookie'] = `player_key=${newPlayerKey}; SameSite=Lax; Secure; Path=/; Max-Age=94608000; HttpOnly`;

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { getServerUrl, getToken } from '@/lib/auth';
+import { useI18n } from '@/lib/i18n';
 
 interface OnlinePlayer {
   playerKey: string;
@@ -21,62 +22,30 @@ interface OnlineStats {
   players: OnlinePlayer[];
 }
 
-const cardStyle: React.CSSProperties = {
-  background: 'var(--card)',
-  border: '1px solid var(--border)',
-  borderRadius: 'var(--radius)',
-  padding: '20px',
-  marginBottom: '16px',
+/* 模式徽标的视觉分组。原先每种模式各配一个色值，这里收敛到 V12 的三档语义色：
+   multi = 正在对局（最"活"）→ ok / single = 自开一局 → mc（管理端强调色）/
+   idle = 只浏览 → no（最低对比度）。
+   未知类型回退到 idle 那一档 —— 与旧实现的 `colors[type] || colors.idle` 同义。 */
+const TYPE_BADGE: Record<string, string> = {
+  multi: 'bdg-ok',
+  single: 'bdg-mc',
+  idle: 'bdg-no',
 };
 
-const statBox: React.CSSProperties = {
-  flex: 1,
-  minWidth: '120px',
-  padding: '14px 16px',
-  borderRadius: 'var(--radius)',
-  border: '1px solid var(--border)',
-  textAlign: 'center',
+const TYPE_LABEL_KEYS: Record<string, string> = {
+  multi: 'admin.online.typeMulti',
+  single: 'admin.online.typeSingle',
+  idle: 'admin.online.typeIdle',
 };
 
-const thStyle: React.CSSProperties = {
-  textAlign: 'left',
-  padding: '8px 12px',
-  borderBottom: '1px solid var(--border)',
-  fontWeight: 700,
-  fontSize: '0.82rem',
-  color: 'var(--text-light)',
-};
-
-const tdStyle: React.CSSProperties = {
-  padding: '8px 12px',
-  borderBottom: '1px solid var(--border)',
-  fontSize: '0.85rem',
-};
-
-function typeBadge(type: string): React.CSSProperties {
-  const colors: Record<string, { bg: string; text: string }> = {
-    multi: { bg: 'rgba(255,101,120,0.15)', text: '#ff6578' },
-    single: { bg: 'rgba(77,148,255,0.15)', text: '#4d94ff' },
-    idle: { bg: 'rgba(149,129,143,0.15)', text: '#95818f' },
-  };
-  const c = colors[type] || colors.idle;
-  return {
-    display: 'inline-block',
-    padding: '2px 8px',
-    borderRadius: 'var(--radius-sm)',
-    background: c.bg,
-    color: c.text,
-    fontSize: '0.78rem',
-    fontWeight: 700,
-  };
-}
-
-function typeLabel(type: string): string {
-  const labels: Record<string, string> = { multi: '对战', single: '单人', idle: '浏览' };
-  return labels[type] || type;
+function typeLabel(type: string, t: (k: string) => string): string {
+  const key = TYPE_LABEL_KEYS[type];
+  // 未知类型原样透传 —— 后端加了新状态时至少能看到原始值，而不是一片空白
+  return key ? t(key) : type;
 }
 
 export default function AdminOnline() {
+  const { t, locale } = useI18n();
   const [stats, setStats] = useState<OnlineStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -91,16 +60,18 @@ export default function AdminOnline() {
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || '加载失败');
+        throw new Error(data.error || t('admin.common.loadFailed'));
       }
       const data: OnlineStats = await res.json();
       setStats(data);
       setError('');
     } catch (err: any) {
+      // ⚠️ 轮询失败只记错误，**不清空 stats** —— 新数据拿不到时，
+      // 列表保持上一次的结果（配合下面的 error 提示条），这是刻意设计。
       setError(err.message);
     }
     setLoading(false);
-  }, [baseUrl]);
+  }, [baseUrl, t]);
 
   useEffect(() => {
     load();
@@ -109,61 +80,67 @@ export default function AdminOnline() {
   }, [load]);
 
   if (loading && !stats) {
-    return <p style={{ textAlign: 'center', color: 'var(--text-light)', padding: '40px' }}>加载中...</p>;
+    return <div className="card"><div className="sk"><i /><i /><i /><i /></div></div>;
   }
 
   return (
     <div>
+      {/* 轮询失败时这里出现一行提示，但下方表格仍是上一轮的数据 */}
       {error && (
-        <p style={{ color: 'var(--danger)', fontSize: '0.85rem', marginBottom: '12px' }}>{error}</p>
+        <p className="alert alert-dan">{error}</p>
       )}
 
-      {/* 统计卡片 */}
-      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '20px' }}>
+      {/* 统计卡片 —— 四项共用一条强调色细线（.stat::after），不各配一色 */}
+      <div className="stats">
         {[
-          { label: '总在线', value: stats?.totalOnline ?? 0, color: 'var(--primary)' },
-          { label: '多人对战', value: stats?.inMultiplayer ?? 0, color: '#ff6578' },
-          { label: '单人模式', value: stats?.inSinglePlayer ?? 0, color: '#4d94ff' },
-          { label: '仅浏览', value: stats?.idle ?? 0, color: '#95818f' },
+          { label: t('admin.online.total'), value: stats?.totalOnline ?? 0 },
+          { label: t('admin.online.multiplayer'), value: stats?.inMultiplayer ?? 0 },
+          { label: t('admin.online.single'), value: stats?.inSinglePlayer ?? 0 },
+          { label: t('admin.online.idle'), value: stats?.idle ?? 0 },
         ].map(s => (
-          <div key={s.label} style={{ ...statBox, borderLeft: `3px solid ${s.color}` }}>
-            <div style={{ fontSize: '1.8rem', fontWeight: 900, color: s.color }}>{s.value}</div>
-            <div style={{ fontSize: '0.78rem', color: 'var(--text-light)', marginTop: '4px' }}>{s.label}</div>
+          <div key={s.label} className="stat">
+            <div className="lb">{s.label}</div>
+            <div className="vl">{s.value}</div>
           </div>
         ))}
       </div>
 
       {/* 玩家列表 */}
-      <div style={cardStyle}>
-        <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontStyle: 'italic', fontWeight: 800, margin: '0 0 14px' }}>
-          在线玩家 ({stats?.totalOnline ?? 0})
-        </h3>
+      <div className="card">
+        <div className="card-hd">
+          <h2>{t('admin.online.players', { count: stats?.totalOnline ?? 0 })}</h2>
+        </div>
 
         {(!stats || stats.players.length === 0) ? (
-          <p style={{ color: 'var(--text-light)', textAlign: 'center', padding: '20px' }}>暂无在线玩家</p>
+          <div className="empty"><div className="etx">{t('admin.online.empty')}</div></div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div className="table-wrap">
+            <table className="tbl">
               <thead>
                 <tr>
-                  <th style={thStyle}>显示名</th>
-                  <th style={thStyle}>用户名</th>
-                  <th style={thStyle}>状态</th>
-                  <th style={thStyle}>房间码</th>
-                  <th style={thStyle}>IP</th>
-                  <th style={thStyle}>最后活跃</th>
+                  <th>{t('admin.online.colName')}</th>
+                  <th>{t('admin.online.colUsername')}</th>
+                  <th>{t('admin.online.colStatus')}</th>
+                  <th>{t('admin.online.colRoom')}</th>
+                  <th>{t('admin.online.colIp')}</th>
+                  <th>{t('admin.online.colLastSeen')}</th>
                 </tr>
               </thead>
               <tbody>
                 {stats.players.map(p => (
                   <tr key={p.playerKey}>
-                    <td style={tdStyle}>{p.displayName}</td>
-                    <td style={{ ...tdStyle, color: 'var(--text-light)' }}>{p.username || '-'}</td>
-                    <td style={tdStyle}><span style={typeBadge(p.type)}>{typeLabel(p.type)}</span></td>
-                    <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: '0.82rem' }}>{p.roomCode || '-'}</td>
-                    <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: '0.72rem', color: 'var(--text-light)' }}>{p.ip || '—'}</td>
-                    <td style={{ ...tdStyle, color: 'var(--text-light)', fontSize: '0.78rem' }}>
-                      {p.lastSeen ? new Date(p.lastSeen).toLocaleTimeString('zh-CN') : '—'}
+                    <td className="k">{p.displayName}</td>
+                    <td>{p.username || '-'}</td>
+                    <td>
+                      <span className={'bdg ' + (TYPE_BADGE[p.type] || TYPE_BADGE.idle)}>
+                        {typeLabel(p.type, t)}
+                      </span>
+                    </td>
+                    <td className="mono">{p.roomCode || '-'}</td>
+                    {/* IP 是后端脱敏后的值，原样展示 —— 审计日志里的才是完整 IP，两者刻意不对称 */}
+                    <td className="mono">{p.ip || '—'}</td>
+                    <td className="num">
+                      {p.lastSeen ? new Date(p.lastSeen).toLocaleTimeString(locale) : '—'}
                     </td>
                   </tr>
                 ))}

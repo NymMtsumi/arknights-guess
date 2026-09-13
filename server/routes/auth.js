@@ -3,6 +3,7 @@ import { randomBytes, createHash } from 'node:crypto';
 import { promises as dns } from 'node:dns';
 import bcrypt from 'bcryptjs';
 import { sanitizeString, parseCookies, parseBody, jsonResponse, generateKey, generateDisplayCode, getSmtpSender } from '../utils.js';
+import { backfillGamesUserId } from '../db.js';
 
 // 时序防御：固定 bcrypt hash，防止通过响应时间枚举账号
 const TIMING_DEFENSE_HASH = '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy';
@@ -234,17 +235,10 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
       if (!conflict) {
         try {
           // cookie pk 无人认领 → 回填 user_id（不再迁移 player_key！）
-          // 跳过该用户当天已有的每日战绩，避免触发 idx_games_daily_unique (user_id, daily_date) 唯一约束
-          const backfilled = db.prepare(`
-            UPDATE games SET user_id = ?
-            WHERE player_key = ? AND user_id IS NULL
-              AND NOT EXISTS (
-                SELECT 1 FROM games g2
-                WHERE g2.user_id = ? AND g2.daily_date = games.daily_date AND g2.daily_date IS NOT NULL
-              )
-          `).run(user.id, cookiePk, user.id);
-          if (backfilled.changes > 0) {
-            console.log(`[login] backfilled user_id=${user.id} for ${backfilled.changes} games from cookie pk=${cookiePk.slice(0, 10)}`);
+          // 唯一约束守卫见 db.js:backfillGamesUserId 的注释
+          const changes = backfillGamesUserId(db, user.id, cookiePk);
+          if (changes > 0) {
+            console.log(`[login] backfilled user_id=${user.id} for ${changes} games from cookie pk=${cookiePk.slice(0, 10)}`);
           }
         } catch (err) {
           console.error('[login] backfill games failed:', err.message);
@@ -391,12 +385,16 @@ export function registerAuthRoutes({ app, db, signToken, verifyToken, requireAut
       return jsonResponse(res, { ok: true, message: '如果该邮箱已注册，重置邮件已发送' });
     }
 
-    // 先校验邮箱是否已注册（已验证），未注册直接明确提示，避免发出无效的重置链接
+    // 查邮箱是否已注册（已验证）。
+    // ⚠️ 未注册时**不能**回 404「该邮箱尚未注册」—— 那是一个可判别的用户枚举预言机：
+    //    拿一份邮箱清单刷一遍，就能知道哪些地址在本站注册过。register 早就统一成了
+    //    「该邮箱或用户名不可用」，这里是漏掉的对称缺口。
+    //    现在回与上面限流分支、与成功分支**逐字相同**的响应，时序由 bcrypt 拉平。
     const user = db.prepare('SELECT id, username, email FROM users WHERE LOWER(email) = ? AND email_verified_at IS NOT NULL').get(email);
     if (!user) {
       // 时序防御：即使未找到也执行 bcrypt（与登录路径一致的防御策略）
       try { await bcrypt.compare('timing-defense', TIMING_DEFENSE_HASH); } catch {}
-      return jsonResponse(res, { error: '该邮箱尚未注册，请先完成注册' }, 404);
+      return jsonResponse(res, { ok: true, message: '如果该邮箱已注册，重置邮件已发送' });
     }
 
     const resetToken = randomBytes(32).toString('hex');

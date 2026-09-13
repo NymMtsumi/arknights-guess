@@ -8,6 +8,7 @@ import { PartyWaitingRoom } from '@/components/party/WaitingRoom';
 import { PartyGame } from '@/components/party/PartyGame';
 import { PartyRoundReveal } from '@/components/party/RoundReveal';
 import { PartyEnd } from '@/components/party/PartyEnd';
+import { ModeArt } from '@/components/ModeArt';
 import { usePartyStore } from '@/stores/party-store';
 import { useGameStore } from '@/stores/game-store';
 import { useI18n } from '@/lib/i18n';
@@ -141,7 +142,7 @@ function PartyPageContent() {
 
   // ── 渲染 ──
   return (
-    <div className="page">
+    <div className="page" data-mode="party">
       <Header />
       <div className="page-scroll" style={{
         display: 'flex', flexDirection: 'column',
@@ -151,13 +152,15 @@ function PartyPageContent() {
         {/* Menu */}
         {stage === 'menu' && (
           <div style={{ textAlign: 'center', maxWidth: '450px' }}>
-            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.5rem, 4vw, 2rem)', fontStyle: 'italic', fontWeight: 900, marginBottom: '12px' }}>
+            {/* 顶部装饰插画 —— 稿子 index-v12-modes.html:1468 的 .mode-art ring */}
+            <ModeArt src="/icons/menu-party.png" />
+            <h1 className="hero-title">
               🎉 {t('party.title')}
             </h1>
-            <p style={{ color: 'var(--text-light)', fontSize: '0.9rem', marginBottom: '20px' }}>
+            <p className="sec-note" style={{ marginTop: 0, marginBottom: '20px' }}>
               {t('party.description')}
             </p>
-            <button data-testid="party-menu-join" onClick={() => setStage('lobby')} style={{ padding: '14px 32px', background: 'var(--primary)', color: 'var(--bg)', border: 'none', borderRadius: 'var(--radius)', fontSize: '1.1rem', fontWeight: 700, cursor: 'pointer' }}>
+            <button data-testid="party-menu-join" onClick={() => setStage('lobby')} className="btn-p">
               {t('party.createJoinRoom')}
             </button>
 
@@ -165,21 +168,13 @@ function PartyPageContent() {
             <div style={{ marginTop: '24px', textAlign: 'left' }}>
               <button
                 onClick={() => setShowRules(!showRules)}
-                style={{
-                  width: '100%', padding: '10px', background: 'var(--card)',
-                  color: 'var(--text)', border: '1px solid var(--border)',
-                  borderRadius: 'var(--radius)', cursor: 'pointer', fontWeight: 700,
-                  fontSize: '0.9rem',
-                }}
+                className="btn-o"
+                style={{ width: '100%' }}
               >
                 📖 {t('party.rulesTitle')} {showRules ? '▲' : '▼'}
               </button>
               {showRules && (
-                <div style={{
-                  marginTop: '8px', padding: '14px', background: 'var(--card)',
-                  border: '1px solid var(--border)', borderRadius: 'var(--radius)',
-                  fontSize: '0.85rem', lineHeight: '1.7', color: 'var(--text)',
-                }}>
+                <div className="card" style={{ marginTop: '8px' }}>
                   <p style={{ marginBottom: '8px' }}>{t('party.rulesIntro')}</p>
                   <ol style={{ paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <li>{t('party.rule1')}</li>
@@ -202,8 +197,8 @@ function PartyPageContent() {
         {/* Countdown */}
         {stage === 'countdown' && (
           <div data-testid="party-countdown" style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '4rem', marginBottom: '16px', animation: 'neon-pulse 1s infinite' }}>{timeLeft}</div>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontStyle: 'italic', fontWeight: 700 }}>{t('party.gettingReady')}</h2>
+            <div className="big-num" style={{ marginBottom: '16px', animation: 'neon-pulse 1s infinite' }}>{timeLeft}</div>
+            <h2 className="hero-title">{t('party.gettingReady')}</h2>
           </div>
         )}
 
@@ -218,23 +213,23 @@ function PartyPageContent() {
 
         {/* Error Toast */}
         {error && stage !== 'lobby' && (
-          <div style={{ position: 'fixed', bottom: '20px', left: '50%', transform: 'translateX(-50%)', padding: '10px 20px', background: 'var(--danger)', color: '#fff', borderRadius: 'var(--radius)', fontWeight: 700, zIndex: 100, fontSize: '0.9rem' }}>
+          <div className="toast" style={{ position: 'fixed', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 100 }}>
             {error}
-            <button onClick={() => usePartyStore.setState({ error: '' })} style={{ marginLeft: '12px', background: 'transparent', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 700 }}>X</button>
+            <button onClick={() => usePartyStore.setState({ error: '' })} className="x" style={{ marginLeft: '12px' }}>X</button>
           </div>
         )}
 
         {/* Connecting Dialog */}
         {connecting && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }}>
-            <div style={{ background: 'var(--card)', padding: '32px', borderRadius: 'var(--radius)', textAlign: 'center' }}>
-              <div style={{ fontSize: '2rem', marginBottom: '10px', animation: 'neon-pulse 1.5s infinite' }}>
+          <div className="modal-mask">
+            <div className="dlg mc" style={{ textAlign: 'center' }}>
+              <div className="dhero sm" style={{ marginBottom: '10px', animation: 'neon-pulse 1.5s infinite' }}>
                 {connecting === 'create' ? '🏠' : connecting === 'join' ? '🚪' : '🎉'}
               </div>
-              <p style={{ fontSize: '1.1rem', fontWeight: 700 }}>
+              <p className="dt" style={{ justifyContent: 'center' }}>
                 {connecting === 'create' ? t('party.creating') : connecting === 'join' ? t('party.joining') : t('party.connecting')}
               </p>
-              <p style={{ color: 'var(--text-light)', fontSize: '0.8rem', marginTop: '6px' }}>
+              <p className="sec-note" style={{ marginTop: '6px' }}>
                 {t('party.connectingTimeout')}
               </p>
             </div>

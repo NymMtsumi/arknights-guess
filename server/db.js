@@ -103,6 +103,7 @@ export function initSchema(db) {
     ['games', 'user_id', "INTEGER REFERENCES users(id)"],
     ['games', 'daily_date', 'TEXT'],
     ['games', 'multi_data', 'TEXT'],
+    ['api_tokens', 'token_prefix', 'TEXT'],
   ]) {
     const columns = db.prepare(`PRAGMA table_info(${table})`).all();
     if (columns.some((c) => c.name === col)) continue;
@@ -232,4 +233,35 @@ export function initSchema(db) {
   }, 3600_000);
 
   return db;
+}
+
+/**
+ * 回填某个游客 pk 名下 ownerless 游戏的 user_id（**不改 player_key**，防止战绩串乱）。
+ *
+ * 登录（auth.js）、socket 鉴权（socket/index.js）、/api/sync 与 /api/link-player-key
+ * （user.js）四处都要做同一件事，原先各写一份 SQL —— 其中三处**漏了守卫**。
+ *
+ * ⚠️ 守卫 `NOT EXISTS` 不能省：
+ *   games 上有 `idx_games_daily_unique (user_id, daily_date) WHERE user_id IS NOT NULL
+ *   AND daily_date IS NOT NULL` 这条**部分唯一索引**。当该用户今天已经有一条每日战绩
+ *   （用账户 pk 记的），又被回填进一条同 daily_date 的游客每日战绩时，这条 UPDATE 直接
+ *   抛 UNIQUE 约束错误。
+ *   后果分两种，都很糟：
+ *     · auth.js / socket —— 整段被外层 try 吞掉，静默降级成「游客登录」，用户以为登录成功了；
+ *     · user.js —— 没有 try 包着，直接 500。
+ *   所以按「该用户当天已有的每日战绩」逐行跳过，让回填只覆盖不冲突的行。
+ *
+ * @returns {number} 实际回填的行数（0 = 没有可回填的，或全被每日守卫跳过）
+ */
+export function backfillGamesUserId(db, userId, playerKey) {
+  if (!playerKey) return 0;
+  const res = db.prepare(`
+    UPDATE games SET user_id = ?
+    WHERE player_key = ? AND user_id IS NULL
+      AND NOT EXISTS (
+        SELECT 1 FROM games g2
+        WHERE g2.user_id = ? AND g2.daily_date = games.daily_date AND g2.daily_date IS NOT NULL
+      )
+  `).run(userId, playerKey, userId);
+  return res.changes;
 }

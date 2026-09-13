@@ -115,12 +115,15 @@ export function startStaticServer() {
 // ═══════════════════════════════════════════════
 //  后端（hermetic：临时 DB + dev JWT 回退 + 放行本静态源）
 // ═══════════════════════════════════════════════
-export function startBackend({ port = BACKEND_PORT, dbPath } = {}) {
+// extraEnv：给个别用例补环境变量（如 auth-smoke 要验部署 webhook 的令牌分支，
+// 需要 DEPLOY_TOKEN 有值）。默认不传，行为与从前完全一致。
+export function startBackend({ port = BACKEND_PORT, dbPath, extraEnv } = {}) {
   if (!dbPath) throw new Error('startBackend 需要 dbPath（临时数据库路径），避免误用生产 data.db');
   const child = spawn(process.execPath, ['server/index.js'], {
     cwd: ROOT,
     env: {
       ...process.env,
+      ...extraEnv,
       PORT: String(port),
       DB_PATH: dbPath,
       NODE_ENV: 'development',

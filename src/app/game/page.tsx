@@ -25,10 +25,11 @@ type GameMode = 'operator' | 'enemy';
 
 const DIFFICULTY_GUESSES: Record<EnemyDifficulty, number> = { easy: 15, normal: 15, hard: 15 };
 
-const RATING_STYLE: Record<GuessStatus, { bg: string; color: string }> = {
-  correct: { bg: 'var(--correct)', color: '#fff' },
-  close: { bg: 'var(--close)', color: '#fff' },
-  wrong: { bg: 'var(--card-soft)', color: 'var(--text-light)' },
+/** 评级 → V12 语义格类（正确 / 接近 / 失准），配色由 .gcell.ok/.warn/.no 提供 */
+const RATING_CLASS: Record<GuessStatus, string> = {
+  correct: 'ok',
+  close: 'warn',
+  wrong: 'no',
 };
 
 const ENEMY_COLUMNS: { key: keyof EnemyGuessComparisons | 'name'; label: string; wide?: boolean }[] = [
@@ -45,6 +46,11 @@ const ENEMY_COLUMNS: { key: keyof EnemyGuessComparisons | 'name'; label: string;
   { key: 'attackSpeed', label: '攻速' },
   { key: 'resistance', label: '法抗' },
 ];
+
+/** 评级类数值列 —— 走 .gcell.num 的等宽数字（设计稿 index-v12-game.html:897-902） */
+const ENEMY_NUMERIC_COLUMNS = new Set<string>([
+  'endure', 'attack', 'defence', 'moveSpeed', 'attackSpeed', 'resistance',
+]);
 
 function getEnemyDisplayValue(enemy: Enemy, key: keyof EnemyGuessComparisons): string {
   const map: Record<string, string> = {
@@ -261,62 +267,41 @@ export default function GamePage() {
     return (
       <div className="page">
         <Header />
-        <div className="page-scroll" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 'clamp(32px, 6vw, 60px)' }}>
+        <div className="page-scroll">
           {/* Mode toggle */}
-          <div style={{
-            display: 'flex', gap: '0', marginBottom: 'clamp(20px, 3vw, 32px)',
-            background: 'var(--card-soft)', borderRadius: 'var(--radius)',
-            border: '1px solid var(--border)',
-          }}>
+          <div className="seg">
             <button
               onClick={() => switchMode('operator')}
-              style={{
-                padding: '10px 28px', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.95rem',
-                background: gameMode === 'operator' ? 'var(--primary)' : 'transparent',
-                color: gameMode === 'operator' ? 'var(--bg)' : 'var(--text-light)',
-                transition: 'all 0.2s',
-              }}
+              className={gameMode === 'operator' ? 'on' : undefined}
             >
               🎯 {t('menu.classic')}
             </button>
             <button
               onClick={() => switchMode('enemy')}
-              style={{
-                padding: '10px 28px', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.95rem',
-                background: gameMode === 'enemy' ? 'var(--primary)' : 'transparent',
-                color: gameMode === 'enemy' ? 'var(--bg)' : 'var(--text-light)',
-                transition: 'all 0.2s',
-              }}
+              className={gameMode === 'enemy' ? 'on' : undefined}
             >
               ⚔️ 敌方猜谜
             </button>
           </div>
 
           {/* Title & description */}
-          <h1 style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 'clamp(2.2rem, 5vw, 3.5rem)',
-            fontStyle: 'italic', fontWeight: 900,
-            letterSpacing: '0.06em', marginBottom: '8px', textAlign: 'center',
-          }}>
-            {isEnemy ? '⚔️ 敌方单位猜谜' : t('menu.classic')}
-          </h1>
-          <p style={{ color: 'var(--text-light)', marginBottom: 'clamp(24px, 4vw, 40px)', textAlign: 'center', fontSize: 'var(--fs-xs)' }}>
-            {isEnemy ? '基于 PRTS 数据 · 1674 个敌方单位 · 11 个属性维度' : t('selectDifficulty')}
-          </p>
+          <div className="panel-hd" style={{ marginTop: 'clamp(20px, 3vw, 32px)' }}>
+            <div>
+              <h1>{isEnemy ? '⚔️ 敌方单位猜谜' : t('menu.classic')}</h1>
+              <p className="sub">
+                {isEnemy ? '基于 PRTS 数据 · 1674 个敌方单位 · 11 个属性维度' : t('selectDifficulty')}
+              </p>
+            </div>
+          </div>
 
           {/* Difficulty cards */}
           {!isEnemy ? (
             // Operator difficulties
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
-              gap: '16px', maxWidth: '720px', width: '100%',
-            }}>
+            <div className="stats stats-3" style={{ marginTop: '16px' }}>
               {(['easy', 'medium', 'hard'] as Difficulty[]).map((diff, i) => (
                 <button key={diff} onClick={() => handleOpStart(diff)} className="menu-card" style={{
                   '--menu-color': i === 0 ? 'var(--success)' : i === 1 ? 'var(--primary)' : 'var(--danger)',
-                  cursor: 'pointer', border: 'none', textAlign: 'left', width: '100%',
+                  cursor: 'pointer', textAlign: 'left',
                 } as React.CSSProperties}>
                   <span className="menu-icon">{i === 0 ? '🌱' : i === 1 ? '⚔️' : '💀'}</span>
                   <span style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -328,18 +313,14 @@ export default function GamePage() {
             </div>
           ) : (
             // Enemy difficulties
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))',
-              gap: '16px', maxWidth: '780px', width: '100%',
-            }}>
+            <div className="stats stats-3" style={{ marginTop: '16px' }}>
               {([
-                { key: 'easy' as EnemyDifficulty, label: '简单', color: '#4caf50', pool: '230 个领袖', guesses: 15, icon: '🌱' },
-                { key: 'normal' as EnemyDifficulty, label: '普通', color: '#ff9800', pool: '938 个领袖+精英', guesses: 15, icon: '⚔️' },
-                { key: 'hard' as EnemyDifficulty, label: '困难', color: '#f44336', pool: '1674 个全部单位', guesses: 15, icon: '💀' },
+                { key: 'easy' as EnemyDifficulty, label: '简单', color: 'var(--success)', pool: '230 个领袖', guesses: 15, icon: '🌱' },
+                { key: 'normal' as EnemyDifficulty, label: '普通', color: 'var(--warning)', pool: '938 个领袖+精英', guesses: 15, icon: '⚔️' },
+                { key: 'hard' as EnemyDifficulty, label: '困难', color: 'var(--danger)', pool: '1674 个全部单位', guesses: 15, icon: '💀' },
               ]).map(d => (
                 <button key={d.key} onClick={() => handleEnStart(d.key)} className="menu-card" style={{
-                  '--menu-color': d.color, cursor: 'pointer', border: 'none', textAlign: 'left', width: '100%',
+                  '--menu-color': d.color, cursor: 'pointer', textAlign: 'left',
                 } as React.CSSProperties}>
                   <span className="menu-icon">{d.icon}</span>
                   <span style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -352,17 +333,11 @@ export default function GamePage() {
           )}
 
           {/* Back + Rules buttons */}
-          <div style={{ marginTop: '24px', display: 'flex', gap: '12px' }}>
-            <button onClick={handleBackToHome} style={{
-              padding: '8px 20px', background: 'transparent', color: 'var(--text-light)',
-              border: '1px solid var(--border)', borderRadius: 'var(--radius)', cursor: 'pointer', fontSize: '0.9rem',
-            }}>
+          <div className="bar-actions" style={{ justifyContent: 'center' }}>
+            <button onClick={handleBackToHome} className="btn-o">
               {t('game.back')}
             </button>
-            <button onClick={() => setRulesOpen(true)} style={{
-              padding: '8px 20px', background: 'transparent', color: 'var(--accent)',
-              border: '1px solid var(--accent)', borderRadius: 'var(--radius)', cursor: 'pointer', fontSize: '0.9rem',
-            }}>
+            <button onClick={() => setRulesOpen(true)} className="btn-o">
               {t('menu.rules')}
             </button>
           </div>
@@ -377,34 +352,23 @@ export default function GamePage() {
   return (
     <div className="page">
       <Header />
-      <div className="page-scroll" style={{ paddingTop: 'clamp(16px, 2vw, 24px)' }}>
+      <div className="page-scroll">
         {/* Status bar */}
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap',
-          gap: '12px', marginBottom: '20px', maxWidth: 'var(--content-max)', margin: '0 auto 20px',
+        <div className="hud" style={{
+          flexWrap: 'wrap', maxWidth: 'var(--content-max)', margin: '0 auto 20px',
         }}>
-          <button onClick={handleBackToHome} style={{
-            padding: '6px 14px', background: 'transparent', color: 'var(--text-light)',
-            border: '1px solid var(--border)', borderRadius: 'var(--radius)', cursor: 'pointer', fontSize: '0.85rem',
-          }}>
+          <button onClick={handleBackToHome} className="btn-o">
             ← {t('game.back')}
           </button>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginLeft: 'auto' }}>
             {/* Mode badge */}
-            <span style={{
-              fontWeight: 700, fontSize: '0.8rem', color: 'var(--primary)',
-              background: 'var(--card-soft)', padding: '4px 10px', borderRadius: 'var(--radius)',
-              border: '1px solid var(--primary)',
-            }}>
+            <span className="bdg bdg-mc">
               {isEnemy ? '⚔️ 敌方' : '🎯 干员'}
             </span>
 
             {status === 'playing' && (
-              <span style={{
-                fontWeight: 700, fontSize: '1.1rem',
-                color: remainingGuesses <= 3 ? 'var(--danger)' : 'var(--text)',
-              }}>
+              <span className={remainingGuesses <= 3 ? 'bdg bdg-dan' : 'bdg bdg-no'}>
                 {remainingGuesses <= 3 ? (
                   <span style={{ animation: 'urgent-pulse 1.2s ease-in-out infinite' }}>
                     {t('game.guessesLeft', { count: remainingGuesses })}
@@ -415,16 +379,13 @@ export default function GamePage() {
               </span>
             )}
 
-            {status === 'won' && <span style={{ color: 'var(--correct)', fontWeight: 700 }}>🎉 {t('guessCorrect')}</span>}
-            {status === 'lost' && <span style={{ color: 'var(--danger)', fontWeight: 700 }}>{t('outOfGuesses')}</span>}
+            {status === 'won' && <span className="bdg bdg-ok">🎉 {t('guessCorrect')}</span>}
+            {status === 'lost' && <span className="bdg bdg-dan">{t('outOfGuesses')}</span>}
 
             {status === 'playing' && (
               <button
                 onClick={isEnemy ? handleEnGiveUp : handleOpGiveUp}
-                style={{
-                  padding: '6px 14px', background: 'transparent', color: 'var(--danger)',
-                  border: '1px solid var(--danger)', borderRadius: 'var(--radius)', cursor: 'pointer', fontSize: '0.85rem',
-                }}
+                className="btn-o btn-dan"
               >
                 {t('game.giveUp')}
               </button>
@@ -447,40 +408,26 @@ export default function GamePage() {
             </div>
           ) : (
             // Enemy search
-            <div style={{ display: 'flex', justifyContent: 'center', position: 'relative', marginBottom: '20px' }}>
-              <input
-                ref={enemyInputRef}
-                type="text"
-                value={enemyQuery}
-                onChange={e => handleEnemyQueryChange(e.target.value)}
-                onKeyDown={handleEnemyKey}
-                placeholder="输入敌方单位名称..."
-                disabled={status !== 'playing'}
-                style={{
-                  width: '100%', maxWidth: '500px', padding: '12px 16px', fontSize: '1rem',
-                  border: '1px solid var(--border)', borderRadius: 'var(--radius)',
-                  background: 'var(--input-bg)', color: 'var(--text)', outline: 'none',
-                  opacity: status !== 'playing' ? 0.5 : 1,
-                  transition: 'border-color 0.2s',
-                }}
-              />
+            <div className="sbox" style={{ maxWidth: '500px', margin: '0 auto 20px' }}>
+              <div className="search-box">
+                <input
+                  ref={enemyInputRef}
+                  type="text"
+                  value={enemyQuery}
+                  onChange={e => handleEnemyQueryChange(e.target.value)}
+                  onKeyDown={handleEnemyKey}
+                  placeholder="输入敌方单位名称..."
+                  disabled={status !== 'playing'}
+                  className="search-input"
+                  style={{ opacity: status !== 'playing' ? 0.5 : 1 }}
+                />
+              </div>
               {enemyDropdown && enemySuggestions.length > 0 && (
-                <div ref={enemyDropdownRef} style={{
-                  position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)',
-                  width: '100%', maxWidth: '500px', maxHeight: '300px', overflowY: 'auto',
-                  background: 'var(--card)', border: '1px solid var(--border)',
-                  borderRadius: 'var(--radius)', zIndex: 50, boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
-                  marginTop: '4px',
-                }}>
+                <div ref={enemyDropdownRef} className="sugg" style={{ maxHeight: '300px', overflowY: 'auto' }}>
                   {enemySuggestions.map((e, i) => (
-                    <div key={e.id} onClick={() => selectEnemy(e)} style={{
-                      padding: '10px 16px', cursor: 'pointer',
-                      background: i === enemySelIdx ? 'var(--card-soft)' : 'transparent',
-                      borderBottom: '1px solid var(--border)',
-                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    }}>
-                      <span style={{ fontWeight: 600 }}>{e.name}</span>
-                      <span style={{ fontSize: '0.8rem', color: 'var(--text-light)' }}>{e.race} · {e.level}</span>
+                    <div key={e.id} onClick={() => selectEnemy(e)} className={i === enemySelIdx ? 'si active' : 'si'}>
+                      <span className="sn3">{e.name}</span>
+                      <span className="se2">{e.race} · {e.level}</span>
                     </div>
                   ))}
                 </div>
@@ -501,20 +448,15 @@ export default function GamePage() {
           ) : (
             // Enemy table — optimized 12-column layout
             <div style={{ marginTop: '4px' }}>
-              <div ref={scrollRef} style={{ overflowX: 'auto', scrollBehavior: 'smooth' }} className="scroll-slider-container">
-                <table style={{
-                  width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse',
-                  fontSize: '0.82rem', minWidth: `${Math.max(enemyTotalW, 320)}px`,
+              <div ref={scrollRef} className="table-wrap scroll-slider-container" style={{ scrollBehavior: 'smooth' }}>
+                <table className="guess-table enemy" style={{
+                  width: '100%', tableLayout: 'fixed',
+                  minWidth: `${Math.max(enemyTotalW, 320)}px`,
                 }}>
                   <thead>
                     <tr>
                       {ENEMY_COLUMNS.map((col, i) => (
-                        <th key={col.key} style={{
-                          width: enemyColPcts[i] || undefined,
-                          padding: '8px 4px', borderBottom: '2px solid var(--border)',
-                          color: 'var(--text-light)', fontWeight: 700, textAlign: 'center',
-                          fontSize: '0.78rem', whiteSpace: 'nowrap',
-                        }}>
+                        <th key={col.key} className="zh" style={{ width: enemyColPcts[i] || undefined }}>
                           {col.label}
                         </th>
                       ))}
@@ -522,35 +464,24 @@ export default function GamePage() {
                   </thead>
                   <tbody>
                     {(guesses as typeof enStore.guesses).slice().reverse().map((g, i) => (
-                      <tr key={i} style={{ animation: 'rowSlide 0.3s ease-out' }}>
+                      <tr key={i}>
                         {ENEMY_COLUMNS.map(col => {
                           if (col.key === 'name') {
                             const isCorrect = target && g.enemy.id === (target as Enemy).id;
                             return (
-                              <td key={col.key} style={{
-                                padding: '8px 6px', borderBottom: '1px solid var(--border)',
-                                textAlign: 'center', fontWeight: 600, fontSize: '0.82rem',
-                                background: isCorrect ? 'var(--correct)' : undefined,
-                                color: isCorrect ? '#fff' : 'var(--text)',
-                              }}>
-                                {g.enemy.name}
+                              <td key={col.key}>
+                                <div className={isCorrect ? 'gcell ok' : 'gcell name'}>{g.enemy.name}</div>
                               </td>
                             );
                           }
                           const key = col.key as keyof EnemyGuessComparisons;
                           const s = g.comparisons[key];
-                          const sty = RATING_STYLE[s] || RATING_STYLE.wrong;
+                          const ratingClass = RATING_CLASS[s] || RATING_CLASS.wrong;
                           return (
-                            <td key={col.key} style={{
-                              padding: '4px 2px', borderBottom: '1px solid var(--border)', textAlign: 'center',
-                            }}>
-                              <span style={{
-                                display: 'inline-block', padding: '2px 6px', borderRadius: '3px',
-                                background: sty.bg, color: sty.color, fontSize: '0.75rem', fontWeight: 700,
-                                whiteSpace: 'nowrap',
-                              }}>
+                            <td key={col.key}>
+                              <div className={`gcell ${ratingClass}${ENEMY_NUMERIC_COLUMNS.has(col.key) ? ' num' : ''}`}>
                                 {getEnemyDisplayValue(g.enemy, key)}
-                              </span>
+                              </div>
                             </td>
                           );
                         })}
@@ -561,9 +492,9 @@ export default function GamePage() {
               </div>
               <ScrollSlider containerRef={scrollRef} />
               {guesses.length === 0 && (
-                <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-light)' }}>
-                  <p style={{ fontSize: '1.1rem', marginBottom: '8px' }}>输入敌方单位名称开始猜测</p>
-                  <p style={{ fontSize: '0.85rem' }}>{t('remainingGuesses', { count: remainingGuesses })}</p>
+                <div className="empty">
+                  <p className="etx">输入敌方单位名称开始猜测</p>
+                  <p className="ehint">{t('remainingGuesses', { count: remainingGuesses })}</p>
                 </div>
               )}
             </div>
@@ -572,12 +503,8 @@ export default function GamePage() {
 
         {/* End state — replay button */}
         {dialogClosed && (status === 'won' || status === 'lost') && (
-          <div style={{ textAlign: 'center', marginTop: '20px' }}>
-            <button onClick={handleNewGame} className="btn-shine" style={{
-              padding: '12px 32px', background: 'var(--primary)', color: 'var(--bg)',
-              border: 'none', borderRadius: 'var(--radius)', fontSize: '1rem',
-              fontWeight: 700, cursor: 'pointer',
-            }}>🔄 {t('playAgain')}</button>
+          <div className="bar-actions" style={{ justifyContent: 'center' }}>
+            <button onClick={handleNewGame} className="btn-p btn-shine">🔄 {t('playAgain')}</button>
           </div>
         )}
       </div>

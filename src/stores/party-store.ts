@@ -14,14 +14,12 @@ export interface PartyPlayerState {
   id: string;
   name: string;
   ready: boolean;
-  score: number;       // 累计得分（按 playerKey 回迁）
-  playerKey?: string;  // 稳定身份标识（重连后 socket.id 会变，用 playerKey 精确匹配，避免重名串号）
+  score: number;       // 累计得分（重连时按服务端返回的 playerId 回迁）
 }
 
 export interface PartyRankingState {
   playerId: string;
   playerName: string;
-  playerKey?: string;
   guessCount: number;
   guessChain: string[];
   pointsEarned: number;
@@ -31,14 +29,12 @@ export interface PartyRankingState {
 export interface TotalScoreState {
   playerId: string;
   playerName: string;
-  playerKey?: string;
   score: number;
 }
 
 export interface FinalRankingState {
   playerId: string;
   playerName: string;
-  playerKey?: string;
   totalScore: number;
   roundsWon?: number;
 }
@@ -46,7 +42,6 @@ export interface FinalRankingState {
 export interface RoundStatusPlayer {
   playerId: string;
   playerName: string;
-  playerKey?: string;
   score: number;        // 累计分
   guessed: boolean;     // 已猜中
   exhausted: boolean;   // 次数用尽

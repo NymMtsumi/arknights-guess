@@ -4,14 +4,40 @@ import { spawn } from 'node:child_process';
 import { readFileSync, writeFileSync, renameSync, unlinkSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { sanitizeString, parseBody, jsonResponse, deriveGuestName, getClientIP } from '../utils.js';
+import { sanitizeString, parseBody, jsonResponse, deriveGuestName, parseLocale, getClientIP } from '../utils.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const CHARACTERS_PATH = join(__dirname, '..', 'characters.json');
+// 与 game-engine.js 的 CHARACTERS_PATH 同源同名（生产不设 → 与原来完全一致）。
+// ⚠️ 两处必须指向同一个文件：这里写的是文件，那边读的是内存池，
+//    指向不同文件会出现「写成功但游戏里没有」的假象。
+//    冒烟测试设这个变量指向临时文件，避免改写 git 跟踪的 characters.json。
+const CHARACTERS_PATH = process.env.CHARACTERS_PATH || join(__dirname, '..', 'characters.json');
 
 // 转义 LIKE 通配符（防 % 和 _ 注入，使搜索按字面量匹配）
 function escapeLike(str) {
   return str.replace(/[%_]/g, '\\$&');
+}
+
+/**
+ * 列头排序解析。
+ *
+ * ⚠️ ORDER BY 的列名**无法参数化**（占位符只对值生效，对标识符无效），
+ *    把用户传来的 sort 直接拼进 SQL 就是注入点。所以这里只认一张固定的
+ *    白名单映射：请求里的 key 命中不了就整条回退到默认排序，绝不透传。
+ *    方向同理，只认 'asc'/'desc' 两个字面量。
+ *
+ * 之所以做在服务端而不是前端：分页是「先排序再切页」，前端排序只能排到
+ * 当前这一页的 30 行，把 5000 行里的 30 行排一下再标上「已排序」是**错的**，
+ * 而且看不出错。排序键必须和分页、过滤在同一层。
+ *
+ * 另外统一补一个 id 兜底排序：created_at 大量重复（同秒批量写入）时，
+ * 单键排序的行序在 SQLite 里是未定义的，翻页会出现重复行/漏行。
+ */
+function parseSort(urlObj, whitelist, defaultExpr) {
+  const key = sanitizeString(urlObj.searchParams.get('sort') || '', 32);
+  const dir = urlObj.searchParams.get('dir') === 'asc' ? 'ASC' : 'DESC';
+  const expr = Object.prototype.hasOwnProperty.call(whitelist, key) ? whitelist[key] : null;
+  return { expr: expr || defaultExpr, dir };
 }
 
 // deploy 内存频率限制（简单防重放）
@@ -26,6 +52,10 @@ function checkDeployRate(ip) {
   for (const [k, t] of deployRateMap) { if (now - t > 120_000) deployRateMap.delete(k); }
   return true;
 }
+
+/* 导出 parseSort 仅供 tests/sort-whitelist-check.mjs 做注入回归。
+   它是**唯一**把请求参数拼进 SQL 的地方，光靠读代码证明不了它挡得住。 */
+export { parseSort };
 
 export function registerAdminRoutes({ app, db, requireAdmin, checkNicknameProfanity, onlinePlayers, onlineSockets, socketIps, getUserIps, ONLINE_TIMEOUT, APP_VERSION, reloadCharacters, invalidateLeaderboardCache }) {
 
@@ -105,8 +135,8 @@ export function registerAdminRoutes({ app, db, requireAdmin, checkNicknameProfan
       ORDER BY g.id DESC LIMIT 10
     `).all().map(g => ({
       id: g.id, playerKey: g.player_key?.slice(0, 10),
-      // 未关联用户的游戏回退到游客名（而非 null）
-      playerName: g.playerName || deriveGuestName(g.player_key || ''),
+      // 未关联用户的游戏回退到游客名（而非 null）；语言取管理员的，因为读的人是管理员
+      playerName: g.playerName || deriveGuestName(g.player_key || '', parseLocale(req.headers['accept-language'])),
       won: !!g.won, guessCount: g.guess_count, difficulty: g.difficulty,
       targetName: g.target_name, mode: g.mode || 'single', timestamp: g.timestamp,
     }));
@@ -208,7 +238,11 @@ export function registerAdminRoutes({ app, db, requireAdmin, checkNicknameProfan
     const total = countRow.total;
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
     const p = Math.min(page, totalPages);
-    const users = db.prepare(query + ' ORDER BY created_at DESC LIMIT ? OFFSET ?').all(...params, pageSize, (p - 1) * pageSize);
+    const { expr: orderExpr, dir: orderDir } = parseSort(urlObj, {
+      username: 'username', email: 'email', role: 'role', created: 'created_at',
+      banned: 'banned_at', verified: 'email_verified_at',
+    }, 'created_at');
+    const users = db.prepare(`${query} ORDER BY ${orderExpr} ${orderDir}, id DESC LIMIT ? OFFSET ?`).all(...params, pageSize, (p - 1) * pageSize);
 
     return jsonResponse(res, {
       users: users.map(u => ({
@@ -347,12 +381,19 @@ export function registerAdminRoutes({ app, db, requireAdmin, checkNicknameProfan
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
     const p = Math.min(page, totalPages);
 
+    /* ⚠️ 可排序列刻意**不含玩家名**。显示的访客名是 deriveGuestName(player_key)
+       在 JS 里算出来的，SQL 排不了；按 player_key 排出来的顺序和显示的名字顺序
+       也对不上。给一个「点了没反应/顺序诡异」的排序按钮比不给更糟，所以这里的
+       排序只开放真正有意义的三个数值/时间列。 */
+    const { expr: orderExpr, dir: orderDir } = parseSort(urlObj, {
+      playerKey: 'g.player_key', totalGames: 'totalGames', wins: 'wins', lastSeen: 'lastSeen',
+    }, 'lastSeen');
     const dataQuery = `
       SELECT g.player_key, COUNT(*) as totalGames, SUM(g.won) as wins, MAX(g.timestamp) as lastSeen
       FROM games g
       WHERE g.user_id IS NULL
       ${whereClause}
-      GROUP BY g.player_key ORDER BY lastSeen DESC
+      GROUP BY g.player_key ORDER BY ${orderExpr} ${orderDir}
       LIMIT ? OFFSET ?
     `;
     const guests = db.prepare(dataQuery).all(...searchParams, pageSize, (p - 1) * pageSize);
@@ -360,7 +401,7 @@ export function registerAdminRoutes({ app, db, requireAdmin, checkNicknameProfan
     return jsonResponse(res, {
       guests: guests.map(g => ({
         playerKey: g.player_key?.slice(0, 10),
-        displayName: deriveGuestName(g.player_key),
+        displayName: deriveGuestName(g.player_key, parseLocale(req.headers['accept-language'])),
         totalGames: g.totalGames,
         wins: g.wins,
         lastSeen: g.lastSeen,
@@ -396,7 +437,8 @@ export function registerAdminRoutes({ app, db, requireAdmin, checkNicknameProfan
 
       result.players.push({
         playerKey: pk.slice(0, 10),
-        displayName: entry.displayName || deriveGuestName(pk),
+        // entry.displayName 由该游客自己的心跳/socket 生成，语言可能与管理员的界面不同
+        displayName: entry.displayName || deriveGuestName(pk, parseLocale(req.headers['accept-language'])),
         username: entry.username,
         type: entry.type,
         roomCode: entry.roomCode || null,
@@ -478,6 +520,21 @@ export function registerAdminRoutes({ app, db, requireAdmin, checkNicknameProfan
     if (rarityFilter >= 1 && rarityFilter <= 6) {
       chars = chars.filter(c => Number(c.rarity) === rarityFilter);
     }
+
+    /* 干员数据来自内存里的 characters.json，不走 SQL —— 排序也得在 JS 里做。
+       同样只认白名单，且同样必须**先排序再切页**（否则排的只是当前页）。 */
+    const { expr: orderExpr, dir: orderDir } = parseSort(urlObj, {
+      name: 'name', nameEn: 'nameEn', rarity: 'rarity',
+    }, 'name');
+    const sign = orderDir === 'ASC' ? 1 : -1;
+    chars = [...chars].sort((a, b) => {
+      const av = a[orderExpr], bv = b[orderExpr];
+      // 星级按数值排，名字按本地化排 —— 都用字符串比较的话 ★10 会排在 ★2 前面
+      const cmp = typeof av === 'number' && typeof bv === 'number'
+        ? av - bv
+        : String(av ?? '').localeCompare(String(bv ?? ''), 'zh-Hans-CN');
+      return cmp * sign;
+    });
 
     const total = chars.length;
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -702,8 +759,13 @@ export function registerAdminRoutes({ app, db, requireAdmin, checkNicknameProfan
 
     const token = 'atk_' + randomBytes(32).toString('hex');
     const tokenHash = createHash('sha256').update(token).digest('hex');
+    /* 存真实前缀，供列表页辨认「这条记录是哪个令牌」。
+       只存前 12 位（atk_ + 8 位十六进制 = 32 bit）：明文只出现一次，
+       哈希不可逆，所以**不存前缀就永远无法把列表行和手里的令牌对上**。
+       余下 224 bit 熵足够，泄露这 12 位不构成风险。 */
+    const tokenPrefix = token.slice(0, 12);
 
-    db.prepare('INSERT INTO api_tokens (name, token_hash, created_by) VALUES (?, ?, ?)').run(name, tokenHash, admin.userId);
+    db.prepare('INSERT INTO api_tokens (name, token_hash, token_prefix, created_by) VALUES (?, ?, ?, ?)').run(name, tokenHash, tokenPrefix, admin.userId);
     logAdminAction(admin.userId, 'create_token', 'api_token', null, name, getClientIP(req));
     return jsonResponse(res, { ok: true, token, name }); // 完整 token 仅返回一次
   }
@@ -712,14 +774,16 @@ export function registerAdminRoutes({ app, db, requireAdmin, checkNicknameProfan
   async function handleListTokens(req, res) {
     const admin = requireAdmin(req, res); if (!admin) return;
     const tokens = db.prepare(`
-      SELECT t.id, t.name, t.created_at, t.last_used_at, t.revoked_at,
+      SELECT t.id, t.name, t.token_prefix, t.created_at, t.last_used_at, t.revoked_at,
              u.username as created_by_name
       FROM api_tokens t LEFT JOIN users u ON u.id = t.created_by
       ORDER BY t.created_at DESC
     `).all().map(t => ({
       id: t.id,
       name: t.name,
-      prefix: 'atk_****',
+      /* 迁移前创建的令牌没有存前缀，返回 null 让前端显示「旧令牌」而不是
+         编一个看起来像前缀的假值 —— 假前缀比没前缀更糟，管理员会拿它去比对。 */
+      prefix: t.token_prefix || null,
       createdBy: t.created_by_name,
       createdAt: t.created_at,
       lastUsedAt: t.last_used_at,
@@ -769,7 +833,10 @@ export function registerAdminRoutes({ app, db, requireAdmin, checkNicknameProfan
     const total = countRow.total;
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
     const p = Math.min(page, totalPages);
-    const rows = db.prepare(query + ' ORDER BY a.id DESC LIMIT ? OFFSET ?').all(...params, pageSize, (p - 1) * pageSize);
+    const { expr: orderExpr, dir: orderDir } = parseSort(urlObj, {
+      action: 'a.action', created: 'a.id', actor: 'admin_name', ip: 'a.ip',
+    }, 'a.id');
+    const rows = db.prepare(`${query} ORDER BY ${orderExpr} ${orderDir}, a.id DESC LIMIT ? OFFSET ?`).all(...params, pageSize, (p - 1) * pageSize);
 
     return jsonResponse(res, {
       logs: rows.map(r => ({

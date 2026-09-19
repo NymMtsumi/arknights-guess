@@ -35,6 +35,12 @@ yarn-error.log*
 PROJECT_CREDENTIALS.md
 HANDOFF-CONFIDENTIAL.md
 
+# 内部运维文档 —— 含服务器地址/项目路径/密钥位置，不进公开仓库。
+# ⚠️ 只挡新增，已有的历史提交仍需单独处理（见仓库 README 的说明）。
+/CLAUDE.md
+/HANDOFF.md
+/REQUIREMENTS.md
+
 # vercel
 .vercel
 

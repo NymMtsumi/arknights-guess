@@ -17,7 +17,13 @@ const SESSION_TTL = 3600_000; // 1 小时后清理
 setInterval(() => {
   const now = Date.now();
   for (const [key, sess] of dailySessions) {
-    if (now - sess.startedAt > SESSION_TTL) dailySessions.delete(key);
+    // 按 lastActiveAt（成功猜测、以及 status 被读取时刷新）而非 startedAt 计时。
+    // 原先只看 startedAt —— 它只在创建会话时写一次，玩得越久越接近被清扫：
+    // 一个玩家从开局起玩了 59 分钟、中间去看了两眼攻略，第 61 分钟的清扫就会
+    // 直接删掉他还在用的会话；下一次猜测「查无此会话」就新建一个，
+    // **次数回满、已猜记录清空**（目标本身在同 UTC 日内由日期种子决定，不变）。
+    // 玩家看到的就是 BUG 3 报的「中途退出后猜测记录消失、次数减少又变回来」。
+    if (now - (sess.lastActiveAt || sess.startedAt) > SESSION_TTL) dailySessions.delete(key);
   }
 }, 300_000); // 每 5 分钟
 
@@ -324,10 +330,27 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
 
     // 检查是否有进行中的内存会话（服务器重启后丢失，但 DB 记录仍是最终权威）
     const cookies = parseCookies(req.headers.cookie || '');
-    const pk = cookies.player_key || '';
+    // header 兜底与 /api/daily/guess 的 `body.player_key` 优先级保持一致：
+    // 若这里只认 Cookie，而客户端把 pk 放在 body/header 里，同一个玩家在
+    // status 里查不到会话（显示未开局）却在 guess 里命中会话。
+    let pk = cookies.player_key || sanitizeString(req.headers['x-player-key'] || '', 64);
+    // ⚠️ 与 handleDailyGuess 的同名守卫对齐（见那边「未认证时拒绝用已注册用户的 pk」注释）。
+    //    Cookie 由浏览器自动携带，请求方无法替他人指定；但 header 是**请求方完全可控**的，
+    //    且这里刚新增了 history（完整猜测记录 + 逐属性 comparisons）。
+    //    没有这道门，拿到他人 pk 的人可以用 X-Player-Key 直接读到对方进行中的整张棋盘 ——
+    //    而 guess 早就有这道守卫，status 漏了就成了绕过它的旁路。
+    if (!userId && pk) {
+      if (db.prepare('SELECT id FROM users WHERE player_key = ?').get(pk)) pk = '';
+    }
     const sessionKey = userId ? `${userId}:${dailyDate}` : (pk ? `${pk}:${dailyDate}` : '');
     const session = sessionKey ? dailySessions.get(sessionKey) : null;
     const inProgress = !played && session && session.status === 'playing';
+
+    // 读一次进行中的会话就算「玩家还在」，续期 TTL。
+    // 刷新页面/重连走的就是这条路径，而它原先不刷新 lastActiveAt ——
+    // 只靠「成功猜测」续期的话，猜错几次后去翻攻略超过 1 小时的玩家
+    // 照样会被清扫，会话没了、次数回满（见上方清扫处的注释）。
+    if (inProgress) session.lastActiveAt = Date.now();
 
     // 不再返回 target（服务端校验模式：目标保密）
     return jsonResponse(res, {
@@ -336,6 +359,10 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
       inProgress: inProgress || undefined,
       remainingGuesses: inProgress ? session.remaining : undefined,
       guessCount: inProgress ? session.guesses.length : undefined,
+      // 已猜记录（含逐属性对比），供客户端在刷新/重连后重建整张猜测表。
+      // 原来只回 remainingGuesses + guessCount：次数对得上，但 guessChain 是空的 ——
+      // 前端 GuessTable 直接 return null，已猜过的干员也不再置灰，玩家看到「记录消失」。
+      history: inProgress && Array.isArray(session.history) ? session.history : undefined,
       ...(result ? { result } : {}),
     });
   }
@@ -425,10 +452,16 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
       }
       session = {
         target: fullTarget,
-        guesses: [],        // 已猜角色名列表
+        guesses: [],        // 已猜角色名列表（去重 + 计数用，形状保持不变）
+        // 与 guesses 并行：多存一份带 comparisons 的完整记录，
+        // 专门给「刷新后用 /api/daily/status 重建棋盘」用。
+        // 不直接把 guesses 改成对象数组 —— 上面 479/485/493 行的 includes/push/length
+        // 和放弃分支的 guess_count 都依赖它是字符串数组，改形状会连带炸掉这些逻辑。
+        history: [],
         remaining: DAILY_MAX_GUESSES,
         status: 'playing',
         startedAt: Date.now(),
+        lastActiveAt: Date.now(),
       };
       dailySessions.set(sessionKey, session);
     }
@@ -483,7 +516,11 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
     // 对比
     const comparisons = compareGuess(session.target, guessed);
     session.guesses.push(guessed.name);
+    // 并行记录完整的一条（名字 + 逐属性对比），供刷新后重建棋盘
+    if (!Array.isArray(session.history)) session.history = [];
+    session.history.push({ name: guessed.name, comparisons });
     session.remaining--;
+    session.lastActiveAt = Date.now();   // 刷新 TTL，活跃玩家不会被清扫
 
     const won = isWin(session.target, guessed);
 

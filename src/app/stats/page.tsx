@@ -36,11 +36,15 @@ export default function StatsPage() {
   const [stats, setStats] = useState<StatsData>({ totalGames: 0, wins: 0, losses: 0, totalGuesses: 0, bestScore: 0 });
   const [history, setHistory] = useState<HistoryRecord[]>([]);
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
+  // 服务端口径明细（经典/多人/每日）。只有登录且服务端返回时才有值 ——
+  // 本地那份统计只涵盖经典模式，拿它拆模式是没有意义的。
+  const [byMode, setByMode] = useState<ServerStats['byMode'] | null>(null);
 
   const loadFromLocal = () => {
     setStats(loadStats());
     setHistory(loadHistory());
     setServerSynced(false);
+    setByMode(null);
   };
 
   const fetchFromServer = useCallback(async () => {
@@ -51,18 +55,13 @@ export default function StatsPage() {
     const localStats = loadStats();
     try {
       const data = await apiCall('/api/me');
-      // 合并服务端统计：以更完整的为准
-      const serverStats = toStatsData(data.stats);
-      const mergedStats: StatsData = {
-        totalGames: Math.max(localStats.totalGames, serverStats.totalGames),
-        wins: Math.max(localStats.wins, serverStats.wins),
-        losses: Math.max(localStats.losses, serverStats.losses),
-        totalGuesses: Math.max(localStats.totalGuesses, serverStats.totalGuesses),
-        bestScore: serverStats.bestScore > 0
-          ? (localStats.bestScore > 0 ? Math.min(localStats.bestScore, serverStats.bestScore) : serverStats.bestScore)
-          : localStats.bestScore,
-      };
-      setStats(mergedStats);
+      // 登录用户一律以服务端为准，本地那份只在服务端不可用时兜底（见下方 catch）。
+      // 原先这里是 Math.max(本地, 服务端)：两个量根本不可比 ——
+      // 本地只统计经典（saveGameStats 的唯一调用点 game/page.tsx 永远传默认 mode='single'），
+      // 服务端是经典+多人+每日且不含自定义。取大值是在比大小，不是合并；
+      // 本地若因含自定义场次而反超，总场次就会被抬高到与排行榜更对不上。
+      setStats(toStatsData(data.stats));
+      setByMode(data.stats?.byMode ?? null);
       setServerSynced(true);
       // 拉取服务端历史记录并合并
       const serverHistory = await fetchHistoryFromServer(80);
@@ -81,8 +80,9 @@ export default function StatsPage() {
         }
       }
     } catch {
-      // 服务端有数据则使用，否则保留本地
+      // 服务端不可用 → 退回本地那份（只含经典模式，所以不展示口径明细）
       setStats(localStats);
+      setByMode(null);
       setServerSynced(false);
       // 不覆盖 history —— 保持上次加载的数据
     } finally {
@@ -122,6 +122,36 @@ export default function StatsPage() {
 
   const winRate = stats.totalGames > 0 ? Math.round((stats.wins / stats.totalGames) * 100) : 0;
   const avgGuesses = stats.wins > 0 ? (stats.totalGuesses / stats.wins).toFixed(1) : '-';
+
+  // 指标卡。总场次卡额外挂一条口径明细：聚合口径是「经典+多人+每日」，
+  // 而排行榜的经典/多人 tab 各自只算其中一个 —— 不拆开的话玩家会看到两个
+  // 不一致的「场次」而不知道谁对。
+  // 标签复用排行榜 tab 的同名 i18n 键（措辞逐字相同，便于按模式对上），但注意：
+  //   · 经典 / 多人 两栏与排行榜 tab 的「场次」列口径一致（同为 mode = ? 聚合）；
+  //   · 每日那栏**对不上**排行榜的「每日」tab —— 那个 tab 走 /api/daily/leaderboard，
+  //     算的是「当日、且仅胜局、按猜测次数排名」，与这里的「全时段每日场次」不是一个量。
+  // 界面上只呈现数字、不做「对应排行榜」的声明，避免给出一个对不上的对照关系。
+  type StatCard = {
+    label: string; value: string; icon: string;
+    breakdown?: { key: string; label: string; value: number }[];
+  };
+  const cards: StatCard[] = [
+    {
+      label: t('stats.totalGames'), value: String(stats.totalGames), icon: '🎮',
+      ...(byMode ? {
+        breakdown: [
+          { key: 'single', label: t('leaderboard.modeSingle'), value: byMode.single },
+          { key: 'multi', label: t('leaderboard.modeMulti'), value: byMode.multi },
+          { key: 'daily', label: t('leaderboard.modeDaily'), value: byMode.daily },
+        ],
+      } : {}),
+    },
+    { label: t('stats.wins'), value: String(stats.wins), icon: '🏆' },
+    { label: t('stats.losses'), value: String(stats.losses), icon: '💔' },
+    { label: t('stats.winRate'), value: `${winRate}%`, icon: '📈' },
+    { label: t('stats.avgGuesses'), value: String(avgGuesses), icon: '📊' },
+    { label: t('stats.bestScore'), value: stats.bestScore > 0 ? t('stats.bestScoreValue', { count: stats.bestScore }) : '-', icon: '⭐' },
+  ];
 
   const historyScrollRef = useRef<HTMLDivElement>(null);
 
@@ -164,17 +194,17 @@ export default function StatsPage() {
             </div>
           ) : (
             <div className="stats stats-3" style={{ marginTop: 16 }}>
-              {[
-                { label: t('stats.totalGames'), value: String(stats.totalGames), icon: '🎮' },
-                { label: t('stats.wins'), value: String(stats.wins), icon: '🏆' },
-                { label: t('stats.losses'), value: String(stats.losses), icon: '💔' },
-                { label: t('stats.winRate'), value: `${winRate}%`, icon: '📈' },
-                { label: t('stats.avgGuesses'), value: String(avgGuesses), icon: '📊' },
-                { label: t('stats.bestScore'), value: stats.bestScore > 0 ? t('stats.bestScoreValue', { count: stats.bestScore }) : '-', icon: '⭐' },
-              ].map(item => (
+              {cards.map(item => (
                 <div key={item.label} className="stat">
                   <div className="lb">{item.icon} {item.label}</div>
                   <div className="vl">{item.value}</div>
+                  {item.breakdown && (
+                    <div className="bd">
+                      {item.breakdown.map(b => (
+                        <span key={b.key}>{b.label} <b>{b.value}</b></span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

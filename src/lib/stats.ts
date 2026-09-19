@@ -224,13 +224,41 @@ export function mergeHistories(local: HistoryRecord[], server: HistoryRecord[]):
   const seen = new Set<string>();
   const result: HistoryRecord[] = [];
 
+  // ⚠️ 时间戳必须容忍毫秒级偏差，不能按全等做键。
+  // 同一局会在本地和服务端各留一份，两份的时间戳来自**两次独立的时钟读取**
+  // （saveGameStats 里 saveHistory 取一次 Date.now()，saveGameToServer 里
+  //  又取一次），两次之间还隔着 loadHistory + JSON.stringify + setItem ——
+  // 一万条历史的一次序列化稳稳超过 1ms，于是两份的毫秒数必然不等。
+  // 键对不上 → merge 认为这是两局 → 同一局在历史里显示两遍；
+  // 更糟的是 stats 页会把合并结果写回 localStorage，重复被固化下来。
+  //
+  // 改成 5 秒分桶：同一局的两份必然落在同一桶（新记录的时间戳已由调用方统一）。
+  // 残余风险有二，都极小但不为零，写在这里以免后人以为这段是绝对安全的：
+  //   1) 服务端 normalizeTimestamp 在时间戳异常（≤0 / 超前 24h 以上）时会替换成
+  //      服务器当前时间，此时两份落在不同桶 —— 需要客户端时钟偏快 24 小时以上；
+  //   2) 同一桶内恰好出现两局「同一干员 + 同一难度」的经典对局，需要 5 秒内连打
+  //      两局且随机目标重复（约 1/429）；多人/自定义则要 5 秒内打完两场 BO3，不可能。
+  // 反向的误合并（把两局不同的判成一局）代价更高 —— 合并结果会被写回 localStorage，
+  // 永久少一条。所以这里保留 target/mode 作为区分位，不做更激进的压缩。
+  const DEDUP_BUCKET_MS = 5000;
+
+  // 对手名两端写法不同：服务端入库前会剥掉 HTML 标签（server/routes/game.js 的
+  // `opponentName.replace(/<[^>]*>/g, '')`），而本地那份直接来自 socket 房间状态、
+  // 保留原样。昵称校验（server/routes/user.js）只限长度、不剥标签，所以昵称里带
+  // `<`/`>` 的对手会让同一局的两份 key 变成 `A<B>C` 与 `ABC`：对不上 → 又变回两条，
+  // 且同样被写回本地固化。按服务端的规则归一化，与「手上拿的是哪一份」无关。
+  function normOpponent(name?: string): string {
+    return String(name || '').replace(/<[^>]*>/g, '').trim().slice(0, 40);
+  }
+
   function dedupKey(r: HistoryRecord): string {
+    const bucket = Math.floor((r.timestamp || 0) / DEDUP_BUCKET_MS);
     const mr = r as MultiGameRecord;
     if (mr.mode === 'multi' || mr.mode === 'custom') {
-      return `${mr.timestamp}-${mr.mode}-${mr.opponentName || ''}`;
+      return `${bucket}-${mr.mode}-${normOpponent(mr.opponentName)}`;
     }
     const gr = r as GameRecord;
-    return `${gr.timestamp}-single-${gr.targetName || ''}-${gr.difficulty || ''}`;
+    return `${bucket}-single-${gr.targetName || ''}-${gr.difficulty || ''}`;
   }
 
   for (const r of primary) {
@@ -289,7 +317,12 @@ function saveHistory(record: HistoryRecord) {
   try { localStorage.setItem(HISTORY_KEY, JSON.stringify(trimmed)); } catch (err) { console.warn('[Stats] Failed to save history:', err); }
 }
 
-export async function saveGameToServer(won: boolean, guessCount: number, difficulty: string, targetName: string): Promise<void> {
+/**
+ * @param ts 与本地历史记录共用的同一个时间戳（毫秒）。省略时自取当前时间。
+ *   本地副本和本请求代表同一局，时间戳必须是同一个值 —— 各读一次时钟会让
+ *   两端差出几毫秒，mergeHistories 就无法把它们认成同一条（见 dedupKey 注释）。
+ */
+export async function saveGameToServer(won: boolean, guessCount: number, difficulty: string, targetName: string, ts?: number): Promise<void> {
   if (typeof window === 'undefined') return;
 
   try {
@@ -305,7 +338,7 @@ export async function saveGameToServer(won: boolean, guessCount: number, difficu
         difficulty,
         targetName,
         mode: 'single',
-        timestamp: new Date(Date.now()).toISOString(),
+        timestamp: new Date(ts ?? Date.now()).toISOString(),
       }),
     });
 
@@ -335,8 +368,11 @@ export function saveGameStats(won: boolean, guessCount: number, difficulty: stri
   }
   try { localStorage.setItem(STATS_KEY, JSON.stringify(stats)); } catch (err) { console.warn('[Stats] Failed to save stats:', err); }
 
+  // 取一次时钟，本地副本与服务端副本共用 —— 见 saveGameToServer 的参数说明
+  const now = Date.now();
+
   saveHistory({
-    timestamp: Date.now(),
+    timestamp: now,
     targetName,
     won,
     guessCount,
@@ -347,7 +383,7 @@ export function saveGameStats(won: boolean, guessCount: number, difficulty: stri
   // 仅登录用户同步到服务器（游客纯本地存储）
   // 每日模式单独提交，不在此处重复写入
   if (mode !== 'daily' && getToken()) {
-    saveGameToServer(won, guessCount, difficulty, targetName).catch(() => {});
+    saveGameToServer(won, guessCount, difficulty, targetName, now).catch(() => {});
   }
 }
 
@@ -370,8 +406,9 @@ export function saveMultiGameStats(result: {
   }
   try { localStorage.setItem(STATS_KEY, JSON.stringify(stats)); } catch (err) { console.warn('[Stats] Failed to save stats:', err); }
 
+  const now = Date.now();
   saveHistory({
-    timestamp: Date.now(),
+    timestamp: now,
     mode: 'multi',
     won: result.won,
     bestOf: result.bestOf,
@@ -384,7 +421,7 @@ export function saveMultiGameStats(result: {
 
   // 仅登录用户同步到服务器（游客纯本地存储）
   if (getToken()) {
-    saveMultiToServer(result).catch(() => {});
+    saveMultiToServer(result, now).catch(() => {});
   }
 }
 
@@ -399,8 +436,9 @@ export function saveCustomGameStats(result: {
   custom: { attributes: string[]; maxGuesses: number; roundTime: number; difficulty: string };
 }) {
   // 注意：不更新 loadStats 聚合（自定义房不计入 totalGames/wins/losses）
+  const now = Date.now();
   saveHistory({
-    timestamp: Date.now(),
+    timestamp: now,
     mode: 'custom',
     won: result.won,
     bestOf: result.bestOf,
@@ -414,7 +452,7 @@ export function saveCustomGameStats(result: {
 
   // 仅登录用户同步到服务器（游客纯本地存储）
   if (getToken()) {
-    saveCustomToServer(result).catch(() => {});
+    saveCustomToServer(result, now).catch(() => {});
   }
 }
 
@@ -471,7 +509,7 @@ async function saveMultiToServer(result: {
   opponentScore: number;
   opponentName: string;
   rounds: MultiRoundResult[];
-}) {
+}, ts?: number) {
   if (typeof window === 'undefined') return;
   try {
     const playerKey = getPlayerKey();
@@ -485,7 +523,7 @@ async function saveMultiToServer(result: {
         difficulty: 'multi',
         targetName: result.opponentName,
         mode: 'multi',
-        timestamp: new Date(Date.now()).toISOString(),
+        timestamp: new Date(ts ?? Date.now()).toISOString(),
         multiData: {
           bestOf: result.bestOf,
           myScore: result.myScore,
@@ -509,7 +547,7 @@ async function saveCustomToServer(result: {
   opponentName: string;
   rounds: MultiRoundResult[];
   custom: { attributes: string[]; maxGuesses: number; roundTime: number; difficulty: string };
-}) {
+}, ts?: number) {
   if (typeof window === 'undefined') return;
   try {
     const playerKey = getPlayerKey();
@@ -523,7 +561,7 @@ async function saveCustomToServer(result: {
         difficulty: result.custom.difficulty,
         targetName: result.opponentName,
         mode: 'custom',
-        timestamp: new Date(Date.now()).toISOString(),
+        timestamp: new Date(ts ?? Date.now()).toISOString(),
         multiData: {
           bestOf: result.bestOf,
           myScore: result.myScore,

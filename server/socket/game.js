@@ -105,6 +105,44 @@ export function registerGameHandlers({
     return `${arr[0]?.name || '?'} ${arr[0]?.wins || 0} - ${arr[1]?.wins || 0} ${arr[1]?.name || '?'}`;
   }
 
+  /**
+   * 重连快照载荷 —— 三处 reconnect_state（连接自动恢复 / join_room 重连 / reconnect_room）共用一份。
+   *
+   * ⚠️ 必须带上本回合的进度。原来这三处只发 code/bestOf/score/remainingTime/players，
+   *    客户端重连后没有任何数据可以重建棋盘：自己猜过的行没了，对手的色块也没了。
+   *    对手色块尤其没救 —— 唯一的推送通道是 opponent_update，而它只在**对手下一次猜测**
+   *    时才发；对手若已猜完、已放弃或已断线，就永远补不回来。
+   * @param scoreText 显式比分；join_room 分支在不足 2 人时要发空串，故留此口子。
+   */
+  function reconnectPayload(room, socketId, scoreText) {
+    const hasActiveRound = !!room._roundStartAt;
+    const roundTime = room.roundTime ?? ROUND_TIME;
+    const remainingTime = hasActiveRound
+      ? Math.max(0, Math.ceil((roundTime - (Date.now() - room._roundStartAt)) / 1000))
+      : 0;
+    const mine = room._roundPlayers?.get(socketId) || null;
+    const oppId = Array.from(room.players.keys()).find((id) => id !== socketId) || null;
+    const opp = oppId ? room._roundPlayers?.get(oppId) || null : null;
+    return {
+      code: room.code, bestOf: room.bestOf, winsNeeded: room.winsNeeded,
+      score: scoreText !== undefined ? scoreText : score(room),
+      remainingTime, hasActiveRound,
+      difficulty: room.difficulty || 'hard',
+      players: Array.from(room.players.entries()).map(([id, p]) => ({ id, name: p.name, wins: p.wins })),
+      // 自己本回合的进度（客户端据此重建 GuessTable）
+      myGuessChain: mine?.guessChain || [],
+      myColorRows: mine?.colorRows || [],
+      myGuessed: !!mine?.guessed,
+      myExhausted: !!mine?.exhausted,
+      mySurrendered: !!mine?.surrendered,
+      // 对手本回合的进度（colorRows 与 opponent_update 的 allComparisons 同构）
+      oppGuessCount: opp?.guessChain?.length || 0,
+      oppColorRows: opp?.colorRows || [],
+      oppSurrendered: !!opp?.surrendered,
+      ...roomConfig(room),
+    };
+  }
+
   // ===== 注册所有 Socket 事件 =====
   io.on('connection', (socket) => {
     console.log(`[+] ${socket.id} pk=${socket.data.playerKey?.slice(0, 10)}`);
@@ -131,12 +169,25 @@ export function registerGameHandlers({
     if (existing) {
       for (const [pid, player] of existing.players) {
         if (player.playerKey === socket.data.playerKey || player.identityKey === socket.data.identityKey) {
-          // 防止多标签页抢槽：如果旧 socket 仍活跃，拒绝转移
+          // 旧 socket 仍被判定为在线 —— 有两种可能，服务端无法区分：
+          //   (1) 真的是另一个标签页在玩；
+          //   (2) 网络抖动：客户端 1s 就重连了（reconnectionDelay: 1000），而服务端
+          //       要等 pingTimeout(15s) 才判定旧连接死亡，此刻那个「在线」的旧 socket
+          //       只是个僵尸。1s~15s 的任意一次网络抖动都会落进这个窗口。
+          //
+          // 🔴 原先这里是 `socket.emit('error_msg', ...); return;` —— 那个 return 退出的是
+          //    整个 io.on('connection') 回调，而下面所有 socket.on(...) 注册都在它后面。
+          //    新连接于是「连着但一个事件都不监听」：客户端发得出 multi:guess 但永远收不到
+          //    guess_result（表现为输入后毫无反应），重连也没有任何回执。
+          //    雪上加霜的是客户端的 error_msg 处理器会 s.disconnect() 关掉自动重连，
+          //    而 error 只在菜单/大厅渲染 —— 游戏界面看起来一切正常，只是全哑。
+          //
+          // 改为让新连接接管，并通知旧连接让位：僵尸收不到这条消息（无害），
+          // 真正的第二个标签页会照旧收到 error_msg 并自行断开。
+          // 通知放在接管之前发送即可 —— 客户端断开是异步的，届时接管早已完成。
           const oldSocket = io.sockets.sockets.get(pid);
           if (oldSocket && !player.dcTimer) {
-            // 旧 socket 活跃且未断线 → 这是多标签页，拒绝（静默，旧标签页仍正常工作）
-            socket.emit('error_msg', { message: '你已在另一标签页的游戏中' });
-            return;
+            oldSocket.emit('error_msg', { message: '你已在另一标签页的游戏中' });
           }
           if (player.dcTimer) { clearTimeout(player.dcTimer); player.dcTimer = null; }
           player.identityKey = socket.data.identityKey;
@@ -157,18 +208,7 @@ export function registerGameHandlers({
             ...roomConfig(existing),
           });
           if (existing.started) {
-            const hasActiveRound = !!existing._roundStartAt;
-            const roundTime = existing.roundTime ?? ROUND_TIME;
-            const remainingTime = hasActiveRound
-              ? Math.max(0, Math.ceil((roundTime - (Date.now() - existing._roundStartAt)) / 1000))
-              : 0;
-            socket.emit('reconnect_state', {
-              code: existing.code, bestOf: existing.bestOf, winsNeeded: existing.winsNeeded,
-              score: score(existing), remainingTime, hasActiveRound,
-              difficulty: existing.difficulty || 'hard',
-              players: Array.from(existing.players.entries()).map(([id, p]) => ({ id, name: p.name, wins: p.wins })),
-              ...roomConfig(existing),
-            });
+            socket.emit('reconnect_state', reconnectPayload(existing, socket.id));
           }
           const reEntry = onlinePlayers.get(socket.data.playerKey);
           if (reEntry) { reEntry.type = 'multi'; reEntry.roomCode = existing.code; }
@@ -308,19 +348,8 @@ export function registerGameHandlers({
             socket.to(code).emit('opponent_reconnected', { playerName: p.name });
             socket.emit('existing_room', { code, bestOf: room.bestOf, difficulty: room.difficulty || 'hard', started: room.started, wins: p.wins, _createdAt: room._createdAt, ...roomConfig(room) });
             if (room.started) {
-              const hasActiveRound = !!room._roundStartAt;
-              const roundTime = room.roundTime ?? ROUND_TIME;
-              const remainingTime = hasActiveRound
-                ? Math.max(0, Math.ceil((roundTime - (Date.now() - room._roundStartAt)) / 1000))
-                : 0;
-              socket.emit('reconnect_state', {
-                code, bestOf: room.bestOf, winsNeeded: room.winsNeeded,
-                score: room.players.size >= 2 ? score(room) : '',
-                remainingTime, hasActiveRound,
-                difficulty: room.difficulty || 'hard',
-                players: Array.from(room.players.entries()).map(([id, pl]) => ({ id, name: pl.name, wins: pl.wins })),
-                ...roomConfig(room),
-              });
+              // 不足 2 人时比分留空（沿用原行为）
+              socket.emit('reconnect_state', reconnectPayload(room, socket.id, room.players.size >= 2 ? score(room) : ''));
             }
             console.log(`[重连] ${socket.id} → ${code}`);
             return;
@@ -670,18 +699,7 @@ export function registerGameHandlers({
       socket.to(code).emit('opponent_reconnected', { playerName: player.name });
 
       if (room.started) {
-        const hasActiveRound = !!room._roundStartAt;
-        const roundTime = room.roundTime ?? ROUND_TIME;
-        const remainingTime = hasActiveRound
-          ? Math.max(0, Math.ceil((roundTime - (Date.now() - room._roundStartAt)) / 1000))
-          : 0;
-        socket.emit('reconnect_state', {
-          code, bestOf: room.bestOf, winsNeeded: room.winsNeeded,
-          score: score(room), remainingTime, hasActiveRound,
-          difficulty: room.difficulty || 'hard',
-          players: Array.from(room.players.entries()).map(([id, p]) => ({ id, name: p.name, wins: p.wins })),
-          ...roomConfig(room),
-        });
+        socket.emit('reconnect_state', reconnectPayload(room, socket.id));
       } else {
         socket.emit('existing_room', {
           code, bestOf: room.bestOf, difficulty: room.difficulty || 'hard',

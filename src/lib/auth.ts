@@ -18,6 +18,13 @@ export interface ServerStats {
   losses: number;
   totalGuesses: number;
   bestScore: number;
+  /**
+   * 口径明细：上面的聚合值按模式拆开。
+   * 聚合是「经典 + 多人 + 每日」，而排行榜每个 tab 只取其中一个 ——
+   * 有了它，统计页才能把总数逐项对到排行榜的三个 tab 上。
+   * 可选：老后端不返回该字段。
+   */
+  byMode?: { single: number; multi: number; daily: number };
 }
 
 export interface MeResponse {

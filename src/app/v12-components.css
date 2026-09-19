@@ -206,6 +206,12 @@ html[data-theme="blast"] {
   font-weight: 700; line-height: 1; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
 .stat .nt { margin-top: 5px; font-size: 10.5px; color: var(--text-3); }
 .stat .nt b { color: var(--ok); font-weight: 700; }
+/* 口径明细（统计页「总场次」卡）：把总数拆成排行榜三个 tab 的对应值。
+   数字用中性色而不是 .nt 的绿色 —— 绿色在这组卡里表示「好转」，
+   分类计数染绿会假造褒贬。换行时按 gap 自然折，不做 2×2 网格。 */
+.stat .bd { margin-top: 5px; display: flex; flex-wrap: wrap; gap: 2px 10px;
+  font-family: var(--f-cn); font-size: 10.5px; color: var(--text-3); }
+.stat .bd b { color: var(--text-2); font-weight: 700; font-variant-numeric: tabular-nums; }
 /* 三项指标时把第四列收掉 —— 留一个空槽会让这组数字看起来像少了一项。 */
 .stats-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 

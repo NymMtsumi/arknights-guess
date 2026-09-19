@@ -81,11 +81,30 @@ export const useDailyStore = create<DailyState>((set, get) => ({
 
       // 未玩过：目标保密（服务器校验模式）
       if (data.inProgress) {
-        // 恢复进行中的会话（刷新页面/重连场景）
+        // 恢复进行中的会话（刷新页面/重连场景）：用服务端回传的 history 重建整张猜测表。
+        // 老服务端不带 history（或空数组）→ restored 为空 → 行为与改动前完全一致。
+        // ⚠️ timestamp 不是「排序占位」，它是 GuessTable 的行 key。
+        //    GuessTable.tsx:154-157：既不是最新一行、也没猜中的行，key 直接取
+        //    `String(guess.timestamp)`。全部填 0 会让这些行 key 相同 → React 报
+        //    "two children with the same key"，且玩家下一次 submitGuess 会 append
+        //    一条真实时间戳的记录并触发 reconciliation，可能错位/丢行。
+        //    给一个按序号唯一且递增的值（数组本身按猜测先后排列，GuessTable 不做排序）。
+        const restoreBase = Date.now();
+        const restored: GuessResult[] = Array.isArray(data.history)
+          ? data.history.flatMap((h: any, i: number): GuessResult[] => {
+              const ch = h && typeof h.name === 'string' ? findCharacterByName(characters, h.name) : null;
+              if (!ch) return [];
+              return [{
+                character: ch,
+                comparisons: toGuessComparisons(h.comparisons || {}),
+                timestamp: restoreBase - (data.history.length - i),
+              }];
+            })
+          : [];
         set({
           status: 'playing',
           target: null,       // 目标保密
-          guesses: [],        // 服务端跟踪猜测历史，客户端用 guesses.length 做本地显示
+          guesses: restored,
           remainingGuesses: typeof data.remainingGuesses === 'number' ? data.remainingGuesses : MAX_GUESSES,
           dailyDate: data.date || '',
         });

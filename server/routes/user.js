@@ -28,6 +28,21 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
       FROM games WHERE user_id = ? AND mode != 'custom'
     `).get(auth.userId);
 
+    // 口径明细：把上面那批行按 mode 拆开。
+    // 聚合口径是 `mode != 'custom'`（经典 + 多人 + 每日），而排行榜的经典/多人 tab
+    // 各自只取其中一个（/api/leaderboard 是 `WHERE g.mode = ?`），两边数字本来就不一样 ——
+    // 玩家在统计页看到的总场次和排行榜上的「场次」是两个口径，这就是 BUG 1 的由来。
+    // 拆出来才能逐项对上。⚠️ 注意 daily 一栏只能对上「库内的每日场次」，
+    // 对不上排行榜的「每日」tab —— 那个 tab 走 /api/daily/leaderboard，
+    // 口径是「当日 + 仅胜局 + 按猜测次数排名」，与本处的「全时段每日场次」不是一个量。
+    // 另外两条 SQL 的谓词必须逐字一致，否则会出现「明细之和 ≠ 总数」。
+    const byMode = { single: 0, multi: 0, daily: 0 };
+    for (const row of db.prepare(
+      "SELECT mode, COUNT(*) as n FROM games WHERE user_id = ? AND mode != 'custom' GROUP BY mode"
+    ).all(auth.userId)) {
+      if (row.mode in byMode) byMode[row.mode] = row.n;
+    }
+
     return jsonResponse(res, {
       username: user.username,
       displayId: user.display_id || null,
@@ -43,6 +58,7 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
         losses: stats?.losses || 0,
         totalGuesses: stats?.totalGuesses || 0,
         bestScore: stats?.bestScore || 0,
+        byMode,
       },
     });
   }

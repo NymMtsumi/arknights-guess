@@ -13,7 +13,7 @@ import { saveMultiGameStats, saveCustomGameStats, type MultiRoundResult } from '
 import { getUser, getServerUrl, getToken, getPlayerKey } from '@/lib/auth';
 import { useI18n } from '@/lib/i18n';
 import { findCharacterByName } from '@/lib/game-engine';
-import type { Character, GuessResult } from '@/types/character';
+import type { Character, GuessResult, GuessComparisons, GuessStatus } from '@/types/character';
 import charactersData from '@/data/characters.json';
 
 // NOTE: Socket event payloads use `any` types throughout this file.
@@ -63,6 +63,22 @@ function drawArtIndex(d: { targetName?: string; score?: number; reason?: string 
     h = Math.imul(h, 16777619);
   }
   return (h >>> 0) % 5 + 1;
+}
+
+/**
+ * 服务端 colorRows 的一行 → GuessComparisons。
+ * 行结构（server/socket/game.js `multi:guess` 里构造，与 ATTR_KEYS 同序）：
+ *   [0] 名称列 correct/wrong，[1..9] = class, subclass, faction, rarity, race,
+ *   gender, releaseYear, position, tags。
+ * 重连时服务端只回传这种压缩行（它同时是发给对手看的那份），这里还原成前端棋盘用的形状。
+ */
+function rowToComparisons(row?: string[]): GuessComparisons {
+  const s = (v?: string): GuessStatus => (v === 'correct' || v === 'close' ? v : 'wrong');
+  return {
+    class: s(row?.[1]), subclass: s(row?.[2]), faction: s(row?.[3]),
+    rarity: s(row?.[4]), race: s(row?.[5]), gender: s(row?.[6]),
+    releaseYear: s(row?.[7]), position: s(row?.[8]), tags: s(row?.[9]),
+  };
 }
 
 export default function MultiplayerPage() {
@@ -266,17 +282,75 @@ export default function MultiplayerPage() {
       const remaining = typeof d.remainingTime === 'number' ? Math.max(0, d.remainingTime) : 120;
       if (hasActiveRound && remaining > 0) { setTimeLeft(remaining); }
       else { setTimeLeft(0); }
-      setOppGuessCount(0); setOppGrid([]);
-      setISurrendered(false); setOppSurrendered(false);
-      setOppDisconnected(false);
-      setRoundEndData(null);
       const me = s.id;
       const opp = d.players.find((p: any) => p.id !== me);
       if (opp) { setOppName(opp.name); setOppWins(opp.wins); }
       const meP = d.players.find((p: any) => p.id === me);
       if (meP) setMyWins(meP.wins);
-      // 重连后不持有答案（服务端权威）：棋盘由内存状态决定，重新加载则从空棋盘继续
-      useGameStore.setState({ status: "playing", target: null, remainingGuesses: d.maxGuesses ?? 8, difficulty: "hard" });
+
+      // ── 用服务端快照恢复本回合进度 ───────────────────────────────
+      // 此处原先无条件 setOppGuessCount(0) / setOppGrid([])，把对手棋盘清空，
+      // 而对手色块只有 opponent_update 一个补发通道（对手下次猜测时才发），
+      // 对手若已猜完或已放弃就再也补不回来 → 「重连后看不到对手色块」。
+      // 同理自己的棋盘也一并从快照恢复：旧代码只重置 remainingGuesses 不恢复 guesses，
+      // 重连者（尤其刷新过页面的）看到空棋盘，且已猜过的干员不再被本地去重拦截，
+      // 再次提交会被服务端静默丢弃 → 「输入后无法响应」。
+      // ⚠️ 老服务端不带这些字段时的退化**不等于**改动前的行为：
+      //    改动前 guesses 根本不在 setState 里，本地棋盘会在抖动重连后原样保留；
+      //    所以下面用 hasSnapshot 门控，缺字段时一律不碰 guesses（见末尾注释）。
+      // 快照能否采信：两个平行数组必须都在且等长。
+      // 只到 myGuessChain 而缺 myColorRows（版本错配/字段被裁剪）时，
+      // rowToComparisons(undefined) 会把 9 列全部判成 wrong —— 棋盘静默显示成
+      // 一片全错，比不还原更糟。宁可不还原。
+      const hasSnapshot = Array.isArray(d.myGuessChain)
+        && Array.isArray(d.myColorRows)
+        && d.myColorRows.length === d.myGuessChain.length;
+      const chain: string[] = hasSnapshot ? d.myGuessChain : [];
+      const rows: string[][] = hasSnapshot ? d.myColorRows : [];
+      const restored: GuessResult[] = [];
+      // ⚠️ timestamp 在这里**不是排序占位，是行 key**。
+      //    GuessTable.tsx:154-157：既不是最新一行、也没猜中的行，key 直接取
+      //    `String(guess.timestamp)`。恢复出来的行若全填 0，这些行的 key 全是 "0"，
+      //    React 报 "Encountered two children with the same key"，且在玩家追加下一条
+      //    猜测触发 reconciliation 时按 key 配对，可能错位或丢行。
+      //    给一个按序号唯一且递增的值：GuessTable 只按数组顺序渲染、不按时间戳排序，
+      //    但保持递增可以让「后猜的更新」这一语义与实时路径一致。
+      const restoreBase = Date.now();
+      for (let i = 0; i < chain.length; i++) {
+        const ch = findCharacterByName(allChars, chain[i]);
+        if (!ch) continue;
+        restored.push({
+          character: ch,
+          comparisons: rowToComparisons(rows[i]),
+          timestamp: restoreBase - (chain.length - i),
+          ...(rows[i]?.[0] === 'correct' ? { correct: true as const } : {}),
+        });
+      }
+      setOppGuessCount(typeof d.oppGuessCount === 'number' ? d.oppGuessCount : 0);
+      setOppGrid(Array.isArray(d.oppColorRows) ? d.oppColorRows : []);
+      setISurrendered(!!d.mySurrendered);
+      setOppSurrendered(!!d.oppSurrendered);
+      setOppDisconnected(false);
+      setRoundEndData(null);
+      // 重连后不持有答案（服务端权威）：status 由快照里的胜负标记决定，
+      // 否则已结束的回合会被当成进行中，让玩家继续提交必被丢弃的猜测。
+      const maxGuesses = d.maxGuesses ?? 8;
+      useGameStore.setState({
+        status: d.myGuessed ? "won" : (d.myExhausted ? "lost" : "playing"),
+        target: null,
+        // 剩余次数按**服务端链条长度**算，不是按本地成功还原的条数：
+        // 某个干员在本地 roster 里查不到时 restored 会短一截（上面的 continue），
+        // 用 restored.length 会高估剩余次数 —— 3 次以内的红色预警就不会出现。
+        remainingGuesses: Math.max(0, maxGuesses - chain.length),
+        difficulty: "hard",
+        // ⚠️ 只有在真的拿到快照时才覆盖 guesses。
+        //    改动前的处理器根本没有 guesses 这一项，网络抖动触发 socket.io 自动重连时
+        //    本地棋盘原样保留；若无条件写 guesses，在「新前端 + 旧后端」窗口期
+        //    （Pages 分钟级上线，VPS 要等 deploy.yml 两道 gate）restored 恒为空数组，
+        //    每次抖动都清空棋盘，而已猜的干员仍被服务端记账 → 再猜同一个会被静默丢弃，
+        //    表现正是 BUG 4 的「输入后无法响应」。
+        ...(hasSnapshot ? { guesses: restored } : {}),
+      });
       if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
       if (hasActiveRound && remaining > 0) {
         timerRef.current = setInterval(() => {

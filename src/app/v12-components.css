@@ -1959,3 +1959,207 @@ html[data-ui="v12"] .ui-v12 .home-page .menu-arrow { display: none; }
   /* 上面的 .dlg.end-dlg .dialog-img 是 (0,3,0)，压得过这条 (0,1,0) —— 窄屏要显式收回来 */
   .dlg.end-dlg .dialog-img { width: 112px; height: 112px; }
 }
+
+/* ---------- 21.7 干员生日横幅 ----------
+   用户要求；**设计稿没有这个形态**，版式由本轮确定。组件：BirthdayBanner.tsx。
+   位置：首页 HeroSection 与 .menu-grid 之间。
+
+   配色：**主题同族色**（用户要求「颜色要和两个主题色相近」）。
+   浅色卡面取 --primary/--primary-strong 那一档青绿（#0b5c60 → #053a3c），
+   blast 取同色相但更亮的一档（#165a60 → #0c3a3e）。
+   醒目靠的是**饱和度与明度，不是色相**：页面底是低饱和的米纸白 / 近黑青，
+   这块是同一色相里最实的一档，所以在不脱离配色的前提下仍然跳出来。
+   （上一版用的是暖褐，靠冷暖对比抢眼 —— 那版违反了这条要求，已换掉。）
+
+   ⚠️ 令牌就地声明在 .bday-banner 上，**不进 :root**。理由同 §1 那条 --r-md 注释：
+      自定义属性在**声明它的元素**上求值，声明在 :root 会被 .ui-v12 的重绑追不回来
+      （--r-md 当初就是这么卡死在浅色的 4px 上的）。本块没有被重绑的项，就地声明即可。
+   ⚠️ 暗色**必须整组重写**，不能只覆盖卡面。blast 的页面底本身就接近黑青，
+      卡面提亮的同时 --bd-line / --bd-mint / 文字色都要跟着走，
+      且没写的令牌会回退到 :root 的**浅色值**（globals.css 末尾有说明；
+      已删的酒红主题 blast-wine 当初就是踩这条翻的车）。
+   ⚠️ 文字对比度都是按 WCAG AA 4.5:1 反推着定的（正文 13px、印戳 12.5px 加粗，
+      都够不上「大字号」那档豁免）。改色值前先算一遍：
+        浅色 #b8dcda on #0b5c60 = 5.2:1   /  #8ff5e2 on #0b5c60 = 6.0:1
+        blast #aad2d0 on #165a60 = 4.8:1  /  #7ff0dc on #165a60 = 5.8:1 */
+.bday-banner {
+  /* 卡面 / 线 / 文字 */
+  --bd-ink-1: #0b5c60;
+  --bd-ink-2: #053a3c;
+  --bd-line: rgba(143, 245, 226, .26);
+  --bd-text: #eafaf8;
+  --bd-text-2: #b8dcda;
+  /* 强调 */
+  --bd-mint: #8ff5e2;
+  --bd-glow: rgba(11, 92, 96, .40);
+
+  position: relative;
+  display: flex; align-items: center;
+  margin: 0 0 26px;
+  padding: 20px 24px;
+  min-height: 184px;
+  overflow: hidden;
+  border: 1px solid var(--bd-line);
+  border-radius: var(--r-xl);
+  background:
+    /* 角色身后的薄荷光。它同时干两件事：把插画从卡面上托出来，
+       以及**填掉文案列与插画之间那段空**——没有它，那条横幅就是
+       「左边一小团字 + 右边一个人 + 中间一大片空」。
+       半径刻意收窄（52% 而不是铺满的 86%）：卡片 1178px 宽，半径一大光就摊平，
+       整条横幅只剩一层均匀打亮，反而更空。收窄后光聚在右中段，
+       正好落在文案收尾与角色之间的那段。 */
+    radial-gradient(52% 128% at 88% 58%, rgba(143, 245, 226, .20), transparent 68%),
+    linear-gradient(112deg, var(--bd-ink-1), var(--bd-ink-2));
+  /* ⚠️ 不用 --sh-card：它带一条 inset 0 1px 0 rgba(255,255,255,.9) 的高光，
+     那是为浅色玻璃面准备的，压在这块实青绿上会变成一条刺眼的白边。 */
+  box-shadow: 0 16px 34px -20px rgba(6, 58, 60, .45), 0 20px 44px -26px var(--bd-glow);
+  animation: in-up .6s cubic-bezier(.2, .72, .25, 1) both;
+}
+
+html[data-theme="blast"] .bday-banner {
+  --bd-ink-1: #165a60;
+  --bd-ink-2: #0c3a3e;
+  --bd-line: rgba(127, 240, 220, .28);
+  --bd-text: #e8fbf8;
+  --bd-text-2: #aad2d0;
+  --bd-mint: #7ff0dc;
+  --bd-glow: rgba(40, 200, 204, .26);
+}
+
+/* —— 文案列 ——
+   ⚠️ padding-right 是给右下角那张插画让位（插画是 absolute，不占流），
+      取「插画宽 190 + 右边距 24 + 28 呼吸」。
+      少了这条，长文案会直接压到角色脸上 —— 这是本块最容易漏的一行。 */
+.bday-copy { position: relative; z-index: 1; flex: 1 1 auto; min-width: 0; padding-right: 242px; }
+
+.bday-eyebrow {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 4px 11px 4px 8px;
+  border: 1px solid var(--bd-line); border-radius: 999px;
+  background: rgba(255, 255, 255, .08);
+  color: var(--bd-mint);
+  font-family: var(--f-en); font-size: 10px; font-weight: 600;
+  letter-spacing: .16em; text-transform: uppercase; line-height: 1;
+}
+/* 呼吸圆点 —— 与 §21.3 的 .hero-kicker .kdot 同一套语言，换成薄荷色 */
+.bday-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--bd-mint); box-shadow: 0 0 8px var(--bd-mint);
+  animation: bday-pulse 2.2s ease-in-out infinite;
+}
+@keyframes bday-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: .4; transform: scale(.75); }
+}
+
+/* —— 标题行：标题 + 日期印戳 —— */
+.bday-head {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  margin-top: 10px;
+}
+.bday-title {
+  margin: 0;
+  font-family: var(--f-cn);
+  font-size: clamp(19px, 2.5vw, 32px);
+  font-weight: 800; letter-spacing: .02em; line-height: 1.12;
+  color: var(--bd-text);
+}
+
+/* 日期印戳 —— 本横幅的 signature。
+   形态是「盖在档案上的日期章」：双线框 + 负角度 + 落章时从大到正的一压。
+   为什么是印戳而不是一行普通日期文本：站点身份就是罗德岛人事部（hero kicker 写死的），
+   这块横幅天然读作一张人事档案卡；日期用章呈现，读起来是「这张卡被盖过章」，
+   而不是「这里放了个日期」。 */
+.bday-seal {
+  position: relative;
+  display: inline-flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 5px 10px 4px;
+  border: 2px solid var(--bd-mint);
+  border-radius: 7px;
+  color: var(--bd-mint);
+  font-family: var(--f-en); line-height: 1.05;
+  transform: rotate(-6deg);
+  animation: bday-stamp .5s .34s cubic-bezier(.2, .9, .3, 1.25) both;
+}
+/* 内圈细线。用伪元素而不是 outline / box-shadow：inset 阴影贴着边框内侧画，
+   给不出「外粗、留白、内细」的章面；outline 负 offset 的圆角行为各浏览器不一致。 */
+.bday-seal::after {
+  content: ''; position: absolute; inset: 2px;
+  border: 1px solid var(--bd-mint); border-radius: 4px;
+  opacity: .55; pointer-events: none;
+}
+.bday-seal b { font-size: 12.5px; font-weight: 700; letter-spacing: .06em; }
+.bday-seal span { font-size: 7.5px; font-weight: 600; letter-spacing: .16em; opacity: .8; }
+
+/* ⚠️ 基态必须写成**终态**（rotate(-6deg)、不透明）。
+   reduced-motion 下把 animation 整个撤掉后元素会落到基态 —— 基态若照抄 from 帧，
+   印戳会永远停在「透明 + 放大 1.5 倍」。 */
+@keyframes bday-stamp {
+  from { opacity: 0; transform: rotate(-22deg) scale(1.5); }
+  to   { opacity: 1; transform: rotate(-6deg) scale(1); }
+}
+
+.bday-msg {
+  margin: 12px 0 0;
+  max-width: 56ch;
+  font-size: 13px; line-height: 1.7; letter-spacing: .01em;
+  color: var(--bd-text-2);
+}
+
+/* —— 插画 ——
+   绝对定位贴着卡片右下角，**允许被卡片下边缘裁掉**。
+   为什么非得裁：原图 407×448（近正方），按高度摆放时 160px 高就只有 145px 宽 ——
+   放在 1178px 宽的卡上，左侧文案与它之间会空出一大段，整条横幅散掉。
+   所以改成「定宽取景框 + object-fit:cover」，缩放由**框宽**决定（框高只决定露多少）：
+     框 190×160 → cover 缩放 = 190/407 = 0.467（宽高比取大者，所以由框宽定）
+     → 图被画成 190×209，框只有 160 高，纵向裁掉 49px，
+     露出的是**原图** y 0..343（160 ÷ 0.467，即原图 77%，object-position 50% 0 从头顶往下量）。
+   实测踩过的坑：缩放 0.737（框宽 300）时纵向只露 y 0..271，切点正好落在眼镜下缘 ——
+   「剪在眼睛上」看着像贴图出错。**要露更多就把框改窄，不是把框改高**：
+   框变高只会让 cover 的缩放失衡，切点位置由「框宽 ÷ 原图宽」定死。
+   当前 0.467 这一档露到 y=343（原图 77%），落在脸颊下、辫子上段，是干净的一刀。
+   ⚠️ 改框宽或换图（不是 draw-2）后必须重新算：切点会跟着挪。 */
+.bday-art {
+  position: absolute; right: 24px; bottom: 0; z-index: 0;
+  width: 190px; height: 160px;
+  overflow: hidden; pointer-events: none;
+}
+.bday-art img {
+  display: block; width: 100%; height: 100%;
+  object-fit: cover; object-position: 50% 0;
+  filter: drop-shadow(0 10px 16px rgba(0, 0, 0, .35))
+          drop-shadow(0 0 20px rgba(143, 245, 226, .22));
+  animation: bday-float 5.5s ease-in-out infinite;
+}
+@keyframes bday-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-5px); }
+}
+
+/* 中窄屏：取景框按比例收，否则文案列会被 242px 的让位挤到只剩两百来像素。 */
+@media (max-width: 1000px) {
+  .bday-banner { padding: 16px 18px; min-height: 154px; }
+  .bday-copy { padding-right: 186px; }
+  .bday-art { right: 18px; width: 138px; height: 122px; }
+}
+
+/* 竖排：插画提到最前（它是这一块最先被看到的东西），文案居中。
+   插画在这里改回「整幅显示」—— 190px 宽的取景框已占掉 390 屏宽的一半，
+   裁出来的头肩既放不下也没必要，竖排时整只角色更好看。 */
+@media (max-width: 760px) {
+  .bday-banner {
+    flex-direction: column; align-items: center; text-align: center;
+    padding: 16px 16px 18px; min-height: 0;
+  }
+  .bday-art { position: static; order: 0; width: auto; height: 100px; overflow: visible; }
+  .bday-art img { width: auto; height: 100px; object-fit: fill; }
+  .bday-copy { order: 1; padding-right: 0; }
+  .bday-head { justify-content: center; margin-top: 10px; }
+  .bday-msg { margin-top: 10px; margin-inline: auto; }
+}
+
+/* 装饰性动画：用户要求减弱动态时整个撤掉。
+   ⚠️ 上一行的基态是终态，所以这里 animation:none 不会让任何元素消失。 */
+@media (prefers-reduced-motion: reduce) {
+  .bday-banner, .bday-dot, .bday-seal, .bday-art img { animation: none; }
+}

@@ -44,7 +44,7 @@ export function registerGameHandlers({
     // 跟踪本回合每位玩家的状态
     room._roundPlayers = new Map();
     for (const [sid, p] of room.players) {
-      room._roundPlayers.set(sid, { guessed: false, exhausted: false, surrendered: false, guessChain: [], colorRows: [] });
+      room._roundPlayers.set(sid, { guessed: false, exhausted: false, surrendered: false, guessChain: [], colorRows: [], alterFlags: [] });
     }
 
     const roundTime = room.roundTime ?? ROUND_TIME;
@@ -132,6 +132,12 @@ export function registerGameHandlers({
       // 自己本回合的进度（客户端据此重建 GuessTable）
       myGuessChain: mine?.guessChain || [],
       myColorRows: mine?.colorRows || [],
+      // 异格标记：与 myGuessChain 平行、只发本人。不入 myColorRows 的原因见
+      // multi:guess 里 alterFlags 的注释（colorRows 会原样广播给对手）。
+      // 服务端这侧先自证等长：客户端的兜底是「长度不等就整块不还原」，
+      // 一份半截记录（chain 有、flags 短）会让整个快照作废、棋盘全空 —— 比只丢高亮更糟。
+      // 这里不等长就直接回空数组，与 myColorRows 的失败形态保持一致。
+      myAlterFlags: mine?.alterFlags?.length === mine?.guessChain?.length ? mine.alterFlags : [],
       myGuessed: !!mine?.guessed,
       myExhausted: !!mine?.exhausted,
       mySurrendered: !!mine?.surrendered,
@@ -425,6 +431,11 @@ export function registerGameHandlers({
           comparisons.releaseYear, comparisons.position, comparisons.tags,
         ];
         rp.colorRows.push(row);
+        // 异格标记与 colorRows 平行、且**只回给本人**（见 reconnectPayload 的 myAlterFlags）。
+        // ⚠️ 绝不能并进 colorRows 当第 11 列：那一份经 opponent_update 原样广播给对手，
+        //    而 isAlterRelation(target, guess) 直接告诉对手「答案是 X 的异格」——
+        //    9 列属性对比是刻意只给颜色的，加这一列等于给对手开一条侧信道。
+        rp.alterFlags.push(isAlter);
 
         // 回执给猜测者（不下发答案，仅对比结果 + 胜负标记）
         socket.emit('guess_result', {

@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { Header } from '@/components/Header';
 import { HeroSection } from '@/components/HeroSection';
+import { BirthdayBanner } from '@/components/BirthdayBanner';
 import { MenuCard } from '@/components/MenuCard';
 import { RulesDialog } from '@/components/RulesDialog';
 import { ChangelogDialog } from '@/components/ChangelogDialog';
@@ -48,6 +49,10 @@ export default function HomePage() {
       <div className="page-scroll" style={{ paddingTop: 'clamp(22px, 4vw, 44px)' }}>
         {/* 英雄区 */}
         <HeroSection />
+
+        {/* 干员生日横幅。日期判断在组件内，非生日当天渲染 null（不占位）。
+            形态是设计稿没覆盖的部分，见 v12-components.css §21.7 开头。 */}
+        <BirthdayBanner />
 
         {/* 大卡片 — 主要游戏入口
             插画与英文副标来自稿子 index-v12.html:923-943；卡色变体类（c-daily 等）

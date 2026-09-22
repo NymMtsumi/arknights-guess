@@ -302,11 +302,41 @@ export default function MultiplayerPage() {
       // 只到 myGuessChain 而缺 myColorRows（版本错配/字段被裁剪）时，
       // rowToComparisons(undefined) 会把 9 列全部判成 wrong —— 棋盘静默显示成
       // 一片全错，比不还原更糟。宁可不还原。
-      const hasSnapshot = Array.isArray(d.myGuessChain)
+      //
+      // ⚠️ 这里对 hasActiveRound 用**严格**判断（=== true），与上面第 281 行那个
+      //    宽松的 `!== false`（为兼容老服务端，把缺失当活跃）刻意不同，两者不能合并：
+      //    快照里的猜测链只在回合进行中才有意义。endRound/超时会清掉 room._roundStartAt，
+      //    却**不清 _roundPlayers** —— 于是「回合已结算、下一回合还没开」的那 5 秒空窗里
+      //    重连，服务端会原样回上一回合的 guessChain/colorRows，客户端照着重建，
+      //    玩家看到的是上一回合**已经结算过**的棋盘，还带着上一回合的胜负状态。
+      //    round_start 到达后会复位，但中间这段是实打实的错显。
+      const roundActive = d.hasActiveRound === true;
+      // 明确的「当前没有进行中的回合」。与 roundActive 分开判断，是为了把
+      // 「新服务端说 false」和「老服务端根本没有这个字段」区分开 —— 前者可以放心清棋盘，
+      // 后者必须保持不动（见下方 setState 里 guesses 那段兼容性注释）。
+      const roundSettledGap = d.hasActiveRound === false;
+      const hasSnapshot = roundActive
+        && Array.isArray(d.myGuessChain)
         && Array.isArray(d.myColorRows)
         && d.myColorRows.length === d.myGuessChain.length;
       const chain: string[] = hasSnapshot ? d.myGuessChain : [];
       const rows: string[][] = hasSnapshot ? d.myColorRows : [];
+      // 异格标记：与 myGuessChain 平行的第三个数组成员，**只发给本人**。
+      // 不进 myColorRows 的原因见 server/socket/game.js 的 alterFlags 注释
+      //（那份会经 opponent_update 原样广播给对手，等于泄露「答案是某人的异格」）。
+      // 老服务端不带这个字段 → 全 false → 与改动前一样只丢异格高亮，不影响其余还原。
+      //
+      // ⚠️ 必须和 myColorRows 一样校验**等长**，不能只判 Array.isArray。
+      //    下面 restored 是按 chain 的下标 i 取 alterFlags[i] 的：长度短了只是越界取到
+      //    undefined（退化成丢高亮，无害），但若数组在，只是**顺序/长度被裁剪错位**，
+      //    就会把 isAlter 挂到错误的那一行上 —— 等于凭空告诉玩家「答案是这一行的异格」，
+      //    而那份信息正是服务端刻意不广播给对手的（见上面 alterFlags 的注释）。
+      //    宁可整块不还原，也不能错位还原。
+      const alterFlags: boolean[] = hasSnapshot
+        && Array.isArray(d.myAlterFlags)
+        && d.myAlterFlags.length === d.myGuessChain.length
+        ? d.myAlterFlags
+        : [];
       const restored: GuessResult[] = [];
       // ⚠️ timestamp 在这里**不是排序占位，是行 key**。
       //    GuessTable.tsx:154-157：既不是最新一行、也没猜中的行，key 直接取
@@ -324,19 +354,27 @@ export default function MultiplayerPage() {
           comparisons: rowToComparisons(rows[i]),
           timestamp: restoreBase - (chain.length - i),
           ...(rows[i]?.[0] === 'correct' ? { correct: true as const } : {}),
+          // 异格高亮（GuessTable 读 guess.isAlter；多人页 target 恒为 null，
+          // 它没有第二个判断源，所以这里不还原就真的丢了）
+          ...(alterFlags[i] ? { isAlter: true as const } : {}),
         });
       }
-      setOppGuessCount(typeof d.oppGuessCount === 'number' ? d.oppGuessCount : 0);
-      setOppGrid(Array.isArray(d.oppColorRows) ? d.oppColorRows : []);
+      // 对手棋盘同样只在回合进行中采信：oppColorRows 也来自 _roundPlayers，
+      // 空窗里回的是上一回合的色块（与 myColorRows 同一个成因）。
+      setOppGuessCount(roundSettledGap ? 0 : (typeof d.oppGuessCount === 'number' ? d.oppGuessCount : 0));
+      setOppGrid(roundSettledGap ? [] : (Array.isArray(d.oppColorRows) ? d.oppColorRows : []));
       setISurrendered(!!d.mySurrendered);
       setOppSurrendered(!!d.oppSurrendered);
       setOppDisconnected(false);
       setRoundEndData(null);
       // 重连后不持有答案（服务端权威）：status 由快照里的胜负标记决定，
       // 否则已结束的回合会被当成进行中，让玩家继续提交必被丢弃的猜测。
+      // 只在回合进行中才采信这两个标记：回合结算后的空窗里重连时，
+      // myGuessed/myExhausted 还是**上一回合**的值，照抄会让玩家凭空看到一次胜负。
+      // 老服务端没有 hasActiveRound 也没有这两个标记，两支都落到 "playing"，与改动前一致。
       const maxGuesses = d.maxGuesses ?? 8;
       useGameStore.setState({
-        status: d.myGuessed ? "won" : (d.myExhausted ? "lost" : "playing"),
+        status: roundActive ? (d.myGuessed ? "won" : (d.myExhausted ? "lost" : "playing")) : "playing",
         target: null,
         // 剩余次数按**服务端链条长度**算，不是按本地成功还原的条数：
         // 某个干员在本地 roster 里查不到时 restored 会短一截（上面的 continue），
@@ -349,7 +387,9 @@ export default function MultiplayerPage() {
         //    （Pages 分钟级上线，VPS 要等 deploy.yml 两道 gate）restored 恒为空数组，
         //    每次抖动都清空棋盘，而已猜的干员仍被服务端记账 → 再猜同一个会被静默丢弃，
         //    表现正是 BUG 4 的「输入后无法响应」。
-        ...(hasSnapshot ? { guesses: restored } : {}),
+        //    注意 roundSettledGap 分支不会踩到这个坑：它要求服务端**明确**发了 false，
+        //    老服务端根本没有这个字段（undefined），走不到这里。
+        ...(roundSettledGap ? { guesses: [] } : hasSnapshot ? { guesses: restored } : {}),
       });
       if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
       if (hasActiveRound && remaining > 0) {
@@ -671,6 +711,20 @@ export default function MultiplayerPage() {
   };
 
   useEffect(() => { return () => { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; } if (rematchTimer.current) { clearTimeout(rematchTimer.current); rematchTimer.current = null; } if (socket) { socket.removeAllListeners(); socket.disconnect(); } }; }, [socket]);
+
+  // 卸载时复位共享的单人 store。
+  // ⚠️ 必须单开一个 deps=[] 的 effect，不能并进上面那个 —— 它的依赖是 [socket]，
+  //    而 connect()（第 518 行附近）每次建房/加房都会换 socket 实例，并进去会在
+  //    换实例的瞬间清空 store。
+  // 为什么需要：useGameStore 是模块级单例，/multiplayer 与 /game 共用同一个实例。
+  // 本页在 round_start / guess_result / reconnect_state 里把它写成
+  // `status:'playing', target:null`，而 game/page.tsx:266 只在 status==='idle' 时
+  // 渲染模式选择、switchMode 又被 `if (status === 'playing') return` 挡住 ——
+  // 于是 Header 用 next/link 客户端跳回经典模式时（不刷新页面），玩家看到的是一块
+  // 没有目标、点不动（store 的 submitGuess 遇 target=null 直接 return，
+  // game/page.tsx:220 又丢弃返回值）的棋盘，且选不了难度。
+  // 同类问题派对模式已经修过（components/party/PartyEnd.tsx:21 的 "Fix #9"），这里是补上。
+  useEffect(() => () => { useGameStore.getState().resetGame(); }, []);
 
   const guessedIds = useMemo(() => new Set(store.guesses.map(g => g.character.id)), [store.guesses]);
   const inputDisabled = store.status !== 'playing' || iSurrendered;

@@ -10,12 +10,27 @@ const leaderboardCache = new Map();
 // 每日挑战会话（内存中跟踪猜测状态）
 // key: `${userId || playerKey}:${dailyDate}`
 const dailySessions = new Map();
+// 被清扫掉的「未完成」会话留下的墓碑：同 key 一份，值为 dailyDate。
+// 为什么需要它：会话被 TTL 清扫后，下一次猜测走「查无此会话 → 新建」，
+// 而新建时 remaining 恒等于 DAILY_MAX_GUESSES —— 等于把这一天的次数回满。
+// 未完成的局在 DB 里**没有任何记录可回填**（落库只发生在猜完/放弃时），
+// 所以只能在这里留痕。不留的话，挂机满 1 小时再猜就能无限刷当日排行榜。
+// 日切后墓碑失去意义（新的一天本来就是全新一次挑战），随清扫一起删。
+// ⚠️ 进程重启会连同 dailySessions 一起丢失 —— 这与既有设计一致
+//    （重启后本来所有进行中的会话就没了），不是本次引入的新缺口。
+const dailyVoided = new Map();
 const DAILY_MAX_GUESSES = 8;
-const SESSION_TTL = 3600_000; // 1 小时后清理
+// 两个时间常量可由环境变量覆盖，**仅供测试**：默认值即线上行为，不设变量时逐字不变。
+// 没有这两个口子的话，「会话被清扫后不再发放次数」那段逻辑只能等满 1 小时才观察得到，
+// 等于永远不会有自动化覆盖 —— 而它正是挡住「挂机刷当日排行榜」的那道门。
+// 用 `||` 而非 `??`：环境变量给 0 或非数字时回落到默认值，不会把 TTL 变成 0。
+const SESSION_TTL = Number(process.env.DAILY_SESSION_TTL_MS) || 3600_000; // 1 小时后清理
+const SWEEP_INTERVAL = Number(process.env.DAILY_SWEEP_INTERVAL_MS) || 300_000; // 每 5 分钟
 
 // 定期清理过期会话
 setInterval(() => {
   const now = Date.now();
+  const today = new Date().toISOString().slice(0, 10);
   for (const [key, sess] of dailySessions) {
     // 按 lastActiveAt（成功猜测、以及 status 被读取时刷新）而非 startedAt 计时。
     // 原先只看 startedAt —— 它只在创建会话时写一次，玩得越久越接近被清扫：
@@ -23,9 +38,15 @@ setInterval(() => {
     // 直接删掉他还在用的会话；下一次猜测「查无此会话」就新建一个，
     // **次数回满、已猜记录清空**（目标本身在同 UTC 日内由日期种子决定，不变）。
     // 玩家看到的就是 BUG 3 报的「中途退出后猜测记录消失、次数减少又变回来」。
-    if (now - (sess.lastActiveAt || sess.startedAt) > SESSION_TTL) dailySessions.delete(key);
+    if (now - (sess.lastActiveAt || sess.startedAt) > SESSION_TTL) {
+      // 只给「还在进行」的会话立碑：已结束的会话对应的局早就落库了，
+      // played=true 本来就会挡住重开，再立碑只会让 Map 白白多存一份。
+      if (sess.status === 'playing') dailyVoided.set(key, today);
+      dailySessions.delete(key);
+    }
   }
-}, 300_000); // 每 5 分钟
+  for (const [key, date] of dailyVoided) if (date !== today) dailyVoided.delete(key);
+}, SWEEP_INTERVAL);
 
 export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getClientIP }) {
 
@@ -342,9 +363,19 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
     if (!userId && pk) {
       if (db.prepare('SELECT id FROM users WHERE player_key = ?').get(pk)) pk = '';
     }
-    const sessionKey = userId ? `${userId}:${dailyDate}` : (pk ? `${pk}:${dailyDate}` : '');
+    // ⚠️ `u:` / `p:` 前缀是**安全边界**，不是装饰（与 handleDailyGuess 的那行必须逐字一致）。
+    //    userId 是 AUTOINCREMENT 小整数，而真实 player_key 恒为 `p_` 前缀，两者原先
+    //    共用 `${x}:${date}` 这一种形状 —— 游客传 `player_key:"1"` 生成的键与 id=1 的
+    //    登录用户逐字相同。上面 363 行那道守卫只查 users.player_key（恒 `p_` 开头），
+    //    拦不住 `"1"`，于是游客能读走对方的进行中棋盘、消耗对方的次数。
+    //    （已实测复现：游客 X-Player-Key:"1" 读到 id=1 用户的完整 history。）
+    //    加前缀后 `u:1:date` ≠ `p:1:date`，且游客造不出 `u:` 开头的键。
+    const sessionKey = userId ? `u:${userId}:${dailyDate}` : (pk ? `p:${pk}:${dailyDate}` : '');
     const session = sessionKey ? dailySessions.get(sessionKey) : null;
     const inProgress = !played && session && session.status === 'playing';
+    // 今日有过会话但被清扫了：告诉客户端「今天这次已经作废」，
+    // 否则前端会照常渲染一块可玩的棋盘，玩家点下去才吃 409。
+    const voided = !played && !inProgress && !!sessionKey && dailyVoided.has(sessionKey);
 
     // 读一次进行中的会话就算「玩家还在」，续期 TTL。
     // 刷新页面/重连走的就是这条路径，而它原先不刷新 lastActiveAt ——
@@ -356,6 +387,7 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
     return jsonResponse(res, {
       date: dailyDate,
       played,
+      voided: voided || undefined,
       inProgress: inProgress || undefined,
       remainingGuesses: inProgress ? session.remaining : undefined,
       guessCount: inProgress ? session.guesses.length : undefined,
@@ -384,7 +416,10 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
     // 解析用户身份
     const authHeader = req.headers.authorization || '';
     let userId = null;
-    let player_key = body.player_key || '';
+    // 与 handleSaveGame 的同一行、以及 status 处理器读 header 的写法对齐
+    // （typeof 校验 + 去控制字符 + 64 长度上限）。原先这里是裸 `body.player_key || ''`：
+    // 非字符串会被当成原样使用，且长度无上限，而它随后要进 Map 的键。
+    let player_key = sanitizeString(body.player_key || '', 64);
     const decoded = authHeader.startsWith('Bearer ') ? verifyToken(authHeader.slice(7)) : null;
     if (decoded) {
       const user = db.prepare('SELECT id, banned_at, token_version, player_key FROM users WHERE id = ?').get(decoded.userId);
@@ -441,10 +476,17 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
     }
 
     // 获取或创建会话
-    const sessionKey = userId ? `${userId}:${dailyDate}` : `${player_key}:${dailyDate}`;
+    // ⚠️ `u:` / `p:` 前缀是安全边界，与 status 处理器的那行必须逐字一致（理由见那边注释）。
+    const sessionKey = userId ? `u:${userId}:${dailyDate}` : `p:${player_key}:${dailyDate}`;
     let session = dailySessions.get(sessionKey);
 
     if (!session) {
+      // 这个 key 今天有过一次进行中的会话、且已被 TTL 清扫 —— 不再新开。
+      // 不拦的话等于白送一整天次数（见 dailyVoided 声明处的注释）。
+      // 上面那道 `今日已挑战` 只挡「已落库的完整局」，这里补的是「未完成」那半边。
+      if (dailyVoided.has(sessionKey)) {
+        return jsonResponse(res, { error: '今日挑战已结束，请明天再来', voided: true }, 409, extraHeaders);
+      }
       const target = pickDailyTarget('hard');
       const fullTarget = findCharByName(target.name);
       if (!fullTarget) {

@@ -8,6 +8,7 @@
 //   m4. 自定义房：A 建自定义房（3 属性）→ B 加入 → A 猜 → 棋盘仅「名字+3 属性」4 列（displayAttributes 过滤）
 //   m5. 断线：对手断线 → A 侧显示「断线中」徽标
 //   m6. 快速匹配：A/B 同时进队列 → 配对成功 → 双方 playing
+//   m7. 局中离开 → 回经典模式不被共享 store 卡住（useGameStore 是模块级单例）
 //
 // 说明：目标干员由服务端随机下发、绝不下发客户端（服务端权威、防作弊），
 //   故「猜对判胜」无法确定性触发（概率 1/425）；胜负结算改用「弃权→平局」确定性路径覆盖。
@@ -146,6 +147,26 @@ async function main() {
     await E.locator('input.game-search-input').waitFor({ state: 'visible', timeout: WAIT_TIMEOUT });
     await F.locator('input.game-search-input').waitFor({ state: 'visible', timeout: WAIT_TIMEOUT });
     check('m6.快速匹配配对成功进入 playing', true);
+
+    // ── m7. 局中离开多人页 → 回经典模式（共享 store 泄漏回归）──
+    // 复现路径**全程是客户端跳转**（不刷新页面），所以内存里的 useGameStore 不会被重建：
+    //   /multiplayer 局中 → 点 Header logo（next/link → /）→ 首页「经典模式」Link → /game
+    // 多人页在 round_start 里把共享 store 写成 status:'playing'、target:null；
+    // 卸载时若不复位，/game 会跳过硬编码在 game/page.tsx:266 的 `status === 'idle'` 分支，
+    // 直接渲染一块没有目标的棋盘：看不到难度选择，猜也猜不动（store 的 submitGuess
+    // 遇 target=null 直接 return，而 game/page.tsx:220 丢弃返回值）。
+    // 判据取难度卡：经典模式空闲页恒有 3 张 button.menu-card，玩局视图一张都没有。
+    console.log('\n[m7] 局中离开多人页 → 回经典模式');
+    await E.locator('header a[href="/"]').first().click({ timeout: WAIT_TIMEOUT });
+    await E.locator('a[href="/game"]').first().click({ timeout: WAIT_TIMEOUT });
+    let idleCards = 0;
+    try {
+      await waitFor(async () => (await E.locator('button.menu-card').count()) === 3, { desc: '经典模式难度卡' });
+      idleCards = 3;
+    } catch {
+      idleCards = await E.locator('button.menu-card').count().catch(() => 0);
+    }
+    check('m7.局中离开多人 → 回经典模式显示难度选择（未被共享 store 卡住）', idleCards === 3, `难度卡=${idleCards}`);
 
     await ctxE.close();
     await ctxF.close();

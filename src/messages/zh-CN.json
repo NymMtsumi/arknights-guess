@@ -8,6 +8,12 @@
   "hero.subtitle": "基于PRTS数据与弗一把开源GitHub项目的网站",
   "hero.description": "系统随机选择一位干员，8 次机会内猜出答案。绿色完全匹配，黄色部分接近/临近，灰色不匹配。困难模式隐藏星级。",
 
+  "bday.eyebrow": "干员生日",
+  "bday.title": "生日快乐，真理",
+  "bday.message": "今天是干员「真理」的生日。罗德岛人事部在此祝她生日快乐。",
+  "bday.seal": "生日",
+  "bday.alt": "干员真理的生日插画",
+
   "menu.classic": "经典模式",
   "menu.multiplayer": "多人对战",
   "menu.party": "派对模式",

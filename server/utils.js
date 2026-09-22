@@ -141,7 +141,9 @@ export function jsonResponse(res, data, status = 200, extraHeaders = {}) {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': getCorsOrigin(res._requestOrigin || null),
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, PATCH, DELETE',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    // 与 server/index.js 的 OPTIONS 预检保持逐字一致（含 X-Player-Key）：
+    // 两处不一致会造成「预检放行、实际响应缺头」，最难排查的一类 CORS 故障。
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Player-Key',
     'Access-Control-Allow-Credentials': 'true',
     'Content-Length': Buffer.byteLength(body),
     ...extraHeaders,

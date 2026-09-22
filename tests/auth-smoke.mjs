@@ -12,8 +12,10 @@
 //   - 内存限流：每次请求注入递增 X-Real-IP（本地 127.0.0.1 时后端信任该头），
 //     邮箱/用户名随机化，避免撞 IP/邮箱限流桶
 
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import {
-  BACKEND_PORT, check, finish, makeDbPath,
+  ROOT, BACKEND_PORT, check, finish, makeDbPath,
   startBackend, killBackend, waitForBackend, cleanupDb,
 } from './helpers.mjs';
 
@@ -76,6 +78,53 @@ async function main() {
     console.log('\n[4] 登录');
     const login = await api('/api/login', { method: 'POST', body: { email, password }, ip: nextIp() });
     check('登录成功', login.status === 200 && !!login.data?.token, `status=${login.status}`);
+
+    // ── [4b] 统计口径 byMode 必须能与 totalGames 对账 ──
+    // 这是「统计页总场次 ≠ 排行榜场次」那个 BUG 的不变量：/api/me 的聚合口径是
+    // `mode != 'custom'`（经典+多人+每日），而 /api/leaderboard 每个 tab 只取
+    // `WHERE mode = ?` —— 两边本来就不是一个量。拆出 byMode 明细才能逐项对上，
+    // 而「明细之和 == 总数」要求两条 SQL 的谓词逐字一致，正是最容易改歪的地方。
+    // 用真实落库记录来测（save-game 认 Bearer token，归属到 user_id）。
+    console.log('\n[4b] 统计口径 byMode 对账');
+    const chars = JSON.parse(await readFile(join(ROOT, 'server', 'characters.json'), 'utf8'));
+    const knownName = chars[0]?.name;
+    const jwt4b = login.data.token;
+    const saveSingle = await api('/api/save-game', {
+      method: 'POST', token: jwt4b, ip: nextIp(),
+      body: { won: false, guessCount: 3, mode: 'single', difficulty: 'easy', targetName: knownName },
+    });
+    const saveMulti = await api('/api/save-game', {
+      method: 'POST', token: jwt4b, ip: nextIp(),
+      body: { won: false, guessCount: 0, mode: 'multi', difficulty: 'hard', targetName: '' },
+    });
+    // ⚠️ 这条 custom 是**必须有**的，不是为了凑数：`totalGames` 与 `byMode` 两条 SQL 的
+    //    谓词都是 `mode != 'custom'`，而 custom 正是这条谓词的唯一分界。fixture 里不放
+    //    一行 custom，下面「明细之和 == totalGames」在把谓词改歪（例如漏掉 mode != 'custom'）
+    //    时**照样通过** —— 实测过：无 custom 行时 total 2 / sum 2 相等；有 custom 行时
+    //    total 3 / sum 2 才暴露。custom 不进 byMode（user.js 的 `if (row.mode in byMode)` 会跳过），
+    //    所以它只应抬高 totalGames 的"应然值"，不改变 sum。
+    const saveCustom = await api('/api/save-game', {
+      method: 'POST', token: jwt4b, ip: nextIp(),
+      body: { won: false, guessCount: 2, mode: 'custom', difficulty: 'hard', targetName: knownName },
+    });
+    check('save-game 单人入库', saveSingle.status === 200, `status=${saveSingle.status} ${saveSingle.data?.error || ''}`);
+    check('save-game 多人入库', saveMulti.status === 200, `status=${saveMulti.status} ${saveMulti.data?.error || ''}`);
+    check('save-game 自定义房入库', saveCustom.status === 200, `status=${saveCustom.status} ${saveCustom.data?.error || ''}`);
+
+    const me2 = await api('/api/me', { token: jwt4b });
+    const bm = me2.data?.stats?.byMode; // ⚠️ 在 stats 里，不是顶层
+    check('GET /api/me 带 byMode 三项', !!bm
+      && typeof bm.single === 'number' && typeof bm.multi === 'number' && typeof bm.daily === 'number',
+      JSON.stringify(bm));
+    check('byMode.single / multi 各记 1 场', bm?.single === 1 && bm?.multi === 1, JSON.stringify(bm));
+    // custom 落了 1 条，但两条 SQL 都把它排除在外 —— 所以 totalGames 应当仍是 2，不是 3。
+    // 这一条同时钉住「谓词一致」和「custom 确实被排除」两件事。
+    const sum = bm ? bm.single + bm.multi + bm.daily : -1;
+    check('custom 不计入 totalGames（谓词 mode != \'custom\' 生效）',
+      me2.data?.stats?.totalGames === 2, `totalGames=${me2.data?.stats?.totalGames}（3 = custom 漏进了统计口径）`);
+    check('byMode 明细之和 == totalGames（口径可对账；含 custom 行时仍成立）',
+      !!bm && sum === me2.data?.stats?.totalGames,
+      `明细和=${sum} totalGames=${me2.data?.stats?.totalGames}`);
 
     console.log('\n[5] 忘记密码');
     const forgot = await api('/api/forgot-password', { method: 'POST', body: { email }, ip: nextIp() });

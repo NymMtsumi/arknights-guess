@@ -67,7 +67,11 @@ export const useDailyStore = create<DailyState>((set, get) => ({
         return;
       }
 
-      if (data.played) {
+      // voided：今天开过一局、但会话被 TTL 清扫了（挂机超过 1 小时）。
+      // 服务端据此不再发新会话，语义上等同于「今日已挑战」，故复用同一个分支。
+      // previousResult 为 null 时该分支本来就不渲染成绩卡
+      //（daily/page.tsx:179 有 `previousResult &&` 门控），只剩标题 + 倒计时 + 按钮。
+      if (data.played || data.voided) {
         // 已完成：显示结果
         const target = (data.result?.targetName && findCharacterByName(characters, data.result.targetName)) || null;
         set({
@@ -199,6 +203,17 @@ export const useDailyStore = create<DailyState>((set, get) => ({
     } catch (err: any) {
       // AuthError（401 登录过期）向上抛出让页面处理
       if (err instanceof AuthError) throw err;
+      // 会话在本页打开期间被 TTL 清扫（挂机超过 1 小时）→ 服务端回 409 { voided:true }。
+      // 不在这里收口的话，页面会永远停在「棋盘可玩、一点就报错」：
+      // initDaily 只在 mount 跑一次（daily/page.tsx 的 deps 是 []），心跳打的是
+      // /api/heartbeat、不碰 dailySessions，所以这条路径没有别的同步时机。
+      // 复用 initDaily 的同一个终态分支，语义与「今日已挑战」一致。
+      // ⚠️ 判据必须同时看 409 和 voided：单看 status 会把别的 409（如「今日已挑战」）
+      //    也吞掉，单看 voided 则可能被未来其他接口的字段误触发。
+      if (err?.status === 409 && err?.data?.voided) {
+        set((state) => ({ ...state, status: 'already-played', previousResult: null, error: null }));
+        return { success: false, error: err.message || '今日挑战已结束' };
+      }
       return { success: false, error: err.message || '请求失败' };
     }
   },

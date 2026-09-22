@@ -8,6 +8,12 @@
   "hero.subtitle": "Based on PRTS data & Friberg open-source project",
   "hero.description": "8 guesses per game. Green=exact match, yellow=close, gray=no match. Hard mode hides rarity.",
 
+  "bday.eyebrow": "Operator Birthday",
+  "bday.title": "Happy Birthday, Istina",
+  "bday.message": "Today is Operator Istina's birthday. Warmest wishes from the Rhodes Island HR Department.",
+  "bday.seal": "BIRTHDAY",
+  "bday.alt": "Birthday illustration of Operator Istina",
+
   "menu.classic": "Classic Mode",
   "menu.multiplayer": "Multiplayer",
   "menu.party": "Party Mode",

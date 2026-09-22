@@ -215,7 +215,15 @@ export async function apiCall<T = any>(path: string, options: RequestInit = {}):
     if (res.status === 401) {
       throw new AuthError(data.error || '登录已过期，请重新登录');
     }
-    throw new Error(data.error || `HTTP ${res.status}`);
+    // 把状态码与响应体挂到 Error 上。**纯附加**：既有调用方一律只读 message，
+    // 行为逐字不变；需要区分「是哪一类失败」的调用方才用得上。
+    // 当前的动因是每日挑战：会话被 TTL 清扫后再猜会拿到 409 { voided:true }，
+    // 只透传 message 的话调用方没法把它和普通失败区分开，页面会一直停在
+    // 「可玩但一点就报错」的状态（见 daily-store 的 submitGuess）。
+    const err: any = new Error(data.error || `HTTP ${res.status}`);
+    err.status = res.status;
+    err.data = data;
+    throw err;
   }
   return data;
 }

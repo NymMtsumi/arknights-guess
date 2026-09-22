@@ -200,7 +200,11 @@ async function handleRequest(req, res) {
     res.writeHead(204, {
       'Access-Control-Allow-Origin': corsOrigin,
       'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      // X-Player-Key 是 /api/daily/status 读会话时的 Cookie 兜底通道
+      //（见 server/routes/game.js 的 status 处理器）。不在这里放行的话，
+      // 浏览器预检会拦掉它，那条兜底对浏览器客户端永远不可达 —— 只有
+      // 非浏览器调用方能用到，等于白写。服务器来源白名单是另一道门。
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Player-Key',
       'Access-Control-Allow-Credentials': 'true',
       'Access-Control-Max-Age': '600',
     });

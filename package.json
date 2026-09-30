@@ -13,7 +13,14 @@
     "smoke:auth": "node tests/auth-smoke.mjs",
     "smoke:admin": "node tests/admin-smoke.mjs",
     "smoke:solo": "node tests/solo-smoke.mjs",
+    "smoke:solo-custom": "node tests/solo-custom-smoke.mjs",
     "smoke:multiplayer": "node tests/multiplayer-smoke.mjs",
+    "smoke:multi-artist": "node tests/multi-artist-smoke.mjs",
+    "smoke:multi-reconnect": "node tests/multi-reconnect-smoke.mjs",
+    "smoke:party-artist": "node tests/party-artist-smoke.mjs",
+    "smoke:turtle": "node tests/turtle-smoke.mjs",
+    "smoke:turtle-store": "node tests/turtle-store-test.mjs",
+    "smoke:turtle-lb": "node tests/turtle-leaderboard-test.mjs",
     "smoke:routes": "node tests/routes-smoke.mjs",
     "smoke:all": "bash scripts/smoke-all.sh",
     "data:sync": "python scripts/auto-update.py --apply",
@@ -21,7 +28,8 @@
     "data:check": "node scripts/check-characters.mjs",
     "check:sort": "node tests/sort-whitelist-check.mjs",
     "check:contrast": "node tests/contrast-check.mjs",
-    "check:i18n": "node scripts/check-i18n-keys.mjs"
+    "check:i18n": "node scripts/check-i18n-keys.mjs",
+    "check:attrs": "node scripts/check-attr-contract.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

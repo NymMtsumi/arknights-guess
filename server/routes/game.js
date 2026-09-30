@@ -2,7 +2,7 @@
 import { sanitizeString, parseCookies, parseBody, jsonResponse, generateKey, normalizeTimestamp } from '../utils.js';
 import { pickDailyTarget } from '../characters.js';
 import { findCharByName, compareGuess, isWin } from '../game-engine.js';
-import { ATTR_KEYS, ROUND_TIME_PRESETS } from '../constants.js';
+import { ALL_ATTR_KEYS, ROUND_TIME_PRESETS } from '../constants.js';
 
 // 排行榜内存缓存（60s TTL，避免每次请求全表聚合扫描）
 const leaderboardCache = new Map();
@@ -72,8 +72,10 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
     }
 
     // 验证 mode 合法性
-    if (!['single', 'multi', 'custom'].includes(mode)) {
-      return jsonResponse(res, { error: 'mode 必须是 single、multi 或 custom' }, 400);
+    // turtle = 海龟汤（盲盒变体）。它走「只进专属榜」的口径：
+    // 落库供 /api/leaderboard?mode=turtle 聚合，但不进个人战绩（见 routes/user.js 的谓词）。
+    if (!['single', 'multi', 'custom', 'turtle'].includes(mode)) {
+      return jsonResponse(res, { error: 'mode 必须是 single、multi、custom 或 turtle' }, 400);
     }
 
     let timestamp = normalizeTimestamp(body.timestamp);
@@ -98,7 +100,8 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
       }
       if (mode === 'custom') {
         if (Array.isArray(md.attributes)) {
-          clean.attributes = [...new Set(md.attributes.filter(a => typeof a === 'string' && ATTR_KEYS.includes(a)))];
+          // 自定义房存档白名单：含 artist（可选词条只在自定义房出现）
+          clean.attributes = [...new Set(md.attributes.filter(a => typeof a === 'string' && ALL_ATTR_KEYS.includes(a)))];
         }
         clean.maxGuesses = Number.isInteger(md.maxGuesses) && md.maxGuesses >= 1 && md.maxGuesses <= 15 ? md.maxGuesses : 8;
         clean.roundTime = ROUND_TIME_PRESETS.includes(md.roundTime) ? md.roundTime : 120000;
@@ -136,8 +139,11 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
     if (guessCount < 0) {
       return jsonResponse(res, { error: 'guessCount 不能为负数' }, 400);
     }
-    // 赢了不可能 0 次猜测（单人）；多人/自定义允许 0 次（对手断线直接判负）
-    if (won && guessCount < 1 && mode === 'single') {
+    // 赢了不可能 0 次猜测（单人/海龟汤）；多人/自定义允许 0 次（对手断线直接判负）
+    // ⚠️ 海龟汤必须并进来：它的获胜**只能**靠点名猜中产生（turtle-store 的 guesses
+    //    恒 >= 1），「对手断线」那个口子对它不成立。漏了这一条，`{won:true, guessCount:0}`
+    //    会被接受，把 /api/leaderboard?mode=turtle 的 avgGuesses 直接压到 0.00。
+    if (won && guessCount < 1 && (mode === 'single' || mode === 'turtle')) {
       return jsonResponse(res, { error: '获胜时 guessCount 至少为 1' }, 400);
     }
     // 自定义房最多 15 次 × 7 小局 = 105，多人 BO7 也可能超过 50，放宽上限
@@ -145,8 +151,9 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
       return jsonResponse(res, { error: 'guessCount 超出合理范围' }, 400);
     }
 
-    // 单人模式：校验目标干员真实存在（防伪造空/垃圾记录）
-    if (mode === 'single' && (!targetName || !findCharByName(targetName))) {
+    // 单人/海龟汤：校验目标干员真实存在（防伪造空/垃圾记录）。
+    // 海龟汤的谜底也是干员池里的一个名字，同样的伪造面，所以并进同一条守卫。
+    if ((mode === 'single' || mode === 'turtle') && (!targetName || !findCharByName(targetName))) {
       return jsonResponse(res, { error: '目标干员不存在' }, 400);
     }
 
@@ -233,7 +240,10 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
 
     if (limit < 1) limit = 1;
     if (limit > 100) limit = 100;
-    if (!['single', 'multi'].includes(mode)) mode = 'single';
+    // turtle 进白名单 = 「海龟汤单独建榜」的**全部**实现：下面的查询本来就是
+    // `WHERE g.mode = ?`，所以不需要动 schema、不需要新表、不需要新端点。
+    // 落在白名单外的 mode（daily、以及任何笔误）一律回落 single —— 保持原行为。
+    if (!['single', 'multi', 'turtle'].includes(mode)) mode = 'single';
 
     // 内存缓存（60s TTL），避免每次请求全表聚合扫描
     const cacheKey = `${mode}:${difficulty || 'all'}:${limit}`;
@@ -555,8 +565,9 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
       return jsonResponse(res, { error: '已猜过该干员' }, 400, extraHeaders);
     }
 
-    // 对比
-    const comparisons = compareGuess(session.target, guessed);
+    // 对比。每日挑战的棋盘没有画师列，且它是唯一走服务端判定的模式 —— 绝不下发这个键
+    // （否则前台猜一次就能从响应里读到「与谜底是否同画师」，等于绕过服务端权威）
+    const comparisons = compareGuess(session.target, guessed, { includeArtist: false });
     session.guesses.push(guessed.name);
     // 并行记录完整的一条（名字 + 逐属性对比），供刷新后重建棋盘
     if (!Array.isArray(session.history)) session.history = [];

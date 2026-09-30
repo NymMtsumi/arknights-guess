@@ -1,0 +1,373 @@
+#!/usr/bin/env node
+// 多人自建房「画师」词条 — 槽位 / UI / 重连验证（plan 阶段 5）
+//
+// 这一段改动碰的是 colorRows —— 一个**定长位置数组**，同时喂三处：
+// 前端的 rowToComparisons（重连）、发给对手的 opponent_update、以及自己的 myColorRows。
+// 不变量 #2 要求只能**末尾追加**，本脚本就是把这条不变量钉死。
+//
+// 覆盖：
+//   a. 服务端槽位（两个裸 socket 客户端，**确定性、不依赖巧合**）
+//      a1 自定义房白名单放行 artist
+//      a2 colorRows 行长 = 11（扩槽成功）
+//      a3 row[10] === guess_result.comparisons.artist  ← 逐条比对
+//      a4 row[1..9] 与 9 个标准键逐一相等            ← 证明前 10 槽语义未被扰动
+//      a5 row[0] === (correct ? 'correct' : 'wrong')
+//      a6 标准房（不传 attributes）不暴露 artist，但行结构同样是 11 槽
+//   b. UI 自己棋盘 + 重连（浏览器建房、裸客户端进房）
+//      b1 自建房表头 11 列、末列为「画师」；每行 11 个 gcell（1 名字 + 10 词条）
+//      b2 刷新后表头与**全部单元格颜色**与刷新前逐字节相同
+//         —— b2 是 rowToComparisons 的确定性探针：漏掉 artist 那行，
+//            重连后画师格会渲染成空 <td>（GuessTable.tsx:186 的 return null），
+//            每行 gcell 从 11 掉到 10。
+//   c. UI 对手棋盘对位 + 命中行搜寻（裸客户端猜、浏览器看）
+//      c1 对手棋盘表头 11 列、末列为「画师」，每行 11 个点
+//      c2 每个点的颜色 === 服务端下发的 row 对应槽位
+//      c3 **命中行**：artist 为 correct 的那一行，画师点必须是 d-ok
+//
+// ⚠️ 为什么 c3 需要"搜寻"而不是直接构造：
+//    这段代码历史上出过的 bug 是 displayCols 用 ATTR_KEYS 查下标 →
+//    indexOf('artist') === -1 → dataIdx = 0 → 画师列去读**名字列**的颜色。
+//    而名字列只在猜中时才是 'correct'，所以那个 bug 的输出是
+//    「画师点 = 名字点」——**它是正确输出的子集**（绝大多数猜测两边都是 wrong）。
+//    只有当 artist 恰好命中时，正确实现给 d-ok、bug 给 d-no，才分得开。
+//    单次猜测命中率约 2%，所以这里按「大画师组」挑猜测对象来抬命中率，
+//    跑不到命中就**显式判 INCONCLUSIVE**（计入失败），绝不静默通过。
+//
+// ⚠️ 未接入 scripts/smoke-all.sh（新增文件，不擅自改部署 gate）。
+// 手动运行：需要先 npm run build
+//   NODE_OPTIONS="--require ./tests/_dns-preload.cjs" node tests/multi-artist-smoke.mjs
+
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import {
+  ROOT, BACKEND_PORT, FRONTEND_ORIGIN, WAIT_TIMEOUT,
+  check, finish, waitFor, makeDbPath, sleep,
+  startStaticServer, startBackend, killBackend, waitForBackend, cleanupDb,
+  requireBuild, requirePlaywright, newZhContext,
+} from './helpers.mjs';
+
+const DB_PATH = makeDbPath('multi-artist');
+
+const STANDARD_KEYS = ['class', 'subclass', 'faction', 'rarity', 'race', 'gender', 'releaseYear', 'position', 'tags'];
+const ALL_KEYS = [...STANDARD_KEYS, 'artist'];
+
+/** 状态 → GuessTable 的类名（GuessTable.tsx:23-27） */
+const GC = { correct: 'ok', close: 'warn', wrong: 'no' };
+/** 状态 → 对手棋盘圆点的类名（multiplayer/page.tsx:962） */
+const DOT = { correct: 'd-ok', close: 'd-cl', wrong: 'd-no' };
+
+async function main() {
+  if (!requireBuild()) return 1;
+  const chromium = await requirePlaywright();
+  if (!chromium) return 1;
+
+  const chars = JSON.parse(await readFile(join(ROOT, 'src', 'data', 'characters.json'), 'utf8'));
+  const knownName = chars[0]?.name;
+  if (!knownName) { console.error('❌ characters.json 为空'); return 1; }
+
+  const backend = startBackend({ dbPath: DB_PATH });
+  let staticServer = null;
+  let browser = null;
+  const raw = [];
+
+  try {
+    await waitForBackend();
+    staticServer = await startStaticServer();
+    browser = await chromium.launch({ headless: true });
+
+    const { io } = await import('socket.io-client');
+    const conn = (label) => new Promise((resolve, reject) => {
+      const s = io(`http://localhost:${BACKEND_PORT}`, {
+        transports: ['websocket'], forceNew: true,
+        auth: { pk: `p_artist${label}${'x'.repeat(10)}` },
+      });
+      s.on('connect', () => resolve(s));
+      s.on('connect_error', reject);
+      setTimeout(() => reject(new Error(`${label} 连接超时`)), WAIT_TIMEOUT);
+    });
+    const connect = async (label) => { const s = await conn(label); raw.push(s); return s; };
+    const tap = (s, events) => { const buf = {}; for (const e of events) { buf[e] = []; s.on(e, (d) => buf[e].push(d)); } return buf; };
+    const waitLen = (buf, ev, n) => waitFor(() => (buf[ev]?.length || 0) >= n, { desc: `${ev} 第 ${n} 条` });
+
+    const createRoom = async (s, buf, payload) => {
+      s.emit('create_room', payload);
+      await waitLen(buf, 'room_created', 1);
+      return buf.room_created[0];
+    };
+    const joinRoom = async (s, buf, code, playerName) => {
+      s.emit('join_room', { code, playerName: playerName || undefined });
+      await waitLen(buf, 'round_start', 1);
+    };
+    /** 猜一个干员并等回执；返回 guess_result 载荷 */
+    const guess = async (s, buf, name) => {
+      const n = buf.guess_result.length;
+      s.emit('multi:guess', { name });
+      await waitLen(buf, 'guess_result', n + 1);
+      return buf.guess_result[n];
+    };
+
+    /** 按「大画师组」挑猜测对象 —— 抬高 artist 命中的概率，见文件头 c3 的说明 */
+    const huntGuesses = (difficulty, count) => {
+      const pool = difficulty === 'easy'
+        ? chars.filter((c) => c.popularity === 'hot' || c.rarity >= 6)
+        : chars;
+      const by = new Map();
+      for (const c of pool) {
+        if (!by.has(c.artist)) by.set(c.artist, []);
+        by.get(c.artist).push(c);
+      }
+      const groups = [...by.values()].sort((a, b) => b.length - a.length);
+      const picked = groups.slice(0, count).map((g) => g[0]);
+      const cover = groups.slice(0, count).reduce((s, g) => s + g.length, 0);
+      return { names: picked.map((c) => c.name), cover, pool: pool.length };
+    };
+
+    // ══════════════ a. 服务端槽位（裸客户端对，确定性） ══════════════
+    console.log('\n[a] 服务端 colorRows 槽位');
+    const A = await connect('A');
+    const B = await connect('B');
+    const aBuf = tap(A, ['room_created', 'guess_result', 'round_start', 'round_end', 'error_msg']);
+    const bBuf = tap(B, ['opponent_update', 'round_start', 'round_end', 'error_msg']);
+
+    const created = await createRoom(A, aBuf, {
+      playerName: '画家甲', difficulty: 'easy', bestOf: 5, maxGuesses: 15, attributes: ALL_KEYS,
+    });
+    const attrs = Array.isArray(created.attributes) ? created.attributes : [];
+    check('a1.自定义房白名单放行 artist',
+      created.custom === true && attrs.includes('artist') && attrs.length === ALL_KEYS.length,
+      `custom=${created.custom} attributes=[${attrs.join(',')}]`);
+
+    await joinRoom(B, bBuf, created.code, '画家乙');
+
+    // 15 次猜测（= maxGuesses），逐条比对两个客户端收到的载荷
+    const nGuesses = Math.min(15, guessCountOf(created));
+    for (const nm of huntGuesses('easy', nGuesses).names) {
+      const r = await guess(A, aBuf, nm);
+      if (r.correct) break; // 猜中就本回合结束，不再受理
+    }
+    await sleep(300); // 让 opponent_update 落定
+
+    const comps = aBuf.guess_result;
+    const rows = bBuf.opponent_update.at(-1)?.allComparisons || [];
+    check('a.样本覆盖（猜测数 > 0）', comps.length > 0, `猜测 ${comps.length} 次`);
+
+    check('a2.colorRows 行长 = 11（扩槽成功）',
+      rows.length > 0 && rows.every((r) => r.length === 11),
+      `行长=[${rows.map((r) => r.length).join(',')}]`);
+
+    const slot10 = rows.map((r, i) => r[10] === comps[i]?.comparisons?.artist);
+    check('a3.row[10] === comparisons.artist（逐条）',
+      slot10.length > 0 && slot10.every(Boolean),
+      `${slot10.filter(Boolean).length}/${slot10.length} 相符；row[10]=[${rows.map((r) => r[10]).join(',')}] artist=[${comps.map((c) => c.comparisons.artist).join(',')}]`);
+
+    const misStd = [];
+    rows.forEach((r, i) => {
+      STANDARD_KEYS.forEach((k, j) => {
+        if (r[j + 1] !== comps[i].comparisons[k]) misStd.push(`#${i}.${k}: row=${r[j + 1]} cmp=${comps[i].comparisons[k]}`);
+      });
+    });
+    check('a4.row[1..9] 与 9 个标准键逐一相等（前 10 槽语义未扰动）',
+      misStd.length === 0, misStd.length ? misStd.slice(0, 3).join(' | ') : '全部相符');
+
+    const misName = rows.map((r, i) => r[0] === (comps[i].correct ? 'correct' : 'wrong')).filter(Boolean).length;
+    check('a5.row[0] = 名字列（correct/wrong）', misName === rows.length, `${misName}/${rows.length}`);
+
+    // ── a6. 标准房：不传 attributes ──
+    const C1 = await connect('C1');
+    const D1 = await connect('D1');
+    const c1Buf = tap(C1, ['room_created', 'guess_result', 'round_start', 'error_msg']);
+    const d1Buf = tap(D1, ['opponent_update', 'round_start', 'error_msg']);
+    const std = await createRoom(C1, c1Buf, { playerName: '标准甲', difficulty: 'hard', bestOf: 5 });
+    await joinRoom(D1, d1Buf, std.code, '标准乙');
+    await guess(C1, c1Buf, knownName);
+    await sleep(300);
+    const stdRows = d1Buf.opponent_update.at(-1)?.allComparisons || [];
+    check('a6.标准房不暴露 artist（结构性保证）',
+      !std.attributes && !std.custom && (stdRows[0]?.length === 11),
+      `attributes=${JSON.stringify(std.attributes)} custom=${std.custom} 行长=${stdRows[0]?.length}`);
+
+    // ══════════════ b. UI 自己棋盘 + 重连 ══════════════
+    console.log('\n[b] UI 自己棋盘 + 重连');
+    const ctxB = await newZhContext(browser);
+    const pageB = await ctxB.newPage();
+    await pageB.goto(`${FRONTEND_ORIGIN}/multiplayer`, { waitUntil: 'load' });
+    await pageB.getByText('自定义房间').click({ timeout: WAIT_TIMEOUT });
+
+    // 默认已选 职业/阵营/星级，补齐其余 7 个（含画师）
+    for (const label of ['子职业', '种族', '性别', '上线年份', '部署位', '词缀', '画师']) {
+      await pageB.locator('button.tchip', { hasText: new RegExp(`^${label}$`) }).click({ timeout: WAIT_TIMEOUT });
+    }
+    const hintTxt = await pageB.locator('.cfg-hint').first().innerText();
+    check('b0.词条计数 = 10/10', hintTxt.includes('10/10'), hintTxt);
+
+    await pageB.getByText('创建房间', { exact: true }).click({ timeout: WAIT_TIMEOUT });
+    const codeB = await readCode(pageB);
+    check('b.自建房创建成功', /^\d{4}$/.test(codeB), `code=${codeB}`);
+
+    const R = await connect('R'); // 裸客户端当对手，既凑人数又持有 ground truth
+    const rBuf = tap(R, ['round_start', 'guess_result', 'error_msg']);
+    await joinRoom(R, rBuf, codeB, '裸对手');
+
+    await pageB.locator('input.game-search-input').waitFor({ state: 'visible', timeout: WAIT_TIMEOUT });
+    await pageB.locator('input.game-search-input').fill(knownName);
+    await pageB.locator('input.game-search-input').press('Enter');
+    await pageB.locator('table.game-table').waitFor({ state: 'visible', timeout: WAIT_TIMEOUT });
+
+    const ownHeaders = () => pageB.locator('table.game-table thead th').allInnerTexts();
+    const ownCells = () => pageB.locator('table.game-table tbody tr').first().locator('div.gcell').evaluateAll(
+      (els) => els.map((e) => e.className.replace(/\s+/g, ' ').trim()));
+
+    const h1 = await ownHeaders();
+    check('b1.自建房表头 11 列、末列为画师',
+      h1.length === 11 && h1[10] === '画师', `cols=${h1.length} [${h1.join('|')}]`);
+    const cells1 = await ownCells();
+    check('b1.每行 11 个 gcell（1 名字 + 10 词条）',
+      cells1.length === 11, `gcell=${cells1.length} [${cells1.join(' | ')}]`);
+
+    // 重连：刷新 → rowToComparisons(myColorRows) 重建棋盘
+    await pageB.reload({ waitUntil: 'load' });
+    await pageB.locator('table.game-table').waitFor({ state: 'visible', timeout: WAIT_TIMEOUT });
+    const h2 = await ownHeaders();
+    const cells2 = await ownCells();
+    check('b2.刷新后表头仍 11 列含画师',
+      h2.length === 11 && h2[10] === '画师', `cols=${h2.length} [${h2.join('|')}]`);
+    check('b2.刷新后单元格颜色逐字节相同（rowToComparisons 覆盖 artist）',
+      JSON.stringify(cells1) === JSON.stringify(cells2),
+      `前=[${cells1.join(',')}] 后=[${cells2.join(',')}]`);
+
+    // ══════════════ c. UI 对手棋盘对位 + 命中行搜寻 ══════════════
+    // 裸客户端 S 负责建房与猜测（这样测试能直接拿到 ground truth），
+    // 浏览器 C 只负责「看」——它是对手，对手棋盘才会渲染 S 的色块。
+    // ⚠️ 多人房只有 2 个位置：S + C 正好，**不能**再加第三方凑人数（会「房间已满」）。
+    console.log('\n[c] UI 对手棋盘（裸客户端猜、浏览器看）');
+    const S = await connect('S');
+    const sBuf = tap(S, ['room_created', 'guess_result', 'round_start', 'round_end', 'error_msg']);
+
+    const { names: hunt, cover, pool } = huntGuesses('easy', 15);
+    console.log(`   搜寻策略：easy 池 ${pool} 人，猜 15 个大画师组代表 → 覆盖 ${cover}/${pool} = ${(cover / pool * 100).toFixed(0)}%`);
+
+    const roomC = await createRoom(S, sBuf, {
+      playerName: '搜寻者', difficulty: 'easy', bestOf: 5, maxGuesses: 15, attributes: ALL_KEYS,
+    });
+
+    const ctxC = await newZhContext(browser);
+    const pageC = await ctxC.newPage();
+    await pageC.goto(`${FRONTEND_ORIGIN}/multiplayer`, { waitUntil: 'load' });
+    await pageC.getByText('创建 / 加入房间').click({ timeout: WAIT_TIMEOUT });
+    await pageC.locator('input[placeholder="4位数字房间码"]').fill(roomC.code);
+    await pageC.getByText('加入房间', { exact: true }).click({ timeout: WAIT_TIMEOUT });
+    await pageC.locator('input.game-search-input').waitFor({ state: 'visible', timeout: WAIT_TIMEOUT });
+
+    // 🔴 回合上限 = 8，**不是 3**。这条断言（c3）是概率性的，而它跑在**部署 gate**里，
+    //    「偶尔红一次」等于偶尔无故阻断一次部署，比漏检更难接受。
+    //    单回合命中率 = cover/pool = 92/153 ≈ 60%（每回合服务端都重新 randomTarget，
+    //    见 server/socket/game.js:38 —— 所以回合之间是独立的）：
+    //      3 回合 → 漏 6.3%（约 16 次 push 里假红一次，实测撞到过）
+    //      8 回合 → 漏 0.07%（约 1500 次一次）
+    //    ⚠️ 加回合数**不会**把测试拖长多少：只有「没命中」的回合才继续，
+    //    而那是 40% 的分支；期望回合数 ≈ 1.7，每多一个空回合约 +10s。
+    //    ⚠️ 上限能不能随意加：可以。空回合一定是**平局**（S 15 次用完 = exhausted，
+    //    C 弃权）→ 平局不计分、不结束比赛（bestOf 5 只数胜负），所以空回合可以无限多；
+    //    而 S 一旦赢下一局就必然是「猜中了名字」→ 那一行 artist 也必然 correct → hits>0 → 已退出循环。
+    const MAX_ROUNDS = 8;
+    //
+    // ⚠️ **每猜一次就读一次对手棋盘**，不能攒完 15 次再读。原因有两条：
+    //   (1) 一旦某次猜中名字，服务端立刻 endRound，浏览器切到结算屏、
+    //       整个 opp-grid 卸载 —— 攒到最后读会读到空表；
+    //   (2) round_start 会 setOppGrid([])（multiplayer/page.tsx:404），
+    //       攒着读会跨回合串行。
+    // 逐次读还有个好处：行号即下标，不必再对齐两次切片。
+    await waitLen(sBuf, 'round_start', 1);
+    let oppHeaders = [];
+    let hits = 0, totalRows = 0, mismatches = [];
+    for (let round = 1; round <= MAX_ROUNDS && hits === 0; round++) {
+      const before = sBuf.round_start.length;
+      let i = 0;
+      for (const nm of hunt) {
+        const r = await guess(S, sBuf, nm);
+        // 等这一行渲染出来（读空表 = 这一轮白读，宁可超时失败也不要静默空转）
+        await waitFor(async () => (await pageC.locator('table.opp-grid tbody tr span.opp-dot').count()) >= (i + 1) * 11,
+          { desc: `对手棋盘第 ${i + 1} 行` }).catch(() => {});
+        // opp-grid 显示时 reverse 过：dots[0] 最新，反向后下标 = 猜测顺序
+        const dotRows = [...(await readOppGrid(pageC))].reverse();
+        oppHeaders = await pageC.locator('table.opp-grid thead th').allInnerTexts();
+        if (dotRows.length > i) {
+          totalRows++;
+          const expect = [r.correct ? 'correct' : 'wrong',
+            ...STANDARD_KEYS.map((k) => r.comparisons[k]), r.comparisons.artist];
+          for (let j = 0; j < 11 && j < dotRows[i].length; j++) {
+            if (dotRows[i][j] !== DOT[expect[j]]) mismatches.push(`r${i}c${j}: 点=${dotRows[i][j]} 期望=${DOT[expect[j]]}(${expect[j]})`);
+          }
+          if (r.comparisons.artist === 'correct') {
+            hits++;
+            check(`c3.第 ${i} 行 artist 命中：画师点 = d-ok、名字点 = d-no`,
+              dotRows[i][10] === DOT.correct && dotRows[i][0] === DOT.wrong,
+              `画师点=${dotRows[i][10]} 名字点=${dotRows[i][0]}`);
+          }
+        }
+        i++;
+        if (r.correct) break; // 猜中名字 → 回合立刻结束
+      }
+      console.log(`   第 ${round} 回合：猜 ${i} 次，累计核对 ${totalRows} 行，命中 ${hits} 行`);
+      if (hits === 0 && round < MAX_ROUNDS) {
+        // 只有 S 次数耗尽是**不会**结算的（服务端要双方都 exhausted/放弃）——
+        // 所以让只观战的 C 放弃，回合立刻判平局，6s 后自动开下一局。
+        // ⚠️ 放弃是二次确认：handleSurrender 只开弹窗（page.tsx:647），
+        //    必须再点弹窗里的「确认放弃」才真的 emit surrender_round。
+        await pageC.locator('button', { hasText: '放弃本局' }).click({ timeout: WAIT_TIMEOUT });
+        await pageC.locator('button', { hasText: '确认放弃' }).click({ timeout: WAIT_TIMEOUT });
+        await waitLen(sBuf, 'round_start', before + 1);
+      }
+    }
+
+    check('c1.对手棋盘表头 11 列、末列为画师',
+      oppHeaders.length === 11 && oppHeaders[10] === '画师', `cols=${oppHeaders.length} [${oppHeaders.join('|')}]`);
+    check('c2.对手棋盘每行 11 个点，颜色逐格匹配服务端载荷',
+      mismatches.length === 0 && totalRows > 0,
+      mismatches.length ? mismatches.slice(0, 3).join(' | ') : `共 ${totalRows} 行全部相符`);
+    check('c3.至少出现一行 artist 命中（否则本项无法证伪 dataIdx 错位）',
+      hits > 0,
+      hits > 0
+        ? `命中 ${hits} 行`
+        : `INCONCLUSIVE — ${MAX_ROUNDS} 回合 ${totalRows} 行内未出现 artist 命中，`
+          + `画师列与名字列的错位在颜色上不可区分（本项按 0.07% 的概率会这样空转，真出现请重跑一次确认）`);
+
+    return 0;
+  } catch (e) {
+    console.error('\n❌ 多人画师冒烟异常：', e.message);
+    return 1;
+  } finally {
+    for (const s of raw) { try { s.disconnect(); } catch {} }
+    if (browser) await browser.close().catch(() => {});
+    if (staticServer) staticServer.close();
+    killBackend(backend);
+    await cleanupDb(DB_PATH);
+  }
+}
+
+/** opponent_update 的 allComparisons 行数与 maxGuesses 取小 —— 猜满就结束，不再受理 */
+function guessCountOf(created) {
+  const mg = Number(created.maxGuesses);
+  return Number.isInteger(mg) && mg > 0 ? mg : 8;
+}
+
+/** 读对手棋盘每个点的颜色类名（d-ok / d-cl / d-no / ''） */
+async function readOppGrid(page) {
+  return page.locator('table.opp-grid tbody tr').evaluateAll((rows) =>
+    rows.map((tr) => [...tr.querySelectorAll('span.opp-dot')].map((sp) => {
+      const m = [...sp.classList].find((c) => /^d-(ok|cl|no)$/.test(c));
+      return m || '';
+    })));
+}
+
+async function readCode(page) {
+  await waitFor(async () => {
+    const texts = await page.locator('p').allTextContents();
+    return texts.map((x) => x.trim()).some((x) => /^\d{4}$/.test(x));
+  }, { desc: '4 位房间码出现' });
+  const texts = await page.locator('p').allTextContents();
+  return texts.map((x) => x.trim()).find((x) => /^\d{4}$/.test(x)) || '';
+}
+
+const exitCode = await main();
+finish(exitCode);

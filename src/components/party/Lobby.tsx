@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, type MutableRefObject } from 'react';
 import { useI18n } from '@/lib/i18n';
 import { usePartyStore } from '@/stores/party-store';
 import { useRoom } from '@/hooks/useRoom';
-import { PARTY_ATTR_KEYS as ATTR_KEYS } from '@/lib/party-constants';
+import { AttrChips } from '@/components/AttrChips';
 import type { Socket } from 'socket.io-client';
 
 interface LobbyProps {
@@ -164,12 +164,6 @@ export function PartyLobby({ onBack, socketRef, isConnected, initialCode }: Lobb
   );
 }
 
-const ATTR_LABEL_KEYS: Record<string, string> = {
-  class: 'table.class', subclass: 'table.subclass', faction: 'table.faction',
-  rarity: 'table.rarity', race: 'table.race', gender: 'table.gender',
-  releaseYear: 'table.year', position: 'table.position', tags: 'table.tags',
-};
-
 export interface PartyHostSettings {
   difficulty: string;
   rounds: number;
@@ -191,19 +185,6 @@ export function HostSettings({
     easy: 'party.difficultyEasy',
     medium: 'party.difficultyMedium',
     hard: 'party.difficultyHard',
-  };
-
-  const toggleAttr = (a: string) => {
-    if (disabled) return;
-    const attrs = settings.attributes;
-    if (attrs === null) {
-      // 标准 → 自定义：默认移除点击的列（其余 8 列保留）
-      onChange({ ...settings, attributes: ATTR_KEYS.filter(k => k !== a) });
-    } else if (attrs.includes(a)) {
-      onChange({ ...settings, attributes: attrs.filter(k => k !== a) });
-    } else {
-      onChange({ ...settings, attributes: [...attrs, a] });
-    }
   };
 
   return (
@@ -284,39 +265,15 @@ export function HostSettings({
         </div>
       </div>
 
-      {/* 词条列 */}
-      <div className="cfg-row">
-        <span className="cfg-lb">
-          {t('party.attributes')}:
-        </span>
-        <span className="cfg-hint">
-          {settings.attributes === null ? t('party.standardColumns') : `${settings.attributes.length}/${ATTR_KEYS.length}`}
-        </span>
-        <div className="cfg-ct">
-          {ATTR_KEYS.map(a => {
-            const on = settings.attributes === null || settings.attributes.includes(a);
-            return (
-              <button
-                key={a}
-                disabled={disabled}
-                onClick={() => toggleAttr(a)}
-                className={on ? 'tchip on' : 'tchip off'}
-              >
-                {t(ATTR_LABEL_KEYS[a])}
-              </button>
-            );
-          })}
-        </div>
-        {settings.attributes !== null && (
-          <button
-            disabled={disabled}
-            onClick={() => onChange({ ...settings, attributes: null })}
-            className="btn-o btn-sm mt-1.5"
-          >
-            {t('party.resetStandard')}
-          </button>
-        )}
-      </div>
+      {/* 词条列 —— 与单人/多人自建房共用同一个组件（含可选的「画师」）。
+          标准态提示语随之从「标准（全部列）」改为「标准（9 列）」：
+          画师在标准态下是**关**的，再写「全部列」就是错的。 */}
+      <AttrChips
+        attributes={settings.attributes}
+        onChange={(attrs) => onChange({ ...settings, attributes: attrs })}
+        disabled={disabled}
+        t={t}
+      />
     </div>
   );
 }

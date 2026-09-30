@@ -309,7 +309,10 @@ export function createPartyGameModule(deps) {
     rp.guessChain.push(guessedName);
 
     // 对比在服务端完成，答案永不离开服务端
-    const comparisons = compareGuess(room.target, char);
+    // artist 只在房主选了画师词条时才算、才下发（派对房是自建房，见 party-room.js 的 sanitizeAttributes）
+    const comparisons = compareGuess(room.target, char, {
+      includeArtist: !!room.settings.attributes?.includes('artist'),
+    });
     const isAlter = isAlterRelation(room.target, char);
     const isCorrect = room.target.id === char.id;
 

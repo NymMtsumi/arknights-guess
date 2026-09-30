@@ -4,7 +4,8 @@
 // 覆盖 checklist：
 //   s1. 单人 /game：选难度 → 输入真实干员名 → 提交 → 出现 game-table（猜测已登记）
 //   s2. 每日 /daily：进入即 playing（临时 DB 无记录）→ 猜一个干员 → 出现 game-table
-//   s3. 排行榜 /leaderboard：标题 + 三 tab（单人/多人/每日）+ 切「每日」后难度筛选隐藏
+//   s3. 排行榜 /leaderboard：标题 + 四 tab（单人/多人/每日/海龟汤）+ 海龟汤 tab 有难度筛选
+//       + 切「每日」后难度筛选隐藏
 //   s2b.每日 /daily 刷新页面：猜测记录从服务端 history 重建（不是「记录消失」）
 //   s4. 统计 /stats：标题 + 空数据态（临时 DB 无战绩 →「暂无游戏记录」）
 //   s5. 每日会话被清扫后不再发放次数（防挂机刷当日排行榜；独立短 TTL 后端）
@@ -98,8 +99,25 @@ async function main() {
     check('s3.标题「排行榜」渲染', true);
 
     const tabs = page.locator('[role="tab"]');
-    await waitFor(async () => (await tabs.count()) === 3, { desc: '3 个 tab' });
-    check('s3.三 tab（单人/多人/每日）存在', true);
+    // ⚠️ 这个数字随排行榜 tab 数增长：海龟汤榜上线时 3 → 4。
+    //    它不是「随便一个数」—— 改排行榜 MODES（src/app/leaderboard/page.tsx）必须同步这里，
+    //    漏改就是一条真实的 gate 失败，而不是可以放过的偶发。
+    await waitFor(async () => (await tabs.count()) === 4, { desc: '4 个 tab' });
+    check('s3.四 tab（单人/多人/每日/海龟汤）存在', true);
+
+    // 海龟汤 tab：走 /api/leaderboard?mode=turtle（不是 daily 那个专用端点），
+    // 所以难度筛选条**应当**照常出现，且空数据态正常渲染。
+    // 这条同时钉住「mode=turtle 没被服务端白名单回落成 single」——
+    // 回落了的话这个 tab 会显示经典单人的数据，而不是空态。
+    await page.locator('[role="tab"]', { hasText: '海龟汤' }).click();
+    await page.locator('.leaderboard-difficulty-bar').waitFor({ state: 'visible', timeout: WAIT_TIMEOUT });
+    check('s3.切「海龟汤」后难度筛选可见（三档难度各一张小榜）', true);
+    await page.locator('.leaderboard-empty').waitFor({ state: 'visible', timeout: WAIT_TIMEOUT });
+    // ⚠️ 「空态可见」本身是弱断言 —— 上一个 tab 也是空态，这条可能只是没来得及重渲染。
+    //    真正有区分度的是「这个 tab 的请求没报错」：数据路径（服务端谓词、难度过滤）
+    //    由 tests/turtle-leaderboard-test.mjs 在 API 级覆盖，UI 这层只保证接线通。
+    const turtleErr = await page.locator('text=加载失败').count();
+    check('s3.海龟汤榜请求无错误态', turtleErr === 0, turtleErr > 0 ? '出现加载失败' : '');
 
     // 切「每日」→ 难度筛选栏隐藏
     await page.locator('[role="tab"]', { hasText: '每日' }).click();

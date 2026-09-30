@@ -64,6 +64,9 @@ GITHUB_API = "https://api.github.com"
 MIRROR = "Kengxxiao/ArknightsGameData"
 UPSTREAM_REF = "master"
 UPSTREAM_PATH = "zh_CN/gamedata/excel/character_table.json"
+# 画师只在皮肤表里，character_table 完全没有该字段（实测 1375 条 0 命中）。
+# 仅在真有新候选时懒加载 —— --check 模式不下载这个 3.8 MB 的文件。
+UPSTREAM_SKIN_PATH = "zh_CN/gamedata/excel/skin_table.json"
 
 # 本仓库内文件（相对 REPO_ROOT）
 ROSTER_PATHS = ["server/characters.json", "src/data/characters.json"]
@@ -82,6 +85,7 @@ REQUIRED_FIELDS = [
     "id", "name", "nameEn", "class", "classEn", "subclass", "subclassEn",
     "faction", "factionEn", "rarity", "race", "raceEn", "gender", "genderEn",
     "popularity", "releaseYear", "tags", "alterBase", "position", "positionEn",
+    "artist",
 ]
 
 
@@ -126,6 +130,45 @@ def download_table(opener, download_url):
     return json.loads(raw.decode("utf-8"))
 
 
+_skin_table_cache = None
+
+
+def load_skin_table(opener):
+    """懒加载皮肤表（约 3.8 MB），返回 charSkins 字典。
+
+    只在真有新候选时才被调用 —— --check / 无候选时一次都不下载。
+    """
+    global _skin_table_cache
+    if _skin_table_cache is None:
+        url = f"https://raw.githubusercontent.com/{MIRROR}/{UPSTREAM_REF}/{UPSTREAM_SKIN_PATH}"
+        print(f"下载皮肤表 ({UPSTREAM_SKIN_PATH})…")
+        raw = http_get_bytes(url, opener, timeout=300)
+        print(f"  收到 {len(raw):,} 字节")
+        # 防御：404 文本也能「下载成功」（曾经踩过 14 字节的 "404: Not Found"）
+        try:
+            data = json.loads(raw.decode("utf-8"))
+        except Exception as e:
+            raise RuntimeError(f"皮肤表不是合法 JSON（{len(raw)} 字节）: {e}")
+        if "charSkins" not in data:
+            raise RuntimeError(f"皮肤表缺 charSkins 键，实际顶层键: {list(data.keys())}")
+        _skin_table_cache = data["charSkins"]
+        print(f"  charSkins 条目 {len(_skin_table_cache):,} 个")
+    return _skin_table_cache
+
+
+def lookup_artist(char_skins, char_id):
+    """取干员的画师名，取不到返回 None。
+
+    ⚠️ 必须取 `<charId>#1`（**基础皮**）：同一干员不同皮肤的画师可能不同。
+       实测能天使 char_103_angel#1 = 幻象黑兔，而 char_103_angel@sale#8 = 尾鱼。
+       取叠加皮肤会让画师与干员本人对不上。
+    ⚠️ displaySkin.designerList 恒为 null，不可用；只用 drawerList。
+    """
+    entry = char_skins.get(f"{char_id}#1") or {}
+    drawer = (entry.get("displaySkin") or {}).get("drawerList") or []
+    return drawer[0] if drawer else None
+
+
 def load_state():
     p = os.path.join(REPO_ROOT, STATE_PATH)
     if not os.path.exists(p):
@@ -139,7 +182,9 @@ def save_state(state):
     state["checked"] = date.today().isoformat()
     p = os.path.join(REPO_ROOT, STATE_PATH)
     os.makedirs(os.path.dirname(p), exist_ok=True)
-    with open(p, "w", encoding="utf-8") as f:
+    # newline=""：同 write_roster —— 这份 state 是 bot 提交进仓库的产物，
+    # 不能让 Windows 本地跑一次就把它的换行翻成 CRLF
+    with open(p, "w", encoding="utf-8", newline="") as f:
         json.dump(state, f, ensure_ascii=False, indent=2)
         f.write("\n")
 
@@ -156,7 +201,14 @@ def serialize_roster(data):
 
 
 def write_roster(path, data):
-    with open(path, "w", encoding="utf-8") as f:
+    # 🔴 `newline=""` **不能省**。默认 newline=None 会把 "\n" 按 os.linesep 翻译
+    #    —— Windows 上写成 CRLF，于是同一份 roster 在 Windows 与 Linux 上产出不同字节。
+    #    两个后果：①`scripts/check-characters.mjs` 断言的是**两文件彼此**字节一致，
+    #    只要两次写都由本脚本完成就还能过，但只要有一次是 `backfill-artist.py`
+    #    （它以 "wb" 写死 LF）写的那份、另一次是这里，就会报「字节不一致」而真因是换行；
+    #    ②CRLF 版本一旦被提交，仓库里就是全文件 diff，真改动被 11000 行噪声埋掉。
+    #    写死 newline="" = 本脚本的输出与平台无关，与 backfill-artist.py 逐字节同源。
+    with open(path, "w", encoding="utf-8", newline="") as f:
         f.write(serialize_roster(data))
 
 
@@ -164,7 +216,7 @@ def write_roster(path, data):
 def select_candidates(ct, roster_names):
     """返回有序 [(key, val)]：上游新出的可获取干员，zh 名不在当前 roster。
 
-    规则与历史验证一致：在 live 数据上精确复现现有 425 人名单
+    规则与历史验证一致：在 live 数据上精确复现现有 429 人名单
     （0 缺失、0 多余）。同 zh 名多 key 时按 key 排序取最后（如 暮落 双 id）。
     """
     cand = {}
@@ -184,9 +236,10 @@ def select_candidates(ct, roster_names):
 
 
 # ============================================================ base 条目构建
-def build_base_entry(key, val):
-    """由 character_table 构建 20 字段条目；race/gender/tags 由 PRTS/mirror 后续填充。
+def build_base_entry(key, val, char_skins=None):
+    """由 character_table 构建 21 字段条目；race/gender/tags 由 PRTS/mirror 后续填充。
 
+    artist 来自 skin_table 的 `<key>#1` 基础皮（char_skins 为 None 时填「未知」）。
     返回值 (entry, warnings)。warnings 提示映射表缺失，需人工补 maps.py。
     """
     warnings = []
@@ -232,6 +285,8 @@ def build_base_entry(key, val):
         "alterBase": "",
         "position": position[0],
         "positionEn": position[1],
+        # 画师：追加在字段末尾（与 backfill-artist.py 的写入位置一致）
+        "artist": (lookup_artist(char_skins, key) if char_skins else None) or "未知",
     }
     return entry, warnings
 
@@ -358,7 +413,8 @@ def load_held():
 def save_held(held):
     p = os.path.join(REPO_ROOT, HELD_PATH)
     os.makedirs(os.path.dirname(p), exist_ok=True)
-    with open(p, "w", encoding="utf-8") as f:
+    # newline=""：同 write_roster（挂起文件也是 bot 提交的产物）
+    with open(p, "w", encoding="utf-8", newline="") as f:
         json.dump(held, f, ensure_ascii=False, indent=2)
         f.write("\n")
 
@@ -403,8 +459,9 @@ def run_sync(opener, wiki_opener, apply_mode):
         # 已在挂起名单里的名字不重复入选（走 held 重试路径，保留 attempts 计数）
         candidates = [(k, v) for k, v in candidates if v.get("name", "") not in held]
         if candidates:
+            char_skins = load_skin_table(opener)
             for key, val in candidates:
-                entry, warns = build_base_entry(key, val)
+                entry, warns = build_base_entry(key, val, char_skins)
                 for w in warns:
                     print(f"  ⚠ WARNING: {entry['name']}: {w} —— 请补 scripts/maps.py")
                 new_entries[entry["name"]] = entry
@@ -443,6 +500,9 @@ def run_sync(opener, wiki_opener, apply_mode):
                 entry, attempts = held[name].get("entry"), held[name].get("attempts", 0)
             if entry is None:
                 continue
+            # 兼容「加 artist 字段之前」就已挂起的 held 条目：现查皮肤表补上
+            if "artist" not in entry:
+                entry["artist"] = lookup_artist(load_skin_table(opener), entry["id"]) or "未知"
             if is_complete(entry):
                 additions.append(entry)
                 print(f"  ✓ 完整可加入: {entry['name']}")

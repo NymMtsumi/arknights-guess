@@ -37,6 +37,10 @@ const MODES = [
   { key: 'single', labelKey: 'leaderboard.modeSingle' },
   { key: 'multi', labelKey: 'leaderboard.modeMulti' },
   { key: 'daily', labelKey: 'leaderboard.modeDaily' },
+  // 海龟汤：服务端按 `WHERE g.mode = 'turtle'` 聚合 —— 这就是「单独建榜」的全部实现。
+  // 它走的是 /api/leaderboard（不是 daily 那个专用端点），所以下面的难度筛选条会照常
+  // 出现（`mode !== 'multi' && mode !== 'daily'`）：三档难度各自一张小榜，与经典单人一致。
+  { key: 'turtle', labelKey: 'leaderboard.modeTurtle' },
 ] as const;
 
 /** 单屏展示条数 */
@@ -130,8 +134,9 @@ export default function LeaderboardPage() {
     return '';
   };
 
-  // 是否显示 avgGuesses 列（单人与多人模式均显示，服务端两种模式都返回 totalGuesses/totalGames）
-  const showAvgGuesses = mode === 'single' || mode === 'multi';
+  // 是否显示 avgGuesses 列（单人与多人模式均显示，服务端两种模式都返回 totalGuesses/totalGames）。
+  // 海龟汤也显示：它上报的 guessCount 只数点名猜测、不含提问，与经典单人同量纲，所以可比。
+  const showAvgGuesses = mode === 'single' || mode === 'multi' || mode === 'turtle';
   const isDaily = mode === 'daily';
 
   // 格式化时间戳

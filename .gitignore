@@ -85,5 +85,12 @@ __pycache__/
 /tests/_shots/
 
 # 一次性探针脚本（本地诊断用，跑完即弃）。
-# ⚠️ 不覆盖 .cjs —— tests/_dns-preload.cjs 是长期保留的沙箱 DNS 垫片。
+# ⚠️ 下划线前缀的文件**默认**不入库，但有两类是长期基建，必须显式放行 ——
+#    漏放行不会在本地报错（文件就在磁盘上），只会在**全新 checkout 的 CI runner 上**
+#    ERR_MODULE_NOT_FOUND。所以每加一个依赖下划线助手的测试，都要回到这里对一遍：
+#      - tests/_dns-preload.cjs  沙箱 DNS 垫片（本地 MX 校验假失败的规避）
+#      - tests/_ts-load.mjs      直接加载 .ts 模块的加载器
+#        （依赖它的有两处：tests/turtle-store-test.mjs，以及 review gate 的哨兵
+#          scripts/check-attr-contract.mjs —— 漏放行会让**部署 gate 自己**在 CI 上挂掉）
 /tests/_*.mjs
+!/tests/_ts-load.mjs

@@ -155,16 +155,20 @@ async function main() {
     // 卸载时若不复位，/game 会跳过硬编码在 game/page.tsx:266 的 `status === 'idle'` 分支，
     // 直接渲染一块没有目标的棋盘：看不到难度选择，猜也猜不动（store 的 submitGuess
     // 遇 target=null 直接 return，而 game/page.tsx:220 丢弃返回值）。
-    // 判据取难度卡：经典模式空闲页恒有 3 张 button.menu-card，玩局视图一张都没有。
+    // 判据取难度卡：经典模式空闲页恒有 3 张，玩局视图一张都没有。
+    // ⚠️ 选择器是 `[data-testid="solo-diff-card"]` 而不是裸的 `.menu-card`：
+    //    空闲页后来多了第二排卡（自定义词条 / 海龟汤），裸数 button.menu-card 会从
+    //    3 变成 4，而这条断言的本意是「难度卡在不在」，不是一个固定的卡片总数。
     console.log('\n[m7] 局中离开多人页 → 回经典模式');
     await E.locator('header a[href="/"]').first().click({ timeout: WAIT_TIMEOUT });
     await E.locator('a[href="/game"]').first().click({ timeout: WAIT_TIMEOUT });
+    const diffCard = () => E.locator('[data-testid="solo-diff-card"]');
     let idleCards = 0;
     try {
-      await waitFor(async () => (await E.locator('button.menu-card').count()) === 3, { desc: '经典模式难度卡' });
+      await waitFor(async () => (await diffCard().count()) === 3, { desc: '经典模式难度卡' });
       idleCards = 3;
     } catch {
-      idleCards = await E.locator('button.menu-card').count().catch(() => 0);
+      idleCards = await diffCard().count().catch(() => 0);
     }
     check('m7.局中离开多人 → 回经典模式显示难度选择（未被共享 store 卡住）', idleCards === 3, `难度卡=${idleCards}`);
 

@@ -2,7 +2,7 @@
 // 干员 roster 一致性 gate（本地 + CI 共用）
 //  1) server/characters.json 与 src/data/characters.json 必须字节一致
 //  2) 两份都能被 JSON 解析，长度一致
-//  3) 每条目 20 字段齐全；popularity 枚举合法；rarity 为 1..6 整数
+//  3) 每条目 21 字段齐全；popularity 枚举合法；rarity 为 1..6 整数
 //  4) 无重复中文名（游戏按 name 匹配，重复会破坏匹配/每日挑战）
 //
 // 用法: node scripts/check-characters.mjs     （退出码 0=通过 / 1=失败）
@@ -17,6 +17,7 @@ const REQUIRED = [
   'id', 'name', 'nameEn', 'class', 'classEn', 'subclass', 'subclassEn',
   'faction', 'factionEn', 'rarity', 'race', 'raceEn', 'gender', 'genderEn',
   'popularity', 'releaseYear', 'tags', 'alterBase', 'position', 'positionEn',
+  'artist',
 ];
 
 const errors = [];
@@ -48,6 +49,8 @@ if (lists.length === 2) {
     const missing = REQUIRED.filter((f) => !(f in c));
     if (missing.length) { errors.push(`${label} 缺字段: ${missing.join(',')}`); break; }
     if (!c.name || !c.nameEn) { errors.push(`${label} name/nameEn 为空`); break; }
+    // artist 允许是「未知」（皮肤表缺该干员的基础皮时的兜底），但不能为空/非字符串
+    if (typeof c.artist !== 'string' || !c.artist) { errors.push(`${label} artist 非法: ${c.artist}`); break; }
     if (seen.has(c.name)) { errors.push(`重复中文名: ${c.name}`); break; }
     seen.add(c.name);
     if (!POPULARITY.has(c.popularity)) { errors.push(`${label} popularity 非法: ${c.popularity}`); break; }

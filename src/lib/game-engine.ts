@@ -3,6 +3,15 @@ import { pickRandom, dailySeed, seededRandom } from './utils';
 
 /**
  * 按难度筛选角色池
+ *
+ * ⚠️ **medium 与 hard 返回的是同一个池子**（都是全量）——它们靠**渲染层**区分，不靠池子：
+ *    经典模式在 game/page.tsx 用 `hideRarity={difficulty === 'hard'}` 把星级列藏掉。
+ *    所以「难度」在这个函数里其实只有两档，三档是 UI 概念。
+ *
+ *    这给不共用那张表格的玩法留了个坑：海龟汤（/turtle）没有 hideRarity 这个杠杆，
+ *    9 个提问维度对三档全开、次数也同为 MAX_ATTEMPTS，于是它的 medium 与 hard
+ *    是**逐字相同的两局**。当前是照实保留、在卡片上如实标注池子大小，
+ *    没有自行给 hard 编一条独有规则。
  */
 export function getPoolByDifficulty(characters: Character[], difficulty: Difficulty): Character[] {
   switch (difficulty) {
@@ -14,7 +23,7 @@ export function getPoolByDifficulty(characters: Character[], difficulty: Difficu
       return characters;
     case 'hard':
     default:
-      // 全部干员（但表格隐藏星级列）
+      // 全部干员（但经典模式的表格隐藏星级列 —— 海龟汤没有这个区分手段，见上方注释）
       return characters;
   }
 }
@@ -159,6 +168,8 @@ export function compareGuess(target: Character, guess: Character): GuessComparis
     releaseYear: compareYear(target.releaseYear || 0, guess.releaseYear || 0),
     tags: compareTags(target.tags || [], guess.tags || []),
     position: comparePosition(target.position, guess.position),
+    // 画师：只有自建房会渲染这一列，其余模式算了但不用（不渲染 = 无行为变化）。
+    artist: compareArtist(target.artist, guess.artist),
   };
 }
 
@@ -169,6 +180,17 @@ function comparePosition(tPos: string, gPos: string): GuessStatus {
   // 有一方是"皆可"→ close
   if (tPos === '皆可' || gPos === '皆可') return 'close';
   return 'wrong';
+}
+
+/**
+ * 对比画师：严格相等，不做「接近」判定（画师之间没有先后/亲疏关系）。
+ * 与 comparePosition 一样对缺失数据设防 —— 两边都缺时**不能**判 correct，
+ * 否则 `undefined === undefined` 会给玩家一个撒谎的绿格。
+ * ⚠️ 与 server/game-engine.js 的同名函数保持逐字一致（那对文件本就有漂移史）。
+ */
+function compareArtist(tArtist: string, gArtist: string): GuessStatus {
+  if (!tArtist || !gArtist) return 'wrong';
+  return tArtist === gArtist ? 'correct' : 'wrong';
 }
 
 function compareTags(targetTags: string[], guessTags: string[]): GuessStatus {

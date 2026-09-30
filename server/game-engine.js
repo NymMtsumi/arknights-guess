@@ -43,8 +43,11 @@ export function loadGameEngine() {
  *    于是 `getAllCharacters()` 原样返回**旧数组**。控制台会照打「已加载 N 干员」，
  *    看起来像成功了，实际新干员在服务端根本不存在 —— 具体后果：
  *      · randomTarget / pickDailyTarget 抽不到新干员；
- *      · findCharByName 找不到新干员 → /api/save-game 的 target 校验（game.js:122）
+ *      · findCharByName 找不到新干员 → /api/save-game 里那条
+ *        `(mode === 'single' || mode === 'turtle') && !findCharByName(targetName)` 的校验
  *        直接把「猜中新干员」的这局判为非法请求。
+ *        （原先这里写的是行号 `game.js:122`，早已漂到 routes/game.js:156 —— 引用**符号**不引用行号，
+ *          行号在每次无关改动后都会变成假线索。）
  *
  * 失败时**保留旧池**（不清空）：宁可少几个新干员，也不能让全站无干员可用。
  * 注意这里是**换引用**而不是原地清空 —— 各调用点每次都用模块变量取值，
@@ -139,6 +142,12 @@ function comparePosition(tPos, gPos) {
   return 'wrong';
 }
 
+/** 对比画师：严格相等，缺失数据一律 wrong（与客户端 src/lib/game-engine.ts 逐字一致） */
+function compareArtist(tArtist, gArtist) {
+  if (!tArtist || !gArtist) return 'wrong';
+  return tArtist === gArtist ? 'correct' : 'wrong';
+}
+
 function compareTags(tTags, gTags) {
   if (!tTags.length && !gTags.length) return 'correct';
   if (!tTags.length || !gTags.length) return 'wrong';
@@ -155,9 +164,24 @@ function compareYear(tYear, gYear) {
   return 'wrong';
 }
 
-/** 核心对比：返回所有属性的 GuessStatus */
-export function compareGuess(target, guess) {
-  return {
+/**
+ * 核心对比：返回所有属性的 GuessStatus。
+ *
+ * `includeArtist` 决定是否附带**可选词条** artist（画师）。
+ * ⚠️ 三个调用点都必须显式传参；默认值 true 只用来兜住「未来新增的调用者」不炸，
+ *    不代表可以省略 —— 漏传等于把画师泄漏出去，而泄漏是**看不见**的（前端不渲染那一列）。
+ *
+ * 为什么要按房间裁剪，而不是算完再删：
+ *   - 标准多人房与每日挑战的棋盘上**没有画师列**。若仍把 artist 塞进载荷
+ *     （`guess_result` / `opponent_update` / 重连回放 / `/api/daily/guess`），
+ *     玩家开一次 DevTools 就能逐次读到「猜的干员与谜底是否同画师」。
+ *   - 画师去重后全池只有约 120 个取值（429 个干员 / 118 位画师），比任何
+ *     一个标准词条都碎 —— 这等于给标准房的对局公平、以及每日挑战的服务端权威
+ *     各开一条 UI 上看不见的提问通道。
+ *   - 只有**自建房**（多人自定义房 / 派对房）由房主选了画师词条时才传 true。
+ */
+export function compareGuess(target, guess, { includeArtist = true } = {}) {
+  const comparisons = {
     class: compareAttribute(target.class, guess.class),
     subclass: compareSubclass(target.subclass, target.class, guess.subclass, guess.class),
     faction: compareFaction(target.faction, guess.faction),
@@ -168,6 +192,11 @@ export function compareGuess(target, guess) {
     tags: compareTags(target.tags || [], guess.tags || []),
     position: comparePosition(target.position, guess.position),
   };
+  // 不暴露画师的房间**根本不计算这个键**（而不是算了再 delete）：
+  // 少一个键比留一个 undefined 更不容易被后续的展开 / 序列化重新带出去。
+  // 定长位置数组 colorRows 的第 11 槽由 socket/game.js 显式取用（末尾追加）。
+  if (includeArtist) comparisons.artist = compareArtist(target.artist, guess.artist);
+  return comparisons;
 }
 
 /** 是否猜中（id 匹配或 name 匹配） */

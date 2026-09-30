@@ -17,7 +17,7 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
       return jsonResponse(res, { error: '用户不存在' }, 404);
     }
 
-    // 按 user_id 查询（一级归属），player_key 仅作兜底；排除自定义房（不计入聚合数据）
+    // 按 user_id 查询（一级归属），player_key 仅作兜底；排除自定义房与海龟汤（不计入聚合数据）
     const stats = db.prepare(`
       SELECT
         COUNT(*) as totalGames,
@@ -25,20 +25,22 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
         COUNT(*) - SUM(won) as losses,
         SUM(guess_count) as totalGuesses,
         MIN(CASE WHEN won = 1 THEN guess_count ELSE NULL END) as bestScore
-      FROM games WHERE user_id = ? AND mode != 'custom'
+      FROM games WHERE user_id = ? AND mode NOT IN ('custom', 'turtle')
     `).get(auth.userId);
 
     // 口径明细：把上面那批行按 mode 拆开。
-    // 聚合口径是 `mode != 'custom'`（经典 + 多人 + 每日），而排行榜的经典/多人 tab
+    // 聚合口径是 `mode NOT IN ('custom','turtle')`（经典 + 多人 + 每日），而排行榜的经典/多人 tab
     // 各自只取其中一个（/api/leaderboard 是 `WHERE g.mode = ?`），两边数字本来就不一样 ——
     // 玩家在统计页看到的总场次和排行榜上的「场次」是两个口径，这就是 BUG 1 的由来。
     // 拆出来才能逐项对上。⚠️ 注意 daily 一栏只能对上「库内的每日场次」，
     // 对不上排行榜的「每日」tab —— 那个 tab 走 /api/daily/leaderboard，
     // 口径是「当日 + 仅胜局 + 按猜测次数排名」，与本处的「全时段每日场次」不是一个量。
     // 另外两条 SQL 的谓词必须逐字一致，否则会出现「明细之和 ≠ 总数」。
+    // ⚠️ 海龟汤（turtle）在上面的聚合里被排除，这里也必须排除，且 byMode **不设** turtle 键 ——
+    //    它的成绩只进 /api/leaderboard?mode=turtle 那张专属榜，不进个人战绩。
     const byMode = { single: 0, multi: 0, daily: 0 };
     for (const row of db.prepare(
-      "SELECT mode, COUNT(*) as n FROM games WHERE user_id = ? AND mode != 'custom' GROUP BY mode"
+      "SELECT mode, COUNT(*) as n FROM games WHERE user_id = ? AND mode NOT IN ('custom', 'turtle') GROUP BY mode"
     ).all(auth.userId)) {
       if (row.mode in byMode) byMode[row.mode] = row.n;
     }
@@ -460,8 +462,16 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
     if (limit > 200) limit = 200;
 
     // 按 user_id 查询（一级归属），不再仅靠 player_key
+    //
+    // ⚠️ 这一条本没有 mode 谓词（daily / custom 都照发），海龟汤是**第一个**被排除的 mode。
+    //    为什么必须排除：前端 `fetchHistoryFromServer` 对认不出的 mode 会**丢掉 mode 字段**、
+    //    按 GameRecord 的形状返回；统计页历史表的「模式」列于是走经典分支，把海龟汤顶着一个
+    //    「困难」徽标显示成经典对局。而统计页拿到合并结果后**会写回 localStorage**，
+    //    这种错标一旦落盘就是长期存在的。要么为它新造一套徽标（设计稿没覆盖，不自行推导），
+    //    要么就别让它进那张表 —— 用户的决策是「海龟汤只进专属榜」，选后者。
+    //    库里的行仍然保留（建榜要用），只是不进个人历史。
     const rows = db.prepare(
-      'SELECT won, guess_count, difficulty, target_name, timestamp, mode, multi_data FROM games WHERE user_id = ? ORDER BY timestamp DESC LIMIT ?'
+      'SELECT won, guess_count, difficulty, target_name, timestamp, mode, multi_data FROM games WHERE user_id = ? AND mode != \'turtle\' ORDER BY timestamp DESC LIMIT ?'
     ).all(auth.userId, limit);
 
     const history = rows.map(r => {

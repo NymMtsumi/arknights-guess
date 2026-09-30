@@ -13,6 +13,7 @@ import { saveMultiGameStats, saveCustomGameStats, type MultiRoundResult } from '
 import { getUser, getServerUrl, getToken, getPlayerKey } from '@/lib/auth';
 import { useI18n } from '@/lib/i18n';
 import { findCharacterByName } from '@/lib/game-engine';
+import { PARTY_ATTR_KEYS as ATTR_KEYS, ALL_ATTR_KEYS, ATTR_LABEL_KEYS } from '@/lib/party-constants';
 import type { Character, GuessResult, GuessComparisons, GuessStatus } from '@/types/character';
 import charactersData from '@/data/characters.json';
 
@@ -34,19 +35,8 @@ const DIFF_KEY_MAP: Record<string, string> = {
   hard: 'multi.difficultyHard',
 };
 
-// 自定义房：属性规范顺序（与服务端 ATTR_KEYS 一致）及单局时间预设
-const ATTR_KEYS = ['class', 'subclass', 'faction', 'rarity', 'race', 'gender', 'releaseYear', 'position', 'tags'];
-const ATTR_LABEL_KEYS: Record<string, string> = {
-  class: 'table.class',
-  subclass: 'table.subclass',
-  faction: 'table.faction',
-  rarity: 'table.rarity',
-  race: 'table.race',
-  gender: 'table.gender',
-  releaseYear: 'table.year',
-  position: 'table.position',
-  tags: 'table.tags',
-};
+// 自定义房的单局时间预设。
+// 词条规范顺序与文案已收敛到 @/lib/party-constants（单一事实源，原先此处有两份手抄副本）。
 const ROUND_TIME_OPTIONS = [30000, 60000, 90000, 120000, 180000, 300000];
 
 // 平局/超时插图的取图序号（public/icons/draw-1..5.png）。
@@ -67,10 +57,11 @@ function drawArtIndex(d: { targetName?: string; score?: number; reason?: string 
 
 /**
  * 服务端 colorRows 的一行 → GuessComparisons。
- * 行结构（server/socket/game.js `multi:guess` 里构造，与 ATTR_KEYS 同序）：
+ * 行结构（server/socket/game.js `multi:guess` 里构造，与 ALL_ATTR_KEYS 同序）：
  *   [0] 名称列 correct/wrong，[1..9] = class, subclass, faction, rarity, race,
- *   gender, releaseYear, position, tags。
+ *   gender, releaseYear, position, tags，[10] = artist（可选词条，仅自定义房）。
  * 重连时服务端只回传这种压缩行（它同时是发给对手看的那份），这里还原成前端棋盘用的形状。
+ * ⚠️ 旧服务端没有 [10] → s(undefined) = 'wrong'，但标准房不渲染画师列，无影响。
  */
 function rowToComparisons(row?: string[]): GuessComparisons {
   const s = (v?: string): GuessStatus => (v === 'correct' || v === 'close' ? v : 'wrong');
@@ -78,6 +69,7 @@ function rowToComparisons(row?: string[]): GuessComparisons {
     class: s(row?.[1]), subclass: s(row?.[2]), faction: s(row?.[3]),
     rarity: s(row?.[4]), race: s(row?.[5]), gender: s(row?.[6]),
     releaseYear: s(row?.[7]), position: s(row?.[8]), tags: s(row?.[9]),
+    artist: s(row?.[10]),
   };
 }
 
@@ -145,9 +137,12 @@ export default function MultiplayerPage() {
   // 展示列（自定义房按配置过滤；标准房 hard 隐藏 rarity）
   const displayCols = useMemo(() => {
     const attrs = displayAttributes ?? ATTR_KEYS.filter(a => !(difficulty === 'hard' && a === 'rarity'));
+    // ⚠️ 必须用 ALL_ATTR_KEYS 查下标：用 ATTR_KEYS 查 'artist' 会得到 -1 →
+    //    dataIdx = 0 → 画师列会去读**名字列**的颜色（静默错位，不报错）。
+    //    前 9 个词条在两个常量里下标相同，所以对标准房是 no-op。
     return [
       { key: 'name', label: t('table.name'), dataIdx: 0 },
-      ...attrs.map(a => ({ key: a, label: t(ATTR_LABEL_KEYS[a]), dataIdx: 1 + ATTR_KEYS.indexOf(a) })),
+      ...attrs.map(a => ({ key: a, label: t(ATTR_LABEL_KEYS[a]), dataIdx: 1 + (ALL_ATTR_KEYS as readonly string[]).indexOf(a) })),
     ];
   }, [displayAttributes, difficulty, t]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -842,10 +837,10 @@ export default function MultiplayerPage() {
 
             <div className="mt-3.5 text-left">
               <p className="cfg-lb">
-                {t('multi.custom.attributes')} <span className="cfg-hint">({customAttrs.length}/9)</span>
+                {t('multi.custom.attributes')} <span className="cfg-hint">({customAttrs.length}/{ALL_ATTR_KEYS.length})</span>
               </p>
               <div className="flex flex-wrap gap-2">
-                {ATTR_KEYS.map(a => {
+                {ALL_ATTR_KEYS.map(a => {
                   const on = customAttrs.includes(a);
                   return (
                     <button

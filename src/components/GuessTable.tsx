@@ -4,7 +4,7 @@ import { useRef, useMemo } from 'react';
 import type { Character, GuessResult, GuessStatus } from '@/types/character';
 import { isAlterRelation } from '@/lib/game-engine';
 import { useI18n } from '@/lib/i18n';
-import { PARTY_ATTR_KEYS as ATTR_KEYS } from '@/lib/party-constants';
+import { PARTY_ATTR_KEYS as ATTR_KEYS, ATTR_LABEL_KEYS } from '@/lib/party-constants';
 import { ScrollSlider } from './ScrollSlider';
 
 interface GuessTableProps {
@@ -64,15 +64,18 @@ interface ColDef {
 function buildColumns(t: (k: string) => string, hideRarity: boolean, displayAttributes?: string[] | null): ColDef[] {
   const nameCol: ColDef = { key: 'name', label: t('table.name'), getText: (c) => c.name };
   const attrCols: Record<string, ColDef> = {
-    class: { key: 'class', label: t('table.class'), getText: (c) => c.class },
-    subclass: { key: 'subclass', label: t('table.subclass'), getText: (c) => c.subclass },
-    faction: { key: 'faction', label: t('table.faction'), getText: (c) => c.faction },
-    rarity: { key: 'rarity', label: t('table.rarity'), getText: (c) => '★'.repeat(c.rarity) },
-    race: { key: 'race', label: t('table.race'), getText: (c) => c.race },
-    gender: { key: 'gender', label: t('table.gender'), getText: (c) => c.gender },
-    releaseYear: { key: 'releaseYear', label: t('table.year'), getText: (c) => c.releaseYear ? String(c.releaseYear) : '?' },
-    position: { key: 'position', label: t('table.position'), getText: (c) => c.position || '?' },
-    tags: { key: 'tags', label: t('table.tags'), getText: (c) => (c.tags || []).join(' ') || '-' },
+    class: { key: 'class', label: t(ATTR_LABEL_KEYS.class), getText: (c) => c.class },
+    subclass: { key: 'subclass', label: t(ATTR_LABEL_KEYS.subclass), getText: (c) => c.subclass },
+    faction: { key: 'faction', label: t(ATTR_LABEL_KEYS.faction), getText: (c) => c.faction },
+    rarity: { key: 'rarity', label: t(ATTR_LABEL_KEYS.rarity), getText: (c) => '★'.repeat(c.rarity) },
+    race: { key: 'race', label: t(ATTR_LABEL_KEYS.race), getText: (c) => c.race },
+    gender: { key: 'gender', label: t(ATTR_LABEL_KEYS.gender), getText: (c) => c.gender },
+    releaseYear: { key: 'releaseYear', label: t(ATTR_LABEL_KEYS.releaseYear), getText: (c) => c.releaseYear ? String(c.releaseYear) : '?' },
+    position: { key: 'position', label: t(ATTR_LABEL_KEYS.position), getText: (c) => c.position || '?' },
+    tags: { key: 'tags', label: t(ATTR_LABEL_KEYS.tags), getText: (c) => (c.tags || []).join(' ') || '-' },
+    // 画师：可选词条，只有 displayAttributes 显式含 'artist' 时才会被渲染（自建房）。
+    // 经典房走下面的 ATTR_KEYS 分支，结构性拿不到这一列。
+    artist: { key: 'artist', label: t(ATTR_LABEL_KEYS.artist), getText: (c) => c.artist || '?' },
   };
 
   // 自定义房：只展示名字 + 所选属性
@@ -171,16 +174,24 @@ export function GuessTable({ guesses, target, hideRarity, displayAttributes, fla
                       </td>
                     );
                   }
-                  // 其余列通过比较结果显示颜色
+                  // 其余列通过比较结果显示颜色。
+                  // ⚠️ 键不在 comparisons 里时**必须渲染一个占位格**，不能 return null：
+                  //    表头来自同一个 `columns` 数组，少一个 <td> 会让这一行比表头短一格、
+                  //    后面的列整排左移错位 —— 不是渲染成空白。属潜在风险（服务端两条路径
+                  //    socket/game.js 与 socket/party-game.js 恒带全部列），但 artist 现在
+                  //    是**可选**键，多一处兜底就少一次错位。兜底取 'wrong'，与 multiplayer
+                  //    的 rowToComparisons 对 undefined 的兜底一致。
+                  //    原先这里还有个 `guess.comparisons &&` —— 类型上 comparisons 必填，
+                  //    是恒真的死分支，去掉以免被误读成「可能为空」。
                   const statusKey = col.key as keyof GuessResult['comparisons'];
-                  if (guess.comparisons && statusKey in guess.comparisons) {
-                    return (
-                      <StatusCell key={col.key} status={guess.comparisons[statusKey] as GuessStatus} width={colPcts[colIdx]} numeric={NUMERIC_COLS.has(col.key)} extraStyle={cellStyle}>
-                        {col.getText(guess.character)}
-                      </StatusCell>
-                    );
-                  }
-                  return null;
+                  const status = statusKey in guess.comparisons
+                    ? (guess.comparisons[statusKey] as GuessStatus)
+                    : 'wrong';
+                  return (
+                    <StatusCell key={col.key} status={status} width={colPcts[colIdx]} numeric={NUMERIC_COLS.has(col.key)} extraStyle={cellStyle}>
+                      {col.getText(guess.character)}
+                    </StatusCell>
+                  );
                 })}
               </tr>
             );

@@ -17,6 +17,14 @@ on:
       - 'next.config.ts'
       - 'tsconfig.json'
       - 'postcss.config.mjs'
+      # `.node-version` 是 **Cloudflare Pages 读的**构建环境 Node 版本（本地的 nvm/fnm 也读它）。
+      # 改它 = 换个 Node 版本重新构建上线，但漏在这里 = 本 workflow 不触发 = 两道 gate 全绕过。
+      # 注意两个 job 里的 `node-version: 22` 是**写死的**，不读这个文件 —— 所以 gate 跑的版本
+      # 与 Pages 构建的版本可能不同，改动它更要过一次 gate。
+      - '.node-version'
+      # `.gitattributes` 决定两份 roster 以什么换行检出，而 review gate 的
+      # check-characters.mjs 断言的正是它们的**字节**。改它等于改被断言的对象，必须过 gate。
+      - '.gitattributes'
       - '.github/workflows/**'      # gate 自身的改动也要过一次（改错了能立刻发现）
       # 全模块测试横跨前后端：src/** 变更也跑冒烟（集成校验），
       # 但只有 server/** 变更才真正触发后端部署（见 deploy job 的 paths-filter）。
@@ -87,6 +95,12 @@ jobs:
         # 两份语言文件的键集合必须一致（缺一边 = 该语言下直接显示原始键名）；
         # 顺带报出死键。只加了脚本没接进 CI 的话，等于没加。
         run: node scripts/check-i18n-keys.mjs
+
+      - name: 词条契约哨兵
+        # 前后端词条清单必须逐字同序，且 colorRows 的槽位下标两侧对齐
+        # （row[1..9] 标准词条 / row[10] artist）。错位的表现是「格子颜色不对」
+        # 而不是报错，尤其前后端分别部署时无法靠 review 看出来，故机器把关。
+        run: node scripts/check-attr-contract.mjs
 
   # ── 部署（仅在冒烟 + 审查通过 + 有服务端变更时；手动触发则强制部署）──
   deploy:

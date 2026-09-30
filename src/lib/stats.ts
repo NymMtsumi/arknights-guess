@@ -456,6 +456,46 @@ export function saveCustomGameStats(result: {
   }
 }
 
+/**
+ * 海龟汤存档：**只提交服务端**，供专属榜聚合（`/api/leaderboard?mode=turtle`）。
+ *
+ * 为什么既不写本地历史、也不碰本地聚合：
+ *   1. **不调 `loadStats()`** —— `totalGames/wins/losses/bestScore` 是经典口径，
+ *      而 `bestScore` 更是服务端 `MIN(guess_count)` 的**全模式**口径。海龟汤的
+ *      guessCount 虽与经典单人同量纲（都是「点名猜了几次」，不含提问），但混进
+ *      那个 MIN 里会把经典的最好成绩顶掉 —— 那是**改变既有行为**，不做。
+ *   2. **不写本地历史** —— 本地历史喂的是统计页那张表的「模式」列，它只有
+ *      经典/多人/自建三种徽标；海龟汤的 mode 落到它不认识的分支，会顶着一个
+ *      「困难」徽标冒充经典对局，而且统计页会把合并结果**写回 localStorage**，
+ *      错标一旦落盘就长期存在。用户决策是「海龟汤只进专属榜」，所以它只进榜。
+ *      同理服务端 `/api/history` 也排除了 turtle（见 server/routes/user.js）。
+ *
+ * 未登录不提交：服务端排行榜 `INNER JOIN users`，游客的行 user_id 为 NULL，
+ * 本来就上不了榜（与经典单人一致）。
+ *
+ * 没有 `ts` 参数 —— 那个参数是为了让本地副本与服务端副本的时间戳一致、
+ * 好让 mergeHistories 认成同一条。这里没有本地副本，不需要。
+ *
+ * @param guessCount 只数**点名猜测**次数，不含提问 —— 与经典单人同量纲，
+ *   榜上的 avgGuesses（totalGuesses / totalGames）因此可比。
+ */
+export function saveTurtleStats(won: boolean, guessCount: number, difficulty: string, targetName: string): void {
+  if (typeof window === 'undefined') return;
+  if (!getToken()) return;
+  apiCall('/api/save-game', {
+    method: 'POST',
+    body: JSON.stringify({
+      player_key: getPlayerKey(),
+      won,
+      guessCount,
+      difficulty,
+      targetName,
+      mode: 'turtle',
+      timestamp: new Date().toISOString(),
+    }),
+  }).catch((err) => { console.warn('[Stats] Failed to save turtle game to server:', err); });
+}
+
 /** 从服务器获取游戏历史 */
 export async function fetchHistoryFromServer(limit = 80): Promise<HistoryRecord[]> {
   if (typeof window === 'undefined') return [];

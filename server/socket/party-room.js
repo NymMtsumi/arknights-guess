@@ -1,5 +1,8 @@
 // 派对模式 — 房间管理（创建/加入/离开/踢人/解散/清理）
-import { ATTR_KEYS } from '../constants.js';
+// ⚠️ 这里用 ALL_ATTR_KEYS（含可选的 artist）而不是 ATTR_KEYS：
+//    派对房是**自建房**，房主可选画师词条。ATTR_KEYS 保持不动 ——
+//    它是「标准房」的词条集，也是与前端 PARTY_ATTR_KEYS 的契约。
+import { ALL_ATTR_KEYS } from '../constants.js';
 // 名次数组在下发前必须剥掉 playerKey（玩家凭证），见 stripPlayerKey 的注释
 import { stripPlayerKey } from './party-game.js';
 
@@ -23,10 +26,10 @@ function guestNameFromKey(pk) {
 function ackOk(ack, data) { if (typeof ack === 'function') ack({ ok: true, ...(data || {}) }); }
 function ackErr(ack, code, message, extra) { if (typeof ack === 'function') ack({ ok: false, code, message, ...(extra || {}) }); }
 
-// ===== 词条列校验：过滤到合法 ATTR_KEYS、去重；<3 则退化为标准（null）。对齐多人自定义房规则 =====
+// ===== 词条列校验：过滤到合法 ALL_ATTR_KEYS（含 artist）、去重；<3 则退化为标准（null）。对齐多人自定义房规则 =====
 function sanitizeAttributes(data) {
   const raw = Array.isArray(data?.attributes)
-    ? [...new Set(data.attributes.filter(a => ATTR_KEYS.includes(a)))] : [];
+    ? [...new Set(data.attributes.filter(a => ALL_ATTR_KEYS.includes(a)))] : [];
   return raw.length >= 3 ? raw : null;
 }
 // 每局猜测次数：1-15 整数，非法回退 8

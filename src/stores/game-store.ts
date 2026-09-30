@@ -34,8 +34,14 @@ interface GameState {
   guesses: GuessResult[];
   remainingGuesses: number;
   difficulty: Difficulty;
+  /**
+   * 自建房的词条（null = 经典九列）。非 null 时 GuessTable 走 displayAttributes 分支。
+   * ⚠️ 自建房**不落档**（用户决策）：game/page.tsx 的存档守卫会在 attributes 非 null 时
+   * 跳过 saveGameStats —— 即不写本地历史、不写服务端、不进战绩与排行榜。
+   */
+  attributes: string[] | null;
 
-  startGame: (difficulty: Difficulty) => void;
+  startGame: (difficulty: Difficulty, attributes?: string[] | null) => void;
   submitGuess: (name: string) => { success: boolean; error?: string };
   giveUp: () => void;
   resetGame: () => void;
@@ -47,8 +53,9 @@ export const useGameStore = create<GameState>((set, get) => ({
   guesses: [],
   remainingGuesses: MAX_GUESSES,
   difficulty: 'medium',
+  attributes: null,
 
-  startGame: (difficulty: Difficulty) => {
+  startGame: (difficulty: Difficulty, attributes: string[] | null = null) => {
     // 防止在游戏进行中重复开始（如双击按钮）
     if (get().status === 'playing') return;
 
@@ -60,6 +67,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       guesses: [],
       remainingGuesses: MAX_GUESSES,
       difficulty,
+      attributes,
     });
   },
 
@@ -124,6 +132,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       guesses: [],
       remainingGuesses: MAX_GUESSES,
       difficulty: 'medium',
+      attributes: null,
     });
   },
 }));

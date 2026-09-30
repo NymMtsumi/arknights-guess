@@ -61,11 +61,13 @@ function PartyPageContent() {
   };
 
   // stub 角色（查不到时降级）
+  // 注：这里**不要**再用 `as Character` —— 那个 cast 会静默掩盖新增必填字段的缺口
+  //（新增 artist 时就是它把错误藏到运行时）。返回类型注解本身已强制形状。
   const makeStubChar = (name: string): Character => ({
     id: name, name, nameEn: name, class: '', classEn: '', subclass: '', subclassEn: '',
     faction: '', factionEn: '', rarity: 0, race: '', raceEn: '', gender: '', genderEn: '',
-    position: '', positionEn: '', releaseYear: 0, tags: [], alterBase: '',
-  } as Character);
+    position: '', positionEn: '', releaseYear: 0, tags: [], alterBase: '', artist: '',
+  });
 
   // 构建 handler 上下文
   const handlerCtx: PartyHandlerCtx = {

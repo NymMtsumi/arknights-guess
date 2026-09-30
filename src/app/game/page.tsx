@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Header } from '@/components/Header';
 import { GameSearch } from '@/components/GameSearch';
 import { GuessTable } from '@/components/GuessTable';
+import { AttrChips } from '@/components/AttrChips';
 import { GameEndDialog } from '@/components/GameEndDialog';
 import { RulesDialog } from '@/components/RulesDialog';
 import { Footer } from '@/components/Footer';
@@ -15,6 +16,7 @@ import { searchEnemies } from '@/lib/enemy-engine';
 import { useI18n } from '@/lib/i18n';
 import { saveGameStats } from '@/lib/stats';
 import { getServerUrl, getPlayerKey } from '@/lib/auth';
+import { PARTY_ATTR_KEYS } from '@/lib/party-constants';
 import enemiesData from '@/data/enemy-characters.json';
 import type { Difficulty } from '@/types/character';
 import type { Enemy, EnemyDifficulty, EnemyGuessComparisons, GuessStatus } from '@/types/enemy';
@@ -99,6 +101,23 @@ export default function GamePage() {
   const [dialogClosed, setDialogClosed] = useState(false);
   const [dialogReady, setDialogReady] = useState(false);
   const [flashTrigger, setFlashTrigger] = useState(0);
+
+  // 单人自建房（自选词条）。customAttrs === null 表示「标准九列」，与 AttrChips 的语义一致。
+  const [customAttrs, setCustomAttrs] = useState<string[] | null>(null);
+  const [customDiff, setCustomDiff] = useState<Difficulty>('medium');
+  // 词条配置区**默认收起**：入口现在是第二排的一张卡（与三张难度卡同形态），
+  // 一张卡装不下「难度 + 10 个词条 chip + 开始按钮」，点开后在卡片下方就地展开。
+  const [customOpen, setCustomOpen] = useState(false);
+
+  // 自选词条的**下限 = 3**，与多人/派对同一条规则：
+  //   server/socket/game.js:316 与 server/socket/party-room.js:33 都是
+  //   `rawAttrs.length >= 3 ? raw : null` —— 少于 3 项在那边会被**静默回落成标准九列**。
+  // 单人自建房此前是唯一没补这条的入口（纯客户端，没有服务端兜底），于是「只勾 2 项」
+  // 能开局，玩家会看到一张 2 列的表 —— 而同样的操作在多人房会变成 9 列，两处不一致。
+  // 这里直接拦住开局（禁用按钮 + 说明原因），不做静默回落：玩家显式取消勾选的词条
+  // 又被塞回去，比拒绝开局更难理解。
+  const customAttrCount = customAttrs === null ? PARTY_ATTR_KEYS.length : customAttrs.length;
+  const customAttrsTooFew = customAttrCount < 3;
   const dialogTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Enemy search state
@@ -176,8 +195,12 @@ export default function GamePage() {
   const savedRef = useRef(false);
   useEffect(() => {
     if (prevStatus.current === 'playing' && (status === 'won' || status === 'lost')) {
+      // 自建房不落档（用户决策）：attributes 非 null 即自建房 → 不写本地历史、不写服务端，
+      // 因此也不进战绩聚合与排行榜。savedRef 仍要置位，避免同一次结束被重复处理。
       if (!savedRef.current && !isEnemy) {
-        saveGameStats(status === 'won', guesses.length, difficulty, (target as { name?: string })?.name || '');
+        if (opStore.attributes === null) {
+          saveGameStats(status === 'won', guesses.length, difficulty, (target as { name?: string })?.name || '');
+        }
         savedRef.current = true;
       }
       if (status === 'won') {
@@ -194,7 +217,7 @@ export default function GamePage() {
     }
     prevStatus.current = status;
     return () => { if (dialogTimer.current) { clearTimeout(dialogTimer.current); dialogTimer.current = null; } };
-  }, [status, guesses.length, difficulty, target, isEnemy]);
+  }, [status, guesses.length, difficulty, target, isEnemy, opStore.attributes]);
 
   // Heartbeat (operator mode only)
   useEffect(() => {
@@ -217,6 +240,29 @@ export default function GamePage() {
 
   // Operator handlers
   const handleOpStart = (diff: Difficulty) => { opStore.startGame(diff); };
+
+  /**
+   * 自建房开局。词条为 null（标准）时展开成标准九列交给 GuessTable 的
+   * displayAttributes 分支 —— 该分支要求**非空**数组，空数组会掉回经典九列分支，
+   * 所以 0 项时按钮是禁用的（见下方的 disabled）。
+   *
+   * 🔴 `?? [...PARTY_ATTR_KEYS]` 这个兜底**是承重的，不能改成直接传 `customAttrs`**：
+   *    `attributes !== null` 同时承担两个含义 —— ①GuessTable 走哪条渲染分支；
+   *    ②本页的存档守卫（见上面存档 effect 的 `opStore.attributes === null`）是否落档。
+   *    直接传 null 会让「玩家点开自建房、一个 chip 都没动就开局」这一局
+   *    **被当成经典局记进战绩与排行榜**，而入口卡上写着「不计入战绩与排行榜」。
+   *
+   * ⚠️ 由此产生的一处**语义待定**（已报告给用户，未自行决定）：玩家不动 chip 时
+   *    这里的九列与经典局**逐列相同**，于是「看起来是经典局、实际不落档」。
+   *    两种自洽的收法 —— (A) 卡片文案为准，凡从自建房入口开局一律不落档（= 现状）；
+   *    (B) 语义为准，选中的恰是标准九列就按经典局落档，并把卡片文案改成
+   *    「自选词条的对局不计入战绩」。二者都要**改用户可见的东西**（文案或局内徽标），
+   *    所以不在这里自行推导。改之前先确认走哪条，别顺手把 `??` 删了。
+   */
+  const handleCustomStart = () => {
+    if (customAttrsTooFew) return;
+    opStore.startGame(customDiff, customAttrs ?? [...PARTY_ATTR_KEYS]);
+  };
   const handleOpGuess = (char: import('@/types/character').Character) => { opStore.submitGuess(char.name); };
   const handleOpGiveUp = () => { opStore.giveUp(); };
 
@@ -234,7 +280,10 @@ export default function GamePage() {
     if (isEnemy) {
       enStore.startGame(enStore.difficulty);
     } else {
-      opStore.startGame(opStore.difficulty);
+      // ⚠️ 必须把 attributes 一起带上。不传的话默认 null → 自建房点「再来一把」会
+      // 静默变成经典对局，并因此开始往战绩里落档（自建房本应不落档）。
+      // 经典局 attributes 本来就是 null，行为不变。
+      opStore.startGame(opStore.difficulty, opStore.attributes);
     }
   };
 
@@ -299,7 +348,7 @@ export default function GamePage() {
             // Operator difficulties
             <div className="stats stats-3" style={{ marginTop: '16px' }}>
               {(['easy', 'medium', 'hard'] as Difficulty[]).map((diff, i) => (
-                <button key={diff} onClick={() => handleOpStart(diff)} className="menu-card" style={{
+                <button key={diff} onClick={() => handleOpStart(diff)} data-testid="solo-diff-card" className="menu-card" style={{
                   '--menu-color': i === 0 ? 'var(--success)' : i === 1 ? 'var(--primary)' : 'var(--danger)',
                   cursor: 'pointer', textAlign: 'left',
                 } as React.CSSProperties}>
@@ -319,7 +368,7 @@ export default function GamePage() {
                 { key: 'normal' as EnemyDifficulty, label: '普通', color: 'var(--warning)', pool: '938 个领袖+精英', guesses: 15, icon: '⚔️' },
                 { key: 'hard' as EnemyDifficulty, label: '困难', color: 'var(--danger)', pool: '1674 个全部单位', guesses: 15, icon: '💀' },
               ]).map(d => (
-                <button key={d.key} onClick={() => handleEnStart(d.key)} className="menu-card" style={{
+                <button key={d.key} onClick={() => handleEnStart(d.key)} data-testid="solo-diff-card" className="menu-card" style={{
                   '--menu-color': d.color, cursor: 'pointer', textAlign: 'left',
                 } as React.CSSProperties}>
                   <span className="menu-icon">{d.icon}</span>
@@ -329,6 +378,122 @@ export default function GamePage() {
                   </span>
                 </button>
               ))}
+            </div>
+          )}
+
+          {/* 第二排：除了三档经典难度之外，单人还能怎么玩。
+              两张卡用**与上面三张难度卡完全同一套语汇**（.menu-card + .menu-icon
+              + .menu-label + .menu-description + 内联 --menu-color），只是换了栅格
+              —— `.stats-2` 收掉第三列，免得两张卡塞进三列栅格后右边空一格。
+              ⚠️ --menu-color 故意**不用** success/primary/danger：那三个在本页已经是
+              「简单/普通/困难」的语义，新卡染上会读成第 4、5 档难度。两处都用
+              --col-single（单人模式的强调色）—— 它们本来就都是单人模式的扩展玩法。
+              卡与卡之间的行距用 12px（= .stats 的 gap），让两排读成一个整块。 */}
+          {!isEnemy && (
+            <div className="stats stats-2" style={{ marginTop: '12px' }}>
+              {/* 自定义词条：点开就地展开配置（卡片装不下难度 + 10 个词条 chip + 开始按钮） */}
+              <button
+                type="button"
+                onClick={() => setCustomOpen(o => !o)}
+                data-testid="solo-custom-card"
+                aria-expanded={customOpen}
+                className="menu-card"
+                style={{
+                  '--menu-color': 'var(--col-single)',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                } as React.CSSProperties}
+              >
+                <span className="menu-icon">🛠️</span>
+                <span style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <span className="menu-label">{t('game.customTitle')}</span>
+                  <span className="menu-description">{t('game.customNoRecord')}</span>
+                </span>
+              </button>
+
+              {/* 海龟汤：整页跳转，不是 <button>。
+                  ⚠️ 必须是 <a> 而不是 router.push —— 海龟汤有自己独立的 store，
+                  整页跳转能保证单人模式的任何状态都不可能漏进海龟汤那一局。
+                  `.menu-card` 自带 text-decoration:none / color:var(--text)，
+                  所以 <a> 直接套这个类不会出现下划线和链接色。 */}
+              <a
+                href="/turtle"
+                data-testid="solo-turtle-entry"
+                className="menu-card"
+                style={{
+                  '--menu-color': 'var(--col-single)',
+                  textAlign: 'left',
+                } as React.CSSProperties}
+              >
+                <span className="menu-icon">🐢</span>
+                <span style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <span className="menu-label">{t('turtle.title')}</span>
+                  {/* 复用副标题，不另立一条卡片专用文案 —— 同一句话说两遍，
+                      日后改一处就会打架（.menu-description 没有行数限制，会自然换行） */}
+                  <span className="menu-description">{t('turtle.subtitle')}</span>
+                </span>
+              </a>
+            </div>
+          )}
+
+          {/* 自建房配置区：点开卡片后**就地展开在那一排下方**（整宽）。
+              不落档 → 不计入战绩与排行榜。 */}
+          {!isEnemy && customOpen && (
+            <div className="card" data-testid="solo-custom-panel" style={{ marginTop: '12px' }}>
+              <p className="sec-note" style={{ marginTop: 0 }}>
+                {t('game.customDesc')}
+              </p>
+
+              {/* 难度：只决定题库（与经典同一套池子） */}
+              <div className="cfg-row">
+                <span className="cfg-lb">
+                  {t('party.difficulty')}:
+                </span>
+                <div className="seg">
+                  {(['easy', 'medium', 'hard'] as Difficulty[]).map(d => (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => setCustomDiff(d)}
+                      className={customDiff === d ? 'on' : undefined}
+                    >
+                      {t(`difficulty.${d}`)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <AttrChips
+                attributes={customAttrs}
+                onChange={setCustomAttrs}
+                t={t}
+              />
+
+              {/* 只在不足 3 项时出现：够 3 项就不占地方。
+                  文案复用多人房那条（multi.custom.minAttrs）—— 同一条规则、同一句话，
+                  不另写一份同样的字，免得日后两边措辞漂移。 */}
+              {customAttrsTooFew && (
+                <p
+                  className="sec-note"
+                  data-testid="solo-custom-min-hint"
+                  style={{ color: 'var(--danger)' }}
+                >
+                  {t('multi.custom.minAttrs')}
+                </p>
+              )}
+
+              {/* 「不计入战绩」这句已经写在上面那张卡的描述里了，这里不重复。
+                  同一条信息在两处出现，日后改一处就会打架。 */}
+
+              <button
+                type="button"
+                data-testid="solo-custom-start"
+                onClick={handleCustomStart}
+                disabled={customAttrsTooFew}
+                className="btn-p w-full"
+              >
+                {t('game.customStart')}
+              </button>
             </div>
           )}
 
@@ -442,6 +607,7 @@ export default function GamePage() {
               guesses={guesses as typeof opStore.guesses}
               target={target as import('@/types/character').Character | null}
               hideRarity={difficulty === 'hard'}
+              displayAttributes={opStore.attributes}
               flashTrigger={flashTrigger}
               staggerKey={guesses.length}
             />

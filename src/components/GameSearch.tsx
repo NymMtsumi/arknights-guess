@@ -61,9 +61,17 @@ interface GameSearchProps {
   guessedIds: Set<string>;
   target?: Character | null; // 开发者 cheat（预留，暂未使用）
   remainingGuesses?: number; // 剩余猜测次数，≤3 时输入框红色预警
+  /**
+   * 输入框占位文案。**默认值是原本写死的那句**，所以不传参的调用方（/game）
+   * 行为与之前逐字一致；海龟汤传自己的 i18n 键。
+   */
+  placeholder?: string;
 }
 
-export function GameSearch({ onGuess, disabled, guessedIds, remainingGuesses }: GameSearchProps) {
+export function GameSearch({
+  onGuess, disabled, guessedIds, remainingGuesses,
+  placeholder = '输入干员名字或拼音...',
+}: GameSearchProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Character[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -153,7 +161,7 @@ export function GameSearch({ onGuess, disabled, guessedIds, remainingGuesses }: 
         onCompositionStart={() => setIsComposing(true)}
         onCompositionEnd={() => setIsComposing(false)}
         onFocus={() => { if (query.trim() && results.length > 0) setShowDropdown(true); }}
-        placeholder="输入干员名字或拼音..."
+        placeholder={placeholder}
         disabled={disabled}
         className={`search-input game-search-input${remainingGuesses !== undefined && remainingGuesses <= 3 ? ' low-guesses' : ''}${shaking ? ' shake' : ''}`}
         onAnimationEnd={() => setShaking(false)}

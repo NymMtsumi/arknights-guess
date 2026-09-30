@@ -1,0 +1,12 @@
+# 换行策略 —— 只钉住**被字节级断言**的那两份文件，其余文件不碰。
+
+# 干员 roster 存两份 git 文件（server/ 给后端运行时读，src/data/ 给前端打包导入），
+# scripts/check-characters.mjs 断言它们**彼此字节一致**，deploy.yml 的 review gate 强制。
+# 换行如果跟着平台的 core.autocrlf 走，同一份数据在 Windows / Linux 上就是不同字节：
+#   · 两份文件由不同的脚本各写一次（auto-update.py / backfill-artist.py）时，
+#     "字节不一致" 会以换行为真因报出来，排查成本很高；
+#   · CRLF 版本一旦提交，仓库里就是 11000 行全文件 diff，真改动被噪声埋掉。
+# 写死 eol=lf = 与脚本侧的 newline=""（auto-update.py）和二进制写入（backfill-artist.py）对齐。
+# 注：index 里本来就是 LF（`git ls-files --eol` → i/lf），所以这条不产生重归一化 diff。
+server/characters.json   text eol=lf
+src/data/characters.json text eol=lf

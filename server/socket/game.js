@@ -1,7 +1,7 @@
 // 回合管理 + 所有 Socket.IO 事件处理器
 import { sanitizeString } from '../utils.js';
 import { randomTarget } from '../characters.js';
-import { ROUND_TIME, ROUND_TIME_PRESETS, ATTR_KEYS } from '../constants.js';
+import { ROUND_TIME, ROUND_TIME_PRESETS, ALL_ATTR_KEYS } from '../constants.js';
 import { findCharByName, compareGuess, isAlterRelation, isWin } from '../game-engine.js';
 import { createRoomCodeGuard } from './rate-limit.js';
 
@@ -137,7 +137,14 @@ export function registerGameHandlers({
       // 服务端这侧先自证等长：客户端的兜底是「长度不等就整块不还原」，
       // 一份半截记录（chain 有、flags 短）会让整个快照作废、棋盘全空 —— 比只丢高亮更糟。
       // 这里不等长就直接回空数组，与 myColorRows 的失败形态保持一致。
-      myAlterFlags: mine?.alterFlags?.length === mine?.guessChain?.length ? mine.alterFlags : [],
+      //
+      // ⚠️ 开头的 `mine &&` 不是多余的：`mine?.a?.length === mine?.b?.length` 在 mine 为
+      //    null 时两边都是 undefined，而 `undefined === undefined` 为 **true** → 取真分支 →
+      //    求值 `mine.alterFlags` → 抛 TypeError。整个 reconnectPayload 随之抛出、被调用方
+      //    catch 掉，**reconnect_state 一条都发不出去**（表现：重连后棋盘全空，且没有任何
+      //    面向用户的报错）。mine 为 null 本身是异常状态（见 reconnect_room 的守卫），
+      //    但快照函数不该因一个字段整体失效 —— 其余字段都已是 `mine?.x || []` 的降级口径。
+      myAlterFlags: mine && mine.alterFlags?.length === mine.guessChain?.length ? mine.alterFlags : [],
       myGuessed: !!mine?.guessed,
       myExhausted: !!mine?.exhausted,
       mySurrendered: !!mine?.surrendered,
@@ -201,7 +208,10 @@ export function registerGameHandlers({
           existing.players.delete(pid);
           existing.players.set(socket.id, player);
           // 重连后 socket.id 变化，同步迁移本回合玩家状态映射，否则重连者本回合无法继续猜
-          if (existing._roundPlayers?.has(pid)) {
+          // ⚠️ 先证 pid !== socket.id —— 见 reconnect_room 里同一惯用法的长注释：
+          //    set 完同一把 key 紧接着 delete 掉 = 自我删除，且失败形态是静默的。
+          //    本处 pid 取自旧连接、当前路径下恒不等，这里只是把这个惯用法钉死。
+          if (pid !== socket.id && existing._roundPlayers?.has(pid)) {
             existing._roundPlayers.set(socket.id, existing._roundPlayers.get(pid));
             existing._roundPlayers.delete(pid);
           }
@@ -302,7 +312,7 @@ export function registerGameHandlers({
       const roundTime = ROUND_TIME_PRESETS.includes(data?.roundTime) ? data?.roundTime : ROUND_TIME;
       // 至少 3 个合法属性才算自定义房；否则退化为标准房（attributes = null）
       const rawAttrs = Array.isArray(data?.attributes)
-        ? [...new Set(data.attributes.filter(a => ATTR_KEYS.includes(a)))] : [];
+        ? [...new Set(data.attributes.filter(a => ALL_ATTR_KEYS.includes(a)))] : [];
       const custom = rawAttrs.length >= 3;
       const attributes = custom ? rawAttrs : null;
 
@@ -342,7 +352,9 @@ export function registerGameHandlers({
             p.lastSocketId = pid;
             room.players.delete(pid);
             room.players.set(socket.id, p);
-            if (room._roundPlayers?.has(pid)) {
+            // ⚠️ 同 reconnect_room：pid === socket.id 时下面两行会自我删除，先证不等。
+            //    本处 pid 来自「带 dcTimer 的旧连接」，当前路径下恒不等。
+            if (pid !== socket.id && room._roundPlayers?.has(pid)) {
               room._roundPlayers.set(socket.id, room._roundPlayers.get(pid));
               room._roundPlayers.delete(pid);
             }
@@ -419,22 +431,32 @@ export function registerGameHandlers({
         const maxGuesses = room.maxGuesses ?? 8;
         const remaining = Math.max(0, maxGuesses - guessCount);
 
-        const comparisons = compareGuess(room.target, char);
+        // artist 只在房主选了画师词条时才算、才下发。标准房的 attributes 是 null，
+        // 上面那一列本来就不渲染 —— 但载荷里带着它等于凭空开一条侧信道，见 compareGuess 的注释。
+        const comparisons = compareGuess(room.target, char, {
+          includeArtist: !!room.attributes?.includes('artist'),
+        });
         const isAlter = isAlterRelation(room.target, char);
         const isCorrect = isWin(room.target, char);
 
-        // 对手棋盘颜色行（与前端 ATTR_KEYS / displayCols.dataIdx 顺序一致，含 name 列）
+        // 对手棋盘颜色行（与前端 ALL_ATTR_KEYS / displayCols.dataIdx 顺序一致，含 name 列）
+        // 定长位置数组：[0]=name，[1..9]=9 个标准词条，[10]=artist（可选词条）。
+        // ⚠️ 只能**末尾追加**。历史上就是靠「新增放末尾」保持前后端可分别部署：
+        //    新前端+旧服务端 → row[10] 为 undefined，只有自定义房会去读它，标准房不受影响。
+        //    槽位**恒定 11 个**：房间没开画师时第 11 槽置 null（前端 s() 兜成 'wrong'），
+        //    不能因为 comparisons 少了 artist 就把数组缩成 10 —— 定长是这条契约的前提。
         const row = [
           isCorrect ? 'correct' : 'wrong',
           comparisons.class, comparisons.subclass, comparisons.faction,
           comparisons.rarity, comparisons.race, comparisons.gender,
           comparisons.releaseYear, comparisons.position, comparisons.tags,
+          comparisons.artist ?? null,
         ];
         rp.colorRows.push(row);
         // 异格标记与 colorRows 平行、且**只回给本人**（见 reconnectPayload 的 myAlterFlags）。
-        // ⚠️ 绝不能并进 colorRows 当第 11 列：那一份经 opponent_update 原样广播给对手，
+        // ⚠️ 绝不能并进 colorRows：那一份经 opponent_update 原样广播给对手，
         //    而 isAlterRelation(target, guess) 直接告诉对手「答案是 X 的异格」——
-        //    9 列属性对比是刻意只给颜色的，加这一列等于给对手开一条侧信道。
+        //    属性对比是刻意只给颜色的，多加一列等于给对手开一条侧信道。
         rp.alterFlags.push(isAlter);
 
         // 回执给猜测者（不下发答案，仅对比结果 + 胜负标记）
@@ -701,7 +723,17 @@ export function registerGameHandlers({
       if (player.dcTimer) { clearTimeout(player.dcTimer); player.dcTimer = null; }
       room.players.delete(foundPid);
       room.players.set(socket.id, player);
-      if (room._roundPlayers?.has(foundPid)) {
+      // ⚠️🔴 foundPid === socket.id 时必须**整块跳过**，否则下面两行会自我删除：
+      //    自动恢复（本文件 connection 里的 [恢复] 分支）已经把该玩家挂到当前 socket.id
+      //    名下了；浏览器重连后 mount 会再发一次 reconnect_room，此刻 foundPid 恰好 ===
+      //    socket.id —— set 进去的那条紧接着被 delete 掉，玩家本回合状态凭空消失。
+      //    失败形态全是**静默**的，线上没有面向用户的报错：
+      //      ① reconnectPayload 的 mine 变 null → myAlterFlags 抛异常 → reconnect_state
+      //         一条都发不出去 → 重连后棋盘全空；
+      //      ② multi:guess 的 `const rp = ...?.get(socket.id); if (!rp) return;`
+      //         → 本回合剩下的时间一次都猜不了（输入毫无反应）。
+      //    2026-09-22 引入（7e79b3f）。回归脚本：tests/multi-reconnect-smoke.mjs
+      if (foundPid !== socket.id && room._roundPlayers?.has(foundPid)) {
         room._roundPlayers.set(socket.id, room._roundPlayers.get(foundPid));
         room._roundPlayers.delete(foundPid);
       }

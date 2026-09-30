@@ -584,6 +584,10 @@ export function registerAdminRoutes({ app, db, requireAdmin, checkNicknameProfan
       position: sanitizeString(body.position, 16) || '',
       positionEn: sanitizeString(body.positionEn, 16) || '',
       popularity: ['hot', 'normal', 'cold'].includes(body.popularity) ? body.popularity : 'normal',
+      // ⚠️ 必须是**最后一个键**，且必须有值：scripts/check-characters.mjs 已把 artist
+      //    列为必填，这里漏写 → 该记录一进 characters.json，deploy.yml 的 review gate
+      //    就报「缺字段: artist」阻断部署。缺省填「未知」，与 auto-update.py 的兜底同词。
+      artist: sanitizeString(body.artist, 64) || '未知',
     };
 
     chars.push(newChar);
@@ -727,11 +731,21 @@ export function registerAdminRoutes({ app, db, requireAdmin, checkNicknameProfan
       if (seenInBatch.has(c.name)) continue;
       seenInBatch.add(c.name);
 
+      // ⚠️ artist 必须**单独**处理，不能像其它字段那样写进 c：
+      //    对已存在的干员走的是 `{...current[existing], ...c}`，若 c 里带着
+      //    `artist: '未知'`，导入一份不含画师的名单会把全库真实画师刷成「未知」
+      //    （而 roster 的画师来自 skin_table.json，比手工导入可靠得多）。
+      // 规则：给了就更新；没给则保留旧值；旧值也没有才兜底「未知」——
+      // 因为 scripts/check-characters.mjs 已把 artist 列为必填，空着会阻断部署。
+      const rawArtist = sanitizeString(raw.artist, 64);
       const existing = nameIndex.get(c.name);
       if (existing !== undefined) {
-        current[existing] = { ...current[existing], ...c };
+        const merged = { ...current[existing], ...c };
+        merged.artist = rawArtist || merged.artist || '未知';
+        current[existing] = merged;
       } else {
-        current.push(c);
+        // 末尾追加，与 create 及两份 roster 的字段序一致（artist 恒为最后一个键）
+        current.push({ ...c, artist: rawArtist || '未知' });
       }
       actualImported++;
     }

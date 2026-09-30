@@ -22,7 +22,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "TOKI"
   },
   {
     "id": "char_286_cast3",
@@ -47,7 +48,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "TOKI"
   },
   {
     "id": "char_376_therex",
@@ -72,7 +74,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "TOKI"
   },
   {
     "id": "char_4000_jnight",
@@ -97,7 +100,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "NoriZC"
   },
   {
     "id": "char_4077_palico",
@@ -121,7 +125,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "桃色Miruku"
   },
   {
     "id": "char_4091_ulika",
@@ -145,7 +150,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "折射镜"
   },
   {
     "id": "char_4093_frston",
@@ -170,7 +176,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "过失帝国"
   },
   {
     "id": "char_4136_phonor",
@@ -195,7 +202,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "M1917史密斯维森"
   },
   {
     "id": "char_4188_confes",
@@ -220,7 +228,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "抽象Rotate"
   },
   {
     "id": "char_4227_gallus",
@@ -245,7 +254,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "EYI"
   },
   {
     "id": "char_4215_buddy",
@@ -270,7 +280,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Studio Montagne"
   },
   {
     "id": "char_502_nblade",
@@ -294,7 +305,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Skade"
   },
   {
     "id": "char_500_noirc",
@@ -318,7 +330,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "竜崎いち"
   },
   {
     "id": "char_503_rang",
@@ -342,7 +355,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "竜崎いち"
   },
   {
     "id": "char_501_durin",
@@ -366,7 +380,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Skade"
   },
   {
     "id": "char_009_12fce",
@@ -390,7 +405,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "海猫络合物"
   },
   {
     "id": "char_123_fang",
@@ -414,7 +430,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "下野宏铭"
   },
   {
     "id": "char_240_wyvern",
@@ -438,7 +455,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "m9nokuro"
   },
   {
     "id": "char_192_falco",
@@ -463,7 +481,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "deel"
   },
   {
     "id": "char_208_melan",
@@ -488,7 +507,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "一立里子"
   },
   {
     "id": "char_281_popka",
@@ -513,7 +533,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "下野宏铭"
   },
   {
     "id": "char_209_ardign",
@@ -537,7 +558,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "一立里子"
   },
   {
     "id": "char_122_beagle",
@@ -561,7 +583,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "下野宏铭"
   },
   {
     "id": "char_284_spot",
@@ -586,7 +609,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "阿鬼"
   },
   {
     "id": "char_124_kroos",
@@ -610,7 +634,8 @@
     ],
     "alterBase": "寒芒克洛丝",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "下野宏铭"
   },
   {
     "id": "char_211_adnach",
@@ -634,7 +659,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "一立里子"
   },
   {
     "id": "char_121_lava",
@@ -658,7 +684,8 @@
     ],
     "alterBase": "炎狱炎熔",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "下野宏铭"
   },
   {
     "id": "char_120_hibisc",
@@ -682,7 +709,8 @@
     ],
     "alterBase": "濯尘芙蓉",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "下野宏铭"
   },
   {
     "id": "char_212_ansel",
@@ -706,7 +734,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "一立里子"
   },
   {
     "id": "char_210_stward",
@@ -730,7 +759,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "一立里子"
   },
   {
     "id": "char_278_orchid",
@@ -754,7 +784,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Skade"
   },
   {
     "id": "char_141_nights",
@@ -779,7 +810,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Skade"
   },
   {
     "id": "char_109_fmout",
@@ -803,7 +835,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "谜肘"
   },
   {
     "id": "char_253_greyy",
@@ -828,7 +861,8 @@
     ],
     "alterBase": "承曦格雷伊",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "我妻洛酱"
   },
   {
     "id": "char_4051_akkord",
@@ -853,7 +887,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Chi4"
   },
   {
     "id": "char_328_cammou",
@@ -878,7 +913,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "れおえん"
   },
   {
     "id": "char_469_indigo",
@@ -903,7 +939,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "织布机loom"
   },
   {
     "id": "char_4004_pudd",
@@ -927,7 +964,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "折射镜"
   },
   {
     "id": "char_235_jesica",
@@ -952,7 +990,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "m9nokuro"
   },
   {
     "id": "char_126_shotst",
@@ -977,7 +1016,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "HUG"
   },
   {
     "id": "char_190_clour",
@@ -1001,7 +1041,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "KENTllaall"
   },
   {
     "id": "char_133_mm",
@@ -1026,7 +1067,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "下野宏铭"
   },
   {
     "id": "char_118_yuki",
@@ -1051,7 +1093,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "阿鬼"
   },
   {
     "id": "char_440_pinecn",
@@ -1076,7 +1119,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "TrNyteal"
   },
   {
     "id": "char_302_glaze",
@@ -1101,7 +1145,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "m9nokuro"
   },
   {
     "id": "char_366_acdrop",
@@ -1125,7 +1170,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Lanzi"
   },
   {
     "id": "char_4062_totter",
@@ -1149,7 +1195,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "板板"
   },
   {
     "id": "char_4100_caper",
@@ -1173,7 +1220,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "臼"
   },
   {
     "id": "char_198_blackd",
@@ -1198,7 +1246,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "竜崎いち"
   },
   {
     "id": "char_149_scave",
@@ -1223,7 +1272,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "戏言咸咸"
   },
   {
     "id": "char_290_vigna",
@@ -1248,7 +1298,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "下野宏铭"
   },
   {
     "id": "char_151_myrtle",
@@ -1273,7 +1324,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "咩煲"
   },
   {
     "id": "char_452_bstalk",
@@ -1298,7 +1350,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "一千"
   },
   {
     "id": "char_4208_wintim",
@@ -1323,7 +1376,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "3MO"
   },
   {
     "id": "char_130_doberm",
@@ -1348,7 +1402,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "LLC"
   },
   {
     "id": "char_289_gyuki",
@@ -1373,7 +1428,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "竜崎いち"
   },
   {
     "id": "char_159_peacok",
@@ -1400,7 +1456,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "TOMATO"
   },
   {
     "id": "char_193_frostl",
@@ -1425,7 +1482,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "下野宏铭"
   },
   {
     "id": "char_127_estell",
@@ -1450,7 +1508,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "鸭"
   },
   {
     "id": "char_185_frncat",
@@ -1474,7 +1533,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Iritoa"
   },
   {
     "id": "char_301_cutter",
@@ -1499,7 +1559,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "下野宏铭"
   },
   {
     "id": "char_337_utage",
@@ -1524,7 +1585,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "釜飯轟々丸"
   },
   {
     "id": "char_271_spikes",
@@ -1548,7 +1610,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "umo_yszx"
   },
   {
     "id": "char_4067_lolxh",
@@ -1572,7 +1635,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "九日九号"
   },
   {
     "id": "char_4063_quartz",
@@ -1596,7 +1660,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "伍秋秋秋秋"
   },
   {
     "id": "char_491_humus",
@@ -1621,7 +1686,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "我妻洛酱"
   },
   {
     "id": "char_445_wscoot",
@@ -1645,7 +1711,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "azuタロウ"
   },
   {
     "id": "char_237_gravel",
@@ -1670,7 +1737,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "竜崎いち"
   },
   {
     "id": "char_272_strong",
@@ -1695,7 +1763,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "阿鬼"
   },
   {
     "id": "char_236_rope",
@@ -1719,7 +1788,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "m9nokuro"
   },
   {
     "id": "char_117_myrrh",
@@ -1743,7 +1813,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "下野宏铭"
   },
   {
     "id": "char_187_ccheal",
@@ -1767,7 +1838,8 @@
     ],
     "alterBase": "百炼嘉维尔",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "LLC"
   },
   {
     "id": "char_298_susuro",
@@ -1791,7 +1863,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "将"
   },
   {
     "id": "char_181_flower",
@@ -1815,7 +1888,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Lanzi"
   },
   {
     "id": "char_385_finlpp",
@@ -1840,7 +1914,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "唯@W"
   },
   {
     "id": "char_4041_chnut",
@@ -1864,7 +1939,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "树豚"
   },
   {
     "id": "char_199_yak",
@@ -1888,7 +1964,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "竜崎いち"
   },
   {
     "id": "char_150_snakek",
@@ -1912,7 +1989,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Skade"
   },
   {
     "id": "char_381_bubble",
@@ -1936,7 +2014,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Cenm0"
   },
   {
     "id": "char_4130_luton",
@@ -1961,7 +2040,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "水滴鱼"
   },
   {
     "id": "char_196_sunbr",
@@ -1986,7 +2066,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Skade"
   },
   {
     "id": "char_260_durnar",
@@ -2011,7 +2092,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "下野宏铭"
   },
   {
     "id": "char_110_deepcl",
@@ -2035,7 +2117,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "REALMBW"
   },
   {
     "id": "char_183_skgoat",
@@ -2059,7 +2142,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "HUG"
   },
   {
     "id": "char_258_podego",
@@ -2084,7 +2168,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "アシマ"
   },
   {
     "id": "char_484_robrta",
@@ -2109,7 +2194,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "IRIS_呓"
   },
   {
     "id": "char_355_ethan",
@@ -2134,7 +2220,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "阿鬼"
   },
   {
     "id": "char_277_sqrrel",
@@ -2158,7 +2245,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "阿鬼"
   },
   {
     "id": "char_4107_vrdant",
@@ -2183,7 +2271,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "百慕大飞鱼"
   },
   {
     "id": "char_4165_ctrail",
@@ -2208,7 +2297,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "虬墨一型"
   },
   {
     "id": "char_128_plosis",
@@ -2233,7 +2323,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "竜崎いち"
   },
   {
     "id": "char_275_breeze",
@@ -2258,7 +2349,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "藻"
   },
   {
     "id": "char_4163_rosesa",
@@ -2283,7 +2375,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "二开"
   },
   {
     "id": "char_115_headbr",
@@ -2308,7 +2401,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Skade"
   },
   {
     "id": "char_102_texas",
@@ -2333,7 +2427,8 @@
     ],
     "alterBase": "缄默德克萨斯",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "幻象黑兔"
   },
   {
     "id": "char_349_chiave",
@@ -2358,7 +2453,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Infukun"
   },
   {
     "id": "char_488_buildr",
@@ -2383,7 +2479,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "NOCO"
   },
   {
     "id": "char_4023_rfalcn",
@@ -2408,7 +2505,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "釜飯轟々丸"
   },
   {
     "id": "char_4199_makiri",
@@ -2433,7 +2531,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "AerialB"
   },
   {
     "id": "char_261_sddrag",
@@ -2458,7 +2557,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "STAR影法师"
   },
   {
     "id": "char_496_wildmn",
@@ -2483,7 +2583,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "NoriZC"
   },
   {
     "id": "char_1036_fang2",
@@ -2508,7 +2609,8 @@
     ],
     "alterBase": "芬",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "下野宏铭"
   },
   {
     "id": "char_401_elysm",
@@ -2533,7 +2635,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Skade"
   },
   {
     "id": "char_4119_wanqin",
@@ -2558,7 +2661,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "三目YYB"
   },
   {
     "id": "char_4237_jcinta",
@@ -2583,7 +2687,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "斑雀"
   },
   {
     "id": "char_476_blkngt",
@@ -2608,7 +2713,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "温泉瓜"
   },
   {
     "id": "char_4147_mitm",
@@ -2633,7 +2739,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "〇亻"
   },
   {
     "id": "char_497_ctable",
@@ -2658,7 +2765,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "温泉瓜"
   },
   {
     "id": "char_4017_puzzle",
@@ -2683,7 +2791,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "kan"
   },
   {
     "id": "char_4144_chilc",
@@ -2708,7 +2817,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Studio Montagne"
   },
   {
     "id": "char_4052_surfer",
@@ -2733,7 +2843,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "れおえん"
   },
   {
     "id": "char_308_swire",
@@ -2758,7 +2869,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "下野宏铭"
   },
   {
     "id": "char_265_sophia",
@@ -2783,7 +2895,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "竜崎いち"
   },
   {
     "id": "char_4106_bryota",
@@ -2808,7 +2921,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Cenm0"
   },
   {
     "id": "char_4125_rdoc",
@@ -2833,7 +2947,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Ubisoft"
   },
   {
     "id": "char_106_franka",
@@ -2858,7 +2973,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "TOKI"
   },
   {
     "id": "char_131_flameb",
@@ -2883,7 +2999,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "虎三"
   },
   {
     "id": "char_154_morgan",
@@ -2907,7 +3024,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Infukun"
   },
   {
     "id": "char_4142_laios",
@@ -2932,7 +3050,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Studio Montagne"
   },
   {
     "id": "char_155_tiger",
@@ -2957,7 +3076,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Infukun"
   },
   {
     "id": "char_415_flint",
@@ -2981,7 +3101,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "aZLing4"
   },
   {
     "id": "char_157_dagda",
@@ -3006,7 +3127,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Infukun"
   },
   {
     "id": "char_140_whitew",
@@ -3031,7 +3153,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "幻象黑兔"
   },
   {
     "id": "char_294_ayer",
@@ -3056,7 +3179,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "NoriZC"
   },
   {
     "id": "char_194_leto",
@@ -3081,7 +3205,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Skade"
   },
   {
     "id": "char_4083_chimes",
@@ -3105,7 +3230,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "〇亻"
   },
   {
     "id": "char_252_bibeak",
@@ -3130,7 +3256,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "RAYVON"
   },
   {
     "id": "char_459_tachak",
@@ -3155,7 +3282,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Ubisoft"
   },
   {
     "id": "char_143_ghost",
@@ -3180,7 +3308,8 @@
     ],
     "alterBase": "归溟幽灵鲨",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Skade"
   },
   {
     "id": "char_356_broca",
@@ -3205,7 +3334,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Infukun"
   },
   {
     "id": "char_4126_fuze",
@@ -3230,7 +3360,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Ubisoft"
   },
   {
     "id": "char_4166_varkis",
@@ -3255,7 +3386,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "赤岸K"
   },
   {
     "id": "char_274_astesi",
@@ -3280,7 +3412,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "YUJI"
   },
   {
     "id": "char_333_sidero",
@@ -3305,7 +3438,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "将"
   },
   {
     "id": "char_475_akafyu",
@@ -3330,7 +3464,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "熊太"
   },
   {
     "id": "char_1030_noirc2",
@@ -3355,7 +3490,8 @@
     ],
     "alterBase": "黑角",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "九日九号"
   },
   {
     "id": "char_421_crow",
@@ -3379,7 +3515,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "LAL!ROLE"
   },
   {
     "id": "char_4066_highmo",
@@ -3403,7 +3540,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Horin"
   },
   {
     "id": "char_486_takila",
@@ -3427,7 +3565,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "一千"
   },
   {
     "id": "char_4131_odda",
@@ -3452,7 +3591,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "我妻洛酱"
   },
   {
     "id": "char_4187_graceb",
@@ -3477,7 +3617,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "水滴鱼"
   },
   {
     "id": "char_4185_amoris",
@@ -3503,7 +3644,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Studio Montagne"
   },
   {
     "id": "char_394_hadiya",
@@ -3528,7 +3670,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "松尾 省吾"
   },
   {
     "id": "char_1049_catap2",
@@ -3554,7 +3697,8 @@
     ],
     "alterBase": "空爆",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Studio Montagne"
   },
   {
     "id": "char_129_bluep",
@@ -3578,7 +3722,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "LLC"
   },
   {
     "id": "char_204_platnm",
@@ -3602,7 +3747,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Skade"
   },
   {
     "id": "char_367_swllow",
@@ -3626,7 +3772,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "m9nokuro"
   },
   {
     "id": "char_365_aprl",
@@ -3650,7 +3797,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "れおえん"
   },
   {
     "id": "char_1021_kroos2",
@@ -3674,7 +3822,8 @@
     ],
     "alterBase": "克洛丝",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "下野宏铭"
   },
   {
     "id": "char_498_inside",
@@ -3698,7 +3847,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "umo_yszx"
   },
   {
     "id": "char_219_meteo",
@@ -3723,7 +3873,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "TOKI"
   },
   {
     "id": "char_379_sesa",
@@ -3748,7 +3899,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "竜崎いち"
   },
   {
     "id": "char_4078_bdhkgt",
@@ -3773,7 +3925,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "伍秋秋秋秋"
   },
   {
     "id": "char_279_excu",
@@ -3797,7 +3950,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Skade"
   },
   {
     "id": "char_346_aosta",
@@ -3821,7 +3975,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Infukun"
   },
   {
     "id": "char_4203_kichi",
@@ -3845,7 +4000,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Horin"
   },
   {
     "id": "char_4213_skybx",
@@ -3869,7 +4025,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "臼"
   },
   {
     "id": "char_002_amiya",
@@ -3893,7 +4050,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "唯@W"
   },
   {
     "id": "char_405_absin",
@@ -3917,7 +4075,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "aZLing4"
   },
   {
     "id": "char_411_tomimi",
@@ -3942,7 +4101,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Chuzenji"
   },
   {
     "id": "char_466_qanik",
@@ -3967,7 +4127,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "三目YYB"
   },
   {
     "id": "char_166_skfire",
@@ -3992,7 +4153,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "TOKI"
   },
   {
     "id": "char_306_leizi",
@@ -4016,7 +4178,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "竜崎いち"
   },
   {
     "id": "char_135_halo",
@@ -4040,7 +4203,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "YUJI"
   },
   {
     "id": "char_344_beewax",
@@ -4065,7 +4229,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "カワグチ"
   },
   {
     "id": "char_373_lionhd",
@@ -4090,7 +4255,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "野崎つばた"
   },
   {
     "id": "char_341_sntlla",
@@ -4115,7 +4281,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Studio Montagne"
   },
   {
     "id": "char_4031_liesel",
@@ -4140,7 +4307,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Lanzi"
   },
   {
     "id": "char_388_mint",
@@ -4165,7 +4333,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "ヌードル"
   },
   {
     "id": "char_338_iris",
@@ -4189,7 +4358,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "下野宏铭"
   },
   {
     "id": "char_297_hamoni",
@@ -4213,7 +4383,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "STAR影法师"
   },
   {
     "id": "char_4110_delphn",
@@ -4237,7 +4408,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Cenm0"
   },
   {
     "id": "char_1011_lava2",
@@ -4261,7 +4433,8 @@
     ],
     "alterBase": "炎熔",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "下野宏铭"
   },
   {
     "id": "char_489_serum",
@@ -4286,7 +4459,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Jacknife"
   },
   {
     "id": "char_446_aroma",
@@ -4311,7 +4485,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "ヌードル"
   },
   {
     "id": "char_4013_kjera",
@@ -4336,7 +4511,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "竜崎いち"
   },
   {
     "id": "char_4040_rockr",
@@ -4360,7 +4536,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Cenm0"
   },
   {
     "id": "char_4054_malist",
@@ -4384,7 +4561,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "〇亻"
   },
   {
     "id": "char_4236_tmslot",
@@ -4408,7 +4586,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "八号地球"
   },
   {
     "id": "char_499_kaitou",
@@ -4433,7 +4612,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "およ"
   },
   {
     "id": "char_4081_warmy",
@@ -4458,7 +4638,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "二色こぺ"
   },
   {
     "id": "char_4198_christ",
@@ -4483,7 +4664,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "YUJI"
   },
   {
     "id": "char_4164_tecno",
@@ -4507,7 +4689,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "水滴鱼"
   },
   {
     "id": "char_242_otter",
@@ -4532,7 +4715,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "幻象黑兔"
   },
   {
     "id": "char_336_folivo",
@@ -4557,7 +4741,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "アシマ"
   },
   {
     "id": "char_4140_lasher",
@@ -4582,7 +4767,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "一千"
   },
   {
     "id": "char_108_silent",
@@ -4606,7 +4792,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "NoriZC"
   },
   {
     "id": "char_171_bldsk",
@@ -4631,7 +4818,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "时辰"
   },
   {
     "id": "char_345_folnic",
@@ -4656,7 +4844,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "m9nokuro"
   },
   {
     "id": "char_4196_reckpr",
@@ -4680,7 +4869,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "九日九号"
   },
   {
     "id": "char_348_ceylon",
@@ -4704,7 +4894,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Skade"
   },
   {
     "id": "char_436_whispr",
@@ -4728,7 +4919,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Chuzenji"
   },
   {
     "id": "char_4173_nowell",
@@ -4752,7 +4944,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "板板"
   },
   {
     "id": "char_402_tuye",
@@ -4776,7 +4969,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "aZLing4"
   },
   {
     "id": "char_473_mberry",
@@ -4800,7 +4994,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Jacknife"
   },
   {
     "id": "char_449_glider",
@@ -4824,7 +5019,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Liyu黎"
   },
   {
     "id": "char_4114_harold",
@@ -4848,7 +5044,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "一千"
   },
   {
     "id": "char_1024_hbisc2",
@@ -4872,7 +5069,8 @@
     ],
     "alterBase": "芙蓉",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "下野宏铭"
   },
   {
     "id": "char_494_vendla",
@@ -4896,7 +5094,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Studio Montagne"
   },
   {
     "id": "char_4071_peper",
@@ -4920,7 +5119,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "板板"
   },
   {
     "id": "char_4139_papyrs",
@@ -4944,7 +5144,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "温泉瓜"
   },
   {
     "id": "char_4224_turdus",
@@ -4968,7 +5169,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "折射镜"
   },
   {
     "id": "char_4222_taraxa",
@@ -4992,7 +5194,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "二开"
   },
   {
     "id": "char_148_nearl",
@@ -5017,7 +5220,8 @@
     ],
     "alterBase": "耀骑士临光",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "竜崎いち"
   },
   {
     "id": "char_226_hmau",
@@ -5042,7 +5246,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "KuroBlood"
   },
   {
     "id": "char_4109_baslin",
@@ -5067,7 +5272,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "九日九号"
   },
   {
     "id": "char_4143_sensi",
@@ -5092,7 +5298,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Studio Montagne"
   },
   {
     "id": "char_144_red",
@@ -5117,7 +5324,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Infukun"
   },
   {
     "id": "char_243_waaifu",
@@ -5142,7 +5350,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "KuroBlood"
   },
   {
     "id": "char_214_kafka",
@@ -5167,7 +5376,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "NoriZC"
   },
   {
     "id": "char_455_nothin",
@@ -5192,7 +5402,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Skade"
   },
   {
     "id": "char_4155_talr",
@@ -5217,7 +5428,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "伍秋秋秋秋"
   },
   {
     "id": "char_107_liskam",
@@ -5242,7 +5454,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "TOKI"
   },
   {
     "id": "char_4137_udflow",
@@ -5268,7 +5481,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "〇亻"
   },
   {
     "id": "char_201_moeshd",
@@ -5293,7 +5507,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "幻象黑兔"
   },
   {
     "id": "char_325_bison",
@@ -5317,7 +5532,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "竜崎いち"
   },
   {
     "id": "char_163_hpsts",
@@ -5343,7 +5559,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "neco"
   },
   {
     "id": "char_4207_branch",
@@ -5368,7 +5585,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "斑雀"
   },
   {
     "id": "char_378_asbest",
@@ -5393,7 +5611,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "TEAM EXPNDR"
   },
   {
     "id": "char_512_aprot",
@@ -5418,7 +5637,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Cenm0"
   },
   {
     "id": "char_4047_pianst",
@@ -5443,7 +5663,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "九日九号"
   },
   {
     "id": "char_457_blitz",
@@ -5468,7 +5689,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Ubisoft"
   },
   {
     "id": "char_304_zebra",
@@ -5493,7 +5715,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "aZLing4"
   },
   {
     "id": "char_431_ashlok",
@@ -5518,7 +5741,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "NoriZC"
   },
   {
     "id": "char_493_firwhl",
@@ -5543,7 +5767,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "IRIS_呓"
   },
   {
     "id": "char_422_aurora",
@@ -5568,7 +5793,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "LAL!ROLE"
   },
   {
     "id": "char_464_cement",
@@ -5592,7 +5818,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "科学"
   },
   {
     "id": "char_4148_philae",
@@ -5617,7 +5844,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Horin"
   },
   {
     "id": "char_4225_tanya",
@@ -5642,7 +5870,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Horin"
   },
   {
     "id": "char_145_prove",
@@ -5666,7 +5895,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "渣念"
   },
   {
     "id": "char_4006_melnte",
@@ -5691,7 +5921,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "redjuice"
   },
   {
     "id": "char_158_milu",
@@ -5716,7 +5947,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "aZLing4"
   },
   {
     "id": "char_218_cuttle",
@@ -5741,7 +5973,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "LLC"
   },
   {
     "id": "char_4014_lunacu",
@@ -5766,7 +5999,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "IRIS_呓"
   },
   {
     "id": "char_363_toddi",
@@ -5790,7 +6024,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "山×2"
   },
   {
     "id": "char_4043_erato",
@@ -5815,7 +6050,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "温泉瓜"
   },
   {
     "id": "char_4221_ju",
@@ -5839,7 +6075,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "虬墨一型"
   },
   {
     "id": "char_1027_greyy2",
@@ -5864,7 +6101,8 @@
     ],
     "alterBase": "格雷伊",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "我妻洛酱"
   },
   {
     "id": "char_4104_coldst",
@@ -5888,7 +6126,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Mag42"
   },
   {
     "id": "char_4211_snhunt",
@@ -5913,7 +6152,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "百慕大飞鱼"
   },
   {
     "id": "char_4177_brigid",
@@ -5937,7 +6177,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Yukuso"
   },
   {
     "id": "char_4015_spuria",
@@ -5962,7 +6203,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "おぐち"
   },
   {
     "id": "char_173_slchan",
@@ -5987,7 +6229,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "竜崎いち"
   },
   {
     "id": "char_383_snsant",
@@ -6012,7 +6255,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "NoriZC"
   },
   {
     "id": "char_4105_almond",
@@ -6036,7 +6280,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "直立行走"
   },
   {
     "id": "char_174_slbell",
@@ -6060,7 +6305,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "竜崎いち"
   },
   {
     "id": "char_254_vodfox",
@@ -6084,7 +6330,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "下野宏铭"
   },
   {
     "id": "char_4079_haini",
@@ -6108,7 +6355,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "色塩"
   },
   {
     "id": "char_195_glassb",
@@ -6133,7 +6381,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Skade"
   },
   {
     "id": "char_326_glacus",
@@ -6158,7 +6407,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "下野宏铭"
   },
   {
     "id": "char_4032_provs",
@@ -6183,7 +6433,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "せんむ"
   },
   {
     "id": "char_4122_grabds",
@@ -6208,7 +6459,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "YUJI"
   },
   {
     "id": "char_433_windft",
@@ -6233,7 +6485,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "nineo"
   },
   {
     "id": "char_4162_cathy",
@@ -6258,7 +6511,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "温泉瓜"
   },
   {
     "id": "char_4178_alanna",
@@ -6283,7 +6537,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "百慕大飞鱼"
   },
   {
     "id": "char_101_sora",
@@ -6308,7 +6563,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "幻象黑兔"
   },
   {
     "id": "char_4045_heidi",
@@ -6333,7 +6589,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "熊太"
   },
   {
     "id": "char_4184_dolris",
@@ -6358,7 +6615,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "折射镜"
   },
   {
     "id": "char_343_tknogi",
@@ -6383,7 +6641,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "上埜"
   },
   {
     "id": "char_4019_ncdeer",
@@ -6408,7 +6667,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "IRIS_呓"
   },
   {
     "id": "char_492_quercu",
@@ -6433,7 +6693,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "YUJI"
   },
   {
     "id": "char_4172_xingzh",
@@ -6458,7 +6719,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "3MO"
   },
   {
     "id": "char_1022_flwr2",
@@ -6483,7 +6745,8 @@
     ],
     "alterBase": "调香师",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Lanzi"
   },
   {
     "id": "char_4102_threye",
@@ -6507,7 +6770,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "伍秋秋秋秋"
   },
   {
     "id": "char_487_bobb",
@@ -6531,7 +6795,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "HUG"
   },
   {
     "id": "char_4223_botany",
@@ -6555,7 +6820,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Yukuso"
   },
   {
     "id": "char_4234_pedro",
@@ -6580,7 +6846,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "致恶剂"
   },
   {
     "id": "char_215_mantic",
@@ -6605,7 +6872,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "竜崎いち"
   },
   {
     "id": "char_478_kirara",
@@ -6630,7 +6898,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "我妻洛酱"
   },
   {
     "id": "char_4186_tmoris",
@@ -6655,7 +6924,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Studio Montagne"
   },
   {
     "id": "char_241_panda",
@@ -6680,7 +6950,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "RAN"
   },
   {
     "id": "char_4036_forcer",
@@ -6705,7 +6976,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Chuzenji"
   },
   {
     "id": "char_451_robin",
@@ -6730,7 +7002,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "aZLing4"
   },
   {
     "id": "char_458_rfrost",
@@ -6755,7 +7028,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Ubisoft"
   },
   {
     "id": "char_4171_wulfen",
@@ -6780,7 +7054,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "臼"
   },
   {
     "id": "char_369_bena",
@@ -6805,7 +7080,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "下野宏铭"
   },
   {
     "id": "char_4016_kazema",
@@ -6830,7 +7106,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "温泉瓜"
   },
   {
     "id": "char_4124_iana",
@@ -6855,7 +7132,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Ubisoft"
   },
   {
     "id": "char_4183_mortis",
@@ -6880,7 +7158,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "温泉瓜"
   },
   {
     "id": "char_4151_tinman",
@@ -6905,7 +7184,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "树豚"
   },
   {
     "id": "char_4191_tippi",
@@ -6930,7 +7210,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "二开"
   },
   {
     "id": "char_103_angel",
@@ -6954,7 +7235,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "幻象黑兔"
   },
   {
     "id": "char_332_archet",
@@ -6978,7 +7260,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "alchemaniac"
   },
   {
     "id": "char_456_ash",
@@ -7002,7 +7285,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Ubisoft"
   },
   {
     "id": "char_340_shwaz",
@@ -7026,7 +7310,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Liduke"
   },
   {
     "id": "char_4055_bgsnow",
@@ -7050,7 +7335,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Chuzenji"
   },
   {
     "id": "char_1048_orchd2",
@@ -7075,7 +7361,8 @@
     ],
     "alterBase": "梓兰",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Studio Montagne"
   },
   {
     "id": "char_430_fartth",
@@ -7099,7 +7386,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "NoriZC"
   },
   {
     "id": "char_4193_lemuen",
@@ -7124,7 +7412,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "IRIS_呓"
   },
   {
     "id": "char_113_cqbw",
@@ -7149,7 +7438,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Liduke"
   },
   {
     "id": "char_300_phenxi",
@@ -7173,7 +7463,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "幻象黑兔"
   },
   {
     "id": "char_197_poca",
@@ -7198,7 +7489,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Skade"
   },
   {
     "id": "char_2012_typhon",
@@ -7222,7 +7514,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "LM7"
   },
   {
     "id": "char_391_rosmon",
@@ -7246,7 +7539,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "唯@W"
   },
   {
     "id": "char_1035_wisdel",
@@ -7270,7 +7564,8 @@
     ],
     "alterBase": "W",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Liduke"
   },
   {
     "id": "char_1013_chen2",
@@ -7295,7 +7590,8 @@
     ],
     "alterBase": "陈",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "唯@W"
   },
   {
     "id": "char_4117_ray",
@@ -7319,7 +7615,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Cenm0"
   },
   {
     "id": "char_4138_narant",
@@ -7343,7 +7640,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "板板"
   },
   {
     "id": "char_112_siege",
@@ -7368,7 +7666,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Infukun"
   },
   {
     "id": "char_222_bpipe",
@@ -7393,7 +7692,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "u介"
   },
   {
     "id": "char_362_saga",
@@ -7418,7 +7718,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "多元菌"
   },
   {
     "id": "char_4026_vulpis",
@@ -7443,7 +7744,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "轟将"
   },
   {
     "id": "char_479_sleach",
@@ -7468,7 +7770,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "下野宏铭"
   },
   {
     "id": "char_420_flamtl",
@@ -7493,7 +7796,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "NoriZC"
   },
   {
     "id": "char_427_vigil",
@@ -7518,7 +7822,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "hou"
   },
   {
     "id": "char_249_mlyss",
@@ -7543,7 +7848,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "NoriZC"
   },
   {
     "id": "char_4228_closur",
@@ -7568,7 +7874,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Liyu黎"
   },
   {
     "id": "char_1045_svash2",
@@ -7593,7 +7900,8 @@
     ],
     "alterBase": "银灰",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "竜崎いち"
   },
   {
     "id": "char_4087_ines",
@@ -7618,7 +7926,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "板板"
   },
   {
     "id": "char_134_ifrit",
@@ -7643,7 +7952,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "NoriZC"
   },
   {
     "id": "char_4229_aphris",
@@ -7668,7 +7978,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "下野宏铭"
   },
   {
     "id": "char_213_mostma",
@@ -7694,7 +8005,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "幻象黑兔"
   },
   {
     "id": "char_180_amgoat",
@@ -7719,7 +8031,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Anmi"
   },
   {
     "id": "char_2013_cerber",
@@ -7744,7 +8057,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "LM7"
   },
   {
     "id": "char_4027_heyak",
@@ -7769,7 +8083,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "LM7"
   },
   {
     "id": "char_4133_logos",
@@ -7793,7 +8108,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Skade"
   },
   {
     "id": "char_2015_dusk",
@@ -7819,7 +8135,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "幻象黑兔"
   },
   {
     "id": "char_4141_marcil",
@@ -7845,7 +8162,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Studio Montagne"
   },
   {
     "id": "char_472_pasngr",
@@ -7869,7 +8187,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Skade"
   },
   {
     "id": "char_426_billro",
@@ -7894,7 +8213,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "カワグチ"
   },
   {
     "id": "char_4080_lin",
@@ -7919,7 +8239,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "三目YYB"
   },
   {
     "id": "char_1046_sbell2",
@@ -7944,7 +8265,8 @@
     ],
     "alterBase": "初雪",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "竜崎いち"
   },
   {
     "id": "char_377_gdglow",
@@ -7968,7 +8290,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Namie"
   },
   {
     "id": "char_1038_whitw2",
@@ -7993,7 +8316,8 @@
     ],
     "alterBase": "拉普兰德",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "幻象黑兔"
   },
   {
     "id": "char_4046_ebnhlz",
@@ -8017,7 +8341,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "竜崎いち"
   },
   {
     "id": "char_4226_veen",
@@ -8041,7 +8366,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "二开"
   },
   {
     "id": "char_4146_nymph",
@@ -8067,7 +8393,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "YUJI"
   },
   {
     "id": "char_1040_blaze2",
@@ -8093,7 +8420,8 @@
     ],
     "alterBase": "煌",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Mag42"
   },
   {
     "id": "char_4204_mantra",
@@ -8119,7 +8447,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "板板"
   },
   {
     "id": "char_450_necras",
@@ -8144,7 +8473,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "STAR影法师"
   },
   {
     "id": "char_206_gnosis",
@@ -8168,7 +8498,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "竜崎いち"
   },
   {
     "id": "char_291_aglina",
@@ -8194,7 +8525,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "LM7"
   },
   {
     "id": "char_358_lisa",
@@ -8220,7 +8552,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "将"
   },
   {
     "id": "char_1047_halo2",
@@ -8246,7 +8579,8 @@
     ],
     "alterBase": "星源",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "YUJI"
   },
   {
     "id": "char_248_mgllan",
@@ -8272,7 +8606,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "NoriZC"
   },
   {
     "id": "char_4195_radian",
@@ -8298,7 +8633,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "aZLing4"
   },
   {
     "id": "char_1012_skadi2",
@@ -8324,7 +8660,8 @@
     ],
     "alterBase": "斯卡蒂",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "alchemaniac"
   },
   {
     "id": "char_4134_cetsyr",
@@ -8350,7 +8687,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Chuzenji"
   },
   {
     "id": "char_1031_slent2",
@@ -8376,7 +8714,8 @@
     ],
     "alterBase": "赫默",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "九日九号"
   },
   {
     "id": "char_4202_haruka",
@@ -8402,7 +8741,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "温泉瓜"
   },
   {
     "id": "char_2023_ling",
@@ -8428,7 +8768,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "下野宏铭"
   },
   {
     "id": "char_4072_ironmn",
@@ -8453,7 +8794,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "一千"
   },
   {
     "id": "char_4212_nasti",
@@ -8478,7 +8820,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "AerialB"
   },
   {
     "id": "char_245_cello",
@@ -8503,7 +8846,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "竜崎いち"
   },
   {
     "id": "char_1042_phatm2",
@@ -8528,7 +8872,8 @@
     ],
     "alterBase": "傀影",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Skade"
   },
   {
     "id": "char_250_phatom",
@@ -8554,7 +8899,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Skade"
   },
   {
     "id": "char_1028_texas2",
@@ -8579,7 +8925,8 @@
     ],
     "alterBase": "德克萨斯",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "幻象黑兔"
   },
   {
     "id": "char_1029_yato2",
@@ -8604,7 +8951,8 @@
     ],
     "alterBase": "夜刀",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "一千"
   },
   {
     "id": "char_1502_crosly",
@@ -8628,7 +8976,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "直立行走"
   },
   {
     "id": "char_322_lmlee",
@@ -8654,7 +9003,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "KuroBlood"
   },
   {
     "id": "char_1033_swire2",
@@ -8679,7 +9029,8 @@
     ],
     "alterBase": "诗怀雅",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "下野宏铭"
   },
   {
     "id": "char_400_weedy",
@@ -8705,7 +9056,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "下野宏铭"
   },
   {
     "id": "char_225_haak",
@@ -8730,7 +9082,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "KuroBlood"
   },
   {
     "id": "char_1041_angel2",
@@ -8755,7 +9108,8 @@
     ],
     "alterBase": "能天使",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "幻象黑兔"
   },
   {
     "id": "char_474_glady",
@@ -8781,7 +9135,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Chuzenji"
   },
   {
     "id": "char_437_mizuki",
@@ -8806,7 +9161,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Namie"
   },
   {
     "id": "char_4132_ascln",
@@ -8831,7 +9187,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Cenm0"
   },
   {
     "id": "char_1023_ghost2",
@@ -8856,7 +9213,8 @@
     ],
     "alterBase": "幽灵鲨",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Skade"
   },
   {
     "id": "char_4048_doroth",
@@ -8881,7 +9239,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Jacknife"
   },
   {
     "id": "char_4123_ela",
@@ -8907,7 +9266,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Ubisoft"
   },
   {
     "id": "char_2027_wang",
@@ -8932,7 +9292,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "KuroBlood"
   },
   {
     "id": "char_1039_thorn2",
@@ -8958,7 +9319,8 @@
     ],
     "alterBase": "棘刺",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "嘎嘎人"
   },
   {
     "id": "char_1015_aglna2",
@@ -8984,7 +9346,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Studio Montagne"
   },
   {
     "id": "char_147_shining",
@@ -9009,7 +9372,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "竜崎いち"
   },
   {
     "id": "char_179_cgbird",
@@ -9034,7 +9398,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Skade"
   },
   {
     "id": "char_003_kalts",
@@ -9059,7 +9424,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "唯@W"
   },
   {
     "id": "char_4042_lumen",
@@ -9084,7 +9450,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "一千"
   },
   {
     "id": "char_1016_agoat2",
@@ -9108,7 +9475,8 @@
     ],
     "alterBase": "艾雅法拉",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Anmi"
   },
   {
     "id": "char_1020_reed2",
@@ -9134,7 +9502,8 @@
     ],
     "alterBase": "苇草",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "STAR影法师"
   },
   {
     "id": "char_4056_titi",
@@ -9160,7 +9529,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "黒星紅白"
   },
   {
     "id": "char_4179_monstr",
@@ -9186,7 +9556,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "伍秋秋秋秋"
   },
   {
     "id": "char_1052_kalts2",
@@ -9212,7 +9583,8 @@
     ],
     "alterBase": "凯尔希",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Studio Montagne"
   },
   {
     "id": "char_136_hsguma",
@@ -9237,7 +9609,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Infukun"
   },
   {
     "id": "char_202_demkni",
@@ -9263,7 +9636,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "NoriZC"
   },
   {
     "id": "char_423_blemsh",
@@ -9289,7 +9663,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "竜崎いち"
   },
   {
     "id": "char_2025_shu",
@@ -9315,7 +9690,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "IRIS_呓"
   },
   {
     "id": "char_2014_nian",
@@ -9340,7 +9716,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "幻象黑兔"
   },
   {
     "id": "char_311_mudrok",
@@ -9366,7 +9743,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "m9nokuro"
   },
   {
     "id": "char_4065_judge",
@@ -9391,7 +9769,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "IRIS_呓"
   },
   {
     "id": "char_416_zumama",
@@ -9417,7 +9796,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Liduke"
   },
   {
     "id": "char_4039_horn",
@@ -9442,7 +9822,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "m9nokuro"
   },
   {
     "id": "char_1034_jesca2",
@@ -9468,7 +9849,8 @@
     ],
     "alterBase": "杰西卡",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Cenm0"
   },
   {
     "id": "char_4194_rmixer",
@@ -9494,7 +9876,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "九日九号"
   },
   {
     "id": "char_4230_mcnist",
@@ -9520,7 +9903,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Studio Montagne"
   },
   {
     "id": "char_2026_yu",
@@ -9545,7 +9929,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "一千"
   },
   {
     "id": "char_4235_thumpy",
@@ -9570,7 +9955,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Yukuso"
   },
   {
     "id": "char_1044_hsgma2",
@@ -9595,7 +9981,8 @@
     ],
     "alterBase": "星熊",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "树豚"
   },
   {
     "id": "char_264_f12yin",
@@ -9620,7 +10007,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "WincalBlanke"
   },
   {
     "id": "char_2024_chyue",
@@ -9644,7 +10032,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "KuroBlood"
   },
   {
     "id": "char_4037_demetr",
@@ -9669,7 +10058,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Lowro"
   },
   {
     "id": "char_172_svrash",
@@ -9694,7 +10084,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "竜崎いち"
   },
   {
     "id": "char_293_thorns",
@@ -9719,7 +10110,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "幻象黑兔"
   },
   {
     "id": "char_4082_qiubai",
@@ -9744,7 +10136,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "温泉瓜"
   },
   {
     "id": "char_4182_oblvns",
@@ -9768,7 +10161,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "〇亻"
   },
   {
     "id": "char_4088_hodrer",
@@ -9792,7 +10186,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "树豚"
   },
   {
     "id": "char_4145_ulpia",
@@ -9817,7 +10212,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Skade"
   },
   {
     "id": "char_4058_pepe",
@@ -9842,7 +10238,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Namie"
   },
   {
     "id": "char_1051_headb2",
@@ -9867,7 +10264,8 @@
     ],
     "alterBase": "凛冬",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "伍秋秋秋秋"
   },
   {
     "id": "char_010_chen",
@@ -9892,7 +10290,8 @@
     ],
     "alterBase": "假日威龙陈",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "唯@W"
   },
   {
     "id": "char_4009_irene",
@@ -9918,7 +10317,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "aZLing4"
   },
   {
     "id": "char_4116_blkkgt",
@@ -9944,7 +10344,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "竜崎いち"
   },
   {
     "id": "char_017_huang",
@@ -9969,7 +10370,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "唯@W"
   },
   {
     "id": "char_1026_gvial2",
@@ -9995,7 +10397,8 @@
     ],
     "alterBase": "嘉维尔",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "LLC"
   },
   {
     "id": "char_350_surtr",
@@ -10019,7 +10422,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Ask"
   },
   {
     "id": "char_4098_vvana",
@@ -10044,7 +10448,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Chuzenji"
   },
   {
     "id": "char_1019_siege2",
@@ -10069,7 +10474,8 @@
     ],
     "alterBase": "推进之王",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Studio Montagne"
   },
   {
     "id": "char_1050_chen3",
@@ -10094,7 +10500,8 @@
     ],
     "alterBase": "陈",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "三目YYB"
   },
   {
     "id": "char_188_helage",
@@ -10119,7 +10526,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Liduke"
   },
   {
     "id": "char_4121_zuole",
@@ -10144,7 +10552,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "九日九号"
   },
   {
     "id": "char_485_pallas",
@@ -10169,7 +10578,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "aZLing4"
   },
   {
     "id": "char_1014_nearl2",
@@ -10193,7 +10603,8 @@
     ],
     "alterBase": "临光",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "竜崎いち"
   },
   {
     "id": "char_4011_lessng",
@@ -10217,7 +10628,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "カワグチ"
   },
   {
     "id": "char_1032_excu2",
@@ -10241,7 +10653,8 @@
     ],
     "alterBase": "送葬人",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Skade"
   },
   {
     "id": "char_4010_etlchi",
@@ -10266,7 +10679,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Ask"
   },
   {
     "id": "char_4064_mlynar",
@@ -10291,7 +10705,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "竜崎いち"
   },
   {
     "id": "char_1043_leizi2",
@@ -10316,7 +10731,8 @@
     ],
     "alterBase": "惊蛰",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "竜崎いち"
   },
   {
     "id": "char_4214_cairn",
@@ -10341,7 +10757,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "kirine"
   },
   {
     "id": "char_230_savage",
@@ -10366,7 +10783,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "TOKI"
   },
   {
     "id": "char_282_catap",
@@ -10390,7 +10808,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "m9nokuro"
   },
   {
     "id": "char_283_midn",
@@ -10414,7 +10833,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "竜崎いち"
   },
   {
     "id": "char_137_brownb",
@@ -10438,7 +10858,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "toast"
   },
   {
     "id": "char_347_jaksel",
@@ -10462,7 +10883,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Nagu"
   },
   {
     "id": "char_164_nightm",
@@ -10488,7 +10910,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Lpip"
   },
   {
     "id": "char_220_grani",
@@ -10513,7 +10936,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "alchemaniac"
   },
   {
     "id": "char_263_skadi",
@@ -10538,7 +10962,8 @@
     ],
     "alterBase": "浊心斯卡蒂",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "alchemaniac"
   },
   {
     "id": "char_4217_makoto",
@@ -10564,7 +10989,8 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Studio Montagne"
   },
   {
     "id": "char_4218_aigis",
@@ -10588,7 +11014,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Studio Montagne"
   },
   {
     "id": "char_4219_yukari",
@@ -10613,7 +11040,8 @@
     ],
     "alterBase": "",
     "position": "高台",
-    "positionEn": "Ranged"
+    "positionEn": "Ranged",
+    "artist": "Studio Montagne"
   },
   {
     "id": "char_4220_kormr",
@@ -10638,6 +11066,7 @@
     ],
     "alterBase": "",
     "position": "地面",
-    "positionEn": "Melee"
+    "positionEn": "Melee",
+    "artist": "Studio Montagne"
   }
 ]

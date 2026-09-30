@@ -6,7 +6,7 @@
 // 这类跨页回归（V12 换肤期真的发生过）。失败退出码 1，可直接当 gate。
 import { startStaticServer, startBackend, makeDbPath, cleanupDb, requireBuild, requirePlaywright, newZhContext, FRONTEND_ORIGIN, WAIT_TIMEOUT, sleep } from './helpers.mjs';
 
-const ROUTES = ['/', '/game', '/multiplayer', '/party', '/daily', '/leaderboard', '/stats', '/profile', '/verify', '/reset-password', '/admin'];
+const ROUTES = ['/', '/game', '/multiplayer', '/party', '/daily', '/turtle', '/leaderboard', '/stats', '/profile', '/verify', '/reset-password', '/admin'];
 const THEMES = ['light', 'blast'];
 // 第三档：已登录 + 预置 localStorage。
 // 为什么必须单列一档：未登录时 localStorage 是空的，服务端预渲染与客户端首帧**恰好一致**，
@@ -17,7 +17,11 @@ const PASSES = [...THEMES.map((theme) => ({ label: theme, theme })), LOGGED_IN];
 // 渲染 <Header /> 的路由。只有这些页「已登录」才体现为用户名文本；
 // /profile /verify /reset-password /admin 自带外壳、不挂 Header
 // （/profile 未登录时 ProfilePage 直接 return null），在它们上面断言用户名必然失败。
-const HEADER_ROUTES = new Set(['/', '/game', '/multiplayer', '/party', '/daily', '/leaderboard', '/stats']);
+// 注意这份集合的含义是「**渲染 <Header />** 的路由」，不是「Header 导航里列出的路由」。
+// /turtle 挂 Header（见 src/app/turtle/page.tsx），所以必须在这里 —— 漏掉它等于
+// 海龟汤页不受「已登录用户名必须出现」这条反向断言保护，而那正是接住
+// 「渲染期读 localStorage 造成水合不匹配」的探针（V12 期间 Header 踩过一次）。
+const HEADER_ROUTES = new Set(['/', '/game', '/multiplayer', '/party', '/daily', '/turtle', '/leaderboard', '/stats']);
 const PROBE_USER = 'routeprobe';
 
 await requireBuild();

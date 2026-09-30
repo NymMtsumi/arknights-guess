@@ -214,6 +214,9 @@ html[data-theme="blast"] {
 .stat .bd b { color: var(--text-2); font-weight: 700; font-variant-numeric: tabular-nums; }
 /* 三项指标时把第四列收掉 —— 留一个空槽会让这组数字看起来像少了一项。 */
 .stats-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+/* 两项时收掉第三列。/game 第二排那两张卡（自定义词条 + 海龟汤）用它 ——
+   塞进 .stats-3 会让右边空一格，与首页第五张卡踩过的「落单」是同一个坑。 */
+.stats-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
 /* ⚠️ 单列断点必须排在**最后一个**：.stats 的窄屏规则有两条来源
    （这里 520px、管理端 1080px），同特异性下后者胜。
@@ -569,7 +572,7 @@ textarea.search-input { resize: vertical; min-height: 88px; line-height: 1.7; }
   .rail button { width: auto; white-space: nowrap; }
 }
 /* 单列断点放最后，压过上面所有两列规则 */
-@media (max-width: 520px) { .stats, .stats-3 { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .stats, .stats-3, .stats-2 { grid-template-columns: 1fr; } }
 
 /* ============================================
    17. 氛围层 —— 极光 / 网格 / 上升光点
@@ -695,6 +698,13 @@ html[data-ui="classic"] .motes { display: none; }
   border-color: var(--mc-soft);
   border-color: color-mix(in srgb, var(--mc) 46%, transparent); }
 .tchip.on .box { background: var(--mc); border-color: var(--mc); box-shadow: 0 0 8px var(--mc-soft); }
+/* ⚠️ `.off` 是**共用类、两处含义不同**，改这条规则会同时改到两个玩法：
+ *    - `AttrChips.tsx:70`（自建房词条）——「这一项没选」，点了会**选中**；
+ *    - `QuestionPicker.tsx:134`（海龟汤取值）——「这个取值问过了」，**仍然可点**，只是变暗。
+ *    后者的语义由 `tests/turtle-smoke.mjs` 当作契约钉住（问过的 chip 仍是 `.tchip` 且仍可点）。
+ *    所以这里**只描述视觉**（半透明），不要加 `pointer-events: none` / `cursor: default`
+ *    —— 那会把海龟汤的「提示」变成「拦截」，而该玩法明确要的是提示（见 QuestionPicker
+ *    文件头「我们比弗一把多做的一条」）。要区分两义请另开一个类，不要改这条。 */
 .tchip.off { opacity: .5; }
 
 /* —— 元信息药丸 —— pages.html:245 —— */

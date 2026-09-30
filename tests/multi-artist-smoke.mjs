@@ -98,12 +98,37 @@ async function main() {
       s.emit('join_room', { code, playerName: playerName || undefined });
       await waitLen(buf, 'round_start', 1);
     };
-    /** 猜一个干员并等回执；返回 guess_result 载荷 */
+    /**
+     * 猜一个干员并等回执。返回 guess_result 载荷；**返回 null = 本回合已结算、服务端不再受理**。
+     *
+     * 🔴 必须能返回 null，不能无条件等 guess_result —— 服务端在**多条路径上静默丢弃**猜测：
+     *      · `server/socket/game.js:411`  `if (!room || room.finished || room.roundSettled) return;`
+     *        （回合计时到点 / 有人猜中 / 有人放弃 → roundSettled，见 `:53-61` 的 roundTime 分支）
+     *      · `:425`  `if (rp.guessed || rp.exhausted) return;`
+     *    两处都是直接 return，**既不发 guess_result 也不发 error_msg**。原先这里无条件等
+     *    guess_result：一旦回合在循环中途结算，之后每一次猜测都要空等满 WAIT_TIMEOUT 再抛错，
+     *    整个套件红掉 —— 而它现在挂在**部署 gate** 上。CI runner 比本机慢，实测撞到过。
+     *
+     *    ⚠️ 这是**测试侧的缺陷，不是产品缺陷**：丢弃晚到的猜测是服务端**正确**行为，
+     *       `:424` 的注释写明了理由（防绕过 maxGuesses 的恶意续猜）。
+     *       修的是「测试没料到回合会提前结算」，不是「服务端不该丢」。
+     *
+     *    判定用「round_end 计数是否增长」而不是「猜中了没」：回合可能因**对手放弃**或
+     *    **本回合耗尽**而结算，那两种情况跟猜没猜中无关。没 tap round_end 的房间恒为 0 次，
+     *    退化成原来的行为。
+     *
+     *    真超时（两条都不来）仍然抛错 —— 不把「后端挂了」伪装成「回合结算了」。
+     */
     const guess = async (s, buf, name) => {
       const n = buf.guess_result.length;
+      const ended = buf.round_end?.length || 0;
       s.emit('multi:guess', { name });
-      await waitLen(buf, 'guess_result', n + 1);
-      return buf.guess_result[n];
+      const ok = await waitFor(
+        () => buf.guess_result.length > n || (buf.round_end?.length || 0) > ended,
+        { desc: `guess_result 第 ${n + 1} 条` },
+      ).then(() => true).catch(() => false);
+      if (!ok) throw new Error(`timeout (guess_result 第 ${n + 1} 条)`);
+      return buf.guess_result.length > n ? buf.guess_result[n] : null;
     };
 
     /** 按「大画师组」挑猜测对象 —— 抬高 artist 命中的概率，见文件头 c3 的说明 */
@@ -143,7 +168,7 @@ async function main() {
     const nGuesses = Math.min(15, guessCountOf(created));
     for (const nm of huntGuesses('easy', nGuesses).names) {
       const r = await guess(A, aBuf, nm);
-      if (r.correct) break; // 猜中就本回合结束，不再受理
+      if (!r || r.correct) break; // null = 回合已结算；猜中也结算，两者都不再受理
     }
     await sleep(300); // 让 opponent_update 落定
 
@@ -283,8 +308,13 @@ async function main() {
     for (let round = 1; round <= MAX_ROUNDS && hits === 0; round++) {
       const before = sBuf.round_start.length;
       let i = 0;
+      // 本回合是不是**自己**结算的（猜中名字）。false 而回合又结束了 = 别人结算的
+      // （对手放弃 / 超时 / 双方耗尽），那种情况下放弃按钮已随结算屏卸载，不能再点。
+      let settledByUs = false;
       for (const nm of hunt) {
         const r = await guess(S, sBuf, nm);
+        // null = 本回合已被结算，服务端此后静默丢弃猜测 → 收工，别空转到超时
+        if (!r) break;
         // 等这一行渲染出来（读空表 = 这一轮白读，宁可超时失败也不要静默空转）
         await waitFor(async () => (await pageC.locator('table.opp-grid tbody tr span.opp-dot').count()) >= (i + 1) * 11,
           { desc: `对手棋盘第 ${i + 1} 行` }).catch(() => {});
@@ -306,16 +336,23 @@ async function main() {
           }
         }
         i++;
-        if (r.correct) break; // 猜中名字 → 回合立刻结束
+        if (r.correct) { settledByUs = true; break; } // 猜中名字 → 回合立刻结束
       }
       console.log(`   第 ${round} 回合：猜 ${i} 次，累计核对 ${totalRows} 行，命中 ${hits} 行`);
+      // 比赛已结束（bestOf 5 数满胜场）就没有下一回合了，再等 round_start 只会等满超时
+      if (sBuf.round_end.at(-1)?.matchOver) break;
       if (hits === 0 && round < MAX_ROUNDS) {
         // 只有 S 次数耗尽是**不会**结算的（服务端要双方都 exhausted/放弃）——
         // 所以让只观战的 C 放弃，回合立刻判平局，6s 后自动开下一局。
         // ⚠️ 放弃是二次确认：handleSurrender 只开弹窗（page.tsx:647），
         //    必须再点弹窗里的「确认放弃」才真的 emit surrender_round。
-        await pageC.locator('button', { hasText: '放弃本局' }).click({ timeout: WAIT_TIMEOUT });
-        await pageC.locator('button', { hasText: '确认放弃' }).click({ timeout: WAIT_TIMEOUT });
+        // ⚠️ 只在本回合**仍开着**时才点：回合若已被别人结算（对手放弃/超时/耗尽），
+        //    浏览器已经切到结算屏、这两个按钮都不在 DOM 里，click 会空等到 WAIT_TIMEOUT
+        //    再抛错 —— 表现与「后端挂了」一模一样，但其实是测试自己把回合走完了。
+        if (!settledByUs) {
+          await pageC.locator('button', { hasText: '放弃本局' }).click({ timeout: WAIT_TIMEOUT });
+          await pageC.locator('button', { hasText: '确认放弃' }).click({ timeout: WAIT_TIMEOUT });
+        }
         await waitLen(sBuf, 'round_start', before + 1);
       }
     }

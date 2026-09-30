@@ -103,6 +103,12 @@ export function initSchema(db) {
     ['games', 'user_id', "INTEGER REFERENCES users(id)"],
     ['games', 'daily_date', 'TEXT'],
     ['games', 'multi_data', 'TEXT'],
+    // 海龟汤的「提问次数」。**只有海龟汤写这一列**，其余模式恒为 NULL —— 无默认值，
+    // 所以老记录自动是 NULL（这正是排行榜要的「口径变更前的记录」标记）。
+    // 为什么不复用 guess_count：它在所有模式里的含义必须保持「点名猜了几次」，
+    // 而 /api/me 的 bestScore 是 MIN(guess_count) 的全模式口径，把提问次数混进去
+    // 会顶掉经典的最好成绩。海龟汤榜读到 NULL 会退回 guess_count，见 routes/game.js。
+    ['games', 'question_count', 'INTEGER'],
     ['api_tokens', 'token_prefix', 'TEXT'],
   ]) {
     const columns = db.prepare(`PRAGMA table_info(${table})`).all();

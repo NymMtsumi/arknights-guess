@@ -57,19 +57,20 @@ export default function TurtlePage() {
   // 结算落档：只提交服务端（进海龟汤专属榜），**不写本地历史、不碰本地聚合**
   // —— 理由见 saveTurtleStats 的注释。与 /game 的存档同一套「上一次状态是 playing
   // 才触发」的写法（game/page.tsx），避免重挂载时对已结算的局面重复提交。
-  // guessCount 只数点名猜测，不含提问：与经典单人同量纲，榜上的 avgGuesses 才可比。
+  // 两个计数器都上报：榜算的是**提问次数**（questionCount），点名次数只用来维持
+  // guess_count 在服务端的既有含义（获胜守卫 / bestScore 口径），见 saveTurtleStats。
   const prevStatus = useRef(status);
   const savedRef = useRef(false);
   useEffect(() => {
     if (prevStatus.current === 'playing' && (status === 'won' || status === 'lost')) {
       if (!savedRef.current && target) {
-        saveTurtleStats(status === 'won', guesses.length, difficulty, target.name);
+        saveTurtleStats(status === 'won', questionCount, guesses.length, difficulty, target.name);
         savedRef.current = true;
       }
     }
     if (status === 'playing') savedRef.current = false;
     prevStatus.current = status;
-  }, [status, guesses.length, difficulty, target]);
+  }, [status, questionCount, guesses.length, difficulty, target]);
 
   // ══════════════ 未开局 ══════════════
   if (status === 'idle') {
@@ -243,8 +244,16 @@ export default function TurtlePage() {
             logCard
           )}
 
-          {/* 点名猜测 */}
-          <div className="card">
+          {/* 点名猜测。
+              ⚠️ `overflow: visible` 不是装饰，是本页唯一需要它的一处：
+              `.card` 自带 `overflow: hidden`，而 GameSearch 的下拉框是
+              `position: absolute; top: calc(100% + 7px)` —— 会被卡片底边裁掉，
+              表现就是「下拉框显示不全」（只剩输入框下面一条）。
+              四个调用点里只有本页把 GameSearch 放进了 `.card`，/game、/daily、
+              /multiplayer、/party 用的都是裸的居中 flex 容器，所以这是海龟汤独有的。
+              本卡内部没有贴边的背景元素（只有标题、输入框和 .bdg 徽标），
+              放开裁切不会让任何内容溢出圆角，其余卡片行为不变。 */}
+          <div className="card" style={{ overflow: 'visible' }}>
             <h3 className="card-sub">{t('turtle.guessTitle')}</h3>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
               <GameSearch

@@ -476,10 +476,20 @@ export function saveCustomGameStats(result: {
  * 没有 `ts` 参数 —— 那个参数是为了让本地副本与服务端副本的时间戳一致、
  * 好让 mergeHistories 认成同一条。这里没有本地副本，不需要。
  *
- * @param guessCount 只数**点名猜测**次数，不含提问 —— 与经典单人同量纲，
- *   榜上的 avgGuesses（totalGuesses / totalGames）因此可比。
+ * ⚠️ **两个计数器都送，含义不同，别合并**：
+ *   - `questionCount`（提问次数）→ 落 `games.question_count`，**海龟汤榜的
+ *     「平均猜测」用的就是它**。这个模式里探测成本几乎全在提问上，点名只是收尾；
+ *     拿点名次数衡量会常年停在 0~1，两个玩家之间没有区分度（线上实测 0.75 / 1.00）。
+ *   - `guessCount`（点名次数）→ 落 `games.guess_count`，保持它在**所有模式**里
+ *     的同一个含义。服务端还有两条依赖它：`won && guessCount < 1` 的守卫
+ *     （获胜只能来自点名猜中），以及 /api/me 的 `MIN(guess_count)` 最好成绩口径。
+ *
+ * @param questionCount 提问次数，不含点名。
+ * @param guessCount 点名猜测次数，不含提问。
  */
-export function saveTurtleStats(won: boolean, guessCount: number, difficulty: string, targetName: string): void {
+export function saveTurtleStats(
+  won: boolean, questionCount: number, guessCount: number, difficulty: string, targetName: string,
+): void {
   if (typeof window === 'undefined') return;
   if (!getToken()) return;
   apiCall('/api/save-game', {
@@ -487,6 +497,7 @@ export function saveTurtleStats(won: boolean, guessCount: number, difficulty: st
     body: JSON.stringify({
       player_key: getPlayerKey(),
       won,
+      questionCount,
       guessCount,
       difficulty,
       targetName,

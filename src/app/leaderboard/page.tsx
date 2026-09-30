@@ -134,8 +134,13 @@ export default function LeaderboardPage() {
     return '';
   };
 
-  // 是否显示 avgGuesses 列（单人与多人模式均显示，服务端两种模式都返回 totalGuesses/totalGames）。
-  // 海龟汤也显示：它上报的 guessCount 只数点名猜测、不含提问，与经典单人同量纲，所以可比。
+  // 是否显示 avgGuesses 列（服务端三种模式都返回 totalGuesses/totalGames）。
+  // ⚠️ 海龟汤也显示这一列，但**口径不同，不可与上面两档横向比较**：
+  //    单人/多人 = 平均点名猜测次数（guess_count）；
+  //    海龟汤  = 平均**提问**次数（question_count），因为该模式的探测成本几乎全在提问上，
+  //             点名只是收尾 —— 拿点名次数衡量会常年停在 0~1（线上实测 0.75 / 1.00）。
+  //    表头沿用「平均猜测」是刻意的（用户原话就是「平均猜测应当是询问的次数」）；
+  //    要改成「平均提问」得另开一个 i18n 键，那是独立事项。
   const showAvgGuesses = mode === 'single' || mode === 'multi' || mode === 'turtle';
   const isDaily = mode === 'daily';
 

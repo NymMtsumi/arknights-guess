@@ -335,8 +335,8 @@ async function main() {
       await P2.locator('[data-testid="turtle-start-easy"]').click({ timeout: WAIT_TIMEOUT });
       await waitFor(async () => (await P2.locator('[data-testid="turtle-attempts"]').count()) === 1, { desc: '登录态开局' });
 
-      // 只**提问**两次、一次都不点名 —— 这样 f3 才能把「上报的是点名猜测次数」
-      // 和「上报的是共享消耗次数」区分开：前者应为 0，后者会是 2。
+      // 只**提问**两次、一次都不点名 —— 这样 f3 才能把两个计数器区分开：
+      // 提问次数 = 2、点名次数 = 0，两个数不同，断言红了就能一眼看出读的是哪一个。
       // 两个维度都取各自最小的一项，不必知道谜底（这里只关心「问了几次」）。
       const rows2 = () => P2.locator('[data-testid="turtle-log-row"]');
       for (const f of ['rarity', 'gender']) {
@@ -358,8 +358,11 @@ async function main() {
 
       check('f2.结算后成绩上了海龟汤榜（totalGames=1）',
         !!row && row.totalGames === 1, `row=${JSON.stringify(row)}`);
-      check('f3.上报的是点名猜测次数、不是共享消耗（问了 2 次、0 次点名 → totalGuesses=0）',
-        !!row && row.totalGuesses === 0, `totalGuesses=${row?.totalGuesses}（若为 2 说明上报了共享消耗）`);
+      // 榜的「平均猜测」口径是**提问次数**（用户要求：询问的次数，不是点名次数）。
+      // 这一局问了 2 次、点名 0 次，所以 totalGuesses 必须是 2 —— 若为 0 说明榜又读回
+      // 点名次数了，两个计数器数值不同正是为了让这条断言能分辨。
+      check('f3.榜读的是提问次数（问了 2 次、点名 0 次 → totalGuesses=2）',
+        !!row && row.totalGuesses === 2, `totalGuesses=${row?.totalGuesses}（若为 0 说明读的是点名次数）`);
       check('f4.「放弃」记为一负（wins=0）',
         !!row && row.wins === 0, `wins=${row?.wins}`);
       check('f5.登录态整局 0 个 pageerror', p2Errors.length === 0,

@@ -78,16 +78,34 @@ async function main() {
 
     // ══════════════ b. 提交对局 ══════════════
     console.log('\n[b] 提交海龟汤 / 经典单人各一局');
+    // 海龟汤提交**两局，故意用不同难度**：海龟汤榜的「平均猜测」口径是**提问次数**
+    // （questionCount），不是点名次数（guessCount）—— 用户要求「应当是询问的次数」。
+    // 把两个计数器给成不同的值（7 vs 2）、再把两局放在不同难度上，就能让 e 段用
+    // 难度筛选把两个口径**分别**断言出来，而不是让它们的和混在一个数里分辨不清。
     const saveTurtle = await api('/api/save-game', {
       method: 'POST', token: jwt, ip: nextIp(),
       body: {
-        won: true, guessCount: 3, difficulty: 'easy',
+        won: true, questionCount: 7, guessCount: 2, difficulty: 'easy',
         targetName: turtleAnswer, mode: 'turtle',
         timestamp: new Date().toISOString(),
       },
     });
     check('b1.mode=turtle 被 save-game 接受（不 400）',
       saveTurtle.status === 200, `status=${saveTurtle.status} body=${JSON.stringify(saveTurtle.data)}`);
+
+    // b3. **口径变更前的老记录形态**：只有 guess_count，没有 question_count
+    //     （该列后加的，无默认值 → 老行是 NULL）。榜必须退回 guess_count 而不是
+    //     把老玩家算成 0.00。线上现存的海龟汤记录全是这个形态，所以要有一局守它。
+    const saveTurtleLegacy = await api('/api/save-game', {
+      method: 'POST', token: jwt, ip: nextIp(),
+      body: {
+        won: true, guessCount: 5, difficulty: 'hard',
+        targetName: turtleAnswer, mode: 'turtle',
+        timestamp: new Date().toISOString(),
+      },
+    });
+    check('b3.不带 questionCount 的海龟汤存档仍被接受（老客户端 / 口径变更前的记录）',
+      saveTurtleLegacy.status === 200, `status=${saveTurtleLegacy.status} body=${JSON.stringify(saveTurtleLegacy.data)}`);
 
     const saveSingle = await api('/api/save-game', {
       method: 'POST', token: jwt, ip: nextIp(),
@@ -116,8 +134,9 @@ async function main() {
     // c2. 「赢了不可能 0 次猜测」这条守卫必须**同时**管住 single 与 turtle。
     //     海龟汤的获胜只能靠点名猜中产生（turtle-store 的 guesses 恒 >= 1），
     //     「多人/自定义允许 0 次（对手断线判负）」那个口子对它不成立。
-    //     ⚠️ 漏了 turtle 时接口会**静默接受**，把 /api/leaderboard?mode=turtle 的
-    //        avgGuesses（= SUM(guess_count)/COUNT(*)）直接压到 0.00 —— 不报错，只是榜变假。
+    //     ⚠️ 漏了 turtle 时接口会**静默接受**一条「赢了但一次都没点过名」的记录 ——
+    //        不报错，只是榜变假。注意这条守卫守的是「这局是否可能真的发生过」，
+    //        与榜算哪个计数器（提问次数）无关，所以口径变更后它仍然成立。
     //     谜底用**第三个**真实干员（不复用 turtleAnswer/singleAnswer）：确保拦下它的是
     //     这一条守卫而不是 c1 那条存在性校验，也不与 b1/b2 那两局的记录混在一起。
     //     ⚠️ 若守卫真的漏了 turtle，这里会**插入**一条 guess_count=0 的记录，后面的
@@ -151,14 +170,14 @@ async function main() {
 
     // ══════════════ d. 两张榜互不串 ══════════════
     console.log('\n[d] 排行榜：海龟汤与经典单人各一张');
-    // ⚠️ 必须连 totalGuesses 一起断言（海龟汤 3 次 / 经典 2 次，两局是刻意给的不同值）。
-    //    只断言 totalGames===1 && wins===1 是**不够的**：mode=turtle 若被白名单漏掉而
-    //    静默回落成 single，这个 tab 会显示经典那一局，而那两个数字照样是 1 —— 断言全绿、
-    //    榜却是错的。totalGuesses 才是能把两局区分开的那个字段。
+    // ⚠️ 必须连 totalGuesses 一起断言（海龟汤两局 7+5=12 / 经典 2，是刻意给的不同值）。
+    //    只断言 totalGames && wins 是**不够的**：mode=turtle 若被白名单漏掉而
+    //    静默回落成 single，这个 tab 会显示经典那一局，而那两个数字照样能对上 —— 断言全绿、
+    //    榜却是错的。totalGuesses 才是能把两榜区分开的那个字段。
     const lbTurtle = await api('/api/leaderboard?mode=turtle&limit=50', { ip: nextIp() });
     const tRow = (lbTurtle.data?.leaderboard || [])[0];
-    check('d1.?mode=turtle 命中的是海龟汤那一局（totalGuesses=3，不是经典那局的 2）',
-      lbTurtle.status === 200 && !!tRow && tRow.totalGames === 1 && tRow.wins === 1 && tRow.totalGuesses === 3,
+    check('d1.?mode=turtle 命中的是海龟汤那两局（totalGuesses=12=7+5，不是经典那局的 2）',
+      lbTurtle.status === 200 && !!tRow && tRow.totalGames === 2 && tRow.wins === 2 && tRow.totalGuesses === 12,
       `status=${lbTurtle.status} row=${JSON.stringify(tRow)}`);
 
     const lbSingle = await api('/api/leaderboard?mode=single&limit=50', { ip: nextIp() });
@@ -167,13 +186,26 @@ async function main() {
       lbSingle.status === 200 && !!sRow && sRow.totalGames === 1 && sRow.wins === 1 && sRow.totalGuesses === 2,
       `status=${lbSingle.status} row=${JSON.stringify(sRow)}`);
 
-    // ══════════════ e. 难度筛选对海龟汤同样生效 ══════════════
-    console.log('\n[e] 海龟汤榜的难度筛选');
+    // ══════════════ e. 难度筛选 + 两个计数器分别对账 ══════════════
+    // 两局刻意放在不同难度上，于是同一个难度筛选把**两个口径分别**隔离出来：
+    //   easy 那局只有 questionCount=7 → 榜必须显示 7（**这就是用户要的口径**）
+    //   hard 那局只有 guessCount=5、question_count 为 NULL → 榜必须退回 5（老记录兜底）
+    // 若有人把口径改回点名次数，e1 会从 7 掉到 2；若有人把 COALESCE 兜底删掉，e2 会变 0。
+    console.log('\n[e] 海龟汤榜的难度筛选，以及提问/点名两个口径各自对账');
     const lbEasy = await api('/api/leaderboard?mode=turtle&difficulty=easy&limit=50', { ip: nextIp() });
     const lbHard = await api('/api/leaderboard?mode=turtle&difficulty=hard&limit=50', { ip: nextIp() });
-    check('e1.easy 档命中、hard 档为空（难度是真的在过滤，不是在忽略参数）',
-      (lbEasy.data?.leaderboard || []).length === 1 && (lbHard.data?.leaderboard || []).length === 0,
-      `easy=${(lbEasy.data?.leaderboard || []).length} 条, hard=${(lbHard.data?.leaderboard || []).length} 条`);
+    const lbMedium = await api('/api/leaderboard?mode=turtle&difficulty=medium&limit=50', { ip: nextIp() });
+    const eRow = (lbEasy.data?.leaderboard || [])[0];
+    const hRow = (lbHard.data?.leaderboard || [])[0];
+    check('e1.?mode=turtle&difficulty=easy → totalGuesses=7（提问次数，不是点名次数 2）',
+      !!eRow && eRow.totalGames === 1 && eRow.totalGuesses === 7,
+      `row=${JSON.stringify(eRow)}（若为 2 说明榜读的是点名次数）`);
+    check('e2.?mode=turtle&difficulty=hard → totalGuesses=5（老记录退回 guess_count，不显示 0.00）',
+      !!hRow && hRow.totalGames === 1 && hRow.totalGuesses === 5,
+      `row=${JSON.stringify(hRow)}（若为 0 说明 COALESCE 兜底没了）`);
+    check('e3.medium 档无人（难度是真的在过滤，不是在忽略参数）',
+      (lbMedium.data?.leaderboard || []).length === 0,
+      `medium=${(lbMedium.data?.leaderboard || []).length} 条`);
 
     // ══════════════ f. 不进个人战绩聚合 ══════════════
     console.log('\n[f] /api/me：海龟汤不进战绩聚合');
@@ -184,7 +216,7 @@ async function main() {
     check('f1.totalGames=1（只有经典那局；海龟汤没被算进去）',
       st.totalGames === 1,
       `totalGames=${st.totalGames} wins=${st.wins} bestScore=${st.bestScore}`);
-    check('f2.bestScore=2（经典那局的成绩；若海龟汤的 3 次混进来会变成 2 仍成立，故配合 f1/f3 一起看）',
+    check('f2.bestScore=2（经典那局的成绩；若海龟汤的 2/5 次混进来 MIN 仍是 2，故配合 f1/f3 一起看）',
       st.bestScore === 2, `bestScore=${st.bestScore}`);
     check('f3.byMode 明细之和 === totalGames（漏改谓词会在这里炸）',
       detailSum === st.totalGames,
@@ -220,8 +252,8 @@ async function main() {
     const lbAfter = await api('/api/leaderboard?mode=turtle&limit=50', { ip: nextIp() });
     const afterRows = lbAfter.data?.leaderboard || [];
     check('h2.游客那局不上榜（INNER JOIN users 挡住了 user_id=NULL）',
-      afterRows.length === 1 && afterRows[0].totalGames === 1,
-      `榜上 ${afterRows.length} 人，totalGames=${afterRows[0]?.totalGames}`);
+      afterRows.length === 1 && afterRows[0].totalGames === 2,
+      `榜上 ${afterRows.length} 人，totalGames=${afterRows[0]?.totalGames}（应仍是登录用户那 2 局）`);
   } finally {
     killBackend(backend);
     await sleep(300);

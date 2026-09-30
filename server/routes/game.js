@@ -61,6 +61,12 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
     let player_key = typeof body.player_key === 'string' ? body.player_key.trim() : '';
     const won = body.won;
     const guessCount = Number.isInteger(body.guessCount) ? body.guessCount : -1;
+    // 海龟汤的**提问**次数（与 guessCount 同属一个 24 次池子的另一个计数器）。
+    // 只有海龟汤会送，其余模式不送 → null。用 null 而不是 -1 当「没送」的哨兵：
+    // 它要原样落进可空列，而 -1 是个会污染榜的合法整数。
+    const questionCount = body.questionCount === undefined || body.questionCount === null
+      ? null
+      : (Number.isInteger(body.questionCount) ? body.questionCount : -1);
     const mode = sanitizeString(body.mode || 'single', 10);
     let difficulty = sanitizeString(body.difficulty || 'hard', 20);
     const targetName = sanitizeString(body.targetName || '', 100);
@@ -141,14 +147,18 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
     }
     // 赢了不可能 0 次猜测（单人/海龟汤）；多人/自定义允许 0 次（对手断线直接判负）
     // ⚠️ 海龟汤必须并进来：它的获胜**只能**靠点名猜中产生（turtle-store 的 guesses
-    //    恒 >= 1），「对手断线」那个口子对它不成立。漏了这一条，`{won:true, guessCount:0}`
-    //    会被接受，把 /api/leaderboard?mode=turtle 的 avgGuesses 直接压到 0.00。
+    //    恒 >= 1），「对手断线」那个口子对它不成立。海龟汤榜的口径改成提问次数之后
+    //    这条守卫仍然成立 —— 它守的是「这局是否可能真的发生过」，与榜算哪个计数器无关。
     if (won && guessCount < 1 && (mode === 'single' || mode === 'turtle')) {
       return jsonResponse(res, { error: '获胜时 guessCount 至少为 1' }, 400);
     }
     // 自定义房最多 15 次 × 7 小局 = 105，多人 BO7 也可能超过 50，放宽上限
     if (guessCount > 200) {
       return jsonResponse(res, { error: 'guessCount 超出合理范围' }, 400);
+    }
+    // questionCount 是同量纲的另一个计数器，同样的上限；-1 是「送了但不是整数」。
+    if (questionCount !== null && (questionCount < 0 || questionCount > 200)) {
+      return jsonResponse(res, { error: 'questionCount 超出合理范围' }, 400);
     }
 
     // 单人/海龟汤：校验目标干员真实存在（防伪造空/垃圾记录）。
@@ -210,8 +220,8 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
     }
 
     const result = db.prepare(
-      'INSERT INTO games (player_key, user_id, won, guess_count, difficulty, target_name, timestamp, mode, daily_date, multi_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-    ).run(player_key, userId || null, won ? 1 : 0, guessCount, difficulty, targetName, timestamp, mode, null, multiData);
+      'INSERT INTO games (player_key, user_id, won, guess_count, difficulty, target_name, timestamp, mode, daily_date, multi_data, question_count) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).run(player_key, userId || null, won ? 1 : 0, guessCount, difficulty, targetName, timestamp, mode, null, multiData, questionCount);
 
     const extraHeaders = {};
     if (newPlayerKey) {
@@ -245,6 +255,22 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
     // 落在白名单外的 mode（daily、以及任何笔误）一律回落 single —— 保持原行为。
     if (!['single', 'multi', 'turtle'].includes(mode)) mode = 'single';
 
+    // 海龟汤的「平均猜测」（前端 = totalGuesses / totalGames）算的是**提问次数**，
+    // 不是点名次数。这个模式里的探测成本几乎全在提问上，点名只是收尾 —— 拿点名次数
+    // 衡量会常年停在 0~1（线上实测 0.75 与 1.00，两个用户之间没有区分度）。
+    // 其余模式仍然用 guess_count，一行不动。
+    //
+    // COALESCE 的兜底不是防御性编程：口径变更前的海龟汤记录只有 guess_count、
+    // question_count 为 NULL（该列无默认值），直接 SUM(question_count) 会得 0，
+    // 把老玩家的榜位显示成 0.00。退回 guess_count 至少是「当时真实记下的探测次数」，
+    // 比 0 诚实；新记录一律有值，所以这个分支只对老记录生效。
+    //
+    // 安全性：mode 在上面刚被收敛成三选一，这里只做二选一，两边都是字面量，
+    // 不存在把用户输入拼进 SQL 的路径。
+    const guessExpr = mode === 'turtle'
+      ? 'SUM(COALESCE(g.question_count, g.guess_count))'
+      : 'SUM(g.guess_count)';
+
     // 内存缓存（60s TTL），避免每次请求全表聚合扫描
     const cacheKey = `${mode}:${difficulty || 'all'}:${limit}`;
     const cached = leaderboardCache.get(cacheKey);
@@ -258,7 +284,7 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
         SELECT u.username, u.display_id, u.nickname,
                SUM(g.won) as wins,
                COUNT(*) as totalGames,
-               SUM(g.guess_count) as totalGuesses,
+               ${guessExpr} as totalGuesses,
                ROUND(CAST(SUM(g.won) AS REAL) / CAST(COUNT(*) AS REAL) * 100, 1) as winRate
         FROM games g
         INNER JOIN users u ON u.id = g.user_id
@@ -273,7 +299,7 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
         SELECT u.username, u.display_id, u.nickname,
                SUM(g.won) as wins,
                COUNT(*) as totalGames,
-               SUM(g.guess_count) as totalGuesses,
+               ${guessExpr} as totalGuesses,
                ROUND(CAST(SUM(g.won) AS REAL) / CAST(COUNT(*) AS REAL) * 100, 1) as winRate
         FROM games g
         INNER JOIN users u ON u.id = g.user_id

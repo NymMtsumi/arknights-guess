@@ -1,7 +1,7 @@
 // 冒烟测试共享骨架
 // 供 tests/*.mjs 复用：后端启动（临时 DB + dev JWT 回退）、静态服务器（服务 out/）、
 // 断言与汇总、Playwright 无关的纯工具。每个脚本是独立进程，模块级 results 天然隔离。
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { createServer } from 'node:http';
 import { readFile, stat, rm } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -89,6 +89,12 @@ async function resolveFile(urlPath) {
     if (existsSync(stripped) && (await stat(stripped)).isFile()) return stripped;
   }
   // 5. SPA 回退（客户端深层路由）
+  // 🔴 这两个命名空间**不许**回退：`/_next/**` 与 `/icons/**` 装的是**真实文件**，
+  //    里面没有「客户端深层路由」这回事 —— 文件不存在就该 404。
+  //    不加这条的后果是**静默**的（实测过）：`/icons/menu-nope.png` 会返回 200 +
+  //    首页 HTML（16670 字节，与 `/` 逐字节相同），于是 routes-smoke 里那条
+  //    「/icons/ 下 4xx 算失败」的监听**永不触发**，变成一行装饰。
+  if (rel.startsWith('/_next/') || rel.startsWith('/icons/')) return null;
   const rootIdx = join(outRoot, 'index.html');
   return existsSync(rootIdx) ? rootIdx : null;
 }
@@ -109,7 +115,16 @@ export function startStaticServer() {
       res.end(String(e));
     }
   });
-  return new Promise((resolve) => server.listen(FRONTEND_PORT, () => resolve(server)));
+  return new Promise((resolve, reject) => {
+    // 端口被占时要 **reject**，不能没有 error 监听 —— 没有监听者时 'error' 事件会变成
+    // uncaught exception 直接崩掉进程，而那时调用方的 try/finally 还没进去（或刚进去），
+    // 后端就被留在 3101 上（就是 memory 里记的「端口 3101 残留导致只红一条」）。
+    server.once('error', reject);
+    server.listen(FRONTEND_PORT, () => {
+      server.on('error', () => {});   // 启动后的错误不再炸进程
+      resolve(server);
+    });
+  });
 }
 
 // ═══════════════════════════════════════════════
@@ -117,8 +132,41 @@ export function startStaticServer() {
 // ═══════════════════════════════════════════════
 // extraEnv：给个别用例补环境变量（如 auth-smoke 要验部署 webhook 的令牌分支，
 // 需要 DEPLOY_TOKEN 有值）。默认不传，行为与从前完全一致。
+/**
+ * 端口上是否已经有进程在**监听**（同步探测）。
+ *
+ * 用「连一下」而不是「bind 一下」：Windows 与 Linux 的 SO_REUSEADDR 语义相反，
+ * bind 试探会在 Windows 上把占着端口的进程骗过去；connect 只认事实。
+ * 另起一个 node 进程是为了拿到同步返回值（Node 没有同步的 net API），
+ * 每次 startBackend 只跑一次，约 40ms。
+ */
+function portInUse(port) {
+  const probe = spawnSync(process.execPath, ['-e', [
+    `const n = require('net');`,
+    `const s = n.connect({ port: ${port}, host: '127.0.0.1' });`,
+    `s.once('connect', () => { s.destroy(); process.exit(0); });`,
+    `s.once('error', () => process.exit(1));`,
+    `setTimeout(() => { s.destroy(); process.exit(1); }, 1500).unref();`,
+  ].join('\n')], { stdio: 'ignore', timeout: 8000 });
+  return probe.status === 0;
+}
+
 export function startBackend({ port = BACKEND_PORT, dbPath, extraEnv } = {}) {
   if (!dbPath) throw new Error('startBackend 需要 dbPath（临时数据库路径），避免误用生产 data.db');
+
+  // 🔴 端口归属校验。没有这一步时，残留的孤儿后端会让整个脚本**静默跑在错的 DB 上**：
+  //    我们 spawn 的后端因 EADDRINUSE 立刻退出，而随后 waitForBackend 连上的是那个
+  //    孤儿（它挂着上一个脚本的临时 DB）—— 于是业务断言按旧数据判定，红得极难归因。
+  //    本地最典型的表现就是「只红一条」，CI 因为是干净容器反而看不到。
+  if (portInUse(port)) {
+    throw new Error(
+      `端口 ${port} 已被占用，拒绝启动后端。\n` +
+      `        多半是上一个 smoke 脚本留下的孤儿后端（挂着那个脚本的临时 DB）。\n` +
+      `        直接继续跑的话，waitForBackend 会连上它，断言会按错误的数据库判定。\n` +
+      `        先找出并结束占用 ${port} 的进程再重跑。`,
+    );
+  }
+
   const child = spawn(process.execPath, ['server/index.js'], {
     cwd: ROOT,
     env: {
@@ -138,13 +186,34 @@ export function startBackend({ port = BACKEND_PORT, dbPath, extraEnv } = {}) {
   return child;
 }
 
-export function killBackend(child) {
+/**
+ * 关掉后端。**返回的 Promise 在子进程真正退出后 resolve**（调用方应当 `await`）。
+ *
+ * 🔴 为什么必须能 await：老版本是「SIGTERM + 一个 `.unref()` 的 2s SIGKILL 兜底」，
+ *    而调用方清一色是 `killBackend(x); await sleep(300); await cleanupDb(); process.exit()`。
+ *    `.unref()` 的定时器既不保活、`process.exit` 又立刻终止父进程 —— **2s 那个分支
+ *    在所有 smoke 脚本里都到不了**（Windows 上 SIGTERM 等效强杀所以本地看不出来，
+ *    但 CI 是 Linux：`server/index.js` 的优雅关闭要走 `http.close()` + `io.close()`，
+ *    连接没立刻收干净就成了孤儿进程占着 3101）。下一个脚本的 `waitForBackend` 会连上
+ *    这个**挂着上一个脚本临时 DB 的孤儿后端**，报成极难归因的红。
+ *
+ * 兼容性：不 `await` 的调用方行为与从前一致 —— `async` 函数体在第一个 `await` 之前
+ * 是**同步**执行的，而 SIGTERM 就发在那之前。
+ */
+export async function killBackend(child, { graceMs = 2000 } = {}) {
   if (!child || child.exitCode !== null) return;
+  const exited = new Promise((resolve) => child.once('exit', resolve));
   try { child.kill('SIGTERM'); } catch {}
-  // 兜底：2s 后仍未退出则强杀（Windows 上 SIGTERM 不触发优雅关闭）
-  setTimeout(() => {
+  // 兜底：graceMs 后仍未退出则强杀（Windows 上 SIGTERM 不触发优雅关闭）
+  const hard = setTimeout(() => {
     if (child.exitCode === null) { try { child.kill('SIGKILL'); } catch {} }
-  }, 2000).unref();
+  }, graceMs);
+  try {
+    // 硬上限：SIGKILL 都杀不掉也别把 CI 挂死（正常路径几百毫秒内就 resolve）
+    await Promise.race([exited, sleep(graceMs + 3000)]);
+  } finally {
+    clearTimeout(hard);
+  }
 }
 
 // ═══════════════════════════════════════════════

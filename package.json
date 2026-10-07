@@ -21,6 +21,9 @@
     "smoke:turtle": "node tests/turtle-smoke.mjs",
     "smoke:turtle-store": "node tests/turtle-store-test.mjs",
     "smoke:turtle-lb": "node tests/turtle-leaderboard-test.mjs",
+    "smoke:bot": "node tests/bot-smoke.mjs",
+    "smoke:bot-engine": "node tests/bot-engine-test.mjs",
+    "smoke:bot-lb": "node tests/bot-leaderboard-test.mjs",
     "smoke:routes": "node tests/routes-smoke.mjs",
     "smoke:all": "bash scripts/smoke-all.sh",
     "data:sync": "python scripts/auto-update.py --apply",
@@ -29,7 +32,9 @@
     "check:sort": "node tests/sort-whitelist-check.mjs",
     "check:contrast": "node tests/contrast-check.mjs",
     "check:i18n": "node scripts/check-i18n-keys.mjs",
-    "check:attrs": "node scripts/check-attr-contract.mjs"
+    "check:attrs": "node scripts/check-attr-contract.mjs",
+    "check:bot": "node scripts/check-bot-isolation.mjs",
+    "check:bot-selftest": "node scripts/check-bot-isolation-selftest.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

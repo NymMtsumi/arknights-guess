@@ -29,7 +29,12 @@ const MIME = {
 };
 
 async function resolveFile(urlPath) {
-  const rel = decodeURIComponent((urlPath || '/').split('?')[0]);
+  let rel = decodeURIComponent((urlPath || '/').split('?')[0]);
+  // 去掉尾斜杠（根路径除外）。Windows 的 path.normalize **保留**尾部分隔符，
+  // 于是下面 `candidate + '.html'` 会拼成 `out\bot\.html` 而不是 `out\bot.html` ——
+  // 表现是**所有**路由 `/xxx/` 都 404 而 `/xxx` 正常。Next 的导出形态是
+  // `bot.html` + `bot/`（后者只放 RSC 载荷），所以带不带尾斜杠本该等价。
+  if (rel.length > 1) rel = rel.replace(/\/+$/, '');
   const outRoot = normalize(OUT_DIR);
   const candidate = normalize(join(outRoot, rel));
   // 路径穿越防护

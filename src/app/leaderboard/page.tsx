@@ -33,6 +33,21 @@ const DIFFICULTIES = [
   { key: 'hard', labelKey: 'leaderboard.difficultyHard' },
 ] as const;
 
+/**
+ * 人机榜的三档筛选条。
+ *
+ * 键**故意与 DIFFICULTIES 相同**（easy/medium/hard）—— 服务端 `difficulty` 列存的就是
+ * 这三个值，查询口径不变。变的只是**标签**：这三档在经典模式里是「题库难度」，
+ * 在人机模式里却是「人机档位」（同一个 `hard`，在 /bot 页上写的是「高级人机」）。
+ * 复用同一批 key 会让榜上写着「困难」而人机页上写着「高级人机」—— 同一个值两套说法。
+ */
+const BOT_DIFFICULTIES = [
+  { key: '', labelKey: 'leaderboard.difficultyAll' },
+  { key: 'easy', labelKey: 'leaderboard.botTierEasy' },
+  { key: 'medium', labelKey: 'leaderboard.botTierMedium' },
+  { key: 'hard', labelKey: 'leaderboard.botTierHard' },
+] as const;
+
 const MODES = [
   { key: 'single', labelKey: 'leaderboard.modeSingle' },
   { key: 'multi', labelKey: 'leaderboard.modeMulti' },
@@ -41,6 +56,9 @@ const MODES = [
   // 它走的是 /api/leaderboard（不是 daily 那个专用端点），所以下面的难度筛选条会照常
   // 出现（`mode !== 'multi' && mode !== 'daily'`）：三档难度各自一张小榜，与经典单人一致。
   { key: 'turtle', labelKey: 'leaderboard.modeTurtle' },
+  // 人机：完全同理（服务端 `WHERE g.mode = 'bot'`），唯一的不同是筛选条换成人机档位的标签，
+  // 见 BOT_DIFFICULTIES。
+  { key: 'bot', labelKey: 'leaderboard.modeBot' },
 ] as const;
 
 /** 单屏展示条数 */
@@ -141,7 +159,10 @@ export default function LeaderboardPage() {
   //             点名只是收尾 —— 拿点名次数衡量会常年停在 0~1（线上实测 0.75 / 1.00）。
   //    表头沿用「平均猜测」是刻意的（用户原话就是「平均猜测应当是询问的次数」）；
   //    要改成「平均提问」得另开一个 i18n 键，那是独立事项。
-  const showAvgGuesses = mode === 'single' || mode === 'multi' || mode === 'turtle';
+  // 人机并进来：它的 guess_count 是**整场 BO5 的累计次数**，所以这一列的含义是
+  // 「平均多少猜解决一场人机」—— 与经典单人的「平均每局几次」在**行粒度**上同义
+  // （都是一行记录消耗的猜测数），只是行本身的大小不同，且两者在不同 tab 里不会并排比。
+  const showAvgGuesses = mode === 'single' || mode === 'multi' || mode === 'turtle' || mode === 'bot';
   const isDaily = mode === 'daily';
 
   // 格式化时间戳
@@ -201,7 +222,7 @@ export default function LeaderboardPage() {
           {mode !== 'multi' && mode !== 'daily' && (
             /* leaderboard-difficulty-bar 仅为 tests/solo-smoke.mjs 的探针保留，无对应 CSS */
             <div className="cfg-ct leaderboard-difficulty-bar" style={{ justifyContent: 'center', marginBottom: '24px' }}>
-              {DIFFICULTIES.map((d) => (
+              {(mode === 'bot' ? BOT_DIFFICULTIES : DIFFICULTIES).map((d) => (
                 <button
                   key={d.key}
                   onClick={() => handleDifficultyChange(d.key)}

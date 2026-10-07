@@ -99,11 +99,11 @@ async function main() {
     check('s3.标题「排行榜」渲染', true);
 
     const tabs = page.locator('[role="tab"]');
-    // ⚠️ 这个数字随排行榜 tab 数增长：海龟汤榜上线时 3 → 4。
+    // ⚠️ 这个数字随排行榜 tab 数增长：海龟汤榜 3 → 4，人机榜 4 → 5。
     //    它不是「随便一个数」—— 改排行榜 MODES（src/app/leaderboard/page.tsx）必须同步这里，
     //    漏改就是一条真实的 gate 失败，而不是可以放过的偶发。
-    await waitFor(async () => (await tabs.count()) === 4, { desc: '4 个 tab' });
-    check('s3.四 tab（单人/多人/每日/海龟汤）存在', true);
+    await waitFor(async () => (await tabs.count()) === 5, { desc: '5 个 tab' });
+    check('s3.五 tab（单人/多人/每日/海龟汤/人机对战）存在', true);
 
     // 海龟汤 tab：走 /api/leaderboard?mode=turtle（不是 daily 那个专用端点），
     // 所以难度筛选条**应当**照常出现，且空数据态正常渲染。
@@ -118,6 +118,26 @@ async function main() {
     //    由 tests/turtle-leaderboard-test.mjs 在 API 级覆盖，UI 这层只保证接线通。
     const turtleErr = await page.locator('text=加载失败').count();
     check('s3.海龟汤榜请求无错误态', turtleErr === 0, turtleErr > 0 ? '出现加载失败' : '');
+
+    // 人机榜：数据路径与海龟汤完全同形（/api/leaderboard?mode=bot），但**筛选条的文案**
+    // 换成了人机档位（BOT_DIFFICULTIES）。
+    // ⚠️ 这里的断言刻意选「按钮文案」而不是「空态可见」：空态在任何一个 tab 上都能过，
+    //    分不清是哪个 tab。而 BOT_DIFFICULTIES 若掉回 DIFFICULTIES，tab 正常、请求正常、
+    //    筛选也真的在过滤 —— 只有按钮上写的是「困难」而不是「困难人机」。同一个值在 /bot 页
+    //    写「困难人机」、在榜上写「困难」，两处说法不一致，肉眼几乎发现不了。
+    await page.locator('[role="tab"]', { hasText: '人机对战' }).click();
+    await page.locator('.leaderboard-difficulty-bar').waitFor({ state: 'visible', timeout: WAIT_TIMEOUT });
+    const tierBtns = page.locator('.leaderboard-difficulty-bar button');
+    await waitFor(async () => (await tierBtns.count()) === 4, { desc: '人机榜 4 档筛选' });
+    const tierTexts = (await tierBtns.allTextContents()).map((s) => s.trim());
+    // ⚠️ detail 恒打印（成功也打），只放中性测量值。「掉回 DIFFICULTIES」的判别式是
+    //    文案里没有「人机」二字 —— 那是失败形态，写在 detail 里会让绿的行看着像报错。
+    check('s3.人机榜筛选条是人机档位文案（切模式重置回「全部」）',
+      tierTexts.join('/') === '全部/简单人机/普通人机/困难人机',
+      `实际=${tierTexts.join('/')}`);
+    await page.locator('.leaderboard-empty').waitFor({ state: 'visible', timeout: WAIT_TIMEOUT });
+    const botErr = await page.locator('text=加载失败').count();
+    check('s3.人机榜请求无错误态（mode=bot 没被白名单回落）', botErr === 0, botErr > 0 ? '出现加载失败' : '');
 
     // 切「每日」→ 难度筛选栏隐藏
     await page.locator('[role="tab"]', { hasText: '每日' }).click();
@@ -200,7 +220,7 @@ async function main() {
         `voided=${st.data?.voided} inProgress=${st.data?.inProgress}`);
       ttlPass = true;
     } finally {
-      killBackend(ttlBackend);
+      await killBackend(ttlBackend);
       await cleanupDb(TTL_DB);
     }
     if (!ttlPass) console.error('   （s5 未走完，见上方失败项）');
@@ -212,7 +232,7 @@ async function main() {
   } finally {
     if (browser) await browser.close().catch(() => {});
     if (staticServer) staticServer.close();
-    killBackend(backend);
+    await killBackend(backend);
     await cleanupDb(DB_PATH);
   }
 }

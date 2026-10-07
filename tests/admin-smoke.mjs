@@ -162,7 +162,7 @@ async function main() {
     console.error('\n❌ 管理面板冒烟异常：', e.message);
     return 1;
   } finally {
-    killBackend(backend);
+    await killBackend(backend);
     await cleanupDb(DB_PATH);
     try { rmSync(CHARS_TMP, { force: true }); } catch {}
   }

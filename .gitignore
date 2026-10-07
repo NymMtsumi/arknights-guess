@@ -94,3 +94,7 @@ __pycache__/
 #          scripts/check-attr-contract.mjs —— 漏放行会让**部署 gate 自己**在 CI 上挂掉）
 /tests/_*.mjs
 !/tests/_ts-load.mjs
+
+# 人机隔离哨兵自测的临时沙盒（scripts/check-bot-isolation-selftest.mjs 每次跑完即删；
+# 这行是兜底 —— 脚本中途被 Ctrl-C 掉时不留脏文件给 git status）
+/.bot-isolation-selftest/

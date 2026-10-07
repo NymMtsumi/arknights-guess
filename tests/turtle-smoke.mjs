@@ -380,7 +380,7 @@ async function main() {
     if (ctx2) { try { await ctx2.close(); } catch {} }
     if (browser) { try { await browser.close(); } catch {} }
     if (staticServer) { try { staticServer.close(); } catch {} }
-    killBackend(backend);
+    await killBackend(backend);
     await sleep(300);
     cleanupDb(DB_PATH);
   }

@@ -507,6 +507,51 @@ export function saveTurtleStats(
   }).catch((err) => { console.warn('[Stats] Failed to save turtle game to server:', err); });
 }
 
+/**
+ * 人机对战存档：**只提交服务端**，供专属榜聚合（`/api/leaderboard?mode=bot`）。
+ *
+ * 形状与 `saveTurtleStats` 逐条对应，理由也相同（用户决策：人机对局不计个人总战绩、
+ * 只进人机专属榜），这里只重复两条最容易踩的：
+ *   1. **不调 `loadStats()`** —— `totalGames/wins/losses/bestScore` 是经典口径，
+ *      而 `bestScore` 更是服务端 `MIN(guess_count)` 的**全模式**口径。人机对局
+ *      「赢」比经典单人容易得多，混进去会把经典的最好成绩顶掉 —— 那是改变既有行为。
+ *   2. **不写本地历史** —— 统计页那张表的「模式」列只认经典/多人/自建三种徽标，
+ *      人机的 mode 落到它不认识的分支会顶着「困难」徽标冒充经典对局，而且统计页会把
+ *      合并结果**写回 localStorage**，错标一旦落盘就长期存在。
+ *
+ * ⚠️ `difficulty` 传的是**人机档位**（easy/medium/hard = 低/中/高级人机），
+ *    不是题库难度 —— 人机模式的题库恒定是全量。之所以复用 Difficulty 的三值，
+ *    就是为了让 `/api/leaderboard` 的难度过滤零改动地工作（见 src/lib/bot-engine.ts）。
+ *
+ * ⚠️ `targetName` 传**最后一小局**的谜底，仅作存档可读性用。它**不参与服务端校验**：
+ *    `routes/game.js` 的「目标干员不存在」守卫覆盖 **single 与 turtle，故意不含 bot**
+ *    —— 单人/海龟汤都是一局一个谜底，而这里是多小局比赛，拿哪一局的谜底去校验都是错的。
+ *    （**注意**：原先这里写着「中途中止时它可能为空」，那句**不可复现** —— 本函数只在终局
+ *    调一次，那时的谜底一定来自 `pickTarget(roster, …)`。真正的理由是上面这条。
+ *    完整理由见 `server/routes/game.js` 里同一段注释。）榜也不读这个字段。
+ *
+ * @param guessCount 本场**全部小局**玩家猜测次数之和（不是平均值）——
+ *   场次恒为 bestOf，所以总量在玩家之间可比。
+ */
+export function saveBotStats(
+  won: boolean, guessCount: number, difficulty: string, targetName: string,
+): void {
+  if (typeof window === 'undefined') return;
+  if (!getToken()) return;
+  apiCall('/api/save-game', {
+    method: 'POST',
+    body: JSON.stringify({
+      player_key: getPlayerKey(),
+      won,
+      guessCount,
+      difficulty,
+      targetName,
+      mode: 'bot',
+      timestamp: new Date().toISOString(),
+    }),
+  }).catch((err) => { console.warn('[Stats] Failed to save bot game to server:', err); });
+}
+
 /** 从服务器获取游戏历史 */
 export async function fetchHistoryFromServer(limit = 80): Promise<HistoryRecord[]> {
   if (typeof window === 'undefined') return [];

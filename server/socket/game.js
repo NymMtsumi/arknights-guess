@@ -421,8 +421,12 @@ export function registerGameHandlers({
 
         const rp = room._roundPlayers?.get(socket.id);
         if (!rp) return;
-        // 已猜出/已耗尽 → 本回合不再受理任何猜测（防绕过 maxGuesses 的恶意续猜）
-        if (rp.guessed || rp.exhausted) return;
+        // 已猜出/已耗尽/已放弃 → 本回合不再受理任何猜测（防绕过 maxGuesses 的恶意续猜）
+        // ⚠️ `surrendered` 这一项是**纵深防御**，不是主闸：客户端放弃后本地已经
+        //    `inputDisabled`（multiplayer/page.tsx 的 iSurrendered）。但那是客户端的，
+        //    而需求⑥之后「放弃」不再立刻结算本回合 —— 少这道闸，一个放弃了的玩家
+        //    就能在回合继续的这段时间里继续猜，甚至把这一局赢回来。
+        if (rp.guessed || rp.exhausted || rp.surrendered) return;
         // 去重：同一干员本回合只计一次
         if (rp.guessChain.includes(guessedName)) return;
 
@@ -487,13 +491,22 @@ export function registerGameHandlers({
           return;
         }
 
-        // 耗尽检查：双方均耗尽 → 平局
+        // 出局检查：**其余所有玩家**都已出局（耗尽或放弃）→ 本回合无人可赢 → 平局。
+        // 🔴 必须遍历**全部**对手，不能用 `find(id => id !== socket.id)` 只取一个：
+        //    房间允许 >2 人（加入的判定下限只是 `players.size >= 2`，见 server/index.js），
+        //    3 人房里「A 已放弃 + B 刚耗尽 + C 还在猜」会被这个 find 误判成「都出局了」，
+        //    直接掐掉 C 的回合。需求⑥把「放弃」也并进出局条件之后，这条误判的触发面更大。
+        // 🔴 出局 = 耗尽 **或** 放弃：需求⑥之后 A 放弃不再立刻结算，若这里只认 exhausted，
+        //    「A 放弃 + B 耗尽」这条组合将**永远**不结算 —— 只能等 90 秒超时兜底。
         if (remaining <= 0) {
           rp.exhausted = true;
-          const otherId = Array.from(room.players.keys()).find(id => id !== socket.id);
-          const otherRp = otherId ? room._roundPlayers?.get(otherId) : null;
-          if (otherRp?.exhausted) {
-            console.log(`[耗尽] 双方次数耗尽 → 平局`);
+          const others = Array.from(room.players.keys()).filter(id => id !== socket.id);
+          const allOthersOut = others.length > 0 && others.every((id) => {
+            const o = room._roundPlayers?.get(id);
+            return !!(o && (o.exhausted || o.surrendered));
+          });
+          if (allOthersOut) {
+            console.log(`[耗尽] 其余玩家均已出局 → 平局`);
             endRound(room, null, '', room.target.name, false);
           }
         }
@@ -511,9 +524,6 @@ export function registerGameHandlers({
       const rp = room._roundPlayers?.get(socket.id);
       if (rp) rp.surrendered = true;
 
-      const otherId = Array.from(room.players.keys()).find(id => id !== socket.id);
-      const otherRp = otherId ? room._roundPlayers?.get(otherId) : null;
-
       // 通知对方你已放弃
       socket.to(room.code).emit('opponent_surrendered', { playerName: player.name });
 
@@ -521,20 +531,33 @@ export function registerGameHandlers({
       // 注：不存在「对方已猜出」分支——multi:guess 猜对会立即 endRound 置 roundSettled=true，
       // 此处已因顶部 roundSettled 检查提前返回，故该分支不可达。
 
-      // 对方已放弃或已耗尽 → 双方弃权/放弃vs耗尽 → 平局
-      if (otherRp?.surrendered || otherRp?.exhausted) {
-        console.log(`[弃权] 双方弃权/耗尽 → 平局`);
+      // 其余玩家**全部**已出局（放弃或耗尽）→ 本回合无人可赢 → 立刻平局。
+      // 🔴 遍历全部对手而非 `find(id => id !== socket.id)`：3 人房里 A 放弃、B 还在猜时
+      //    只看一个对手会误判成「都出局了」，把 B 的回合掐掉。
+      // KNOWN EDGE CASE: If two players surrender_round within the same event-loop tick,
+      // the second emit may see the first's surrender flag set and take this "all out → draw"
+      // branch. This is rare (< ~1ms race window) and the outcome is the same (draw),
+      // so it is accepted without a setTimeout defense.
+      const others = Array.from(room.players.keys()).filter(id => id !== socket.id);
+      const allOthersOut = others.length > 0 && others.every((id) => {
+        const o = room._roundPlayers?.get(id);
+        return !!(o && (o.surrendered || o.exhausted));
+      });
+      if (allOthersOut) {
+        console.log(`[弃权] 其余玩家均已出局 → 平局`);
         endRound(room, null, '', room.target?.name || '', false);
         return;
       }
 
-      // 对方未猜出、未放弃 → 平局（弃权方主动放弃，不判对方胜）
-      // KNOWN EDGE CASE: If both players surrender_round within the same event-loop tick,
-      // the second emit may see the first's surrender flag set via otherRp?.surrendered and
-      // take the "both surrendered → draw" branch above. This is rare (< ~1ms race window)
-      // and the outcome is the same (draw), so it is accepted without a setTimeout defense.
-      console.log(`[弃权] ${player.name} 弃权 → 对方未猜出 → 平局`);
-      endRound(room, null, '', room.target?.name || '', false);
+      // 🔴 这里**故意没有任何 endRound** —— 需求⑥：A 放弃后本回合**不立即结算**。
+      //    之前这里有一句无条件的 `endRound(..., null, ...)`（判平局），它就是
+      //    「A 一放弃这局立刻结束」的来源。删掉之后：
+      //      · A 已放弃 → 上面那道 `rp.surrendered` 闸挡住它再猜，它只能等；
+      //      · B 猜中 → multi:guess 里的 isCorrect 分支照常 endRound，**B 赢下该局**；
+      //      · B 耗尽 → 上面出局检查看到 A 已出局 → 平局；
+      //      · 都不发生 → startRound 里那个 90 秒（房主可选）回合定时器兜底判平局。
+      //    ⚠️ 别忘了 `startRound` 里那个回合定时器是本文件里这条新语义的**唯一兜底出口**。
+      console.log(`[弃权] ${player.name} 弃权 → 本回合继续，等其余玩家猜中/耗尽/超时`);
       } catch (e) { console.error('[game] surrender_round error:', e.message); }
     });
 

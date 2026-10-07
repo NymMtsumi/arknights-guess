@@ -33,6 +33,13 @@
 //    单次猜测命中率约 2%，所以这里按「大画师组」挑猜测对象来抬命中率，
 //    跑不到命中就**显式判 INCONCLUSIVE**（计入失败），绝不静默通过。
 //
+// ⚠️ 有效探针 = 「artist 命中 **且名字未中**」。**猜中答案的那一行不算**：
+//    那种行的名字列本来就是 correct（两列同时 d-ok），正确实现与 bug 的输出完全重合，
+//    它既证伪不了什么，也不该断言「名字点 = d-no」——
+//    2026-10-07 实测因此**假红过一次**（日志：`第 1 回合：猜 1 次，累计核对 1 行`，
+//    而内层只有 `if (r.correct)` 会 break → 那一猜就是答案本身）。
+//    所以答案恰好落在 hunt 名单里时，本轮按「无效」处理、继续下一回合，不当失败。
+//
 // ⚠️ 未接入 scripts/smoke-all.sh（新增文件，不擅自改部署 gate）。
 // 手动运行：需要先 npm run build
 //   NODE_OPTIONS="--require ./tests/_dns-preload.cjs" node tests/multi-artist-smoke.mjs
@@ -271,8 +278,10 @@ async function main() {
     const { names: hunt, cover, pool } = huntGuesses('easy', 15);
     console.log(`   搜寻策略：easy 池 ${pool} 人，猜 15 个大画师组代表 → 覆盖 ${cover}/${pool} = ${(cover / pool * 100).toFixed(0)}%`);
 
+    // bestOf 7（服务端上限，winsNeeded 4）而不是 5：S 只能靠猜中名字赢局，
+    // 而赢下的那些局**不算探针** —— 见上面 MAX_ROUNDS 那段最后一条 ⚠️。
     const roomC = await createRoom(S, sBuf, {
-      playerName: '搜寻者', difficulty: 'easy', bestOf: 5, maxGuesses: 15, attributes: ALL_KEYS,
+      playerName: '搜寻者', difficulty: 'easy', bestOf: 7, maxGuesses: 15, attributes: ALL_KEYS,
     });
 
     const ctxC = await newZhContext(browser);
@@ -283,18 +292,27 @@ async function main() {
     await pageC.getByText('加入房间', { exact: true }).click({ timeout: WAIT_TIMEOUT });
     await pageC.locator('input.game-search-input').waitFor({ state: 'visible', timeout: WAIT_TIMEOUT });
 
-    // 🔴 回合上限 = 8，**不是 3**。这条断言（c3）是概率性的，而它跑在**部署 gate**里，
+    // 🔴 回合上限 = 12，**不是 3**。这条断言（c3）是概率性的，而它跑在**部署 gate**里，
     //    「偶尔红一次」等于偶尔无故阻断一次部署，比漏检更难接受。
-    //    单回合命中率 = cover/pool = 92/153 ≈ 60%（每回合服务端都重新 randomTarget，
-    //    见 server/socket/game.js:38 —— 所以回合之间是独立的）：
-    //      3 回合 → 漏 6.3%（约 16 次 push 里假红一次，实测撞到过）
-    //      8 回合 → 漏 0.07%（约 1500 次一次）
-    //    ⚠️ 加回合数**不会**把测试拖长多少：只有「没命中」的回合才继续，
-    //    而那是 40% 的分支；期望回合数 ≈ 1.7，每多一个空回合约 +10s。
-    //    ⚠️ 上限能不能随意加：可以。空回合一定是**平局**（S 15 次用完 = exhausted，
-    //    C 弃权）→ 平局不计分、不结束比赛（bestOf 5 只数胜负），所以空回合可以无限多；
-    //    而 S 一旦赢下一局就必然是「猜中了名字」→ 那一行 artist 也必然 correct → hits>0 → 已退出循环。
-    const MAX_ROUNDS = 8;
+    //    实测单回合有效探针出现率 = **40%**（2026-10-07 实跑 12 次统计：30 回合里 12 回合出现）。
+    //    ⚠️ 早期这里写的是 60% = cover/pool = 92/153，那个数只算了「答案的画师组在 hunt 里」，
+    //    没扣掉两种情况：① 答案**本身就是**那个代表 → 名字会被猜中，那行不是有效探针（见 c3）；
+    //    ② 猜中名字的那一行常常来不及渲染就被跳过（下面那个静默 catch），
+    //    偏偏它往往就是本轮唯一「有 artist 命中」的一行。所以照 60% 推出来的概率全是乐观值。
+    //    每回合服务端都重新 randomTarget（见 server/socket/game.js:38）→ 回合之间独立：
+    //      3 回合 → 漏 21.6%
+    //      8 回合 → 漏 1.68%
+    //     12 回合 → 漏 0.22%
+    //    ⚠️ 加回合数**不会**把测试拖长多少：只有「没探针」的回合才继续，而那是 60% 的分支；
+    //    期望回合数 ≈ 1/0.4 = 2.5，每多一个空回合约 +10s（实测跑满 7 回合的整轮也不到 1 分钟）。
+    //    ⚠️ 上限能不能随意加：可以。空回合一定是**平局**（S 15 次用完 = exhausted，C 弃权）
+    //    → 平局不计分、不结束比赛，所以空回合可以无限多。
+    //    ⚠️ **唯一**会提前掐掉比赛的是 S 攒满胜场（room 的 bestOf）—— 而 S 赢一局必然是
+    //    「猜中了名字」，也就是答案恰好落在 hunt 名单里（≈9.8%/回合，且这种回合**不算探针**、
+    //    循环不会退出）。bestOf 5 只要 3 局就能结束比赛，那条
+    //    「比赛先结束 → hits 仍为 0 → INCONCLUSIVE 假红」的路（(0.098/0.601)³ ≈ 0.43%）
+    //    比 12 回合跑空（0.22%）还大；所以这里抬到服务端上限 **bestOf 7**（要 4 局，≈0.07%）。
+    const MAX_ROUNDS = 12;
     //
     // ⚠️ **每猜一次就读一次对手棋盘**，不能攒完 15 次再读。原因有两条：
     //   (1) 一旦某次猜中名字，服务端立刻 endRound，浏览器切到结算屏、
@@ -328,7 +346,12 @@ async function main() {
           for (let j = 0; j < 11 && j < dotRows[i].length; j++) {
             if (dotRows[i][j] !== DOT[expect[j]]) mismatches.push(`r${i}c${j}: 点=${dotRows[i][j]} 期望=${DOT[expect[j]]}(${expect[j]})`);
           }
-          if (r.comparisons.artist === 'correct') {
+          // ⚠️ `&& !r.correct` 是**承重的**，别删：猜中答案的那一行，名字列本来就是 correct
+          //    （两列同时 d-ok），正确实现与「画师列错读名字列」的 bug 完全重合 ——
+          //    它证伪不了任何东西。旧版无条件断言「名字点 = d-no」，于是**答案恰好落在 hunt
+          //    名单里时当场假红**（2026-10-07 实测撞到过）。这种行不计 hits、不断言，
+          //    本轮按「无效」处理，外层靠 `hits === 0` continue 到下一回合。
+          if (r.comparisons.artist === 'correct' && !r.correct) {
             hits++;
             check(`c3.第 ${i} 行 artist 命中：画师点 = d-ok、名字点 = d-no`,
               dotRows[i][10] === DOT.correct && dotRows[i][0] === DOT.wrong,
@@ -338,12 +361,16 @@ async function main() {
         i++;
         if (r.correct) { settledByUs = true; break; } // 猜中名字 → 回合立刻结束
       }
-      console.log(`   第 ${round} 回合：猜 ${i} 次，累计核对 ${totalRows} 行，命中 ${hits} 行`);
+      console.log(`   第 ${round} 回合：猜 ${i} 次，累计核对 ${totalRows} 行，有效探针 ${hits}`);
       // 比赛已结束（bestOf 5 数满胜场）就没有下一回合了，再等 round_start 只会等满超时
       if (sBuf.round_end.at(-1)?.matchOver) break;
       if (hits === 0 && round < MAX_ROUNDS) {
-        // 只有 S 次数耗尽是**不会**结算的（服务端要双方都 exhausted/放弃）——
-        // 所以让只观战的 C 放弃，回合立刻判平局，6s 后自动开下一局。
+        // 只有 S 次数耗尽是**不会**结算的（服务端要**其余玩家全部出局**才判平局）——
+        // 所以让只观战的 C 放弃：此时 S 已 exhausted、C 已 surrendered → 全体出局 → 平局，
+        // 6s 后自动开下一局。
+        // ⚠️ 需求⑥之后这条**依然成立**，但机制换了：C 的放弃**本身**不再结算回合
+        //    （旧版会），结算靠的是它让 C 也变成「出局」、从而凑满「全体出局」。
+        //    本用例能继续用，正是因为有 S 先耗尽这一半 —— 别以为它测的是「单方放弃即结算」。
         // ⚠️ 放弃是二次确认：handleSurrender 只开弹窗（page.tsx:647），
         //    必须再点弹窗里的「确认放弃」才真的 emit surrender_round。
         // ⚠️ 只在本回合**仍开着**时才点：回合若已被别人结算（对手放弃/超时/耗尽），
@@ -365,9 +392,9 @@ async function main() {
     check('c3.至少出现一行 artist 命中（否则本项无法证伪 dataIdx 错位）',
       hits > 0,
       hits > 0
-        ? `命中 ${hits} 行`
-        : `INCONCLUSIVE — ${MAX_ROUNDS} 回合 ${totalRows} 行内未出现 artist 命中，`
-          + `画师列与名字列的错位在颜色上不可区分（本项按 0.07% 的概率会这样空转，真出现请重跑一次确认）`);
+        ? `有效探针 ${hits} 行`
+        : `INCONCLUSIVE — ${MAX_ROUNDS} 回合 ${totalRows} 行内未出现**有效探针**（artist 命中且名字未中），`
+          + `画师列与名字列的错位在颜色上不可区分（本项按 0.6^${MAX_ROUNDS} ≈ 0.2% 的概率会这样空转，真出现请重跑一次确认）`);
 
     return 0;
   } catch (e) {
@@ -377,7 +404,7 @@ async function main() {
     for (const s of raw) { try { s.disconnect(); } catch {} }
     if (browser) await browser.close().catch(() => {});
     if (staticServer) staticServer.close();
-    killBackend(backend);
+    await killBackend(backend);
     await cleanupDb(DB_PATH);
   }
 }

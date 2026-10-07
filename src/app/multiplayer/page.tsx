@@ -13,6 +13,7 @@ import { saveMultiGameStats, saveCustomGameStats, type MultiRoundResult } from '
 import { getUser, getServerUrl, getToken, getPlayerKey } from '@/lib/auth';
 import { useI18n } from '@/lib/i18n';
 import { findCharacterByName } from '@/lib/game-engine';
+import { drawArtIndex } from '@/lib/round-art';
 import { PARTY_ATTR_KEYS as ATTR_KEYS, ALL_ATTR_KEYS, ATTR_LABEL_KEYS } from '@/lib/party-constants';
 import type { Character, GuessResult, GuessComparisons, GuessStatus } from '@/types/character';
 import charactersData from '@/data/characters.json';
@@ -39,21 +40,7 @@ const DIFF_KEY_MAP: Record<string, string> = {
 // 词条规范顺序与文案已收敛到 @/lib/party-constants（单一事实源，原先此处有两份手抄副本）。
 const ROUND_TIME_OPTIONS = [30000, 60000, 90000, 120000, 180000, 300000];
 
-// 平局/超时插图的取图序号（public/icons/draw-1..5.png）。
-// ⚠️ 用 hashCode 而不是 Math.random()：这个函数在 render 里跑，用随机数会在
-//    任何一次重渲染时换图（计时器每 100ms setState 一次 → 会疯狂闪烁）。
-//    以「目标名 + 比分 + 服务端给的 reason」为种 → 同一局恒定，不同局大概率不同。
-//    ⚠️ reason 只有超时那一支才有（server/socket/game.js:55 发 'timeout'），
-//       其余平局分支不发该字段，所以这里必须容忍 undefined。
-function drawArtIndex(d: { targetName?: string; score?: number; reason?: string }): number {
-  const seed = `${d.targetName ?? ''}|${d.score ?? 0}|${d.reason ?? ''}`;
-  let h = 2166136261;
-  for (let i = 0; i < seed.length; i++) {
-    h ^= seed.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return (h >>> 0) % 5 + 1;
-}
+// 平局/超时插图的取图序号已提到 @/lib/round-art（人机页也要用同一张 —— 见该文件注释）。
 
 /**
  * 服务端 colorRows 的一行 → GuessComparisons。
@@ -114,6 +101,12 @@ export default function MultiplayerPage() {
   const [timeLeft, setTimeLeft] = useState(120);
   const [error, setError] = useState('');
   const [endMsg, setEndMsg] = useState('');
+  /**
+   * 整场结果 —— 只驱动结算卡那张情绪图（胜 → happy、负 → error）。
+   * ⚠️ 不能从 `endMsg` 反推：那是一句**已渲染好的文案**，「平局 / 对手掉线」等分支
+   *    也会走到这里，从字符串猜胜负会在这些分支上猜错。
+   */
+  const [matchWon, setMatchWon] = useState(false);
   const [roundEndData, setRoundEndData] = useState<any>(null);
   const [iSurrendered, setISurrendered] = useState(false);
   const [oppSurrendered, setOppSurrendered] = useState(false);
@@ -490,6 +483,7 @@ export default function MultiplayerPage() {
       roundResultsRef.current = [];
       clearRoomCode();
       setStage('matchEnd');
+      setMatchWon(won);
       setEndMsg(
         d.reason === 'both_disconnected' ? t('multi.matchEndBothDisconnected')
         : d.reason === 'disconnect' ? t('multi.matchEndDisconnect', { name: d.winnerName })
@@ -651,7 +645,14 @@ export default function MultiplayerPage() {
     if (!sock?.connected || useGameStore.getState().status !== 'playing') return;
     setISurrendered(true);
     sock.emit('surrender_round', {}); // 答案由服务端持有，无需上报 targetName
-    useGameStore.setState({ status: 'lost' });
+    // 🔴 **不置 `status: 'lost'`** —— 需求⑥：A 放弃后本回合**不立刻结算**，改为等 B
+    //    猜中（B 赢）/ 耗尽 / 超时（平局）。置 lost 会让 A 的本地状态当场变成「本局已输」，
+    //    与「这局还在打」矛盾（对手 B 此刻仍能在同一局里猜中取胜）。
+    //    A 停在局中屏、只能干等 —— 这正是要的效果。输入已被 `inputDisabled` 里的
+    //    `iSurrendered` 挡住（见那行），所以不置 lost 不会让 A 还能继续猜；
+    //    对手棋盘也照常通过 `opponent_update` 刷新，A 能看着 B 猜。
+    //    ⚠️ 结算屏由 `round_end` 事件驱动（见上面的 handler），与本地 status 无关，
+    //       所以 A 不需要额外的「跳出局中」逻辑。
   };
 
   const handleRematch = () => {
@@ -759,6 +760,13 @@ export default function MultiplayerPage() {
               </label>
             </div>
             <button onClick={handleQuickMatch} disabled={!!connecting} className="btn-p w-full mt-1">{connecting ? t('multi.connecting') : '⚡ ' + t('multi.quickMatch')}</button>
+            {/* 人机对战入口 —— 就放在「快速匹配」正下方：这两条是同一类意图
+                （「我现在就想打一局」），而活跃用户少时快速匹配多半匹配不到人，
+                人机是它的兜底。按钮文案复用 bot.title，两处措辞不会漂。
+                `disabled={!!connecting}` 是为了与上面那个按钮**同一套可用性规则**：
+                连接在飞的时候，这一组里的按钮要么都可点、要么都不可点，
+                否则「连着呢但人机那个还能点」会让人以为连接已经失败了。 */}
+            <button onClick={() => router.push('/bot')} disabled={!!connecting} className="btn-p mt-2">🤖 {t('bot.title')}</button>
             {error && <p className="formmsg err">{error}</p>}
             {lastRoomCode && (
               <div className="card w-full max-w-[320px] mx-auto my-3">
@@ -977,12 +985,21 @@ export default function MultiplayerPage() {
         {/* ===== Round End ===== */}
         {stage === 'roundEnd' && roundEndData && (
           <div className="card text-center w-full max-w-[400px] mt-4">
-            {/* 平局 / 超时 → 稿子 modes:1389 的随机插图（draw-1..5 取一张）。
-                只在 winner 为空时出现：赢/输那两种沿用内联 emoji，
-                与 docs/icons-prep.md:32「多人回合横幅保留 emoji」的定稿一致。 */}
-            {!roundEndData.winner && <ModeArt src={`/icons/draw-${drawArtIndex(roundEndData)}.png`} />}
+            {/* 单局情绪图 —— 按需求⑤三态**都**出图（不再是「只有平局才出图 + 胜负用 emoji」）：
+                  猜中 → right.png（绿 ✓「赞诶!」）
+                  战败 → error.png（「No…」+ 红 ✗）
+                  平局 / 超时 → draw-1..5.png 随机取一张
+                ⚠️ 超时那张必须走 drawArtIndex()（FNV 哈希）而不是 Math.random()：
+                   本块在 render 里，随机数会在**每次重渲染**时换图 —— 计时器每 100ms
+                   setState 一次，表现就是疯狂闪烁。人机页同理，用的是同一个函数。
+                文字行保留在图下方（`emoji-lg` 那行只剩文案，emoji 已由图代替）。 */}
+            <ModeArt src={
+              !roundEndData.winner ? `/icons/draw-${drawArtIndex(roundEndData)}.png`
+                : roundEndData.winner === socket?.id ? '/icons/right.png'
+                  : '/icons/error.png'
+            } />
             <div className="emoji-lg sm">
-              {roundEndData.winner ? (roundEndData.winner === socket?.id ? '🎉 ' + t('multi.youWinRound') : '😔 ' + t('multi.oppWinRound')) : '🤝 ' + t('multi.roundDraw')}
+              {roundEndData.winner ? (roundEndData.winner === socket?.id ? t('multi.youWinRound') : t('multi.oppWinRound')) : t('multi.roundDraw')}
             </div>
             <p className="sec-note">{t('multi.answerWithScore', { name: roundEndData.targetName, score: roundEndData.score })}</p>
             {roundEndData.matchOver
@@ -995,7 +1012,10 @@ export default function MultiplayerPage() {
         {/* ===== Match End ===== */}
         {stage === 'matchEnd' && (
           <div className="card text-center w-full max-w-[400px] mt-4">
-            <div className="emoji-lg">🏆</div>
+            {/* 整场情绪图（需求⑤的拍板）：整场胜 → happy.png（得意）、整场负 → error.png。
+                ⚠️ 用 `matchWon` 而不是从 `endMsg` 反推 —— 平局 / 对手掉线那几个分支
+                   走的是同一块 UI，从渲染好的字符串猜胜负会在那些分支上猜错。 */}
+            <ModeArt src={matchWon ? '/icons/happy.png' : '/icons/error.png'} />
             <h2 className="scr-ttl whitespace-pre-line">{endMsg}</h2>
             <div className="bar-actions justify-center">
               <button onClick={handleRematch} disabled={rematchReady} className="btn-p">

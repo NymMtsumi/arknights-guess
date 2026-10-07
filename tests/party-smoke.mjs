@@ -262,7 +262,7 @@ async function main() {
   } finally {
     if (browser) await browser.close().catch(() => {});
     if (staticServer) staticServer.close();
-    killBackend(backend);
+    await killBackend(backend);
     await sleep(800);
     await cleanupDb(DB_PATH);
   }

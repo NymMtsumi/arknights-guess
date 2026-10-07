@@ -17,7 +17,7 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
       return jsonResponse(res, { error: '用户不存在' }, 404);
     }
 
-    // 按 user_id 查询（一级归属），player_key 仅作兜底；排除自定义房与海龟汤（不计入聚合数据）
+    // 按 user_id 查询（一级归属），player_key 仅作兜底；排除自定义房、海龟汤与人机（不计入聚合数据）
     const stats = db.prepare(`
       SELECT
         COUNT(*) as totalGames,
@@ -25,11 +25,11 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
         COUNT(*) - SUM(won) as losses,
         SUM(guess_count) as totalGuesses,
         MIN(CASE WHEN won = 1 THEN guess_count ELSE NULL END) as bestScore
-      FROM games WHERE user_id = ? AND mode NOT IN ('custom', 'turtle')
+      FROM games WHERE user_id = ? AND mode NOT IN ('custom', 'turtle', 'bot')
     `).get(auth.userId);
 
     // 口径明细：把上面那批行按 mode 拆开。
-    // 聚合口径是 `mode NOT IN ('custom','turtle')`（经典 + 多人 + 每日），而排行榜的经典/多人 tab
+    // 聚合口径是 `mode NOT IN ('custom','turtle','bot')`（经典 + 多人 + 每日），而排行榜的经典/多人 tab
     // 各自只取其中一个（/api/leaderboard 是 `WHERE g.mode = ?`），两边数字本来就不一样 ——
     // 玩家在统计页看到的总场次和排行榜上的「场次」是两个口径，这就是 BUG 1 的由来。
     // 拆出来才能逐项对上。⚠️ 注意 daily 一栏只能对上「库内的每日场次」，
@@ -38,9 +38,12 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
     // 另外两条 SQL 的谓词必须逐字一致，否则会出现「明细之和 ≠ 总数」。
     // ⚠️ 海龟汤（turtle）在上面的聚合里被排除，这里也必须排除，且 byMode **不设** turtle 键 ——
     //    它的成绩只进 /api/leaderboard?mode=turtle 那张专属榜，不进个人战绩。
+    //    人机（bot）同理：byMode 也**不设** bot 键，成绩只进 /api/leaderboard?mode=bot。
+    //    🔴 上面那条 SQL 与本条的 `NOT IN` 列表必须逐字一致 —— 少一个都会让
+    //       「明细之和 ≠ 总数」，而那种偏差在界面上表现为一个查不出来的数字对不上。
     const byMode = { single: 0, multi: 0, daily: 0 };
     for (const row of db.prepare(
-      "SELECT mode, COUNT(*) as n FROM games WHERE user_id = ? AND mode NOT IN ('custom', 'turtle') GROUP BY mode"
+      "SELECT mode, COUNT(*) as n FROM games WHERE user_id = ? AND mode NOT IN ('custom', 'turtle', 'bot') GROUP BY mode"
     ).all(auth.userId)) {
       if (row.mode in byMode) byMode[row.mode] = row.n;
     }
@@ -470,8 +473,13 @@ export function registerUserRoutes({ app, db, verifyToken, requireAuth, checkNic
     //    这种错标一旦落盘就是长期存在的。要么为它新造一套徽标（设计稿没覆盖，不自行推导），
     //    要么就别让它进那张表 —— 用户的决策是「海龟汤只进专属榜」，选后者。
     //    库里的行仍然保留（建榜要用），只是不进个人历史。
+    //    bot 同理并进来：它的 difficulty 列存的是**人机档位**（easy/medium/hard），
+    //    进了这张表会被套上「简单/困难」徽标显示成经典对局，比海龟汤更容易误读
+    //    （海龟汤至少 difficulty 是真的题库难度，bot 的 difficulty 根本不是难度）。
+    //    而且 bot 的 guess_count 是**整场 BO5 的累计次数**，与经典单人的「一局几次」
+    //    不同量纲，混进同一列会让历史表「猜测次数」列失去可比性。
     const rows = db.prepare(
-      'SELECT won, guess_count, difficulty, target_name, timestamp, mode, multi_data FROM games WHERE user_id = ? AND mode != \'turtle\' ORDER BY timestamp DESC LIMIT ?'
+      'SELECT won, guess_count, difficulty, target_name, timestamp, mode, multi_data FROM games WHERE user_id = ? AND mode NOT IN (\'turtle\', \'bot\') ORDER BY timestamp DESC LIMIT ?'
     ).all(auth.userId, limit);
 
     const history = rows.map(r => {

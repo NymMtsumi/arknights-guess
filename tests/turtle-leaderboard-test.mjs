@@ -2,7 +2,8 @@
 // 海龟汤专属榜 —— API 级测试（plan 阶段 8）
 //
 // 为什么单开一个文件而不并进 solo-smoke：solo-smoke 是 UI 级、且用**未登录**的
-// browser context，排行榜那条只验到「四个 tab 都在、空态能渲染」。而阶段 8 真正
+// browser context，排行榜那条只验到「各 tab 都在、空态能渲染」（tab 数随玩法增长，
+// 那个数字在 solo-smoke 里硬编码，别在这里再抄一份）。而阶段 8 真正
 // 会悄悄出错的地方全是**服务端谓词**，一条 UI 断言都盖不住：
 //
 //   g. `routes/user.js` 的聚合谓词与 byMode 谓词必须**逐字一致**且都排除 turtle。
@@ -14,7 +15,7 @@
 //      海龟汤 tab 显示的是经典单人的数据，而且不报任何错。
 //   d. turtle 必须和 single 一样校验谜底真实存在，否则可以灌垃圾记录刷榜。
 //
-// ⚠️ 未接入 scripts/smoke-all.sh（新增文件，不擅自改部署 gate）。
+// 已接入 scripts/smoke-all.sh（构建前那一组，第 5 步）。单独跑：
 //   NODE_OPTIONS="--require ./tests/_dns-preload.cjs" node tests/turtle-leaderboard-test.mjs
 // 不需要 build（纯 API 级，不碰静态产物）。
 
@@ -255,7 +256,7 @@ async function main() {
       afterRows.length === 1 && afterRows[0].totalGames === 2,
       `榜上 ${afterRows.length} 人，totalGames=${afterRows[0]?.totalGames}（应仍是登录用户那 2 局）`);
   } finally {
-    killBackend(backend);
+    await killBackend(backend);
     await sleep(300);
     cleanupDb(DB_PATH);
   }

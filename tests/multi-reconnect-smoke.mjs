@@ -171,7 +171,7 @@ async function main() {
     await sleep(200);
   } finally {
     for (const s of raw) { try { s.disconnect(); } catch {} }
-    killBackend(backend);
+    await killBackend(backend);
     await sleep(300);
     cleanupDb(DB_PATH);
   }

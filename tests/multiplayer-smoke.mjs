@@ -4,21 +4,23 @@
 // 覆盖 checklist：
 //   m1. 标准房：建房 → 拿 4 位房间码 → 二号加入 → 双方 playing
 //   m2. 猜测回环：A 猜 → A 侧 game-table 回显（guess_result）；B 侧对手计数 +1（opponent_update）
-//   m3. 弃权结算：B 弃权 → 双方 round_end（答案揭晓「答案：…」）
+//   m3. 弃权**不**立即结算（需求⑥）：B 弃权 → A 仍留在局中 → A 耗尽次数 → 才 round_end（平局）
 //   m4. 自定义房：A 建自定义房（3 属性）→ B 加入 → A 猜 → 棋盘仅「名字+3 属性」4 列（displayAttributes 过滤）
 //   m5. 断线：对手断线 → A 侧显示「断线中」徽标
 //   m6. 快速匹配：A/B 同时进队列 → 配对成功 → 双方 playing
 //   m7. 局中离开 → 回经典模式不被共享 store 卡住（useGameStore 是模块级单例）
 //
 // 说明：目标干员由服务端随机下发、绝不下发客户端（服务端权威、防作弊），
-//   故「猜对判胜」无法确定性触发（概率 1/425）；胜负结算改用「弃权→平局」确定性路径覆盖。
+//   故「猜对判胜」无法确定性触发（概率 1/425）；回合结算改用确定性路径覆盖
+//   —— 弃权、以及「一方弃权 + 另一方耗尽」。需求⑥之后，**单方弃权本身不再结算**，
+//   所以 m3 必须再补一步「A 耗尽」才能走到 round_end（这恰好把需求⑥钉住了）。
 //   match_end（胜场判负/断线超时）走 30s 宽限窗口，smoke 不等待，由 party-smoke 覆盖断线/重连链路。
 
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import {
   ROOT, FRONTEND_ORIGIN, WAIT_TIMEOUT,
-  check, finish, waitFor, makeDbPath,
+  check, finish, waitFor, sleep, makeDbPath,
   startStaticServer, startBackend, killBackend, waitForBackend, cleanupDb,
   requireBuild, requirePlaywright, newZhContext,
 } from './helpers.mjs';
@@ -88,12 +90,41 @@ async function main() {
     await waitFor(async () => (await B.getByText('（1次）').count()) > 0, { desc: 'B 侧对手计数=1' });
     check('m2.B 收到对手更新（opponent_update 计数=1）', true);
 
-    console.log('\n[m3] 弃权结算（round_end）');
+    console.log('\n[m3] 弃权**不**立刻结算（需求⑥）');
+    // 🔴 本段是需求⑥（多人弃权语义）的探针，形状与旧版**正好相反**：
+    //    旧语义：任一方放弃 → 服务端立刻 endRound 判平局 → 双方当场看到「答案：」。
+    //    新语义：一方放弃只是把它移出本局，**回合继续**，直到另一方猜中（猜中者赢下该局）、
+    //            耗尽、或超时（平局）。
+    //    反事实：把 server/socket/game.js 里 surrender_round 末尾那句无条件的
+    //            `endRound(room, null, ...)` 加回去 → m3b 立刻红。
     await B.getByText('放弃本局', { exact: true }).click({ timeout: WAIT_TIMEOUT });
     await B.getByText('确认放弃', { exact: true }).click({ timeout: WAIT_TIMEOUT });
+
+    // 放弃方：留在局中，只挂一个「你已放弃」徽标（不再当场跳到结算屏 / 判负）
+    await B.getByText('你已放弃', { exact: true }).waitFor({ state: 'visible', timeout: WAIT_TIMEOUT });
+    check('m3a.放弃方仍留在局中，只显示「你已放弃」徽标', true);
+
+    // 对方：1.5s 内**不该**出现答案。老路径会在这 1.5s 内把它推上来。
+    let aSawAnswer = true;
+    try {
+      await A.getByText('答案：').first().waitFor({ state: 'visible', timeout: 1500 });
+    } catch { aSawAnswer = false; }
+    check('m3b.对方放弃后，本回合没有被提前结算（1.5s 内 A 侧无「答案：」）',
+      !aSawAnswer,
+      aSawAnswer ? 'A 侧已出现「答案：」→ 回合被提前结算（需求⑥未生效）' : 'A 侧仍停在局中');
+
+    // A 把 8 次用完（m2 已用掉 1 次，再补 7 次）→ 服务端此时看到「其余玩家已出局」→ 平局。
+    // 这就是「A 耗尽」这条出口：没有它，需求⑥之后「一方放弃 + 另一方耗尽」将永不结算。
+    for (const c of characters.slice(1, 8)) {
+      await A.locator('input.game-search-input').click({ timeout: WAIT_TIMEOUT });
+      await A.locator('input.game-search-input').fill(c.name);
+      await sleep(250); // 等 150ms 防抖出下拉
+      await A.keyboard.press('Enter');
+      await sleep(120);
+    }
     await A.getByText('答案：').first().waitFor({ state: 'visible', timeout: WAIT_TIMEOUT });
     await B.getByText('答案：').first().waitFor({ state: 'visible', timeout: WAIT_TIMEOUT });
-    check('m3.弃权 → 双方 round_end（答案揭晓）', true);
+    check('m3c.A 耗尽次数（B 已放弃）→ 回合判平局并揭晓答案', true);
 
     await ctxA.close();
     await ctxB.close();
@@ -182,7 +213,7 @@ async function main() {
   } finally {
     if (browser) await browser.close().catch(() => {});
     if (staticServer) staticServer.close();
-    killBackend(backend);
+    await killBackend(backend);
     await cleanupDb(DB_PATH);
   }
 }

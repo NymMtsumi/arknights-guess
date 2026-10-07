@@ -80,8 +80,12 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
     // 验证 mode 合法性
     // turtle = 海龟汤（盲盒变体）。它走「只进专属榜」的口径：
     // 落库供 /api/leaderboard?mode=turtle 聚合，但不进个人战绩（见 routes/user.js 的谓词）。
-    if (!['single', 'multi', 'custom', 'turtle'].includes(mode)) {
-      return jsonResponse(res, { error: 'mode 必须是 single、multi、custom 或 turtle' }, 400);
+    // bot = 人机对战。同样只进专属榜、不进个人战绩（用户拍板：「人机对局不计入个人总战绩」）；
+    //       difficulty 列存的是**人机档位**（easy/medium/hard = 低/中/高级人机），
+    //       所以它走下面 :127 的默认分支就够了 —— 那里已经在校验 easy|medium|hard，
+    //       正好是要的口径，不需要为它单开一个分支。
+    if (!['single', 'multi', 'custom', 'turtle', 'bot'].includes(mode)) {
+      return jsonResponse(res, { error: 'mode 必须是 single、multi、custom、turtle 或 bot' }, 400);
     }
 
     let timestamp = normalizeTimestamp(body.timestamp);
@@ -149,6 +153,13 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
     // ⚠️ 海龟汤必须并进来：它的获胜**只能**靠点名猜中产生（turtle-store 的 guesses
     //    恒 >= 1），「对手断线」那个口子对它不成立。海龟汤榜的口径改成提问次数之后
     //    这条守卫仍然成立 —— 它守的是「这局是否可能真的发生过」，与榜算哪个计数器无关。
+    //
+    // ⚠️ bot **故意不并进来**（与下方 targetName 那条守卫同一口径；这条不对称是既定决策，
+    //    别顺手统一）。实测它是**空守卫**：赢下 BO5 至少要猜中 3 小局，而每次猜中都得先经
+    //    页面的 handleGuess 计数（`matchRef.current.myTotalGuesses++`），所以 bot 记录
+    //    不可能出现 won=true 且 guessCount=0 —— 并进来**不会误伤任何真实存档**。
+    //    留着的原因不是怕误伤，而是不想在这一模式上摆一条看起来有用、实则拦不住伪造
+    //    （纯客户端上报）的校验。
     if (won && guessCount < 1 && (mode === 'single' || mode === 'turtle')) {
       return jsonResponse(res, { error: '获胜时 guessCount 至少为 1' }, 400);
     }
@@ -163,6 +174,18 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
 
     // 单人/海龟汤：校验目标干员真实存在（防伪造空/垃圾记录）。
     // 海龟汤的谜底也是干员池里的一个名字，同样的伪造面，所以并进同一条守卫。
+    //
+    // ⚠️ bot **故意不并进来**（与上面那条守卫同一口径；这条不对称是既定决策，别顺手统一）。
+    //
+    //    ⚠️ 原文给的理由（「中途中止时 targetName 可能为空」）**在客户端不可复现**：
+    //    `saveBotStats` 只在终局（`myWins`/`botWins` 到 3）调一次，那一刻的 `r.target`
+    //    一定来自 `pickTarget(roster, …)` 的真名字，不存在空的情况。
+    //
+    //    真正的理由是**这条守卫对 bot 没有意义**：一局人机是 BO5 多个小局、每小局换一个
+    //    谜底，而 targetName 只带**最后完成的那一小局**的谜底 —— 拿它去校验，对另外几局
+    //    一无所知，只提供「看起来在校验」的错觉。而能伪造 targetName 的客户端本来就能
+    //    伪造 guessCount（纯客户端上报，与单人/海龟汤同一信任级别），加不加这条守卫都
+    //    拦不住伪造，只会给一条合法存档多一个 400 的机会。
     if ((mode === 'single' || mode === 'turtle') && (!targetName || !findCharByName(targetName))) {
       return jsonResponse(res, { error: '目标干员不存在' }, 400);
     }
@@ -253,7 +276,10 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
     // turtle 进白名单 = 「海龟汤单独建榜」的**全部**实现：下面的查询本来就是
     // `WHERE g.mode = ?`，所以不需要动 schema、不需要新表、不需要新端点。
     // 落在白名单外的 mode（daily、以及任何笔误）一律回落 single —— 保持原行为。
-    if (!['single', 'multi', 'turtle'].includes(mode)) mode = 'single';
+    // bot 同理（用户需求④：「人机对局单独建榜」）。它的难度分组白拿 ——
+    // 下面的 `difficulty` 过滤是 ['easy','medium','hard']，而 bot 的 difficulty 列
+    // 存的就是档位，三档天然各成一榜（见 bot-engine.ts 里 BotTier 的选型注释）。
+    if (!['single', 'multi', 'turtle', 'bot'].includes(mode)) mode = 'single';
 
     // 海龟汤的「平均猜测」（前端 = totalGuesses / totalGames）算的是**提问次数**，
     // 不是点名次数。这个模式里的探测成本几乎全在提问上，点名只是收尾 —— 拿点名次数

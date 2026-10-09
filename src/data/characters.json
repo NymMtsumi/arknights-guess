@@ -11068,5 +11068,82 @@
     "position": "地面",
     "positionEn": "Melee",
     "artist": "Studio Montagne"
+  },
+  {
+    "id": "char_393_toledo",
+    "name": "德·托莱多",
+    "nameEn": "de Toledo",
+    "class": "辅助",
+    "classEn": "Supporter",
+    "subclass": "削弱者",
+    "subclassEn": "Hexer",
+    "faction": "伊比利亚",
+    "factionEn": "Iberia",
+    "rarity": 5,
+    "race": "黎博利",
+    "raceEn": "黎博利",
+    "gender": "女",
+    "genderEn": "Female",
+    "popularity": "normal",
+    "releaseYear": 2026,
+    "tags": [
+      "削弱"
+    ],
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged",
+    "artist": "NOCO"
+  },
+  {
+    "id": "char_4231_clemnt",
+    "name": "克莱门莎",
+    "nameEn": "Clementia",
+    "class": "近卫",
+    "classEn": "Guard",
+    "subclass": "本源近卫",
+    "subclassEn": "Primal Guard",
+    "faction": "阿戈尔",
+    "factionEn": "Ægir",
+    "rarity": 6,
+    "race": "阿戈尔",
+    "raceEn": "阿戈尔",
+    "gender": "女",
+    "genderEn": "Female",
+    "popularity": "normal",
+    "releaseYear": 2026,
+    "tags": [
+      "输出",
+      "爆发"
+    ],
+    "alterBase": "",
+    "position": "地面",
+    "positionEn": "Melee",
+    "artist": "一千"
+  },
+  {
+    "id": "char_4232_hbound",
+    "name": "旅骨",
+    "nameEn": "Homebound",
+    "class": "特种",
+    "classEn": "Specialist",
+    "subclass": "炼金师",
+    "subclassEn": "Alchemist",
+    "faction": "伊比利亚",
+    "factionEn": "Iberia",
+    "rarity": 5,
+    "race": "阿戈尔",
+    "raceEn": "阿戈尔",
+    "gender": "男",
+    "genderEn": "Male",
+    "popularity": "normal",
+    "releaseYear": 2026,
+    "tags": [
+      "削弱",
+      "减速"
+    ],
+    "alterBase": "",
+    "position": "高台",
+    "positionEn": "Ranged",
+    "artist": "3MO"
   }
 ]

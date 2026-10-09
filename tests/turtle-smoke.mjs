@@ -7,8 +7,16 @@
 //
 // 三条关键断言各钉一个**已定**的设计决定：
 //   a3/a4/a5 取值域与谜底**同源**（都用难度池）——
-//            easy 池只有 3 种星级、2 种性别、68 个子职业；全量池是 6/5/72。
+//            easy 池只有 3 种星级、2 种性别；子职业数**随 roster 增长**
+//            （2026-10-09 因新增 6★「克莱门莎」带来新子职业「本源近卫」而从 68 涨到 69），
+//            所以 a5 **不写死**，改成与下方从 JSON 现算的 easy 池取值域对照。
 //            谁把取值域改成全量，这三条立刻红。
+//
+//   ⚠️ a5 为什么必须派生而不是写常数：写死 68 时，每日 data-sync 一旦加入一个
+//      带新子职业的 6★（6★ 自动进 easy 池），这条就会在**无人值守**的自动提交上变红 →
+//      deploy job 被 skip → 后端不更新，而 Cloudflare Pages **不看这两道 gate**、
+//      照样把前端发上线 → 前后端 roster 劈叉（2026-10-09 实际发生过这一次）。
+//      派生之后判别力不变（全量池 72 ≠ easy 69），但不再随数据漂移。
 //   b1       提问的三级反馈 + 数值维方向提示：对 easy 的 3 个星级各问一次，
 //            **恰好 1 个「准确」、另外 2 个都带 ↑/↓**（不必知道谜底，确定性成立）。
 //   c3       端到端交叉验证：b1 里答「准确」的那个星级，必须等于结算卡上揭晓的谜底星级。
@@ -35,11 +43,12 @@ import {
   requireBuild, requirePlaywright, newZhContext,
 } from './helpers.mjs';
 
-/** easy 难度池 = 热门 ∪ 六星（src/lib/game-engine.ts:11）—— 取值域的唯一来源 */
+/** easy 难度池 = 热门 ∪ 六星（src/lib/game-engine.ts:20）—— 取值域的唯一来源 */
 const EASY_RARITIES = [4, 5, 6];
 const EASY_GENDERS = 2;
-const EASY_SUBCLASSES = 68;
 const FULL_RARITIES = 6; // 用来在失败信息里点明「你接的是全量池」
+// ⚠️ 子职业**没有**对应的常数：它的个数随 roster 增长（见文件头），写死会随数据漂移。
+//    a5 用 main() 里从 characters.json 现算的 easySubclasses.length 作期望值。
 
 async function main() {
   if (!requireBuild()) return 1;
@@ -51,6 +60,8 @@ async function main() {
   const easySubclasses = [...new Set(
     chars.filter(c => c.popularity === 'hot' || c.rarity >= 6).map(c => c.subclass),
   )];
+  // a5 的期望值（现算，不写死）＋失败信息里用来点明「你接的是全量池」的参照值
+  const allSubclasses = new Set(chars.map(c => c.subclass));
   const DB_PATH = makeDbPath('turtle');
   const backend = startBackend({ dbPath: DB_PATH });
   let staticServer = null;
@@ -152,8 +163,8 @@ async function main() {
     const subclassCount = P.locator('[data-testid="turtle-count-subclass"]');
     await waitFor(async () => (await subclassCount.count()) === 1, { desc: '子职业计数' });
     const subclassTotal = Number(((await subclassCount.textContent()) || '').match(/\d+/)?.[0]);
-    check(`a5.子职业取值域 = ${EASY_SUBCLASSES} 种（easy 池；全量池是 72）`,
-      subclassTotal === EASY_SUBCLASSES,
+    check(`a5.子职业取值域 = easy 池现算的 ${easySubclasses.length} 种（全量池 ${allSubclasses.size}；接错池子这里红）`,
+      subclassTotal === easySubclasses.length,
       `实际 ${subclassTotal}（读的是行尾计数，不是候选 chip —— 候选有 12 个上限）`);
 
     // 筛选框真的能筛：中文子串命中；再验拼音命中（valueSearchIndex 拼了 全拼 + 首字母）

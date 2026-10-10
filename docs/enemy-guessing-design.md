@@ -1,5 +1,13 @@
 # 敌方单位猜谜模式 — 方案设计
 
+> **📌 状态（2026-10-10 补注，正文未改，读时以这段为准）**：本方案**只落地了前半段**。
+> - ✅ **前端已上线**：`/game` 页（`src/app/game/page.tsx` 的 `GameMode = 'operator' | 'enemy'`）
+>   提供敌方模式，配 `src/lib/enemy-engine.ts`、`src/stores/enemy-store.ts`、`src/data/enemy-characters.json`。
+> - ✅ **数据脚本已实现**：`scripts/build-enemy-data.js` 已存在（本文下方标「待实现」的那句已过时）。
+> - ❌ **服务端仍未接线**：`server/routes/enemy.js` 定义了 `registerEnemyRoutes`，但**从未在
+>   `server/index.js` 注册**；`server/enemy-engine.js` / `server/enemy-db.js` 头部自标 `DEPRECATED`。
+>   即敌方模式**目前是纯客户端玩法**，没有服务端排行榜 / 每日。
+>
 > 基于 PRTS 敌方数据（2026-08-11 抓取），数据源：`https://prts.wiki/index.php?title=敌人一览/数据&action=raw&ctype=application/json`
 
 ## 一、数据规模

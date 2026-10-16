@@ -147,6 +147,8 @@ export default function MultiplayerPage() {
   const oppNameRef = useRef('');
   const roomCodeRef = useRef('');
   const socketRef = useRef<Socket | null>(null);
+  /** 上一次连接失败的横幅是不是我们设的（连上后只清这一种，不误清别的报错） */
+  const connErrRef = useRef(false);
   const myBoardScrollRef = useRef<HTMLDivElement>(null);
   const oppBoardScrollRef = useRef<HTMLDivElement>(null);
 
@@ -202,7 +204,9 @@ export default function MultiplayerPage() {
       socketRef.current.disconnect();
     }
     const s = io(WS_BASE, {
-      transports: ['websocket', 'polling'],
+      // 🔴 顺序不能反，理由与 src/hooks/useSocket.ts 同：engine.io-client 只认 transports[0]，
+      //    ['websocket','polling'] 的第二项永不生效 = WS 被中间设备挡掉时没有兜底。
+      transports: ['polling', 'websocket'],
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
@@ -212,7 +216,19 @@ export default function MultiplayerPage() {
     });
 
     // Register event listeners before connecting
-    s.on('connect_error', (err) => { clearConnecting(); setError(t('multi.serverConnectFail', { msg: err?.message || '' })); s.disconnect(); });
+    s.on('connect_error', (err) => {
+      clearConnecting();
+      connErrRef.current = true;
+      setError(t('multi.serverConnectFail', { msg: err?.message || '' }));
+      // 🔴 不调 s.disconnect()：它会置 skipReconnect=true，废掉 reconnection*（同 useSocket.ts）
+    });
+    // 自动重连成功后清掉上一次「连接失败」横幅：本页原本没有 connect 处理器，
+    // 报错只在用户下次操作时被 setError('') 覆盖，留着会一直挂在等待房里。
+    s.on('connect', () => {
+      if (!connErrRef.current) return;
+      connErrRef.current = false;
+      setError('');
+    });
     s.on('connect_timeout', () => { clearConnecting(); setError(t('multi.connectTimeout')); });
     s.on('error_msg', (d: any) => { clearConnecting(); setError(d.message); s.disconnect(); });
     s.on('room_expired', (d: any) => {

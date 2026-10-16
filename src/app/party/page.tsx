@@ -84,6 +84,10 @@ function PartyPageContent() {
     },
     onBeforeConnect: (s) => {
       registerAllPartyHandlers(s, handlerCtx);
+      // 自动重连是新增能力（useSocket 不再在 connect_error 里断线）：连上后清掉上一次
+      // 连接失败留下的横幅，否则大厅/等待房会一直挂着一条过期的报错。
+      // Manager 的回调顺序是 connect → reconnect，所以下面 onReconnect 里要报的错不会被盖掉。
+      s.on('connect', () => usePartyStore.setState({ error: '' }));
     },
     onReconnect: (s) => {
       const code = usePartyStore.getState().roomCode;

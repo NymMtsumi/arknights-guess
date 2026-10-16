@@ -66,7 +66,13 @@ export function useSocket(options: UseSocketOptions = {}) {
     clearConnectTimer();
 
     const s = io(WS_BASE, {
-      transports: ['websocket', 'polling'],
+      // 🔴 顺序不能反。写 ['websocket','polling'] 等于**只**用 WebSocket：
+      //    engine.io-client 默认只认 transports[0]，不会在 WS 失败时自动落到下一项
+      //    （那要显式开 `tryAllTransports`），所以第二项是死配置 ——
+      //    WS 被中间设备/运营商/企业网络挡掉时，直接连接失败，没有兜底。
+      //    这里用 Socket.IO 的默认顺序：先用轮询握手，随后自动升级到 WebSocket，
+      //    稳态传输仍是 WS，只在 WS 不可用时留在轮询上。
+      transports: ['polling', 'websocket'],
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
@@ -79,7 +85,11 @@ export function useSocket(options: UseSocketOptions = {}) {
       clearConnectTimer();
       setIsConnected(false);
       optionsRef.current.onError?.(err?.message || 'Connection failed');
-      s.disconnect();
+      // 🔴 这里**不能**调 s.disconnect()：它会置 Manager 的 skipReconnect=true，
+      //    把 reconnectionAttempts=10 / reconnectionDelay* 整套重连彻底废掉 ——
+      //    连「后端重启几十秒后自己恢复」这种瞬时失败也永不重连。
+      //    交给 Manager 按 reconnection* 自己退避重试即可。
+      //    （error_msg 那条是应用层终态错误，仍照旧主动断开，别一起改。）
     });
 
     s.on('connect_timeout', () => {

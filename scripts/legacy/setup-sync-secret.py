@@ -4,7 +4,7 @@
 安全：token 只在本进程内使用，绝不打印；加密用 repo public key + libsodium sealed box。
 
 用法:
-  python scripts/setup-sync-secret.py [--owner NymMtsumi] [--repo arknights-guess]
+  python scripts/legacy/setup-sync-secret.py [--owner NymMtsumi] [--repo arknights-guess]
         [--token-file ~/.git-credentials-nym] [--proxy http://127.0.0.1:10090]
 
 依赖: PyNaCl (pip install pynacl)

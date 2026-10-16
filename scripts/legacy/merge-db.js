@@ -1,5 +1,5 @@
 // 数据库合并脚本：将当前库的新用户/游戏合并到备份库
-// 用法：node scripts/merge-db.js
+// 用法：node scripts/legacy/merge-db.js
 const Database = require('better-sqlite3');
 const path = require('path');
 

@@ -10,8 +10,13 @@ ALERT_FILE="$LOG_DIR/ALERT"
 mkdir -p "$LOG_DIR"
 
 if curl -sf --max-time 5 http://localhost:3001/stats > /dev/null 2>&1; then
-  # 成功：清零失败计数
+  # 成功：清零失败计数，并撤下告警
+  # 🔴 必须连 ALERT 一起删。原先成功路径只清计数，于是「告警一旦触发就永不消失」：
+  #    2026-08-11 触发的那条一直挂到 2026-10-16，其间服务完全正常，
+  #    而 /etc/profile.d/liyiba-alert.sh 会让 **每次 SSH 登录** 都谎报「SERVER ALERT」。
+  #    监控的价值在于反映**当前**状态，不会自愈的告警比没有告警更糟。
   echo 0 > "$FAIL_COUNT_FILE"
+  rm -f "$ALERT_FILE"
   exit 0
 fi
 

@@ -84,6 +84,29 @@ for (const f of files) {
 }
 const missing = [...tArgs].filter((k) => !(k in zh) && !(k in en) && !isDynamicallyCovered(k));
 
+// ── 2b. ICU 残留检查（2026-10-16 新增）────────────────────────
+// 背景：src/lib/i18n.tsx 的 interpolate() 只认 {{key}}，其余一律原样输出。
+// 谁按 next-intl 的习惯写了 {count, plural, ...}，会被原样显示在界面上**且不报错**。
+// 所以：任何文案值去掉合法的 {{word}} 之后，如果还残留 { 或 }，就是 ICU 语法漏网。
+// 反事实对照（逻辑等价复现）：
+//   '{count, plural, one {#} other {#}}' → 报错   '共 {{count}} 次' → 通过
+//   '单一 {'                              → 报错   '{{a}} 与 {{b}}'  → 通过
+const braceIssues = [];
+const scanBraces = (obj, file, path) => {
+  for (const [k, v] of Object.entries(obj)) {
+    const p = path ? path + '.' + k : k;
+    if (v && typeof v === 'object') scanBraces(v, file, p);
+    else if (typeof v === 'string') {
+      const stripped = v.replace(/\{\{\w+\}\}/g, '');
+      if (stripped.includes('{') || stripped.includes('}')) {
+        braceIssues.push(file + ' :: ' + p + ' :: ' + JSON.stringify(v).slice(0, 70));
+      }
+    }
+  }
+};
+scanBraces(zh, 'zh-CN', '');
+scanBraces(en, 'en', '');
+
 // ── 3. 输出 ──────────────────────────────────────────────────
 // --json：只吐机器可读的结果，给清理脚本消费（免得解析人类可读输出）
 if (process.argv.includes('--json')) {
@@ -118,5 +141,14 @@ if (dead.length) {
   console.log('✓ 无死键');
 }
 if (verbose) console.log(`\n（扫描源文件 ${files.length} 个，模板前缀 ${prefixes.length} 个）`);
+
+if (braceIssues.length) {
+  fail = true;
+  console.error(`✗ 文案里残留 ICU 花括号 ${braceIssues.length} 条（interpolate() 只认 {{key}}，其余会原样显示）：`);
+  for (const b of braceIssues.slice(0, 10)) console.error('   ' + b);
+  if (braceIssues.length > 10) console.error(`   …还有 ${braceIssues.length - 10} 条`);
+} else {
+  console.log('✓ 无 ICU 花括号残留');
+}
 
 if (fail) process.exit(1);

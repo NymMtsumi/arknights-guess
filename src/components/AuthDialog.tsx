@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { register, login, forgotPassword, syncGames, linkPlayerKey, getUser, getPlayerKey, logout, apiCall } from '@/lib/auth';
-import { loadHistory } from '@/lib/stats';
+import { loadHistory, type GameRecord } from '@/lib/stats';
 import { useI18n } from '@/lib/i18n';
+import { errorMessage } from '@/lib/error-utils';
 
 interface AuthDialogProps {
   open: boolean;
@@ -48,8 +49,8 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
 
   if (!open) return null;
 
-  // 登录成功后更新 email 状态
-  const handleLoginSuccess = (data: any) => {
+  // 登录成功后更新 email 状态（只关心这两个字段，用最小形状而不是 any）
+  const handleLoginSuccess = (data: { email?: string | null; email_verified?: boolean | null }) => {
     if (data.email) {
       setLoginEmailVerified(data.email_verified ?? false);
     }
@@ -61,7 +62,7 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
     try {
       await apiCall('/api/send-verification', { method: 'POST', body: JSON.stringify({ email: currentUser?.email || '' }) });
       setMsg(t('auth.verifySent'));
-    } catch (e: any) { setError(e.message); }
+    } catch (e) { setError(errorMessage(e)); }
     setSendingVerify(false);
   };
 
@@ -108,17 +109,25 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
           await linkPlayerKey(pk);
           const history = loadHistory();
           // 只同步无 pk 标签的单人记录（multi/custom 已由 login() 内的 migrateGuestDataToAccount 处理）
-          const singleGames = history.filter(r => !r.player_key && !('mode' in r && (r.mode === 'multi' || r.mode === 'custom')));
+          const singleGames = history
+            .filter((r): r is GameRecord => !r.player_key && !('mode' in r && (r.mode === 'multi' || r.mode === 'custom')))
+            .map((r) => ({
+              timestamp: r.timestamp,
+              targetName: r.targetName,
+              won: r.won,
+              guessCount: r.guessCount,
+              difficulty: r.difficulty,
+            }));
           if (singleGames.length > 0) {
-            await syncGames(pk, singleGames as any[]);
+            await syncGames(pk, singleGames);
           }
           // Clear local game history after syncing (server is now the source of truth)
           try {
             localStorage.removeItem('arknights-guess-history');
             localStorage.removeItem('arknights-guess-stats');
           } catch {}
-        } catch (syncErr: any) {
-          console.warn('[Auth] Sync failed:', syncErr.message);
+        } catch (syncErr) {
+          console.warn('[Auth] Sync failed:', errorMessage(syncErr));
         }
         setSyncing(false);
       }
@@ -126,8 +135,8 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
       onClose();
       // Force reload to update UI across components
       window.location.reload();
-    } catch (err: any) {
-      setError(err.message || t('auth.opFailed'));
+    } catch (err) {
+      setError(errorMessage(err) || t('auth.opFailed'));
     } finally {
       setLoading(false);
     }

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getServerUrl, getToken } from '@/lib/auth';
 import { useI18n } from '@/lib/i18n';
+import { errorMessage } from '@/lib/error-utils';
 
 interface Announcement {
   id: number;
@@ -63,8 +64,8 @@ export default function AdminAnnouncements() {
       setTitle(''); setContent(''); setIsPopup(false);
       setMsg(t('admin.announcements.published'));
       await load();
-    } catch (err: any) {
-      setError(err.message || t('admin.announcements.publishFailed'));
+    } catch (err) {
+      setError(errorMessage(err) || t('admin.announcements.publishFailed'));
     } finally {
       setPublishing(false);
     }
@@ -90,9 +91,9 @@ export default function AdminAnnouncements() {
       }
       setMsg(t('admin.announcements.deleted'));
       await load();
-    } catch (err: any) {
+    } catch (err) {
       // 区分网络错误和服务器错误
-      const msg = err.message || '';
+      const msg = errorMessage(err);
       if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
         setError(t('admin.announcements.networkError'));
       } else {
@@ -134,8 +135,8 @@ export default function AdminAnnouncements() {
       setMsg(t('admin.announcements.updated'));
       setEditingId(null);
       await load();
-    } catch (err: any) {
-      setError(err.message || t('admin.announcements.updateFailed'));
+    } catch (err) {
+      setError(errorMessage(err) || t('admin.announcements.updateFailed'));
     } finally {
       setPublishing(false);
     }

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { fetchMe, AuthError } from '@/lib/auth';
 import { useI18n } from '@/lib/i18n';
+import { errorMessage } from '@/lib/error-utils';
 import AdminAnnouncements from '@/components/admin/AdminAnnouncements';
 import AdminUsers from '@/components/admin/AdminUsers';
 import AdminGuests from '@/components/admin/AdminGuests';
@@ -51,11 +52,11 @@ export default function AdminPage() {
       } else {
         setError(t('admin.noPermission'));
       }
-    } catch (err: any) {
+    } catch (err) {
       if (err instanceof AuthError) {
         setError(t('admin.pleaseLogin'));
       } else {
-        setError(err.message || t('admin.verifyFailed'));
+        setError(errorMessage(err) || t('admin.verifyFailed'));
       }
     } finally {
       setLoading(false);
@@ -78,14 +79,14 @@ export default function AdminPage() {
         setError(t('admin.permissionExpired'));
         router.push('/');
       }
-    } catch (err: any) {
+    } catch (err) {
       // 仅认证错误时重定向；网络错误仅提示（不踢出管理面板）
       if (err instanceof AuthError) {
         setIsAdmin(false);
         setError(t('admin.loginExpired'));
         router.push('/');
       } else {
-        setError(err.message || t('admin.verifyFailed'));
+        setError(errorMessage(err) || t('admin.verifyFailed'));
       }
     } finally {
       tabVerifyingRef.current = false;

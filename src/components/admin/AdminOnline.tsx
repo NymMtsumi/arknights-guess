@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getServerUrl, getToken } from '@/lib/auth';
 import { useI18n } from '@/lib/i18n';
+import { errorMessage } from '@/lib/error-utils';
 
 interface OnlinePlayer {
   playerKey: string;
@@ -65,10 +66,10 @@ export default function AdminOnline() {
       const data: OnlineStats = await res.json();
       setStats(data);
       setError('');
-    } catch (err: any) {
+    } catch (err) {
       // ⚠️ 轮询失败只记错误，**不清空 stats** —— 新数据拿不到时，
       // 列表保持上一次的结果（配合下面的 error 提示条），这是刻意设计。
-      setError(err.message);
+      setError(errorMessage(err));
     }
     setLoading(false);
   }, [baseUrl, t]);

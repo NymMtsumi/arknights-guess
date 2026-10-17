@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { getServerUrl, setToken, setUser } from '@/lib/auth';
 import { useI18n } from '@/lib/i18n';
 
@@ -78,13 +79,13 @@ export default function VerifyPage() {
           <p>
             {t('verify.autoLoginRedirect')}
           </p>
-          <a href="/" className="btn-p" style={{ display: 'inline-block', marginTop: 18 }}>{t('verify.goNow')}</a>
+          <Link href="/" className="btn-p" style={{ display: 'inline-block', marginTop: 18 }}>{t('verify.goNow')}</Link>
         </div>
       )}
       {status === 'error' && (
         <div>
           <h2 className="alert-dan">❌ {msgText}</h2>
-          <a href="/" className="btn-o" style={{ display: 'inline-block', marginTop: 18 }}>{t('verify.backHome')}</a>
+          <Link href="/" className="btn-o" style={{ display: 'inline-block', marginTop: 18 }}>{t('verify.backHome')}</Link>
         </div>
       )}
     </div>

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getServerUrl, getToken } from '@/lib/auth';
 import { useI18n } from '@/lib/i18n';
+import { errorMessage } from '@/lib/error-utils';
 
 interface TokenInfo {
   id: number;
@@ -37,8 +38,8 @@ export default function AdminTokens() {
       if (!res.ok) throw new Error(t('admin.common.loadFailed'));
       const data = await res.json();
       setTokens(data.tokens || data);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(errorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -61,8 +62,8 @@ export default function AdminTokens() {
       setNewToken(data.token);
       setName('');
       await load();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(errorMessage(err));
     } finally {
       setCreating(false);
     }
@@ -81,8 +82,8 @@ export default function AdminTokens() {
       if (!res.ok) throw new Error(data.error || t('admin.tokens.revokeFailed'));
       setMsg(t('admin.tokens.revoked'));
       await load();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(errorMessage(err));
     }
   };
 

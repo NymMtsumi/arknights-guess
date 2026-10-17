@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { getServerUrl, getToken } from '@/lib/auth';
 import { useI18n } from '@/lib/i18n';
+import { errorMessage } from '@/lib/error-utils';
 import { adminSortMark, ADMIN_PAGE_SIZES } from './ui';
 
 interface Character {
@@ -47,7 +48,9 @@ export default function AdminCharacters() {
 
   // Import state
   const [importPreview, setImportPreview] = useState<{ total: number; added: number; updated: number; skipped: number } | null>(null);
-  const [importData, setImportData] = useState<any[] | null>(null);
+  // 导入预览的原始 JSON 数组：内容来自用户上传的文件，形状不可知 —— 原样传回服务端，
+  // 客户端不假设字段，所以用 unknown[]（不是 any[]）。
+  const [importData, setImportData] = useState<unknown[] | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [sortKey, setSortKey] = useState('name');
@@ -77,8 +80,8 @@ export default function AdminCharacters() {
       setTotal(data.total);
       setPage(data.page);
       setTotalPages(data.totalPages);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(errorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -143,7 +146,7 @@ export default function AdminCharacters() {
     setMsg(''); setError('');
     try {
       const token = getToken();
-      const body: any = {
+      const body: Record<string, unknown> = {
         name: form.name.trim(),
         nameEn: form.nameEn.trim(),
         rarity: form.rarity,
@@ -174,8 +177,8 @@ export default function AdminCharacters() {
       setMsg(editTarget ? t('admin.characters.updated') : t('admin.characters.added'));
       setShowForm(false);
       await load();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(errorMessage(err));
     }
   };
 
@@ -192,8 +195,8 @@ export default function AdminCharacters() {
       if (!res.ok) throw new Error(data.error || t('admin.common.deleteFailed'));
       setMsg(t('admin.characters.deleted', { name }));
       await load();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(errorMessage(err));
     }
   };
 
@@ -218,8 +221,8 @@ export default function AdminCharacters() {
 
       setImportData(data);
       setImportPreview(result);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(errorMessage(err));
     }
     // Reset file input
     if (fileRef.current) fileRef.current.value = '';
@@ -241,8 +244,8 @@ export default function AdminCharacters() {
       setImportPreview(null);
       setImportData(null);
       await load();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(errorMessage(err));
     }
   };
 
@@ -266,8 +269,8 @@ export default function AdminCharacters() {
       a.click();
       setTimeout(() => URL.revokeObjectURL(a.href), 1000);
       setMsg(t('admin.characters.exported'));
-    } catch (err: any) {
-      setError(err.message || t('admin.characters.exportFailedPlain'));
+    } catch (err) {
+      setError(errorMessage(err) || t('admin.characters.exportFailedPlain'));
     }
   };
 

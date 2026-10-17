@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef } from 'react';
+import Link from 'next/link';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { GameSearch } from '@/components/GameSearch';
@@ -128,7 +129,7 @@ export default function TurtlePage() {
             </div>
 
             <div className="bar-actions" style={{ justifyContent: 'center' }}>
-              <a href="/" className="btn-o">{t('game.back')}</a>
+              <Link href="/" className="btn-o">{t('game.back')}</Link>
             </div>
           </div>
           <Footer />
@@ -287,7 +288,7 @@ export default function TurtlePage() {
               <button onClick={reset} data-testid="turtle-restart" className="btn-p">
                 {t('game.newGame')}
               </button>
-              <a href="/" className="btn-o">{t('game.back')}</a>
+              <Link href="/" className="btn-o">{t('game.back')}</Link>
             </div>
           )}
         </div>

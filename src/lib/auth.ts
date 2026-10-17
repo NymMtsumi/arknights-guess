@@ -1,15 +1,19 @@
 'use client';
 
+import { errorMessage } from './error-utils';
+
 const TOKEN_KEY = 'arknights-auth-token';
 const USER_KEY = 'arknights-auth-user';
 
 export interface AuthUser {
   username: string;
   userId: number;
-  displayId?: string;
-  email?: string;
-  nickname?: string;
-  role?: string;
+  // server 对未设置字段返回 null（见 /api/login、/api/me），不是 undefined ——
+  // 所以这里显式允许 null，避免用 `as` 把 null 硬塞进 string。
+  displayId?: string | null;
+  email?: string | null;
+  nickname?: string | null;
+  role?: string | null;
 }
 
 export interface ServerStats {
@@ -40,6 +44,39 @@ export interface MeResponse {
 }
 
 let _cachedServerUrl: string | null = null;
+
+/**
+ * 本地历史里「形状未知」的旧记录（guest → account 迁移代码只按字段名读，
+ * 不假设它满足 `HistoryRecord`）。用它在迁移里替代 `any`。
+ */
+type RawHistoryRecord = Record<string, unknown>;
+
+/** 从「形状未知」的旧小局记录里取猜测数（迁移上报用） */
+function roundGuessCount(round: unknown): number {
+  if (!round || typeof round !== 'object') return 0;
+  return Number((round as { guessCount?: unknown }).guessCount) || 0;
+}
+
+/** 登录接口的响应体（形状以 server 的 /api/login 为准） */
+interface LoginResponse {
+  token: string;
+  username: string;
+  userId: number;
+  displayId?: string;
+  role: string;
+  nickname: string | null;
+  player_key: string | null;
+  email: string | null;
+  email_verified: boolean;
+}
+
+export type UpdateProfileResponse = {
+  username: string;
+  nickname: string | null;
+  email: string | null;
+  email_verified: boolean;
+  created_at: string;
+};
 
 export function getServerUrl(): string {
   if (_cachedServerUrl) return _cachedServerUrl;
@@ -178,7 +215,7 @@ export class AuthError extends Error {
  * @param path - API path starting with / (e.g. '/api/me')
  * @param options - fetch options; method defaults to 'GET'
  */
-export async function apiCall<T = any>(path: string, options: RequestInit = {}): Promise<T> {
+export async function apiCall<T = unknown>(path: string, options: RequestInit = {}): Promise<T> {
   const base = getServerUrl();
   const { method: optMethod, headers: optHeaders, ...restOptions } = options;
   const method = optMethod || 'GET';
@@ -196,42 +233,45 @@ export async function apiCall<T = any>(path: string, options: RequestInit = {}):
       headers,
       credentials: 'include',
     });
-  } catch (fetchErr: any) {
+  } catch (fetchErr) {
     // NOTE: Hardcoded Chinese error messages bypass i18n.
     // Acceptable trade-off: these are network/server errors where i18n context may be unavailable.
-    throw new Error(fetchErr?.message === 'Failed to fetch'
+    const message = errorMessage(fetchErr);
+    throw new Error(message === 'Failed to fetch'
       ? '网络连接失败，请刷新页面后重试'
-      : (fetchErr?.message || '网络错误'));
+      : (message || '网络错误'));
   }
 
-  let data: any;
+  let data: unknown;
   try {
     data = await res.json();
   } catch {
     // 非 JSON 响应（如 502/504 网关错误 HTML）
     throw new Error(`服务器错误 (${res.status})，请稍后再试`);
   }
+  // 服务端错误体至少是 `{ error: string }`；成功体的形状由调用方用泛型 `T` 声明。
+  const body = (data && typeof data === 'object' ? data : {}) as { error?: string; [key: string]: unknown };
   if (!res.ok) {
     if (res.status === 401) {
-      throw new AuthError(data.error || '登录已过期，请重新登录');
+      throw new AuthError(body.error || '登录已过期，请重新登录');
     }
     // 把状态码与响应体挂到 Error 上。**纯附加**：既有调用方一律只读 message，
     // 行为逐字不变；需要区分「是哪一类失败」的调用方才用得上。
     // 当前的动因是每日挑战：会话被 TTL 清扫后再猜会拿到 409 { voided:true }，
     // 只透传 message 的话调用方没法把它和普通失败区分开，页面会一直停在
     // 「可玩但一点就报错」的状态（见 daily-store 的 submitGuess）。
-    const err: any = new Error(data.error || `HTTP ${res.status}`);
+    const err = new Error(body.error || `HTTP ${res.status}`) as Error & { status?: number; data?: unknown };
     err.status = res.status;
     err.data = data;
     throw err;
   }
-  return data;
+  return data as T;
 }
 
 // ===== 注册 =====
 // 不会自动登录——用户需要先去邮箱点击验证链接。
 export async function register(username: string, password: string, email: string): Promise<{ ok: boolean; message: string }> {
-  const data = await apiCall('/api/register', {
+  const data = await apiCall<{ ok: boolean; message: string }>('/api/register', {
     method: 'POST',
     body: JSON.stringify({ username, password, email }),
   });
@@ -240,7 +280,7 @@ export async function register(username: string, password: string, email: string
 
 // ===== 忘记密码 =====
 export async function forgotPassword(email: string): Promise<{ ok: boolean; message: string }> {
-  const data = await apiCall('/api/forgot-password', {
+  const data = await apiCall<{ ok: boolean; message: string }>('/api/forgot-password', {
     method: 'POST',
     body: JSON.stringify({ email }),
   });
@@ -249,7 +289,7 @@ export async function forgotPassword(email: string): Promise<{ ok: boolean; mess
 
 // ===== 重置密码 =====
 export async function resetPassword(token: string, password: string): Promise<{ ok: boolean; message: string }> {
-  const data = await apiCall('/api/reset-password', {
+  const data = await apiCall<{ ok: boolean; message: string }>('/api/reset-password', {
     method: 'POST',
     body: JSON.stringify({ token, password }),
   });
@@ -258,12 +298,8 @@ export async function resetPassword(token: string, password: string): Promise<{ 
 
 // ===== 登录 =====
 // 仅支持邮箱登录
-export async function login(identifier: string, password: string): Promise<{
-  token: string; username: string; userId: number; role: string;
-  nickname: string | null;
-  player_key: string | null; email: string | null; email_verified: boolean;
-}> {
-  const data = await apiCall('/api/login', {
+export async function login(identifier: string, password: string): Promise<LoginResponse> {
+  const data = await apiCall<LoginResponse>('/api/login', {
     method: 'POST',
     body: JSON.stringify({ username: identifier, password }),
   });
@@ -315,20 +351,24 @@ export async function migrateGuestDataToAccount(accountPlayerKey: string, oldGue
     const rawHistory = localStorage.getItem(HISTORY_KEY);
     if (!rawHistory) return;
 
-    const history = JSON.parse(rawHistory);
+    const history: unknown = JSON.parse(rawHistory);
     if (!Array.isArray(history) || history.length === 0) return;
 
     // 迁移无 pk 的记录，以及标记为旧游客 pk 的记录（如 socket 写入的 pk）
-    const ownerlessGames = history.filter((r: any) =>
-      r && !r._migrating && (!r.player_key || (oldGuestPk && r.player_key === oldGuestPk))
-    );
+    const ownerlessGames = history
+      .filter((r): r is RawHistoryRecord => !!r && typeof r === 'object')
+      .filter((r) =>
+        !r._migrating && (!r.player_key || (oldGuestPk && r.player_key === oldGuestPk))
+      );
 
     if (ownerlessGames.length === 0) return;
 
     // 立即标记为"迁移中"，防止并发 tab 重复迁移
     // 覆盖所有匹配的记录（无 pk + 旧游客 pk），不仅是 !r.player_key 的
-    let updated = history.map((r: any) => {
-      if (!r || r._migrating) return r;
+    const updated = history.map((raw) => {
+      if (!raw || typeof raw !== 'object') return raw;
+      const r = raw as RawHistoryRecord;
+      if (r._migrating) return r;
       // 已有 pk 且不是旧游客 pk 的记录跳过（属于其他账户）
       if (r.player_key && r.player_key !== oldGuestPk) return r;
       return { ...r, _migrating: accountPlayerKey };
@@ -347,7 +387,7 @@ export async function migrateGuestDataToAccount(accountPlayerKey: string, oldGue
     //    同时记下每条在 ownerlessGames 里的下标，服务端逐行返回结果后好按行标记。
     const singleIdx: number[] = [];
     const singleGames: Array<Record<string, unknown>> = [];
-    ownerlessGames.forEach((r: any, i: number) => {
+    ownerlessGames.forEach((r, i: number) => {
       if (r.mode === 'multi' || r.mode === 'custom' || typeof r.timestamp !== 'number') return;
       singleIdx.push(i);
       singleGames.push({
@@ -361,13 +401,13 @@ export async function migrateGuestDataToAccount(accountPlayerKey: string, oldGue
     });
 
     if (singleGames.length > 0) {
-      const data = await apiCall('/api/sync', {
+      const data = await apiCall<{ results?: unknown; synced?: unknown }>('/api/sync', {
         method: 'POST',
         body: JSON.stringify({ player_key: accountPlayerKey, games: singleGames }),
       });
       // 只标记服务端**确认收下**的行。'new' = 新写入，'dup' = 服务器已有（同样算成功）。
       // 'bad' 或结果缺失（老服务端不返回 results）→ 保留本地记录，下次登录再试。
-      const results: unknown = (data as { results?: unknown }).results;
+      const results = data.results;
       if (Array.isArray(results)) {
         let kept = 0;
         results.forEach((st, k) => {
@@ -377,9 +417,9 @@ export async function migrateGuestDataToAccount(accountPlayerKey: string, oldGue
         console.log(`[Auth] guest single games: ${results.length - kept} migrated, ${kept} kept local`);
       } else {
         // 老服务端：无法逐行确认，只能按 synced 总数判断，全对才标记
-        const ok = Number((data as { synced?: unknown }).synced) === singleGames.length;
+        const ok = Number(data.synced) === singleGames.length;
         if (ok) singleIdx.forEach((i) => migratedIndices.add(i));
-        else console.warn(`[Auth] guest single games not confirmed (synced=${(data as { synced?: unknown }).synced}/${singleGames.length}), kept local`);
+        else console.warn(`[Auth] guest single games not confirmed (synced=${String(data.synced)}/${singleGames.length}), kept local`);
       }
     }
 
@@ -394,7 +434,7 @@ export async function migrateGuestDataToAccount(accountPlayerKey: string, oldGue
           body: JSON.stringify({
             player_key: accountPlayerKey,
             won: Boolean(g.won),
-            guessCount: Array.isArray(g.rounds) ? g.rounds.reduce((sum: number, rd: any) => sum + (Number(rd.guessCount) || 0), 0) : 0,
+            guessCount: Array.isArray(g.rounds) ? g.rounds.reduce((sum: number, rd: unknown) => sum + roundGuessCount(rd), 0) : 0,
             difficulty: 'multi',
             targetName: String(g.opponentName || ''),
             mode: 'multi',
@@ -414,13 +454,13 @@ export async function migrateGuestDataToAccount(accountPlayerKey: string, oldGue
       if (g.mode !== 'custom' || typeof g.timestamp !== 'number') continue;
 
       try {
-        const customCfg = g.custom && typeof g.custom === 'object' ? g.custom : {};
+        const customCfg = (g.custom && typeof g.custom === 'object' ? g.custom : {}) as RawHistoryRecord;
         await apiCall('/api/save-game', {
           method: 'POST',
           body: JSON.stringify({
             player_key: accountPlayerKey,
             won: Boolean(g.won),
-            guessCount: Array.isArray(g.rounds) ? g.rounds.reduce((sum: number, rd: any) => sum + (Number(rd.guessCount) || 0), 0) : 0,
+            guessCount: Array.isArray(g.rounds) ? g.rounds.reduce((sum: number, rd: unknown) => sum + roundGuessCount(rd), 0) : 0,
             difficulty: typeof customCfg.difficulty === 'string' ? customCfg.difficulty : 'hard',
             targetName: String(g.opponentName || ''),
             mode: 'custom',
@@ -455,19 +495,23 @@ export async function migrateGuestDataToAccount(accountPlayerKey: string, oldGue
         const migratedSet = new Set<string>();
         for (const idx of migratedIndices) {
           const g = ownerlessGames[idx];
-          migratedSet.add(`${g.timestamp}|${g.targetName}|${g.mode}`);
+          migratedSet.add(`${String(g.timestamp)}|${String(g.targetName)}|${String(g.mode)}`);
         }
-        const finalHistory = currentHistory.map((r: any) => {
+        const finalHistory = currentHistory.map((raw) => {
+          if (!raw || typeof raw !== 'object') return raw;
+          const r = raw as RawHistoryRecord;
           // Skip records belonging to a different account (keep their player_key)
-          if (!r || (r.player_key && r.player_key !== oldGuestPk)) return r;
-          const key = `${r.timestamp}|${r.targetName}|${r.mode}`;
+          if (r.player_key && r.player_key !== oldGuestPk) return r;
+          const key = `${String(r.timestamp)}|${String(r.targetName)}|${String(r.mode)}`;
           if (migratedSet.has(key)) {
             const { _migrating, ...rest } = r;
+            void _migrating;
             return { ...rest, player_key: accountPlayerKey };
           }
           // 清除 _migrating 标记（超时或失败的记录回退为可迁移状态）
           if (r._migrating === accountPlayerKey) {
             const { _migrating, ...rest } = r;
+            void _migrating;
             return rest;
           }
           return r;
@@ -479,9 +523,12 @@ export async function migrateGuestDataToAccount(accountPlayerKey: string, oldGue
       const currentRaw = localStorage.getItem(HISTORY_KEY);
       const currentHistory = currentRaw ? JSON.parse(currentRaw) : history;
       if (Array.isArray(currentHistory)) {
-        const restored = currentHistory.map((r: any) => {
-          if (r?._migrating === accountPlayerKey) {
+        const restored = currentHistory.map((raw) => {
+          if (!raw || typeof raw !== 'object') return raw;
+          const r = raw as RawHistoryRecord;
+          if (r._migrating === accountPlayerKey) {
             const { _migrating, ...rest } = r;
+            void _migrating;
             return rest;
           }
           return r;
@@ -517,15 +564,12 @@ export async function logout(): Promise<void> {
 
 // ===== 获取个人信息 =====
 export async function fetchMe(): Promise<MeResponse> {
-  return apiCall('/api/me', { method: 'GET' });
+  return apiCall<MeResponse>('/api/me', { method: 'GET' });
 }
 
 // ===== 修改个人信息 =====
-export async function updateProfile(data: { nickname?: string }): Promise<{
-  username: string; nickname: string | null;
-  email: string | null; email_verified: boolean; created_at: string;
-}> {
-  const result = await apiCall('/api/me', {
+export async function updateProfile(data: { nickname?: string }): Promise<UpdateProfileResponse> {
+  const result = await apiCall<UpdateProfileResponse>('/api/me', {
     method: 'PATCH',
     body: JSON.stringify(data),
   });
@@ -546,7 +590,7 @@ export async function syncGames(playerKey: string, games: Array<{
   guessCount: number;
   difficulty: string;
 }>): Promise<{ synced: number }> {
-  return apiCall('/api/sync', {
+  return apiCall<{ synced: number }>('/api/sync', {
     method: 'POST',
     body: JSON.stringify({ player_key: playerKey, games }),
   });
@@ -554,7 +598,7 @@ export async function syncGames(playerKey: string, games: Array<{
 
 // ===== 关联 player_key =====
 export async function linkPlayerKey(playerKey: string): Promise<void> {
-  await apiCall('/api/link-player-key', {
+  await apiCall<unknown>('/api/link-player-key', {
     method: 'POST',
     body: JSON.stringify({ player_key: playerKey }),
   });

@@ -30,6 +30,35 @@ function clearRoomCode() { try { localStorage.removeItem(ROOM_KEY); } catch {} }
 
 type Stage = 'menu' | 'lobby' | 'custom' | 'waiting' | 'playing' | 'roundEnd' | 'matchEnd' | 'matchmaking';
 
+/**
+ * socket 事件载荷的**最小形状** —— 只声明本页真正读到的字段。
+ * 服务端可能返回更多字段，这里不追求完整；用具体接口替代 `any` 后，
+ * 字段名写错会由 tsc 抓出来，而不是静默变成 undefined。
+ * （本文件历史上所有 socket 载荷都是 `any`，2026-10-17 清 no-explicit-any 时补的最小类型。）
+ */
+interface RoomPlayerPayload { id: string; name: string; wins: number }
+interface ConfigPayload {
+  custom?: boolean | null;
+  attributes?: string[];
+  maxGuesses?: number;
+  roundTime?: number;
+  difficulty?: string;
+}
+interface ExistingRoomPayload extends ConfigPayload {
+  code: string;
+  bestOf: number;
+  started?: boolean;
+  wins?: number;
+  _createdAt?: number;
+}
+interface ErrorMessagePayload { message?: string }
+interface RoundEndPayload {
+  winner: string | null;
+  targetName: string;
+  score: string;
+  matchOver?: boolean;
+}
+
 const DIFF_KEY_MAP: Record<string, string> = {
   easy: 'multi.difficultyEasy',
   medium: 'multi.difficultyMedium',
@@ -65,7 +94,7 @@ export default function MultiplayerPage() {
   const router = useRouter();
 
   // 从服务端载荷同步自定义房配置（标准房重置为 null）
-  const applyConfig = (d: any) => {
+  const applyConfig = (d: ConfigPayload) => {
     if (d.custom && Array.isArray(d.attributes)) {
       const cfg = {
         attributes: d.attributes,
@@ -107,7 +136,7 @@ export default function MultiplayerPage() {
    *    也会走到这里，从字符串猜胜负会在这些分支上猜错。
    */
   const [matchWon, setMatchWon] = useState(false);
-  const [roundEndData, setRoundEndData] = useState<any>(null);
+  const [roundEndData, setRoundEndData] = useState<RoundEndPayload | null>(null);
   const [iSurrendered, setISurrendered] = useState(false);
   const [oppSurrendered, setOppSurrendered] = useState(false);
   const [showSurrenderConfirm, setShowSurrenderConfirm] = useState(false);
@@ -230,14 +259,14 @@ export default function MultiplayerPage() {
       setError('');
     });
     s.on('connect_timeout', () => { clearConnecting(); setError(t('multi.connectTimeout')); });
-    s.on('error_msg', (d: any) => { clearConnecting(); setError(d.message); s.disconnect(); });
-    s.on('room_expired', (d: any) => {
+    s.on('error_msg', (d: ErrorMessagePayload) => { clearConnecting(); setError(d.message || ''); s.disconnect(); });
+    s.on('room_expired', (d: ErrorMessagePayload | null) => {
       clearConnecting();
       clearRoomCode();
       setStage('menu');
       setError(d?.message || t('multi.roomExpired'));
     });
-    s.on('existing_room', (d: any) => {
+    s.on('existing_room', (d: ExistingRoomPayload) => {
       clearConnecting();
       setRoomCode(d.code); roomCodeRef.current = d.code; saveRoomCode(d.code);
       setBestOf(d.bestOf); if (d.difficulty) setDifficulty(d.difficulty);
@@ -251,7 +280,7 @@ export default function MultiplayerPage() {
       }
     });
 
-    s.on('set_cookie', (d: any) => {
+    s.on('set_cookie', (d: { value: string }) => {
       if (typeof document !== 'undefined') {
         try { localStorage.setItem('player_key', d.value); } catch {}
       }
@@ -263,7 +292,7 @@ export default function MultiplayerPage() {
 
     s.on('room_created', (d) => { clearConnecting(); setRoomCode(d.code); roomCodeRef.current = d.code; saveRoomCode(d.code); setBestOf(d.bestOf); if (d.difficulty) setDifficulty(d.difficulty); applyConfig(d); setRoomExpireTime(Date.now() + 120_000); setStage('waiting'); });
 
-    s.on('room_disbanded', (d: any) => {
+    s.on('room_disbanded', (d: { cooldown?: number; reason?: string }) => {
       clearRoomCode();
       if (d.cooldown) {
         setDisbandCooldown(Date.now() + d.cooldown);
@@ -287,9 +316,9 @@ export default function MultiplayerPage() {
       if (hasActiveRound && remaining > 0) { setTimeLeft(remaining); }
       else { setTimeLeft(0); }
       const me = s.id;
-      const opp = d.players.find((p: any) => p.id !== me);
+      const opp = d.players.find((p: RoomPlayerPayload) => p.id !== me);
       if (opp) { setOppName(opp.name); setOppWins(opp.wins); }
-      const meP = d.players.find((p: any) => p.id === me);
+      const meP = d.players.find((p: RoomPlayerPayload) => p.id === me);
       if (meP) setMyWins(meP.wins);
 
       // ── 用服务端快照恢复本回合进度 ───────────────────────────────
@@ -415,9 +444,9 @@ export default function MultiplayerPage() {
       setOppDisconnected(false);
       setRoundEndData(null);
       const me = s.id;
-      const opp = d.players.find((p: any) => p.id !== me);
+      const opp = d.players.find((p: RoomPlayerPayload) => p.id !== me);
       if (opp) { setOppName(opp.name); setOppWins(opp.wins); }
-      const meP = d.players.find((p: any) => p.id === me);
+      const meP = d.players.find((p: RoomPlayerPayload) => p.id === me);
       if (meP) setMyWins(meP.wins);
       // 服务端不下发答案：客户端不持有 target，对比结果由服务端回传 guess_result
       useGameStore.setState({ status: 'playing', target: null, guesses: [], remainingGuesses: d.maxGuesses ?? 8, difficulty: 'hard' });
@@ -522,13 +551,13 @@ export default function MultiplayerPage() {
       useGameStore.setState({ status: 'idle', target: null, guesses: [], remainingGuesses: d.maxGuesses ?? 8, difficulty: 'hard' });
     });
 
-    s.on('rematch_cancelled', (d: any) => {
+    s.on('rematch_cancelled', (d: { playerName?: string } | null) => {
       setError(t('multi.rematchCancelled', { name: d?.playerName || '' }));
       setTimeout(() => setError(''), 3000);
     });
 
     // Matchmaking queue events
-    s.on('matchmaking:status', (d: any) => {
+    s.on('matchmaking:status', (d: { queued: boolean; position: number; difficulty: string }) => {
       if (d.queued) {
         setQueuePosition(d.position);
         setMatchDifficulty(d.difficulty);
@@ -541,7 +570,7 @@ export default function MultiplayerPage() {
       }
     });
 
-    s.on('matchmaking:matched', (d: any) => {
+    s.on('matchmaking:matched', (d: { roomCode: string; bestOf: number; difficulty?: string; opponent: { name: string } }) => {
       clearConnecting();
       setRoomCode(d.roomCode);
       roomCodeRef.current = d.roomCode;

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getServerUrl, getToken } from '@/lib/auth';
 import { useI18n } from '@/lib/i18n';
+import { errorMessage } from '@/lib/error-utils';
 
 interface DashboardData {
   totalUsers: number;
@@ -36,8 +37,8 @@ export default function AdminDashboard() {
       }
       const d: DashboardData = await res.json();
       setData(d);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(errorMessage(err));
     }
     setLoading(false);
   }, [baseUrl, t]);

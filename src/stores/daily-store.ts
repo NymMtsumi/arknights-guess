@@ -3,6 +3,7 @@ import type { Character, GuessResult, GuessComparisons } from '@/types/character
 import { findCharacterByName } from '@/lib/game-engine';
 import charactersData from '@/data/characters.json';
 import { apiCall, getPlayerKey, AuthError } from '@/lib/auth';
+import { errorMessage } from '@/lib/error-utils';
 
 const MAX_GUESSES = 8;
 const characters: Character[] = charactersData as Character[];
@@ -12,6 +13,40 @@ export interface DailyResult {
   guessCount: number;
   timestamp: string;
   targetName?: string;
+}
+
+/** /api/daily/status 的响应（字段可选：老服务端 / 不同分支返回的字段不同） */
+interface DailyStatusResponse {
+  played?: boolean;
+  voided?: boolean;
+  result?: DailyResult | null;
+  date?: string;
+  inProgress?: boolean;
+  /** 刷新恢复进行中的会话时回传的历史猜测（老服务端不带） */
+  history?: Array<{ name?: string; comparisons?: Record<string, string> }>;
+  remainingGuesses?: number;
+}
+
+/** /api/daily/guess 的响应 */
+interface DailyGuessResponse {
+  player_key?: string;
+  comparisons?: Record<string, string>;
+  won?: boolean;
+  lost?: boolean;
+  target?: { name: string } | null;
+  remainingGuesses?: number;
+}
+
+/**
+ * 是否为「会话被 TTL 清扫」的 409 `{ voided:true }` 错误。
+ * apiCall 把 status / 响应体挂在 Error 上（见 auth.ts），这里做一次 unknown 收窄，
+ * 替代原来的 `err?.status === 409 && err?.data?.voided`（那需要把 err 标成 any）。
+ */
+function isVoidedSessionError(err: unknown): boolean {
+  if (!err || typeof err !== 'object') return false;
+  const e = err as { status?: unknown; data?: unknown };
+  if (e.status !== 409 || !e.data || typeof e.data !== 'object') return false;
+  return (e.data as { voided?: unknown }).voided === true;
 }
 
 type DailyStatus = 'loading' | 'already-played' | 'playing' | 'won' | 'lost' | 'error';
@@ -60,7 +95,7 @@ export const useDailyStore = create<DailyState>((set, get) => ({
     set({ status: 'loading', error: null });
 
     try {
-      const data = await apiCall('/api/daily/status', { method: 'GET' });
+      const data = await apiCall<DailyStatusResponse>('/api/daily/status', { method: 'GET' });
 
       if (!data || typeof data.played !== 'boolean') {
         set({ status: 'error', error: '服务器响应异常，请稍后再试' });
@@ -94,17 +129,16 @@ export const useDailyStore = create<DailyState>((set, get) => ({
         //    一条真实时间戳的记录并触发 reconciliation，可能错位/丢行。
         //    给一个按序号唯一且递增的值（数组本身按猜测先后排列，GuessTable 不做排序）。
         const restoreBase = Date.now();
-        const restored: GuessResult[] = Array.isArray(data.history)
-          ? data.history.flatMap((h: any, i: number): GuessResult[] => {
-              const ch = h && typeof h.name === 'string' ? findCharacterByName(characters, h.name) : null;
-              if (!ch) return [];
-              return [{
-                character: ch,
-                comparisons: toGuessComparisons(h.comparisons || {}),
-                timestamp: restoreBase - (data.history.length - i),
-              }];
-            })
-          : [];
+        const history = Array.isArray(data.history) ? data.history : [];
+        const restored: GuessResult[] = history.flatMap((h, i: number): GuessResult[] => {
+          const ch = h && typeof h.name === 'string' ? findCharacterByName(characters, h.name) : null;
+          if (!ch) return [];
+          return [{
+            character: ch,
+            comparisons: toGuessComparisons(h.comparisons || {}),
+            timestamp: restoreBase - (history.length - i),
+          }];
+        });
         set({
           status: 'playing',
           target: null,       // 目标保密
@@ -122,9 +156,9 @@ export const useDailyStore = create<DailyState>((set, get) => ({
           dailyDate: data.date || '',
         });
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('[Daily] Failed to initialize:', err);
-      set({ status: 'error', error: err.message || '无法连接服务器，请稍后再试' });
+      set({ status: 'error', error: errorMessage(err) || '无法连接服务器，请稍后再试' });
     }
   },
 
@@ -149,7 +183,7 @@ export const useDailyStore = create<DailyState>((set, get) => ({
     }
 
     try {
-      const data = await apiCall('/api/daily/guess', {
+      const data = await apiCall<DailyGuessResponse>('/api/daily/guess', {
         method: 'POST',
         body: JSON.stringify({ name: trimmed, player_key: getPlayerKey() || '' }),
       });
@@ -169,7 +203,7 @@ export const useDailyStore = create<DailyState>((set, get) => ({
 
       if (data.won) {
         // 猜对了
-        const target = findCharacterByName(characters, data.target.name);
+        const target = data.target ? findCharacterByName(characters, data.target.name) : undefined;
         set((state) => ({
           ...state,
           guesses: [...state.guesses, guessResult],
@@ -181,7 +215,7 @@ export const useDailyStore = create<DailyState>((set, get) => ({
 
       if (data.lost) {
         // 次数用尽
-        const target = findCharacterByName(characters, data.target.name);
+        const target = data.target ? findCharacterByName(characters, data.target.name) : undefined;
         set((state) => ({
           ...state,
           guesses: [...state.guesses, guessResult],
@@ -200,7 +234,7 @@ export const useDailyStore = create<DailyState>((set, get) => ({
       }));
 
       return { success: true };
-    } catch (err: any) {
+    } catch (err) {
       // AuthError（401 登录过期）向上抛出让页面处理
       if (err instanceof AuthError) throw err;
       // 会话在本页打开期间被 TTL 清扫（挂机超过 1 小时）→ 服务端回 409 { voided:true }。
@@ -210,11 +244,11 @@ export const useDailyStore = create<DailyState>((set, get) => ({
       // 复用 initDaily 的同一个终态分支，语义与「今日已挑战」一致。
       // ⚠️ 判据必须同时看 409 和 voided：单看 status 会把别的 409（如「今日已挑战」）
       //    也吞掉，单看 voided 则可能被未来其他接口的字段误触发。
-      if (err?.status === 409 && err?.data?.voided) {
+      if (isVoidedSessionError(err)) {
         set((state) => ({ ...state, status: 'already-played', previousResult: null, error: null }));
-        return { success: false, error: err.message || '今日挑战已结束' };
+        return { success: false, error: errorMessage(err) || '今日挑战已结束' };
       }
-      return { success: false, error: err.message || '请求失败' };
+      return { success: false, error: errorMessage(err) || '请求失败' };
     }
   },
 
@@ -223,7 +257,7 @@ export const useDailyStore = create<DailyState>((set, get) => ({
     if (status !== 'playing') return;
 
     try {
-      const data = await apiCall('/api/daily/guess', {
+      const data = await apiCall<DailyGuessResponse>('/api/daily/guess', {
         method: 'POST',
         body: JSON.stringify({ giveUp: true, player_key: getPlayerKey() || '' }),
       });
@@ -233,13 +267,13 @@ export const useDailyStore = create<DailyState>((set, get) => ({
         try { localStorage.setItem('player_key', data.player_key); } catch {}
       }
 
-      const target = findCharacterByName(characters, data.target?.name);
+      const target = data.target ? findCharacterByName(characters, data.target.name) : undefined;
       set({
         status: 'lost',
         target,
         guesses: [], // 服务端已保存，客户端清空
       });
-    } catch (err: any) {
+    } catch (err) {
       console.error('[Daily] giveUp failed:', err);
       // 即使请求失败也设为 lost（网络问题时至少客户端停止游戏）
       set({ status: 'lost' });

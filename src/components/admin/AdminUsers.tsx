@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getServerUrl, getToken } from '@/lib/auth';
 import { useI18n } from '@/lib/i18n';
+import { errorMessage } from '@/lib/error-utils';
 import { adminSortMark, ADMIN_PAGE_SIZES } from './ui';
 
 interface AdminUser {
@@ -66,8 +67,8 @@ export default function AdminUsers() {
       setTotal(data.total);
       setPage(data.page);
       setTotalPages(data.totalPages);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(errorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -130,8 +131,8 @@ export default function AdminUsers() {
       if (!res.ok) throw new Error(data.error || t('admin.common.opFailed'));
       setMsg(t('admin.users.actionSuccess', { action }));
       await load();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(errorMessage(err));
     }
   };
 
@@ -150,8 +151,8 @@ export default function AdminUsers() {
       setMsg(t('admin.users.nicknameUpdated'));
       setEditingNickname(null);
       await load();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(errorMessage(err));
     }
   };
 
@@ -171,8 +172,8 @@ export default function AdminUsers() {
       if (!res.ok) throw new Error(data.error || t('admin.common.opFailed'));
       setMsg(t('admin.users.actionSuccess', { action }));
       await load();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(errorMessage(err));
     }
   };
 

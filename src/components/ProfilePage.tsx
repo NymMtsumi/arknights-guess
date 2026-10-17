@@ -4,15 +4,19 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { fetchMe, updateProfile, AuthError, clearAuth, logout } from '@/lib/auth';
+import type { MeResponse, UpdateProfileResponse } from '@/lib/auth';
 import { useI18n } from '@/lib/i18n';
+import { errorMessage } from '@/lib/error-utils';
 
 export function ProfilePage() {
   const router = useRouter();
   const { t } = useI18n();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [user, setUserState] = useState<any>(null);
-  const [stats, setStats] = useState<any>(null);
+  // loadProfile 拿到的是完整 MeResponse；handleSave 拿到的是 PATCH 的返回（没有 stats 等字段）。
+  // 两种形状的并集 —— 渲染只读两者共有的字段，displayId 用 `in` 收窄（保存后本就不显示）。
+  const [user, setUserState] = useState<MeResponse | UpdateProfileResponse | null>(null);
+  const [stats, setStats] = useState<MeResponse['stats'] | null>(null);
   const [editing, setEditing] = useState(false);
   const [nickname, setNickname] = useState('');
   const [saving, setSaving] = useState(false);
@@ -26,12 +30,12 @@ export function ProfilePage() {
       setUserState(data);
       setStats(data.stats);
       setNickname(data.nickname || '');
-    } catch (err: any) {
+    } catch (err) {
       if (err instanceof AuthError) {
         setError(t('profile.sessionExpired'));
         clearAuth();
       } else {
-        setError(err.message || t('profile.loadFailed'));
+        setError(errorMessage(err) || t('profile.loadFailed'));
       }
     } finally {
       setLoading(false);
@@ -49,8 +53,8 @@ export function ProfilePage() {
       setUserState(result);
       setMsg(t('profile.saveSuccess'));
       setEditing(false);
-    } catch (err: any) {
-      setError(err.message || t('profile.saveFailed'));
+    } catch (err) {
+      setError(errorMessage(err) || t('profile.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -104,7 +108,7 @@ export function ProfilePage() {
           <div className="nm">{user.nickname || user.username}</div>
           <div className="id">
             @{user.username}
-            {user.displayId && (
+            {'displayId' in user && user.displayId && (
               <span className="mchip">#{user.displayId}</span>
             )}
           </div>

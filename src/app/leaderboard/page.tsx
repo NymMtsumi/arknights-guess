@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { useI18n } from '@/lib/i18n';
+import { errorMessage, errorName } from '@/lib/error-utils';
 import { getServerUrl } from '@/lib/auth';
 
 interface LeaderboardEntry {
@@ -108,9 +109,9 @@ export default function LeaderboardPage() {
         setEntries((data.leaderboard || []).slice(0, MAX_ROWS));
         setDailyEntries([]);
       }
-    } catch (err: any) {
-      if (err?.name === 'AbortError') return; // ignore aborted requests
-      setError(err?.message || 'Failed to fetch leaderboard');
+    } catch (err) {
+      if (errorName(err) === 'AbortError') return; // ignore aborted requests
+      setError(errorMessage(err) || 'Failed to fetch leaderboard');
       setEntries([]);
       setDailyEntries([]);
     } finally {

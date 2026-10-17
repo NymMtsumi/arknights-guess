@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { getServerUrl, getToken } from '@/lib/auth';
 import { useI18n } from '@/lib/i18n';
+import { errorMessage } from '@/lib/error-utils';
 import { adminSortMark, ADMIN_PAGE_SIZES } from './ui';
 
 interface LogEntry {
@@ -84,8 +85,8 @@ export default function AdminAuditLog() {
       setTotal(data.total);
       setPage(data.page);
       setTotalPages(data.totalPages);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(errorMessage(err));
     } finally {
       setLoading(false);
     }

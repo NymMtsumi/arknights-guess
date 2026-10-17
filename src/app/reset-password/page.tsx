@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { resetPassword, clearAuth } from '@/lib/auth';
 import { useI18n } from '@/lib/i18n';
+import { errorMessage } from '@/lib/error-utils';
+import Link from 'next/link';
 
 /* ⚠️ 与 /verify 同理：挂载期 effect 里不能用 t() 拼好文案再存进 state。
    locale 首次渲染固定是 'zh-CN'，挂载后才切到 localStorage 的值，
@@ -41,8 +43,9 @@ export default function ResetPasswordPage() {
       setMsg(result.message ? { text: result.message } : { key: 'reset.success' });
       // 清除旧登录状态（token_version 已递增，旧 token 失效）
       clearAuth();
-    } catch (err: any) {
-      setMsg(err.message ? { text: err.message } : { key: 'reset.failed' });
+    } catch (err) {
+      const message = errorMessage(err);
+      setMsg(message ? { text: message } : { key: 'reset.failed' });
     } finally {
       setLoading(false);
     }
@@ -91,14 +94,14 @@ export default function ResetPasswordPage() {
           <p>
             {t('reset.canLoginNow')}
           </p>
-          <a href="/" className="btn-p" style={{ display: 'inline-block', marginTop: 18 }}>{t('reset.goLogin')}</a>
+          <Link href="/" className="btn-p" style={{ display: 'inline-block', marginTop: 18 }}>{t('reset.goLogin')}</Link>
         </div>
       )}
 
       {status === 'error' && (
         <div>
           <h2 className="alert-dan">❌ {msgText}</h2>
-          <a href="/" className="btn-o" style={{ display: 'inline-block', marginTop: 18 }}>{t('verify.backHome')}</a>
+          <Link href="/" className="btn-o" style={{ display: 'inline-block', marginTop: 18 }}>{t('verify.backHome')}</Link>
         </div>
       )}
     </div>

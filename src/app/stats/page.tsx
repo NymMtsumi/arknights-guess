@@ -6,11 +6,12 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { ScrollSlider } from '@/components/ScrollSlider';
 import { useI18n } from '@/lib/i18n';
+import { errorMessage } from '@/lib/error-utils';
 import type { StatsData } from '@/lib/stats';
 import type { HistoryRecord, GameRecord, MultiGameRecord } from '@/lib/stats';
 import { loadStats, loadHistory, fetchHistoryFromServer, mergeHistories } from '@/lib/stats';
 import { getUser, apiCall } from '@/lib/auth';
-import type { ServerStats } from '@/lib/auth';
+import type { MeResponse, ServerStats } from '@/lib/auth';
 
 function toStatsData(s: ServerStats): StatsData {
   return {
@@ -23,8 +24,8 @@ function toStatsData(s: ServerStats): StatsData {
 }
 
 function isMultiRecord(r: HistoryRecord): r is MultiGameRecord {
-  const m = (r as any).mode;
-  return m === 'multi' || m === 'custom';
+  // `mode` 只存在于 MultiGameRecord；用 `in` 收窄（而不是 `(r as any).mode`）
+  return 'mode' in r && (r.mode === 'multi' || r.mode === 'custom');
 }
 
 export default function StatsPage() {
@@ -54,7 +55,7 @@ export default function StatsPage() {
     const localHistory = loadHistory();
     const localStats = loadStats();
     try {
-      const data = await apiCall('/api/me');
+      const data = await apiCall<MeResponse>('/api/me');
       // 登录用户一律以服务端为准，本地那份只在服务端不可用时兜底（见下方 catch）。
       // 原先这里是 Math.max(本地, 服务端)：两个量根本不可比 ——
       // 本地只统计经典（saveGameStats 的唯一调用点 game/page.tsx 永远传默认 mode='single'），

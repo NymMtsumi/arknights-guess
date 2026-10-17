@@ -63,7 +63,9 @@ async function main() {
 
   // a1：问谜底的真值 → 必然「准确」
   // ⚠️ 排除 tags：`compareTags` 的 correct 要求**集合完全相等**，而提问传的是单值，
-  //    所以只有「恰好 1 个词缀」的干员才可能答 correct（429 人里 130 人）。
+  //    所以只有「恰好 1 个词缀」的干员才可能答 correct。
+  //    （别写死「X 人里 Y 人」这种数：它取决于当前取值域/干员表，会随数据同步漂。
+  //      需要时用 chars.filter(c => (c.tags || []).length === 1).length 现算。）
   //    这不是缺陷，是三级语义（见 a1b），但对 tags 就不能照搬「问真值必 correct」。
   const SCALAR_FIELDS = FIELDS.filter(f => f !== 'tags');
   const selfMiss = [];

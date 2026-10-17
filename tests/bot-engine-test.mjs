@@ -34,24 +34,36 @@ const SEEDS = Number(process.env.SEEDS || 6);
 
 /**
  * 定标目标 —— **本文件自己跑出来的实测值**（两轮原始数见下表；`SEEDS=6` 与 `SEEDS=20`
- * 之间的差：hit 最大 0.16pt、meanIdx 最大 0.006）。
+ * 之间的差：hit 最大 0.68pt、meanIdx 最大 0.023）。
  *
- * 🔴 2026-10-17 起「人机出手几次」是**每档独立**的（`BOT_TIER_MAX_GUESSES`：easy/medium 6、
- *    hard 8），所以 b 段的循环与 meanIdx 口径都按**本档的次数**算，不再写死 8：
+ * 🔴 2026-10-17 晚起难度只剩**两把旋钮**：`TIER_ATTRS`（看几列：3/4/6）+
+ *    `BOT_TIER_MAX_GUESSES`（给几次：7/8/8）。三档步时已统一为 4.0s
+ *    （`TIER_DELAY_MS`，难度不再由步速承担 —— 指标改成回合胜率后步速进胜率公式，
+ *    统一值见 c4）；所以命中率/平均猜中次数**只随「列数 × 出手次数」变**。
+ *    下面的目标取两轮实测的中间值，保证 `SEEDS=6` 与 `SEEDS=20` **都**落在
+ *    `TOL_HIT` / `TOL_IDX` 内（不是只对着一轮凑）。
  *
- *    | 档 | 列 | 出手 | SEEDS=6 hit / meanIdx | SEEDS=20 hit / meanIdx |
- *    |---|---|---|---|---|
- *    | easy | 3 | 6 | 48.46% / 5.2909 | 48.30% / 5.2858 |
- *    | medium | 4 | 6 | 72.34% / 4.7986 | 72.34% / 4.7928 |
- *    | hard | 6 | 8 | 99.96% / 3.8561 | 99.95% / 3.8576 |
+ * 🔴 出手次数是**每档独立**的，所以 b 段的循环与 meanIdx 口径都按**本档的次数**算，
+ *    不写死 8：
+ *
+ *    | 档 | 列 | 出手 | 单局步时 | SEEDS=6 hit / meanIdx | SEEDS=20 hit / meanIdx |
+ *    |---|---|---|---|---|---|
+ *    | easy | 3 | 7 | 4.0s | 58.6806% / 5.8140 | 59.3634% / 5.8027 |
+ *    | medium | 4 | 8 | 4.0s | 89.8534% / 5.2542 | 90.0926% / 5.2316 |
+ *    | hard | 6 | 8 | 4.0s | 99.9614% / 3.8561 | 99.9537% / 3.8576 |
+ *
+ *    ⚠️ medium 的 meanIdx（≈5.24）只比 easy（≈5.81）低一点，**别误读成「中档没强多少」**：
+ *    命中率 90% 已经把「每局要猜几次」压下来了，但没猜中的那 ~10% 按**本档 8 次**计入均值
+ *    （口径见下），easy 则按 7 次计 —— 出手次数不同的两档，meanIdx 不能直接横比。
+ *    （medium 的 meanIdx 也明显高于它的中位猜中步数，是同一个原因：均值被没猜中的局抬着。）
  *
  * ⚠️ `meanIdx` 的口径**含没猜中的局**（按**本档的出手次数**计），与 `/api/leaderboard` 的
  *    `总猜测数 / 总场次` 同口径 —— 这正是需求①要拿来比较的那个数。
  */
 const TARGETS = {
-  easy: { hit: 48.4, meanIdx: 5.29 },
-  medium: { hit: 72.3, meanIdx: 4.79 },
-  hard: { hit: 99.9, meanIdx: 3.86 },
+  easy: { hit: 59.0, meanIdx: 5.81 },
+  medium: { hit: 90.0, meanIdx: 5.24 },
+  hard: { hit: 99.96, meanIdx: 3.86 },
 };
 
 /**
@@ -234,19 +246,19 @@ async function main() {
   //    早先这行写的是 `TARGETS.easy.hit < TARGETS.medium.hit < TARGETS.hard.hit`，
   //    三个数都是手写的字面量 —— 量的是常量之间的关系，**永远为真**，
   //    引擎怎么改都不会红。那等于这条「梯度递增」的保证压根不存在。
-  //    改成实测值后它是可证伪的：把 easy 的 TIER_ATTRS 改成与 medium 逐字相同（4 列），
-  //    三个实测值就**打平**（SEEDS=1 实测 70.6 / 70.6 / 99.8%，SEEDS=6 会是 72.3 / 72.3 / 99.9%）
-  //    → 红（已做反事实对照，见交付报告）。
+  //    改成实测值后它是可证伪的：三档一旦被拧成同一套「列数 + 出手次数」，
+  //    实测值就会打平 → 红（b.easy 的绝对目标同时也会红，见下）。
   //
   //    ⚠️ 与旧版的两处差异：
-  //    ① 三档现在跨**不同的出手次数**（easy/medium 各 6 次、hard 8 次）—— 比较的是
+  //    ① 三档现在跨**不同的出手次数**（easy 7 次、medium/hard 8 次）—— 比较的是
   //       「页面实际跑出来的三档」，这正是需求要的；不再隐含「三档都在 8 次预算下」。
-  //    ② 别把它当成补上了覆盖空白：那个塌梯度场景里 b.easy 的**绝对目标**（48.4 ±6）
-  //       本来也会红。三档目标相距 23.9 / 27.6pt、容差只有 ±6，所以「顺序」已被那六条
-  //       绝对断言覆盖（可推出的间距下界 = 66.3 − 54.3 = 12.0pt）。b4 的价值在于**把意图
-  //       写成一行**：将来若有人放宽 TOL_HIT（比如放到 ±25pt），那六条会失去对顺序的约束，
-  //       而这一行还在管着。
-  check('b4.实测梯度严格递增 低 < 中 < 高（easy 6 次 / medium 6 次 / hard 8 次）',
+  //    ② 本轮（2026-10-17 晚）唯一直接钉「三档命中率严格递增」的就是这一条 ——
+  //       c4 按新口径只钉「三档步时相同」，不再管梯度；别把它当 c4 的重复删掉。
+  //       它也是「±6pt 绝对带」之外的独立保险：若有人把 TOL_HIT 放宽（比如 ±25pt），
+  //       六条 b.* 会失去对顺序的约束，而这一行还在管着。
+  //       （当前实测间距：easy→medium 约 31pt、medium→hard 约 10pt；绝对带只在
+  //        TOL_HIT 不变时蕴含 easy<medium 的下界 19pt，medium<hard 靠这一条守着。）
+  check('b4.实测命中率严格递增 低 < 中 < 高（easy 7 次 / medium 8 次 / hard 8 次）',
     measured.easy.hit < measured.medium.hit && measured.medium.hit < measured.hard.hit,
     `实测 ${measured.easy.hit.toFixed(1)} / ${measured.medium.hit.toFixed(1)} / ${measured.hard.hit.toFixed(1)}%`);
 
@@ -265,7 +277,7 @@ async function main() {
 
   for (const tier of TIERS) {
     const cfg = BOT_TIERS[tier];
-    // 🔴 时间预算按**本档出手次数**算（easy/medium 6 次、hard 8 次），不是玩家的 8 次：
+    // 🔴 时间预算按**本档出手次数**算（easy 7 次、medium/hard 8 次），不是玩家的 8 次：
     //    页面上人机只被允许落 `BOT_TIER_MAX_GUESSES[tier]` 次，所以最坏耗时乘的也是它。
     const maxG = BOT_TIER_MAX_GUESSES[tier];
     // 硬约束：最坏情况（每次都抖到上限）也必须装得进单局，否则人机会被计时器掐掉一猜。
@@ -294,8 +306,16 @@ async function main() {
     check(`c.${tier} 抖动生效（2000 次采样出现了多种取值）`, new Set(samples).size > 100);
   }
 
-  check('c4.延迟随难度递减（低级人机最慢）',
-    BOT_TIERS.easy.delayMs > BOT_TIERS.medium.delayMs && BOT_TIERS.medium.delayMs > BOT_TIERS.hard.delayMs);
+  // 🔴 2026-10-17 晚：难度指标从「命中率」改成「回合胜率」后，步速进了胜率公式，
+  //    三档步时**统一为 4.0s**（用户拍板的体验红线；见 `TIER_DELAY_MS` 的注释，
+  //    src/lib/bot-engine.ts）。所以这里钉的是「三档步时相同」，**不是**旧的
+  //    「延迟随难度递减（低级人机最慢）」—— 后者在本轮常量下必然红。
+  //    难度差现在只剩「看几列 + 给几次」；「三档命中率严格递增」由 b4 覆盖（不重复造断言）。
+  //    反事实：把 `TIER_DELAY_MS` 改回 10000/8200/6800 → 集合里有 3 个值，本条立刻红
+  //    （整份测试在旧常量下的反事实跑法见交付报告）。
+  check('c4.三档步时相同（难度不再由步速承担，见 TIER_DELAY_MS 的注释）',
+    new Set(Object.values(BOT_TIERS).map(c => c.delayMs)).size === 1,
+    `步时 ${TIERS.map(t => `${t}=${BOT_TIERS[t].delayMs}ms`).join('；')}`);
 
   // 需求③：人机的**第一猜**要像真人一样立刻落子。它不参与上面那条时间预算
   //（第一猜只会更早落子），所以单独钉两条：必须存在、且必须比常规节奏快。

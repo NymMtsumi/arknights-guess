@@ -22,7 +22,7 @@
 //          反事实：把本页的 `hideRarity` 改回 `hideRarity={false}` → d1 立刻红。
 //   c6  人机的**第一猜**在 4s 内落子 —— 需求③「首猜不思考、像真人一样随手点一个」的探针。
 //       反事实：把 newRound 里那行 `BOT_FIRST_DELAY_MS[m.tier]` 改回 `botDelayMs(m.tier)`
-//       （困难档 6.8s）→ c6 立刻红。⚠️ 只测第一局：之后的每一步本来就该走慢节奏。
+//       （现在三档都是 4.0s）→ c6 立刻红。⚠️ 只测第一局：之后的每一步本来就该走慢节奏。
 //   e1/e2  每局揭晓的谜底**不是人机的名字**，且各局谜底互不相同 —— 对应 `newRound` 里
 //       「把人机名与本场已用过的谜底一起排除出池子」那段。抽签口径正确时这两条**恒真**
 //       （不是概率断言），只在有人删掉排除时才有机会响。
@@ -272,9 +272,9 @@ async function main() {
           || (await stageOf()) !== 'playing', { desc: `第 ${round} 局人机落第一子` });
         const firstGuessMs = Date.now() - firstGuessT0;
         // 🔴 需求③的行为探针：人机的**第一猜**要快（~1.5s，`BOT_FIRST_DELAY_MS`），
-        //    不是它平时的思考节奏（困难档 6.8s、普通 8.2s、简单 10s）。
+        //    不是它平时的思考节奏（2026-10-17 晚起三档统一 4.0s）。
         //    上限取 4s：正常 ~1.6s（含 stage 轮询与 tick 的 100ms 粒度），
-        //    「谁把这行改回 `botDelayMs(m.tier)`」时这档至少 6.8s → 稳稳变红。
+        //    「谁把这行改回 `botDelayMs(m.tier)`」时这档至少 4.0s → 稳稳变红。
         //    ⚠️ 只测**第一局**（`boardChecked` 那道门）—— 之后的每一猜本来就该走慢节奏。
         check(`c6.人机第一猜在 4s 内落子（实测 ${(firstGuessMs / 1000).toFixed(1)}s；需求③：首猜不思考）`,
           firstGuessMs < 4000,

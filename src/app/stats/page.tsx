@@ -214,7 +214,7 @@ export default function StatsPage() {
           {mounted && (
             <div className="card">
               <div className="card-hd">
-                <h2>📋 {t('stats.recentGames', { count: 80 })}</h2>
+                <h2>📋 {t('stats.recentGames', { count: history.length })}</h2>
               </div>
               {history.length === 0 ? (
                 <div className="empty">

@@ -95,8 +95,13 @@ const TIER_LABEL_KEY: Record<BotTier, string> = {
  * ⚠️ 三档的**档位名**（`TIER_LABEL_KEY`）与局内状态文字**保留**，别顺手删。
  */
 
-/** 回合结算卡自动进入下一局的停留时长（ms）。玩家点一下可立刻跳过。 */
-const ROUND_END_MS = 3_000;
+// 🔴 2026-10-17 起**没有**「结算卡自动进入下一局」这个常量了。
+// 原来的 `ROUND_END_MS = 3000` 会在 3 秒后无条件开下一局 —— 玩家刚打完一局、比分还没看清，
+// 下一局已经开始计时（90 秒照走）。现在改成**由玩家决定**：结算卡上有明确的「开始下一局」
+// 按钮（`bot-next-round`），不点就一直停在结算页，想休息多久都行。
+// 为什么不做成「15 秒后自动开始」：那仍然会在玩家放下手机时偷偷开一局并计时，
+// 而这正是用户要求修掉的那种体验（「要有休息时间或让玩家决定」）。
+// ⚠️ 别把这段改回自动跳转：`tests/bot-smoke.mjs` 现在按「点按钮才进下一局」验证。
 
 const roster = charactersData as Character[];
 
@@ -113,9 +118,10 @@ interface RoundState {
    *
    * 🔴 2026-10-17 加。浏览器会把后台标签页的 setInterval 节流到 >=1000ms（>5min 时 1 次/60s），
    * 而回合计时用 Date.now() 照走 —— 结果是**玩家不在场时人机继续落子**：hard 约 49s、
-   * easy 约 52s 就能打满本档 6 次/猜中，3 秒后自动开下一局，整场 0:3 输掉**并已落库**
-   * （saveBotStats 不阻塞）。玩家回来看到的是结算卡或残局，观感就是「人机卡住/步时不对/
-   * 水平没变却输了」。
+   * easy 约 52s 就能打满本档 6 次/猜中，整场 0:3 输掉**并已落库**（saveBotStats 不阻塞）。
+   * 玩家回来看到的是结算卡或残局，观感就是「人机卡住/步时不对/水平没变却输了」。
+   * （2026-10-17 晚起结算卡不再自动开下一局，所以「后台连打 3 局」这条链更依赖这道冻结 ——
+   *   没有它，玩家切走的 90 秒里人机仍会赢下当小局，只是不会再自动开新局。）
    *
    * 暂停期间 tick 直接返回（计时与人机都冻结），恢复时把 startedAt / nextBotAt
    * 一并后移相同的时长 —— 这样「切走一小时再回来」只是白白过去一小时的墙钟时间。
@@ -200,8 +206,6 @@ export default function BotPage() {
   const [showSurrenderConfirm, setShowSurrenderConfirm] = useState(false);
 
   const roundRef = useRef<RoundState | null>(null);
-  /** 上一次 newRound 的时刻 —— 防「结算卡点击」与「3s 定时器」同拍双触发（见 newRound） */
-  const newRoundAtRef = useRef(0);
   const matchRef = useRef<MatchState>({
     tier: 'easy', botIdentity: null, myWins: 0, botWins: 0, myTotalGuesses: 0,
     pastTargets: [], saved: false,
@@ -348,8 +352,9 @@ export default function BotPage() {
    * 人机照样落子、自动打完 3 局、整场记负并落库。加上它之后，隐藏期间的墙钟时间被
    * 「退还」给本局，两端都不再偷跑。
    *
-   * ⚠️ 只处理 playing 阶段：结算卡（roundEnd）不冻结是**有意的** —— 那一局已经结束，
-   * 让 3 秒倒计时在后台跑完、回来直接看到下一局，比「回来发现卡在结算卡」更符合预期。
+   * ⚠️ 只处理 playing 阶段：结算卡（roundEnd）不冻结是**有意的** —— 那一局已经结束、
+   * 计时已停，而且现在**不会再自动开下一局**（要玩家点「开始下一局」），所以后台待着
+   * 也不会偷走任何一局。
    */
   useEffect(() => {
     const onVisibility = () => {
@@ -371,13 +376,22 @@ export default function BotPage() {
   // ───────────────────────── 开局 / 开新局 ─────────────────────────
 
   const newRound = useCallback(() => {
-    // 防双触发（2026-10-17）：结算卡的 onClick 与 ROUND_END_MS 的 setTimeout **没有互斥**，
-    // 同拍命中时 newRound 会跑两次 —— 新局谜底被换、人机已落子清零，观感是「突然从头开始」。
-    if (Date.now() - newRoundAtRef.current < 500) return;
-    newRoundAtRef.current = Date.now();
+    // 防双触发 —— 用**状态**判断，不用时间窗（2026-10-17 晚改）。
+    //
+    // 原先是 `if (Date.now() - newRoundAtRef.current < 500) return;`。时间窗的问题是
+    // **会吞掉合法点击**：只要「上一局开局的时刻」距今不足 500ms，真正的「开始下一局」
+    // 就会被静默丢弃（实测：自动化测试里一局只用 91ms，第二局点按钮毫无反应、卡在 roundEnd；
+    // 手速极快的真人同样可能撞上，而且没有任何反馈 —— 这类 bug 最难查）。
+    //
+    // 现在判据换成「**本局是否还活着**」：`roundRef.current && !ended` 说明局还在进行，
+    // 此刻再开新局一定是重复触发（双击 / 同拍），直接返回；`ended === true`（结算卡）
+    // 或 `null`（还没开过）则放行。
+    // 为什么这样仍然挡得住双击：第一次调用末尾就把 `roundRef.current` 换成 `ended: false`
+    // 的新局，第二次调用看到「还活着」立刻返回 —— 与时间无关，不会误伤任何合法点击。
+    if (roundRef.current && !roundRef.current.ended) return;
     const m = matchRef.current;
     // 谜底从**全量池**里抽（BOT_POOL_DIFFICULTY = 'hard' = 全部 432 人）：
-    // 人机的定标就是拿这个池子测的，池子一变那套 48.9/71.8/99.9% 立即作废。
+    // 人机的定标就是拿这个池子测的，池子一变那套 48.3/72.3/99.9% 立即作废。
     // recentIds 传人机的名字 + 本场已用过的谜底 → 既防连庄，也保证人机的名字
     // 不会是谜底（否则对面板上会同时出现「人机名」与「答案」，一眼穿帮）。
     const drawn = pickTarget(roster, BOT_POOL_DIFFICULTY, [
@@ -409,13 +423,13 @@ export default function BotPage() {
     setBotMaxGuesses(BOT_TIER_MAX_GUESSES[m.tier]);
     setRoundWin(null);
     // 🔴 必须清掉投降确认框。它不是「只属于某一局」的 UI —— 框开着的时候计时器照走、
-    //    人机照猜，所以**局会自己结束**（超时 / 人机猜中），3 秒后本函数又开了新局，
-    //    而框还挂在屏幕上（modal-mask 是固定层，盖着整页）。此时点「确认放弃」，
+    //    人机照猜，所以**局会自己结束**（超时 / 人机猜中），而框还挂在屏幕上
+    //    （modal-mask 是固定层，盖着整页）。此时点「确认放弃」，
     //    `confirmSurrender` 拿到的是**新局**的 `roundRef.current`（ended 仍为 false），
     //    于是新一局零猜测被判负、比分与落库记录全错。`finishRound` 的 r.ended 幂等闸
     //    挡不住它 —— 那道闸挡的是同一局，这里连局都换了。
-    //    渲染处的 `stage === 'playing'` 门只挡「结算卡那 3 秒」，挡不住「新局又回到 playing」，
-    //    所以两处都要有。
+    //    渲染处的 `stage === 'playing'` 门挡不住「新局又回到 playing」，所以两处都要有。
+    //    （自动跳转删掉后这条路更难触发，但手动点「开始下一局」时框仍可能开着 —— 闸门保留。）
     setShowSurrenderConfirm(false);
     setStage('playing');
   }, []);
@@ -456,22 +470,18 @@ export default function BotPage() {
   }, []);
 
   /**
-   * 结算卡停留 ROUND_END_MS 后**自动开下一局**（点卡片可立刻跳过）。
+   * 结算卡**不再自动进入下一局**（2026-10-17 改，见文件顶部 `ROUND_END_MS` 被删掉的注释）。
    *
-   * 🔴 必须调 `newRound()`，不能只 `setStage('playing')` —— 后者只是把**已经结束的**
-   *    那一局重新显示出来：`roundRef.current.ended` 仍是 true，tick 第一行就返回，
-   *    棋盘定格、计时器不动、人机也再不落子，整个页面看着像卡死。
-   *    （第一版就是这么写的，靠 stage 回到 playing 触发 tick 才没在静态检查里露出来。）
+   * 这里原先是一个 `setTimeout(newRound, ROUND_END_MS)`：3 秒后强制开新局。它带来两个问题 ——
+   *   ① 玩家刚打完一局，还没看清比分/谜底就被推进下一局，且**下一局的 90 秒立刻开始计时**
+   *      （`newRound` 里 `startedAt = Date.now()`），等于在他去倒水的 3 秒里白送一局；
+   *   ② 它与结算卡的 `onClick` 没有互斥（同拍会 `newRound` 两次，新局谜底被换掉）。
+   * 现在入口只有两处、都是玩家主动点击：结算卡上的「开始下一局」按钮（主入口）与整卡点击。
+   * 所以这个 effect 被**故意删掉**了，不是漏写。
    *
-   * stage 变成 matchEnd 时本 effect 不跑（依赖是 stage），所以不会误开新局。
-   * 本 effect 必须声明在 newRound 之后：deps 数组里的 newRound 在渲染体里求值，
-   * 放在前面会落在 const 的暂时性死区。
+   * ⚠️ 下次要加「休息多久后自动开始」时，必须先把「计时器什么时候开始走」与「结算页停留」
+   *    解耦（例如把 startedAt 延迟到玩家首次落子），否则会自动偷走玩家的局。
    */
-  useEffect(() => {
-    if (stage !== 'roundEnd') return;
-    const id = setTimeout(newRound, ROUND_END_MS);
-    return () => clearTimeout(id);
-  }, [stage, newRound]);
 
   // ───────────────────────── 玩家落子 ─────────────────────────
 
@@ -630,12 +640,15 @@ export default function BotPage() {
           </div>
         )}
 
-        {/* ===== Round End ===== */}
+        {/* ===== Round End =====
+            🔴 2026-10-17 起**不自动**进入下一局：这里从 `<button onClick={newRound}>`
+               改成了普通容器 + 显式「开始下一局」按钮。理由见文件顶部（原 ROUND_END_MS 的注释）：
+               让玩家打完一局能喘口气、看清比分与谜底，**由他决定何时开始下一局的 90 秒**。
+               ⚠️ 别把外层改回按钮：按钮里再放按钮是非法 HTML，且整卡点击会让玩家误触开新局。 */}
         {stage === 'roundEnd' && roundWin && (
-          <button
-            onClick={newRound}
+          <div
             data-testid="bot-round-end"
-            className="card text-center w-full max-w-[400px] mt-4 cursor-pointer"
+            className="card text-center w-full max-w-[400px] mt-4"
           >
             {/* 单局情绪图 —— 与多人页**取同一组图、同一个函数**（需求⑤）：
                   猜中 → right、战败 → error、平局/超时 → draw-1..5（FNV 哈希，不闪）。
@@ -656,7 +669,15 @@ export default function BotPage() {
             </div>
             <p className="sec-note" data-testid="bot-answer">{t('multi.answerWithScore', { name: roundWin.targetName, score: roundWin.score })}</p>
             <p className="sec-note mt-3">{t('bot.nextRoundHint')}</p>
-          </button>
+            <button
+              type="button"
+              onClick={newRound}
+              data-testid="bot-next-round"
+              className="btn-p w-full mt-3"
+            >
+              ▶ {t('bot.nextRound')}
+            </button>
+          </div>
         )}
 
         {/* ===== Match End ===== */}

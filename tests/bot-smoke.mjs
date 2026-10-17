@@ -31,6 +31,19 @@
 //         · 约 1/215 概率的**假红**（`凯尔希·思衡托`、`维娜·维多利亚` 有裸 `·`）；
 //         · 更糟的是**假绿** —— `凯尔希` 本身就是另一位真干员，截断到它时 f3 照样绿，
 //           而断言已经不再检查被截断的那个名字了。所以这条注释别只写「假红」。
+//   c7/c8  局间**不会自动进入下一局**（2026-10-17 需求变更的唯一行为探针）——
+//       c7：一局结算后停在 `bot-round-end` 上，且卡里有「开始下一局」按钮（`bot-next-round`）；
+//       c8：**等 5 秒（> 旧的 3 秒）**后 stage 仍是 roundEnd、结算卡仍在、`bot-time` 不出现。
+//       旧实现是 `ROUND_END_MS = 3000` + `setTimeout(newRound, 3000)`，3 秒后必定回到 playing
+//       （新一局 90 秒已经在走）—— 把那两行加回去，c8 在 5s 处会读到 stage='playing' 而变红。
+//       反事实的构造方式：**不点按钮**等满 5s 再读，而不是点完再读 —— 后者新旧实现都会绿。
+//   c9/i3  同一张卡上的「双击只开一局」——
+//       c9：连点两次 `bot-next-round`（间隔 80ms）后只进入 playing（计时 01:30 起、结算卡不残留）。
+//           ⚠️ 边界：第 1 次点击后按钮就卸载了，第 2 次落在原坐标的空区域，所以 c9 钉的是
+//              「UI 不被连点打乱」，**不是**「状态门挡住了同拍双触发」；后者在 UI 层已不可构造
+//              （旧的「整卡点击 + 3s 定时器」同拍源已删），由 i3 的源码级形状检查兜底。
+//       i3：newRound 的防双触发必须是状态门（`roundRef.current && !ended`），不能改回
+//           500ms 时间窗 —— 那个时间窗会吞掉合法点击（实测一局 91ms → 第 2 局点按钮卡住 20s）。
 //
 // ⚠️ 本页**没有服务端**（方案 A 纯客户端），所以这里不做落档断言 ——
 //    人机榜的服务端口径由 tests/bot-engine-test.mjs 之外的 routes 层保证，
@@ -64,7 +77,9 @@ const TIER = 'hard';
  * 🔴 必须显式给。Playwright 的默认超时是 **30s**，而 locator 方法在元素缺席时是
  *    **一直等到超时**才抛 —— 不带超时的「容忍缺席」不是「立刻返回空」，是「每局白等 30s」。
  *    实测（同版本 Playwright，对未渲染的元素取 textContent）：无超时 30006ms / 带 1000ms 超时 1010ms。
- *    结算卡总共只停 3s，只要还在窗口里就是毫秒级命中，1s 绰绰有余。
+ * ⚠️ 2026-10-17 起结算卡**不再自动消失**（旧 `ROUND_END_MS = 3000` 的自动开下一局已删除，改成
+ *    玩家点 `bot-next-round`），所以这里不再有「抢 3 秒窗口」的问题；短超时只作为**兜底**：
+ *    c7 万一红（卡根本没出现）时，读文本别白等 20s，读不到就当这一局没读到、交给 e1 报红。
  */
 const SHORT_TIMEOUT = 1_000;
 /**
@@ -237,6 +252,10 @@ async function main() {
     let boardChecked = false;
     let playerGuessed = false;
     let sawEmptyPlayerBoard = false;
+    /** c8（局间不自动跳转）只跑第一张结算卡：它钉的是「自动跳转这个行为是否存在」，与第几局无关 */
+    let antiAutoNextChecked = false;
+    /** c9（双击只开一局）同样只跑第一张结算卡：第二次点击必须落在「刚被点掉的那个按钮坐标」上 */
+    let doubleClickChecked = false;
 
     for (let round = 1; round <= MAX_ROUNDS; round++) {
       const stage = await stageOf();
@@ -317,35 +336,93 @@ async function main() {
       if ((await stageOf()) === 'playing') {
         await surrender();
       }
+      // 🔴 2026-10-17 起结算卡**不会自己消失**（旧 `ROUND_END_MS = 3000` 的自动开下一局已删除），
+      //    所以这里不再有「点慢了这张卡就已经自己走了」的假红窗口，等结算即可。
       await waitFor(async () => (await stageOf()) !== 'playing', { desc: `第 ${round} 局结算` });
 
       const endStage = await stageOf();
       if (endStage === 'roundEnd') {
-        // 🔴 结算卡只停 3s 就自动开下一局，而这里既要读它的文本、又要点它 —— 每一步都可能
-        //    撞上「这张卡已经自己走了」。撞上时 textContent()/click() 会一直等 element
-        //    出现、最后等满超时报错，把「只是慢了一拍」变成一条**假红**（CI 冷启动时最容易）。
-        //    所以：读的时候容忍缺席，点的时候容忍中途 detach —— 但**每次都要带短超时**
-        //    （不带 = 每局白等 30s，见 SHORT_TIMEOUT 的注释）。
-        //    ⚠️ 代价是**可能少读一局**：本场恰好 3 局时（玩家弃权 3 次 = 人机先到 3 胜），
-        //       漏读 1 局就只剩 2 条 —— 故 e1 的门槛取 >= 2 而**不是** >= 3。
-        //       写 >= 3 就是零余量：撞上上面那种「慢了一拍」时 e1 会假红（而真答案一直是对的）。
-        //       e2 是「各局互不相同」，少一局只是少一个比较对象，照样成立。
+        // 新流程（本次改动）：结算卡停住 → 读谜底 → **玩家点「开始下一局」** → 回到 playing。
+        // 旧流程是「点整张卡（或干脆不点，3s 后自己走）」，所以老脚本那段抢窗口的代码全部删掉。
         const endCard = P.locator('[data-testid="bot-round-end"]');
-        if (await endCard.count()) {
-          const answerText = ((await P.locator('[data-testid="bot-answer"]')
-            .textContent({ timeout: SHORT_TIMEOUT }).catch(() => '')) || '').trim();
-          const resultText = ((await P.locator('[data-testid="bot-round-result"]')
-            .textContent({ timeout: SHORT_TIMEOUT }).catch(() => '')) || '').trim();
-          // multi.answerWithScore = "答案：{{name}} · {{score}}"
-          if (answerText) {
-            const { name, score } = parseAnswer(answerText);
-            answers.push({ name, score, resultText });
-            scores.push(score);
-          }
-          // 点一下立刻跳（不点也不会卡住，只是慢 3s/局）
-          await endCard.click({ timeout: SHORT_TIMEOUT }).catch(() => {});
+        const nextBtn = P.locator('[data-testid="bot-next-round"]');
+        const endCardCount = await endCard.count();
+        const nextBtnCount = await nextBtn.count();
+        check(`c7.第 ${round} 局结算后停在结算卡上（bot-round-end 与「开始下一局」按钮都在，没有自动跳走）`,
+          endCardCount === 1 && nextBtnCount === 1,
+          `round-end=${endCardCount} next-round=${nextBtnCount}`);
+
+        const answerText = ((await P.locator('[data-testid="bot-answer"]')
+          .textContent({ timeout: SHORT_TIMEOUT }).catch(() => '')) || '').trim();
+        const resultText = ((await P.locator('[data-testid="bot-round-result"]')
+          .textContent({ timeout: SHORT_TIMEOUT }).catch(() => '')) || '').trim();
+        // multi.answerWithScore = "答案：{{name}} · {{score}}"
+        if (answerText) {
+          const { name, score } = parseAnswer(answerText);
+          answers.push({ name, score, resultText });
+          scores.push(score);
         }
-        await sleep(150);
+
+        // ═══ 反事实断言：局间**不会**自动进入下一局（本次改动的核心保证）═══
+        // 旧实现：`ROUND_END_MS = 3000` + `setTimeout(newRound, ROUND_END_MS)` —— 进 roundEnd
+        // 后 **3 秒必定**回到 playing，且新一局的 90 秒已经开始走（`bot-time` 重新出现）。
+        // 这里**不点任何按钮**，等 5 秒（> 旧的 3 秒）再读一次：
+        //   仍在 roundEnd + 结算卡仍在 + `bot-time` 不出现  ⇔  没有自动跳转。
+        // 反事实：把那两行加回去 → 5s 处读到 stage='playing'、bot-time=1，本断言立刻红。
+        // 只跑第一张结算卡（判断的是 effect 有无，不是每局差异），后面每局只在 c7 里查「停在卡上」。
+        if (!antiAutoNextChecked) {
+          antiAutoNextChecked = true;
+          const waitT0 = Date.now();
+          await sleep(5000);
+          const waitedMs = Date.now() - waitT0;
+          const stage5s = await stageOf();
+          const card5s = await endCard.count();
+          const time5s = await P.locator('[data-testid="bot-time"]').count();
+          check('c8.局间不会自动进入下一局（等 5s > 旧 3s）：仍在 roundEnd、结算卡仍在、计时器不出现',
+            stage5s === 'roundEnd' && card5s === 1 && time5s === 0,
+            `等 ${waitedMs}ms 后 stage="${stage5s}"、bot-round-end=${card5s}、bot-time=${time5s}`
+              + `（旧实现 3s 后 stage 必为 'playing' 且 bot-time=1）`);
+        }
+
+        // 进入下一局：新流程里**唯一**的入口是玩家点「开始下一局」（旧脚本点的是整张卡）。
+        // ⚠️ 第一张结算卡上故意**连点两次**（间隔 80ms）：c9 的双击探针 —— 验证连点两次
+        //    只会开出一局、不会把 UI 打乱（源码把防双触发从 500ms 时间窗改成状态门，见 i3）。
+        const isDoubleClickProbe = !doubleClickChecked;
+        if (isDoubleClickProbe) {
+          doubleClickChecked = true;
+          const nextBox = await nextBtn.boundingBox();
+          await nextBtn.click({ timeout: WAIT_TIMEOUT });   // 第 1 次：真的点中按钮
+          await sleep(80);
+          // 第 2 次：80ms 后点**同一坐标**（此时按钮已随 stage 切换卸载，边界见 c9 说明）
+          if (nextBox) {
+            await P.mouse.click(nextBox.x + nextBox.width / 2, nextBox.y + nextBox.height / 2);
+          }
+        } else {
+          await nextBtn.click({ timeout: WAIT_TIMEOUT });
+        }
+        await waitFor(async () => (await stageOf()) === 'playing',
+          { desc: `第 ${round} 局后点「开始下一局」进入 playing` });
+
+        if (isDoubleClickProbe) {
+          // c9. 连点两次「开始下一局」只开一局（双击防护的可观察部分）
+          //
+          // ⚠️ 这条的**边界**（别把它当成状态门的证明）：第 1 次点击后 stage 立刻变 playing、
+          //    按钮随结算卡卸载，所以第 2 次点击其实落在「原按钮坐标上的棋盘区域」（无 handler）。
+          //    UI 层因此构造不出「同拍双触发 newRound」——旧流程里那个「整卡点击 + 3s 定时器」
+          //    的同拍源已经删掉了。所以这里钉的是：连点两次后 **UI 只进入一局**（计时从 01:30
+          //    起、结算卡不残留、250ms 内不回退），而不是「状态门挡住了第二次调用」。
+          //    状态门本身由 i3 的源码级形状检查兜底（删掉那道门 → i3 变红）。
+          await sleep(120);
+          const timeAfterDbl = ((await P.locator('[data-testid="bot-time"]').textContent()) || '').trim();
+          const cardAfterDbl = await endCard.count();
+          const rowsAfterDbl = await P.locator('[data-testid="bot-opp-row"]').count();
+          await sleep(250);
+          const stageLater = await stageOf();
+          check('c9.结算卡上连点两次「开始下一局」（间隔 80ms）只开一局：回到 playing、计时从 01:30 起、250ms 内不回退',
+            timeAfterDbl === '01:30' && cardAfterDbl === 0 && stageLater === 'playing',
+            `双击后 bot-time="${timeAfterDbl}"、残留结算卡=${cardAfterDbl}、人机落子 ${rowsAfterDbl} 行、`
+              + `+250ms 后 stage="${stageLater}"`);
+        }
       } else {
         // 终局：**最后一局的谜底在终局卡上**（bot-final-answer）。不读它的话，整场里
         // 唯一看不到答案的就是决定胜负的那一局 —— 而它恰恰是最想看的那局。
@@ -358,6 +435,9 @@ async function main() {
     check('c4.人机落子前玩家棋盘是空的（GuessTable 零猜测不渲染）', sawEmptyPlayerBoard);
     check('c5.玩家成功落子一次', playerGuessed);
 
+    // e1 的门槛 >= 2 是**下限**：正常能读到「2 张结算卡 + 1 张终局卡」= 3 条。
+    // 2026-10-17 起结算卡停住不自动走，读卡不再有「慢一拍就少读一局」的丢失问题，
+    // 保留 2 只是不把这条断言的成败押在「恰好走 3 局」这个具体局数上。
     check('e1.每一局揭晓的谜底都不是人机的名字（人机名被排除出谜底池）',
       answers.length >= 2 && answers.every((a) => a.name.length > 0 && a.name !== botName),
       answers.map((a) => `${a.name}(${a.score})`).join(' | ') || '一局都没读到谜底');
@@ -426,9 +506,11 @@ async function main() {
     //    人机猜中要 ~39 秒且不确定；期间 modal-mask 盖住整页（无 pointer-events:none），
     //    棋盘点不动，所以也没法用「第 8 次猜测结束本局」来构造。
     //    因此这两条钉的是**形状**：它挡得住「有人删了这行」，挡不住「有人换一种写法绕过」。
-    //    人工复现（30 秒内可做）：进 playing → 点「放弃本局」开框 → 放着不管，
-    //    等这一局超时自己结束 → 3 秒后新局开始 → 点框里的「确认放弃」。
-    //    修好之前：新局零猜测被判负（`bot-opp-wins` +1）；修好后：框已经不在。
+    //    人工复现（约 30 秒可做）：进 playing → 点「放弃本局」开框 → 放着不管，
+    //    等这一局超时自己结束（或人机猜中）→ 结算卡出现、框被 stage 门收起 →
+    //    （2026-10-17 起没有「3 秒后自动开新局」，要**手动点**「开始下一局」）→
+    //    若 newRound 没清 flag，新局里框会自己弹回来 → 点「确认放弃」。
+    //    修好之前：新局零猜测被判负（`bot-opp-wins` +1）；修好后：新局里框不在。
     console.log('\n[i] 投降框跨局不变量（源码级）');
     const pageSrc = readFileSync(join(ROOT, 'src/app/bot/page.tsx'), 'utf8');
     // i1. newRound 里必须清掉这个 flag。框不属于任何一局，但 stage 回到 playing 时
@@ -441,11 +523,28 @@ async function main() {
       newRoundBody
         ? `newRound 体 ${newRoundBody[0].length} 字符，${newRoundBody[0].includes('setShowSurrenderConfirm(false)') ? '含' : '不含'}该行`
         : '未提取到 newRound 函数体（改写了它？本检查需同步）');
-    // i2. 渲染处必须有 stage 门：局末那 3 秒（roundEnd）不该让框盖在结算卡上。
+    // i2. 渲染处必须有 stage 门：结算卡（roundEnd）与终局卡（matchEnd）上不该让框盖住。
+    //     ⚠️ 局末不再有「那 3 秒自动开下一局」了（改成玩家点「开始下一局」，见文件头 c7/c8），
+    //        但这道门**仍然必要**：框开着的时候本局照样会自己结束（超时 / 人机猜中），
+    //        stage 一离开 playing，框就必须收起 —— 否则玩家会在结算卡上看到一个属于上一局的弹窗。
     const i2ok = /stage === 'playing' && showSurrenderConfirm/.test(pageSrc);
     check('i2. 投降框的渲染条件带 stage === \'playing\'（结算卡不被遮罩盖住）',
       i2ok,
       `渲染条件${i2ok ? '形如 stage && flag' : '不含 stage 门'}`);
+
+    // i3. 防双触发必须是**状态门**，不能回到 500ms 时间窗（2026-10-17 晚改；见 newRound 注释）。
+    //     旧写法 `if (Date.now() - newRoundAtRef.current < 500) return;` 会**吞掉合法点击**：
+    //     上一局开始后不足 500ms 时点「开始下一局」被静默丢弃 —— 本冒烟实测一局只用 91ms，
+    //     改之前第 2 局点按钮毫无反应、卡在 roundEnd 直到 20s 超时（那次红就是这条门的实证）。
+    //     新门 `if (roundRef.current && !roundRef.current.ended) return;` 与时间无关：
+    //     双击/同拍时第二次调用看到「本局还活着」才拦；结算后（ended=true）合法点击一律放行。
+    //     ⚠️ 形状检查：挡得住「有人改回时间窗 / 删掉门」，挡不住「换个写法绕过」。
+    //     源码注释里也引用了旧写法，所以这里匹配的是**代码行**（行首缩进、不是 `//` 注释）。
+    const hasStateGate = /^[ \t]*if \(roundRef\.current && !roundRef\.current\.ended\) return;$/m.test(pageSrc);
+    const hasTimeGate = /^[ \t]*if \(Date\.now\(\) - newRoundAtRef\.current < 500\) return;$/m.test(pageSrc);
+    check('i3. newRound 的防双触发用状态门（roundRef.current && !ended），不是会吞合法点击的 500ms 时间窗',
+      hasStateGate && !hasTimeGate,
+      `状态门=${hasStateGate}，500ms 时间窗残留=${hasTimeGate}`);
 
     await sleep(200);
   } finally {

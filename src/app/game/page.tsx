@@ -199,7 +199,13 @@ export default function GamePage() {
       // 因此也不进战绩聚合与排行榜。savedRef 仍要置位，避免同一次结束被重复处理。
       if (!savedRef.current && !isEnemy) {
         if (opStore.attributes === null) {
-          saveGameStats(status === 'won', guesses.length, difficulty, (target as { name?: string })?.name || '');
+          // 猜测序列（干员 id，按点击先后）随存档一起上报 —— 见 stats.ts saveGameToServer 的注释。
+          // ⚠️ 这里只可能是干员模式（外层已 `!isEnemy`），但 `guesses` 的静态类型是
+          //    「敌方 | 干员」的联合，所以按可选字段取 id；取不到就跳过（不会误把敌人 id 存进去）。
+          const guessIds = (guesses as { character?: { id: string } }[])
+            .map((g) => g.character?.id)
+            .filter((id): id is string => typeof id === 'string' && id.length > 0);
+          saveGameStats(status === 'won', guesses.length, difficulty, (target as { name?: string })?.name || '', 'single', guessIds);
         }
         savedRef.current = true;
       }

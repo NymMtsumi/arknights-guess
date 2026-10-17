@@ -109,6 +109,13 @@ export function initSchema(db) {
     // 而 /api/me 的 bestScore 是 MIN(guess_count) 的全模式口径，把提问次数混进去
     // 会顶掉经典的最好成绩。海龟汤榜读到 NULL 会退回 guess_count，见 routes/game.js。
     ['games', 'question_count', 'INTEGER'],
+    // 🔴 2026-10-17：玩家**猜测序列**（JSON 数组，存干员 id，按猜测先后排序）。
+    // 为什么要存：用户要「用用户数据训练人机」，而之前库里只有「猜了几次」，
+    // 没有任何「猜了谁、什么顺序」—— 没有序列就训练不出「人类怎么选点」。
+    // 只存 id（不存昵称/时间戳/IP），且服务端用干员表白名单过滤，最长 24 个。
+    // ⚠️ 这列**不参与**任何榜单/战绩聚合（那些只读 guess_count），只是数据资产。
+    // 老记录自动是 NULL（=「采样本列之前的历史数据」，训练时要显式过滤掉）。
+    ['games', 'guess_log', 'TEXT'],
     ['api_tokens', 'token_prefix', 'TEXT'],
   ]) {
     const columns = db.prepare(`PRAGMA table_info(${table})`).all();

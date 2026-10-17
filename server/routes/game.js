@@ -1,8 +1,63 @@
 // 游戏路由：save-game, leaderboard, daily
 import { sanitizeString, parseCookies, parseBody, jsonResponse, generateKey, normalizeTimestamp } from '../utils.js';
 import { pickDailyTarget } from '../characters.js';
-import { findCharByName, compareGuess, isWin } from '../game-engine.js';
+import { findCharByName, compareGuess, isWin, getAllCharacters } from '../game-engine.js';
 import { ALL_ATTR_KEYS, ROUND_TIME_PRESETS } from '../constants.js';
+
+/**
+ * 猜测序列落库（2026-10-17 加）：把「玩家按顺序猜了哪些干员」存进 `games.guess_log`。
+ *
+ * 为什么：用户要「用用户数据训练人机」，而在此之前全库只有 `guess_count`（猜了几次），
+ * 没有任何一条能回答「先猜谁、后猜谁」—— 没有序列就没法做行为模仿，也没法反推人类选点。
+ *
+ * 校验（**客户端上报天然可伪造**，所以只做白名单与长度钳制，且这些数据**不进任何榜单**）：
+ *   · 元素必须是字符串，且能在服务端干员表里找到对应 id（找不到的直接丢弃）；
+ *   · 最长 MAX_GUESS_LOG 条（单人 8 次、海龟汤 24 次都装得下；超出的截断而非报错）；
+ *   · 去重**不做**：重复猜测本身是有意义的信号（旧版 easy 有 24.7% 的局重复猜同一个人）。
+ *
+ * ⚠️ 干员索引惰性构建：服务启动早期 getAllCharacters() 可能还没有数据，
+ *    这时**不缓存**空表，下次请求再建（否则整进程的序列会被全部丢弃）。
+ */
+const MAX_GUESS_LOG = 24;
+let CHAR_INDEX = null;
+function charIndex() {
+  if (CHAR_INDEX && CHAR_INDEX.ids.size > 0) return CHAR_INDEX;
+  const list = getAllCharacters() || [];
+  if (list.length === 0) return { ids: new Set(), byName: new Map() };
+  CHAR_INDEX = {
+    ids: new Set(list.map((c) => c.id)),
+    byName: new Map(list.map((c) => [c.name, c.id])),
+  };
+  return CHAR_INDEX;
+}
+
+/** 把客户端上报的 guesses 洗成「合法干员 id 的 JSON 数组」，无可留内容时返回 null */
+function sanitizeGuessLog(raw) {
+  if (!Array.isArray(raw) || raw.length === 0) return null;
+  const idx = charIndex();
+  const out = [];
+  for (const x of raw.slice(0, MAX_GUESS_LOG)) {
+    if (typeof x !== 'string') continue;
+    const id = x.trim();
+    if (!id || id.length > 64) continue;
+    if (idx.ids.size > 0 && !idx.ids.has(id)) continue;
+    out.push(id);
+  }
+  return out.length ? JSON.stringify(out) : null;
+}
+
+/** 每日挑战的会话里存的是**名字**，落库统一转成 id（与其它模式同口径） */
+function guessLogFromNames(names) {
+  if (!Array.isArray(names) || names.length === 0) return null;
+  const idx = charIndex();
+  const out = [];
+  for (const n of names.slice(0, MAX_GUESS_LOG)) {
+    if (typeof n !== 'string') continue;
+    const id = idx.byName.get(n);
+    if (id) out.push(id);
+  }
+  return out.length ? JSON.stringify(out) : null;
+}
 
 // 排行榜内存缓存（60s TTL，避免每次请求全表聚合扫描）
 const leaderboardCache = new Map();
@@ -70,6 +125,8 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
     const mode = sanitizeString(body.mode || 'single', 10);
     let difficulty = sanitizeString(body.difficulty || 'hard', 20);
     const targetName = sanitizeString(body.targetName || '', 100);
+    // 猜测序列（可选）：见文件头 sanitizeGuessLog 的说明。没有就是 NULL。
+    const guessLog = sanitizeGuessLog(body.guesses);
 
     // 每日挑战走独立端点 /api/daily/guess（服务端追踪并校验猜测序列），
     // save-game 不接收 daily 存档，防止伪造每日排行榜
@@ -243,8 +300,8 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
     }
 
     const result = db.prepare(
-      'INSERT INTO games (player_key, user_id, won, guess_count, difficulty, target_name, timestamp, mode, daily_date, multi_data, question_count) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-    ).run(player_key, userId || null, won ? 1 : 0, guessCount, difficulty, targetName, timestamp, mode, null, multiData, questionCount);
+      'INSERT INTO games (player_key, user_id, won, guess_count, difficulty, target_name, timestamp, mode, daily_date, multi_data, question_count, guess_log) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).run(player_key, userId || null, won ? 1 : 0, guessCount, difficulty, targetName, timestamp, mode, null, multiData, questionCount, guessLog);
 
     const extraHeaders = {};
     if (newPlayerKey) {
@@ -584,8 +641,8 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
           : db.prepare('SELECT id FROM games WHERE player_key = ? AND daily_date = ? AND user_id IS NULL').get(player_key, dailyDate);
         if (existing) return { conflict: true };
         db.prepare(
-          'INSERT INTO games (player_key, user_id, won, guess_count, difficulty, target_name, timestamp, mode, daily_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
-        ).run(player_key, userId || null, 0, session.guesses.length, 'hard', targetName, now.toISOString(), 'daily', dailyDate);
+          'INSERT INTO games (player_key, user_id, won, guess_count, difficulty, target_name, timestamp, mode, daily_date, guess_log) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        ).run(player_key, userId || null, 0, session.guesses.length, 'hard', targetName, now.toISOString(), 'daily', dailyDate, guessLogFromNames(session.guesses));
         return { conflict: false };
       })();
       dailySessions.delete(sessionKey);
@@ -642,8 +699,8 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
           : db.prepare('SELECT id FROM games WHERE player_key = ? AND daily_date = ? AND user_id IS NULL').get(player_key, dailyDate);
         if (existing) return { conflict: true };
         db.prepare(
-          'INSERT INTO games (player_key, user_id, won, guess_count, difficulty, target_name, timestamp, mode, daily_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
-        ).run(player_key, userId || null, saveWon, guessCount, 'hard', targetName, now.toISOString(), 'daily', dailyDate);
+          'INSERT INTO games (player_key, user_id, won, guess_count, difficulty, target_name, timestamp, mode, daily_date, guess_log) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        ).run(player_key, userId || null, saveWon, guessCount, 'hard', targetName, now.toISOString(), 'daily', dailyDate, guessLogFromNames(session.guesses));
         return { conflict: false };
       })();
 

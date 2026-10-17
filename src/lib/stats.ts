@@ -40,6 +40,26 @@ export interface MultiGameRecord {
 
 export type HistoryRecord = GameRecord | MultiGameRecord;
 
+/**
+ * 本地历史里「形状未知」的旧记录 —— 迁移 / 服务端回包共用的兜底形状。
+ *
+ * 这些数据来自 localStorage 或 JSON 响应：可能是旧版字段、缺字段、甚至字段类型不对
+ * （例如 timestamp 是字符串）。所以这里**只按字段名读**，逐字段用
+ * Number/String/Boolean 归一，不假设它已经满足 `GameRecord` / `MultiGameRecord`。
+ * 用它在迁移代码里替代 `any`，让 `no-explicit-any` 不再报错，同时保持「不认识的字段原样保留」。
+ */
+type RawHistoryRecord = Record<string, unknown>;
+
+/** 从「形状未知」的旧小局记录里安全取出三个已知字段（迁移补字段用） */
+function legacyRound(rd: unknown): MultiRoundResult {
+  const rec = (rd && typeof rd === 'object' ? rd : {}) as RawHistoryRecord;
+  return {
+    targetName: String(rec.targetName || ''),
+    won: Boolean(rec.won),
+    guessCount: Number(rec.guessCount) || 0,
+  };
+}
+
 export const STATS_KEY = 'arknights-guess-stats';
 export const HISTORY_KEY = 'arknights-guess-history';
 const VERSION_KEY = 'arknights-guess-data-version';
@@ -89,11 +109,11 @@ function migrateData(): void {
       try {
         const rawHistory = localStorage.getItem(HISTORY_KEY);
         if (rawHistory) {
-          const history = JSON.parse(rawHistory);
+          const history: unknown = JSON.parse(rawHistory);
           if (Array.isArray(history)) {
             const migrated = history
-              .filter(r => r && typeof r === 'object')
-              .map((r: any) => {
+              .filter((r): r is RawHistoryRecord => !!r && typeof r === 'object')
+              .map((r) => {
                 // ⚠️ 'custom' 也是 MultiGameRecord（见 MultiGameRecord.mode 的类型），
                 //    必须与 'multi' 走同一分支。早前只判 'multi'，自定义房记录会掉进
                 //    单人分支被重写成 {timestamp,won,guessCount,difficulty,targetName} ——
@@ -109,11 +129,7 @@ function migrateData(): void {
                     myScore: Number(r.myScore) || 0,
                     opponentScore: Number(r.opponentScore) || 0,
                     opponentName: String(r.opponentName || ''),
-                    rounds: Array.isArray(r.rounds) ? r.rounds.map((rd: any) => ({
-                      targetName: String(rd.targetName || ''),
-                      won: Boolean(rd.won),
-                      guessCount: Number(rd.guessCount) || 0,
-                    })) : [],
+                    rounds: Array.isArray(r.rounds) ? r.rounds.map(legacyRound) : [],
                   };
                 }
                 // 认不出的形态（未来新增的 mode 等）原样保留：迁移的职责是补字段，
@@ -198,11 +214,13 @@ function isValidRecord(r: unknown): r is HistoryRecord {
       typeof rec.opponentScore === 'number' &&
       typeof rec.opponentName === 'string' &&
       Array.isArray(rec.rounds) &&
-      rec.rounds.every((rd: any) =>
-        typeof rd.targetName === 'string' &&
-        typeof rd.won === 'boolean' &&
-        typeof rd.guessCount === 'number'
-      );
+      rec.rounds.every((rd) => {
+        if (!rd || typeof rd !== 'object') return false;
+        const round = rd as Record<string, unknown>;
+        return typeof round.targetName === 'string' &&
+          typeof round.won === 'boolean' &&
+          typeof round.guessCount === 'number';
+      });
   }
   // Single GameRecord check
   return typeof rec.timestamp === 'number' &&
@@ -321,8 +339,11 @@ function saveHistory(record: HistoryRecord) {
  * @param ts 与本地历史记录共用的同一个时间戳（毫秒）。省略时自取当前时间。
  *   本地副本和本请求代表同一局，时间戳必须是同一个值 —— 各读一次时钟会让
  *   两端差出几毫秒，mergeHistories 就无法把它们认成同一条（见 dedupKey 注释）。
+ * @param guessIds 本局的**猜测序列**（干员 id，按点击先后）。可省略 ——
+ *   2026-10-17 起才采集，服务端 `/api/save-game` 会做白名单校验后写进 `games.guess_log`。
+ *   省略时该列保持 NULL（=「这局没采到序列」，训练时要显式排除）。
  */
-export async function saveGameToServer(won: boolean, guessCount: number, difficulty: string, targetName: string, ts?: number): Promise<void> {
+export async function saveGameToServer(won: boolean, guessCount: number, difficulty: string, targetName: string, ts?: number, guessIds?: string[]): Promise<void> {
   if (typeof window === 'undefined') return;
 
   try {
@@ -339,6 +360,8 @@ export async function saveGameToServer(won: boolean, guessCount: number, difficu
         targetName,
         mode: 'single',
         timestamp: new Date(ts ?? Date.now()).toISOString(),
+        // 空数组也发（语义上「这局没记到序列」）；服务端会把空数组当成 NULL
+        guesses: Array.isArray(guessIds) ? guessIds : [],
       }),
     });
 
@@ -354,7 +377,7 @@ export async function saveGameToServer(won: boolean, guessCount: number, difficu
  * Concurrent writes from multiple tabs can produce a read-modify-write race on localStorage stats/history.
  * In practice this is low-risk because users rarely play in multiple tabs simultaneously.
  */
-export function saveGameStats(won: boolean, guessCount: number, difficulty: string, targetName: string, mode: 'single' | 'daily' | 'multi' = 'single') {
+export function saveGameStats(won: boolean, guessCount: number, difficulty: string, targetName: string, mode: 'single' | 'daily' | 'multi' = 'single', guessIds?: string[]) {
   const stats = loadStats();
   stats.totalGames++;
   if (won) {
@@ -383,7 +406,7 @@ export function saveGameStats(won: boolean, guessCount: number, difficulty: stri
   // 仅登录用户同步到服务器（游客纯本地存储）
   // 每日模式单独提交，不在此处重复写入
   if (mode !== 'daily' && getToken()) {
-    saveGameToServer(won, guessCount, difficulty, targetName, now).catch(() => {});
+    saveGameToServer(won, guessCount, difficulty, targetName, now, guessIds).catch(() => {});
   }
 }
 
@@ -532,9 +555,12 @@ export function saveTurtleStats(
  *
  * @param guessCount 本场**全部小局**玩家猜测次数之和（不是平均值）——
  *   场次恒为 bestOf，所以总量在玩家之间可比。
+ * @param guessIds 本场**玩家**的猜测序列（干员 id，按时间先后跨小局拼接）。
+ *   与人机自己的猜测无关 —— 我们要采的是「人类怎么选点」，不是人机怎么选点。
+ *   服务端只做白名单校验后落 `games.guess_log`，不进任何榜单。
  */
 export function saveBotStats(
-  won: boolean, guessCount: number, difficulty: string, targetName: string,
+  won: boolean, guessCount: number, difficulty: string, targetName: string, guessIds?: string[],
 ): void {
   if (typeof window === 'undefined') return;
   if (!getToken()) return;
@@ -548,6 +574,7 @@ export function saveBotStats(
       targetName,
       mode: 'bot',
       timestamp: new Date().toISOString(),
+      guesses: Array.isArray(guessIds) ? guessIds : [],
     }),
   }).catch((err) => { console.warn('[Stats] Failed to save bot game to server:', err); });
 }
@@ -559,29 +586,34 @@ export async function fetchHistoryFromServer(limit = 80): Promise<HistoryRecord[
     const token = getToken();
     if (!token) return [];
 
-    const data = await apiCall(`/api/history?limit=${limit}`, { method: 'GET' });
+    // 服务端回包的形状见 server 的 /api/history：这里按「字段可能缺失」处理，
+    // 用 RawHistoryRecord 收窄而不是 `any`（见文件头 no-explicit-any 的清理说明）。
+    const data = await apiCall<{ history?: unknown }>(`/api/history?limit=${limit}`, { method: 'GET' });
     if (Array.isArray(data.history)) {
-      return data.history.map((r: any) => {
+      return data.history.map((raw): HistoryRecord => {
+        const r = (raw && typeof raw === 'object' ? raw : {}) as RawHistoryRecord;
         const ts = typeof r.timestamp === 'string' ? new Date(r.timestamp).getTime() : (Number(r.timestamp) || 0);
         if (r.mode === 'multi' || r.mode === 'custom') {
           return {
             timestamp: ts,
             mode: (r.mode === 'custom' ? 'custom' : 'multi') as 'multi' | 'custom',
-            won: r.won,
-            bestOf: r.bestOf || 0,
-            myScore: r.myScore || 0,
-            opponentScore: r.opponentScore || 0,
-            opponentName: r.opponentName || r.targetName || '',
-            rounds: r.rounds || [],
-            ...(r.mode === 'custom' && r.custom ? { custom: r.custom } : {}),
+            won: Boolean(r.won),
+            bestOf: Number(r.bestOf) || 0,
+            myScore: Number(r.myScore) || 0,
+            opponentScore: Number(r.opponentScore) || 0,
+            opponentName: String(r.opponentName || r.targetName || ''),
+            rounds: Array.isArray(r.rounds) ? r.rounds.map(legacyRound) : [],
+            ...(r.mode === 'custom' && r.custom
+              ? { custom: r.custom as MultiGameRecord['custom'] }
+              : {}),
           };
         }
         return {
           timestamp: ts,
-          targetName: r.targetName || '',
-          won: r.won,
-          guessCount: r.guessCount || 0,
-          difficulty: r.difficulty || 'hard',
+          targetName: String(r.targetName || ''),
+          won: Boolean(r.won),
+          guessCount: Number(r.guessCount) || 0,
+          difficulty: String(r.difficulty || 'hard'),
         };
       });
     }

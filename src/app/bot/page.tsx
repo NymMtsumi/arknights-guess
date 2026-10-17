@@ -137,6 +137,14 @@ interface MatchState {
   botWins: number;
   /** 整场累计的玩家猜测数 —— 落库的 guess_count 是这个值，不是某一小局的 */
   myTotalGuesses: number;
+  /**
+   * 本场**玩家**的猜测序列（干员 id，按点击先后、跨小局拼接）。
+   *
+   * 2026-10-17 加，与人机自己的猜测无关 —— 采的是「人类怎么选点」，
+   * 随存档一起进 `games.guess_log`（样本用途见 `src/lib/stats.ts` 的 saveBotStats 注释）。
+   * 只在本地累积，不发中间请求。
+   */
+  myGuessIds: string[];
   /** 本场已用过的谜底 id：既防连庄，也用来把人机的名字排除出谜底池 */
   pastTargets: string[];
   /** 存档只发一次（finishRound 可能被多条出口同时命中） */
@@ -208,7 +216,7 @@ export default function BotPage() {
   const roundRef = useRef<RoundState | null>(null);
   const matchRef = useRef<MatchState>({
     tier: 'easy', botIdentity: null, myWins: 0, botWins: 0, myTotalGuesses: 0,
-    pastTargets: [], saved: false,
+    myGuessIds: [], pastTargets: [], saved: false,
   });
   const myBoardScrollRef = useRef<HTMLDivElement>(null);
   const botBoardScrollRef = useRef<HTMLDivElement>(null);
@@ -261,7 +269,7 @@ export default function BotPage() {
       // （服务端三处谓词见 routes/user.js）。这里守一次 saved，避免双开。
       if (!m.saved) {
         m.saved = true;
-        saveBotStats(won, m.myTotalGuesses, m.tier, r.target.name);
+        saveBotStats(won, m.myTotalGuesses, m.tier, r.target.name, m.myGuessIds);
       }
       // 🔴 终局也要把**最后一局的谜底**亮出来（和多人房同形态：那边是在结算卡上
       //    加一行「本场结束」，同样会揭晓答案）。只 setMatchEnd 不 setRoundWin 的话，
@@ -454,7 +462,7 @@ export default function BotPage() {
     const identity = pickBotIdentity(roster);
     matchRef.current = {
       tier, botIdentity: identity, myWins: 0, botWins: 0, myTotalGuesses: 0,
-      pastTargets: [], saved: false,
+      myGuessIds: [], pastTargets: [], saved: false,
     };
     setBotName(identity.name);
     setMyWins(0);
@@ -498,6 +506,8 @@ export default function BotPage() {
     const result = makeGuess(r.target, c);
     r.myGuesses = [...r.myGuesses, result];
     matchRef.current.myTotalGuesses++;
+    // 采样本：玩家的猜测序列（跨小局累积，整场结束时随 saveBotStats 一起上报）
+    matchRef.current.myGuessIds.push(c.id);
     setMyGuesses(r.myGuesses);
     setGuessedIds(new Set(r.myGuesses.map(g => g.character.id)));
 

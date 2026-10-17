@@ -53,6 +53,12 @@ node tests/turtle-leaderboard-test.mjs
 echo "==> 人机专属榜冒烟（API）"
 node tests/bot-leaderboard-test.mjs
 
+# 2026-10-17 加：猜测序列落库（`games.guess_log`）。训练数据的唯一来源，
+# 而它由客户端上报 —— 白名单/截断写错不会报任何错，只会静默污染样本库。
+echo "==> 猜测序列落库冒烟（API）"
+node tests/guess-log-test.mjs
+node tests/guess-log-daily-test.mjs
+
 echo "==> 多人重连冒烟（Socket）"
 node tests/multi-reconnect-smoke.mjs
 

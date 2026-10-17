@@ -32,7 +32,7 @@
   "difficulty.easy": "简单",
   "difficulty.easyDesc": "NGA人气热门 + 全部六星干员",
   "difficulty.medium": "普通",
-  "difficulty.mediumDesc": "全部 425 位干员，8 次猜测机会",
+  "difficulty.mediumDesc": "全部 432 位干员，8 次猜测机会",
   "difficulty.hard": "困难",
   "difficulty.hardDesc": "全部干员，隐藏星级信息，8 次猜测机会",
 
@@ -686,7 +686,7 @@
   "bot.start": "开始对战",
   "bot.you": "你",
   "bot.thinking": "{{name}} 正在思考…",
-  "bot.botOut": "对方已用完八次猜测，这一局只剩你了",
+  "bot.botOut": "对方已用完 {{count}} 次猜测，这一局只剩你了",
   "bot.nextRoundHint": "点击进入下一局",
   "bot.confirmSurrenderDesc": "放弃后本局判负，人机得 1 分。整场对战可以继续。",
   "bot.matchWin": "你赢下了这场人机对战",

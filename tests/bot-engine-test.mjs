@@ -5,7 +5,7 @@
 //
 // 🔴 本文件存在的理由有两条：
 //    ① 证明「低 < 中 < 高」这条难度梯度真的落地了，且**高档真的落在 3.8 次附近**
-//       （用户 2026-10-07 下修的目标，见 b5）—— 它不是「跑一遍看看」，是拿**全部 429 个可能答案**
+//       （用户 2026-10-07 下修的目标，见 b5）—— 它不是「跑一遍看看」，是拿**全部 432 个可能答案**
 //       穷举、多种子取均值，跑的是**真实调用路径**（createBrain → botPick → compareGuess
 //       → botLearn），不是另写一份仿真；
 //    ② 证明引擎里那张**两两签名缓存**没有说谎（见 g 段）—— 缓存把低档的耗时从 92s
@@ -29,19 +29,29 @@ import { join } from 'node:path';
 import { check, finish, ROOT } from './helpers.mjs';
 import { loadTsModule } from './_ts-load.mjs';
 
-/** 每种子的重复次数。429 个目标 × SEEDS 个种子 = 样本量；SEEDS=6 时标准误约 1.0pt */
+/** 每种子的重复次数。432 个目标 × SEEDS 个种子 = 样本量；SEEDS=6 时标准误约 1.0pt */
 const SEEDS = Number(process.env.SEEDS || 6);
 
 /**
- * 定标目标 —— **本文件自己跑出来的实测值**（6 种子与 20 种子两次跑出来的数只差 0.01）。
+ * 定标目标 —— **本文件自己跑出来的实测值**（两轮原始数见下表；`SEEDS=6` 与 `SEEDS=20`
+ * 之间的差：hit 最大 0.16pt、meanIdx 最大 0.006）。
  *
- * ⚠️ `meanIdx` 的口径**含没猜中的局**（按用满 8 次计），与 `/api/leaderboard` 的
+ * 🔴 2026-10-17 起「人机出手几次」是**每档独立**的（`BOT_TIER_MAX_GUESSES`：easy/medium 6、
+ *    hard 8），所以 b 段的循环与 meanIdx 口径都按**本档的次数**算，不再写死 8：
+ *
+ *    | 档 | 列 | 出手 | SEEDS=6 hit / meanIdx | SEEDS=20 hit / meanIdx |
+ *    |---|---|---|---|---|
+ *    | easy | 3 | 6 | 48.46% / 5.2909 | 48.30% / 5.2858 |
+ *    | medium | 4 | 6 | 72.34% / 4.7986 | 72.34% / 4.7928 |
+ *    | hard | 6 | 8 | 99.96% / 3.8561 | 99.95% / 3.8576 |
+ *
+ * ⚠️ `meanIdx` 的口径**含没猜中的局**（按**本档的出手次数**计），与 `/api/leaderboard` 的
  *    `总猜测数 / 总场次` 同口径 —— 这正是需求①要拿来比较的那个数。
  */
 const TARGETS = {
-  easy: { hit: 54.9, meanIdx: 6.52 },
-  medium: { hit: 96.6, meanIdx: 4.91 },
-  hard: { hit: 100.0, meanIdx: 3.87 },
+  easy: { hit: 48.4, meanIdx: 5.29 },
+  medium: { hit: 72.3, meanIdx: 4.79 },
+  hard: { hit: 99.9, meanIdx: 3.86 },
 };
 
 /**
@@ -104,7 +114,7 @@ async function main() {
   //    （照 turtle-store-test 的教训 —— 那边第一版就栽在这）。
   const gameEngine = await loadTs('src/lib/game-engine.ts');
 
-  const { createBrain, botPick, botLearn, botDelayMs, pickBotIdentity, BOT_MAX_GUESSES, BOT_ROUND_TIME, BOT_TICK_MS, BOT_TIERS, BOT_FIRST_DELAY_MS } = bot;
+  const { createBrain, botPick, botLearn, botDelayMs, pickBotIdentity, BOT_MAX_GUESSES, BOT_TIER_MAX_GUESSES, BOT_ROUND_TIME, BOT_TICK_MS, BOT_TIERS, BOT_FIRST_DELAY_MS } = bot;
   const { compareGuess } = gameEngine;
 
   /**
@@ -117,7 +127,8 @@ async function main() {
    */
   const TIERS = Object.keys(BOT_TIERS);
 
-  console.log(`干员 ${roster.length}；每档 ${SEEDS} 个种子 × 全部目标；K=${BOT_MAX_GUESSES}；单局 ${BOT_ROUND_TIME / 1000}s\n`);
+  console.log(`干员 ${roster.length}；每档 ${SEEDS} 个种子 × 全部目标；玩家 ${BOT_MAX_GUESSES} 次 / 人机 `
+    + `${TIERS.map(t => `${t}=${BOT_TIER_MAX_GUESSES[t]} 次`).join('、')}；单局 ${BOT_ROUND_TIME / 1000}s\n`);
 
   // ══════════════ a. 结构不变量：人机拿不到答案 ══════════════
   console.log('[a] 「人机不读答案」的结构保证');
@@ -138,14 +149,56 @@ async function main() {
   check('a6.干员 id 唯一（两两签名缓存按 id 定位，重名会让它读错行）',
     idCount === roster.length, `${idCount}/${roster.length}`);
 
-  // ══════════════ b. 定标：40 / 60 / 80 ══════════════
-  console.log('\n[b] 难度梯度定标（全部 429 个答案穷举，走真实调用路径）');
+  // ── 第二把难度旋钮的结构约束：每档出手次数 ──
+  // 上面那张定标表是**按「每档自己的出手次数」立论**的，所以次数表本身必须先成立 ——
+  // 否则 b 段量的是另一个东西（例如某档次数缺失、为 0，或干脆比玩家还能猜）。
+  const tierCaps = TIERS.map(t => `${t}=${BOT_TIER_MAX_GUESSES[t]}`);
+  check('a7.三档都有独立的出手次数配置（键与档位清单一致）',
+    Object.keys(BOT_TIER_MAX_GUESSES).sort().join(',') === TIERS.slice().sort().join(','),
+    `引擎档位 [${TIERS.join(',')}] / 次数表 [${Object.keys(BOT_TIER_MAX_GUESSES).join(',')}]`);
+
+  // 人机不许比玩家猜得还多：`BOT_MAX_GUESSES` 是玩家的 8 次，也是「出手次数」这条旋钮的
+  // 硬上限 —— 超过它就不是「人机变弱」，而是人机拿到了玩家没有的规则优势。
+  // 反事实：把 `BOT_TIER_MAX_GUESSES.hard` 改成 9（或 0 / 6.5）→ 本条立刻红（已实测）。
+  const badCaps = TIERS.filter(t => !(
+    Number.isInteger(BOT_TIER_MAX_GUESSES[t])
+    && BOT_TIER_MAX_GUESSES[t] > 0
+    && BOT_TIER_MAX_GUESSES[t] <= BOT_MAX_GUESSES
+  ));
+  check(`a8.每档出手次数都是正整数且 ≤ 玩家的 ${BOT_MAX_GUESSES} 次（人机不许比玩家猜得还多）`,
+    badCaps.length === 0,
+    `${tierCaps.join('；')}${badCaps.length ? `；越界档 ${badCaps.join(',')}` : ''}`);
+
+  // 两把旋钮必须**同向**：列多的档，出手次数不许少于列少的档。
+  // 否则会出现「hard 只给 4 次、easy 反倒 8 次」这种自相矛盾的难度配置 —— 三档的强弱
+  // 不再归因到同一个方向，而 b 段的绝对目标只按数字对照，单看数字看不出旋钮拧反。
+  // 反事实：把 hard 改成 4（easy 仍 6，或把 easy 抬到 8）→ 本条立刻红（已实测）。
+  const colCount = (t) => BOT_TIERS[t].attrs.length;
+  const inverted = [];
+  for (const a of TIERS) {
+    for (const b of TIERS) {
+      if (colCount(a) < colCount(b) && BOT_TIER_MAX_GUESSES[a] > BOT_TIER_MAX_GUESSES[b]) {
+        inverted.push(`${a}(${colCount(a)}列)=${BOT_TIER_MAX_GUESSES[a]} > `
+          + `${b}(${colCount(b)}列)=${BOT_TIER_MAX_GUESSES[b]}`);
+      }
+    }
+  }
+  check('a9.出手次数与列数同向（列多的档，出手次数不少于列少的档）',
+    inverted.length === 0,
+    `${TIERS.map(t => `${t} ${colCount(t)}列×${BOT_TIER_MAX_GUESSES[t]}次`).join('；')}`
+    + (inverted.length ? `；反向配置 ${inverted.join(', ')}` : ''));
+
+  // ══════════════ b. 定标：每档用自己的出手次数 ══════════════
+  console.log('\n[b] 难度梯度定标（全部 432 个答案穷举，走真实调用路径）');
 
   // 实测值留痕：b4 要断言的是**跑出来的梯度**，不是上面那张写死的定标表。
   const measured = {};
 
   for (const tier of TIERS) {
     const t0 = Date.now();
+    // 🔴 本档的出手次数（不是玩家的 8 次）：页面上人机用满 `BOT_TIER_MAX_GUESSES[tier]` 次
+    //    仍未猜中就是它输了，所以「没猜中」必须按这个数计入 meanIdx（与排行榜同口径）。
+    const maxG = BOT_TIER_MAX_GUESSES[tier];
     let hitSum = 0, idxSum = 0, samples = 0;
 
     for (let s = 0; s < SEEDS; s++) {
@@ -153,14 +206,14 @@ async function main() {
       for (const target of roster) {
         let brain = createBrain(tier, roster);
         let solved = null;
-        for (let n = 1; n <= BOT_MAX_GUESSES; n++) {
+        for (let n = 1; n <= maxG; n++) {
           const guess = botPick(brain, rng);
           if (!guess) break;
           if (guess.id === target.id) { solved = n; break; }
           brain = botLearn(brain, guess, compareGuess(target, guess));
         }
         if (solved !== null) hitSum++;
-        idxSum += solved ?? BOT_MAX_GUESSES;
+        idxSum += solved ?? maxG;
         samples++;
       }
     }
@@ -171,33 +224,38 @@ async function main() {
     const want = TARGETS[tier];
     const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
 
-    check(`b.${tier} 准确率 ${hit.toFixed(1)}%（目标 ${want.hit}%，容差 ±${TOL_HIT}pt）`,
+    check(`b.${tier} 准确率 ${hit.toFixed(1)}%（目标 ${want.hit}%，容差 ±${TOL_HIT}pt；本档 ${maxG} 次出手）`,
       Math.abs(hit - want.hit) <= TOL_HIT, `${SEEDS} 种子 / ${samples} 样本，用时 ${elapsed}s`);
-    check(`b.${tier} 平均猜中次数 ${meanIdx.toFixed(2)}（目标 ${want.meanIdx}，容差 ±${TOL_IDX}）`,
+    check(`b.${tier} 平均猜中次数 ${meanIdx.toFixed(2)}（目标 ${want.meanIdx}，容差 ±${TOL_IDX}；没猜中按 ${maxG} 次计）`,
       Math.abs(meanIdx - want.meanIdx) <= TOL_IDX);
   }
 
   // 🔴 b4 断言的是**实测**梯度，不是 `TARGETS` 那张写死的定标表。
   //    早先这行写的是 `TARGETS.easy.hit < TARGETS.medium.hit < TARGETS.hard.hit`，
-  //    三个数都是第 30-32 行手写的字面量 —— 量的是常量之间的关系，**永远为真**，
+  //    三个数都是手写的字面量 —— 量的是常量之间的关系，**永远为真**，
   //    引擎怎么改都不会红。那等于这条「梯度递增」的保证压根不存在。
-  //    改成实测值后它是可证伪的：把三档的 TIER_ATTRS 调成同一份（梯度塌掉），
-  //    三个实测值打平 → 这就是一条真的红了（已做反事实对照，实测 79.1 / 79.1 / 79.1%）。
+  //    改成实测值后它是可证伪的：把 easy 的 TIER_ATTRS 改成与 medium 逐字相同（4 列），
+  //    三个实测值就**打平**（SEEDS=1 实测 70.6 / 70.6 / 99.8%，SEEDS=6 会是 72.3 / 72.3 / 99.9%）
+  //    → 红（已做反事实对照，见交付报告）。
   //
-  //    ⚠️ 但别把它当成补上了覆盖空白：那个场景里 b.easy / b.medium 的**绝对目标**
-  //    （各自 40.2 / 60.9，容差 ±6pt）本来也会红。三档目标相距 20pt、容差只有 6pt，
-  //    所以「梯度」这件事其实已被那六条绝对断言覆盖。b4 的价值在于**把意图写成一行**，
-  //    将来若有人放宽 TOL_HIT（比如放到 ±25pt），那六条会失去对顺序的约束，
-  //    而这一行还在管着。
-  check('b4.实测梯度严格递增 低 < 中 < 高',
+  //    ⚠️ 与旧版的两处差异：
+  //    ① 三档现在跨**不同的出手次数**（easy/medium 各 6 次、hard 8 次）—— 比较的是
+  //       「页面实际跑出来的三档」，这正是需求要的；不再隐含「三档都在 8 次预算下」。
+  //    ② 别把它当成补上了覆盖空白：那个塌梯度场景里 b.easy 的**绝对目标**（48.4 ±6）
+  //       本来也会红。三档目标相距 23.9 / 27.6pt、容差只有 ±6，所以「顺序」已被那六条
+  //       绝对断言覆盖（可推出的间距下界 = 66.3 − 54.3 = 12.0pt）。b4 的价值在于**把意图
+  //       写成一行**：将来若有人放宽 TOL_HIT（比如放到 ±25pt），那六条会失去对顺序的约束，
+  //       而这一行还在管着。
+  check('b4.实测梯度严格递增 低 < 中 < 高（easy 6 次 / medium 6 次 / hard 8 次）',
     measured.easy.hit < measured.medium.hit && measured.medium.hit < measured.hard.hit,
     `实测 ${measured.easy.hit.toFixed(1)} / ${measured.medium.hit.toFixed(1)} / ${measured.hard.hit.toFixed(1)}%`);
 
   // 🔴 b5 是**需求本身**，不是定标表。上面那几条 b.* 断言的是「实测 ≈ 我们自己写的目标」，
   //    谁把 TARGETS.hard 改成任何实测值、或放宽 TOL_IDX，它们都照样绿。
   //    这一条钉的是用户拍板的那个数，改不动 —— 也正因如此它才是能证伪的。
+  //    ⚠️ 它只在 hard 出手 8 次时成立（次数也是旋钮）；「人机次数 ≤ 玩家 8 次」由 a8 钉住。
   check(`b5.最高档平均猜测次数 ${measured.hard.meanIdx.toFixed(2)} ≈ ${HARD_MEAN_IDX_TARGET}`
-    + `（容差 ±${HARD_MEAN_IDX_TOL}）`,
+    + `（容差 ±${HARD_MEAN_IDX_TOL}；hard 出手 ${BOT_TIER_MAX_GUESSES.hard} 次）`,
   Math.abs(measured.hard.meanIdx - HARD_MEAN_IDX_TARGET) <= HARD_MEAN_IDX_TOL,
   `实测 ${measured.hard.meanIdx.toFixed(2)} 次/局；对照 ${LEADERBOARD_TOP_NOTE}`
     + `，人机仍快 ${(LEADERBOARD_TOP_MEAN_IDX - measured.hard.meanIdx).toFixed(2)} 次`);
@@ -207,17 +265,21 @@ async function main() {
 
   for (const tier of TIERS) {
     const cfg = BOT_TIERS[tier];
+    // 🔴 时间预算按**本档出手次数**算（easy/medium 6 次、hard 8 次），不是玩家的 8 次：
+    //    页面上人机只被允许落 `BOT_TIER_MAX_GUESSES[tier]` 次，所以最坏耗时乘的也是它。
+    const maxG = BOT_TIER_MAX_GUESSES[tier];
     // 硬约束：最坏情况（每次都抖到上限）也必须装得进单局，否则人机会被计时器掐掉一猜。
     // 🔴 每次落子最多晚一个 tick（人机是 tick 驱动、不是 setTimeout 精确定时），
-    //    这个开销**累加 8 次**，所以必须并进最坏值 —— 漏掉它就会在林余量里骗自己。
-    const worst = (cfg.delayMs + cfg.jitterMs + BOT_TICK_MS) * BOT_MAX_GUESSES;
+    //    这个开销**按本档出手次数累加**，所以必须并进最坏值 —— 漏掉它就会在余量里骗自己。
+    const worst = (cfg.delayMs + cfg.jitterMs + BOT_TICK_MS) * maxG;
     // 余量下限 2s：后台标签页被浏览器把定时器节流到 1s 时，靠的就是这点余量。
     // ⚠️ 这里**只留一条**断言。原先还并列着一条 `worst <= BOT_ROUND_TIME`，但
     //    `slack = BOT_ROUND_TIME - worst`，所以 `slack >= 2000` 严格蕴含它 ——
     //    两条并列时后者永远不会单独红，是一条恒真的装饰（放久了会让人以为有两层保护）。
     const slack = BOT_ROUND_TIME - worst;
     check(`c.${tier} 最坏耗时 ${(worst / 1000).toFixed(1)}s ≤ 单局 ${(BOT_ROUND_TIME / 1000)}s，余量不少于 2s（抗后台节流）`,
-      slack >= 2_000, `worst=${(worst / 1000).toFixed(1)}s slack=${(slack / 1000).toFixed(1)}s`);
+      slack >= 2_000, `worst=${(worst / 1000).toFixed(1)}s slack=${(slack / 1000).toFixed(1)}s`
+      + `（本档 ${maxG} 次：(${cfg.delayMs}+${cfg.jitterMs}+${BOT_TICK_MS})×${maxG}）`);
   }
 
   const rngD = makeRng(42);
@@ -255,11 +317,11 @@ async function main() {
   check('d2.抽取有分布（500 次不总是同一个）', new Set(ids.map(c => c.id)).size > 50);
   check('d3.返回的是干员表里的真对象',
     ids.every(c => roster.some(r => r.id === c.id)));
-  // 集齐问题：500 次抽取覆盖 429 项，期望不同项数 = 429×(1−e^(−500/429)) ≈ 295。
-  // 断言按理论值放宽到 250 —— 卡在 295 附近会让测试变成对随机数的复读；
+  // 集齐问题：500 次抽取覆盖 432 项，期望不同项数 = 432×(1−e^(−500/432)) ≈ 296。
+  // 断言按理论值放宽到 250 —— 卡在 296 附近会让测试变成对随机数的复读；
   // 低于 250 才说明分布出了问题（比如伪随机退化）。
   const distinct = new Set(ids.map(c => c.id)).size;
-  check('d4.抽取覆盖接近集齐问题理论值（429 项抽 500 次 ≈ 295 个不同）', distinct > 250,
+  check('d4.抽取覆盖接近集齐问题理论值（432 项抽 500 次 ≈ 296 个不同）', distinct > 250,
     `${distinct}/${roster.length}`);
 
   // ══════════════ e. 不变量：答案永不被筛掉 ══════════════
@@ -270,6 +332,8 @@ async function main() {
     const rng = makeRng(99);
     for (const target of roster.slice(0, 60)) {
       let brain = createBrain(tier, roster);
+      // 8 是任何一档出手次数的上限（a8 已断言），所以这里按 8 步验不变量 = 覆盖
+      // 所有档位的全部可达步数；它验的是引擎筛选口径，与档位次数无关。
       for (let n = 1; n <= BOT_MAX_GUESSES; n++) {
         const guess = botPick(brain, rng);
         if (!guess) break;
@@ -321,9 +385,20 @@ async function main() {
     return pool.map(g => ({ g, cost: cost(g) })).sort((a, b) => a.cost - b.cost).map(r => r.g);
   }
 
-  // 第一猜的池子恒为全量，逐档只重算一次（429² 次 compareGuess），不放进目标循环里。
+  // 第一猜的池子恒为全量，逐档只重算一次（432² 次 compareGuess），不放进目标循环里。
   const freshOpening = {};
   for (const tier of TIERS) freshOpening[tier] = freshRank(roster, BOT_TIERS[tier].attrs);
+
+  // 🔴 2026-10-17 起 botPick 的选点池**不是「全部候选」**：它先排除本局已猜过的人，
+  //    剩下 ≤3 人时**直接点名**（不再算信息增益）。现场重算必须逐条复现这两步，
+  //    否则量的是旧算法 —— 实测旧写法在 easy 上只有 32/36，它拿「含已猜者」的候选集
+  //    去排一个 botPick 根本不会去排的池子，差异看起来却像「缓存读错了」。
+  /** 与 botPick 同口径的可用池：候选 − 已猜过（全被猜过时回退到候选集） */
+  function usablePool(brain) {
+    const seen = new Set(brain.guessed);
+    const fresh = brain.candidates.filter(c => !seen.has(c.id));
+    return fresh.length > 0 ? fresh : brain.candidates;
+  }
 
   for (const tier of TIERS) {
     const attrs = BOT_TIERS[tier].attrs;
@@ -331,15 +406,27 @@ async function main() {
     for (const target of roster.slice(0, 12)) {
       let brain = createBrain(tier, roster);
       for (let n = 1; n <= 3; n++) {
-        const want = n === 1 ? freshOpening[tier] : freshRank(brain.candidates, attrs);
-        // rng 是确定的：0.1 → 恒取第 1 名，0.9 → 恒取第 2 名（见 botPick 的实现）
+        const pool = usablePool(brain);
+        if (pool.length === 0) { // 理论不可达（真答案恒在候选集里），留着防 NaN
+          diff++;
+          if (!firstBad) firstBad = `目标 ${target.name} 第 ${n} 猜：可用池为空`;
+          break;
+        }
+        // ≤3 人：终局点名，直接按 rng 取下标 floor(rng×len)，不排信息增益；
+        // 否则第一猜用开局排序（全量池只算一次），之后按当前可用池现算。
+        const ranked = pool.length <= 3
+          ? null
+          : (n === 1 ? freshOpening[tier] : freshRank(pool, attrs));
+        const want1 = ranked ? ranked[0] : pool[Math.floor(0.1 * pool.length)];
+        const want2 = ranked ? (ranked[1] ?? ranked[0]) : pool[Math.floor(0.9 * pool.length)];
+        // rng 是确定的：0.1 → 第 1 名，0.9 → 第 2 名；终局点名时就是上面那两个下标
+        // （见 botPick 的实现）。
         const got1st = botPick(brain, () => 0.1);
         const got2nd = botPick(brain, () => 0.9);
-        const want2nd = want[1] ?? want[0];
-        if (got1st?.id === want[0].id && got2nd?.id === want2nd.id) same++;
+        if (got1st?.id === want1.id && got2nd?.id === want2.id) same++;
         else {
           diff++;
-          if (!firstBad) firstBad = `目标 ${target.name} 第 ${n} 猜：期望 ${want[0].name}／${want2nd.name}，`
+          if (!firstBad) firstBad = `目标 ${target.name} 第 ${n} 猜：期望 ${want1.name}／${want2.name}，`
             + `实际 ${got1st?.name}／${got2nd?.name}`;
         }
         if (!got1st) break;

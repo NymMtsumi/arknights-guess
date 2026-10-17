@@ -237,7 +237,7 @@ export function mergeHistories(local: HistoryRecord[], server: HistoryRecord[]):
   //   1) 服务端 normalizeTimestamp 在时间戳异常（≤0 / 超前 24h 以上）时会替换成
   //      服务器当前时间，此时两份落在不同桶 —— 需要客户端时钟偏快 24 小时以上；
   //   2) 同一桶内恰好出现两局「同一干员 + 同一难度」的经典对局，需要 5 秒内连打
-  //      两局且随机目标重复（约 1/429）；多人/自定义则要 5 秒内打完两场 BO3，不可能。
+  //      两局且随机目标重复（约 1/432）；多人/自定义则要 5 秒内打完两场 BO3，不可能。
   // 反向的误合并（把两局不同的判成一局）代价更高 —— 合并结果会被写回 localStorage，
   // 永久少一条。所以这里保留 target/mode 作为区分位，不做更激进的压缩。
   const DEDUP_BUCKET_MS = 5000;

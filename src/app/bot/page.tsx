@@ -13,6 +13,7 @@ import { drawArtIndex } from '@/lib/round-art';
 import { saveBotStats } from '@/lib/stats';
 import {
   BOT_FIRST_DELAY_MS, BOT_MAX_GUESSES, BOT_POOL_DIFFICULTY, BOT_ROUND_TIME, BOT_TICK_MS,
+  BOT_TIER_MAX_GUESSES,
   botDelayMs, botLearn, botPick, createBrain, pickBotIdentity, warmUp,
   type BotBrain, type BotTier,
 } from '@/lib/bot-engine';
@@ -32,10 +33,12 @@ import charactersData from '@/data/characters.json';
  * 纯本地的人机**：谜底改由浏览器选，人机由 `@/lib/bot-engine` 驱动。
  *
  * 🔴 三件事**必须**与标准多人房保持一致，否则玩家在两种模式间迁移时会学到错的规则：
- *    ① 赛制 —— BO5 / 先到 3 局 / 每局 8 次 / 单局 90 秒。
- *       ⚠️ 这里说的「一致」是**规则形态**一致，不是两边共用同一个常量：8 次是 `BOT_MAX_GUESSES`
- *       （锁死不可配，因为它是自定标的锚点），与 `PARTY_MAX_GUESSES` 只是**数值相同**；
- *       90 秒也不是多人的**默认**时长，只是房主可选的一档（本页固定取这一档）；
+ *    ① 赛制 —— BO5 / 先到 3 局 / **玩家每局 8 次** / 单局 90 秒。
+ *       ⚠️ 这里说的「一致」是**规则形态**一致，不是两边共用同一个常量：玩家的 8 次是
+ *       `BOT_MAX_GUESSES`（锁死不可配，因为它是自定标的锚点），与 `PARTY_MAX_GUESSES`
+ *       只是**数值相同**；90 秒也不是多人的**默认**时长，只是房主可选的一档（本页固定取这一档）。
+ *       🔴 2026-10-17 起 **人机的出手次数与玩家解耦**：每档有自己的 `BOT_TIER_MAX_GUESSES`
+ *       （低/中各 6 次、高档 8 次）—— 这是难度旋钮，不是规则变更：玩家始终是 8 次。
  *    ② 棋盘 —— 标准八列（**删掉了星级列**，左右两块棋盘都是）。改这里同时会改到人机：
  *       它「注意到」的列必须与玩家看得见的列一致，所以 `TIER_ATTRS` 里也没有 rarity；
  *    ③ 同时落子 —— 双方各自计时、互不阻塞，不是回合制。
@@ -60,9 +63,11 @@ import charactersData from '@/data/characters.json';
  *   · 玩家猜中 → 玩家赢本局
  *   · **玩家用满 8 次仍未猜中 → 平局**（人机的窗口到此为止，见下）
  *   · 单局 90 秒耗尽 → 平局
+ *   · 人机用满**本档**的出手次数（`BOT_TIER_MAX_GUESSES`）仍未猜中 → 它再也赢不了，
+ *     状态行提示「对方已用完 N 次猜测」，但本局**不结束**：玩家仍可继续猜并取胜。
  *
- * 第三条是**人机定标的口径来源**：`tests/bot-engine-test.mjs` 量的是「人机在自己的 8 次
- * 之内猜中」，而在真实对局里，人机的可用次数 = 玩家的猜测节奏 × 人机的落子间隔。
+ * 第三条是**人机定标的口径来源**：`tests/bot-engine-test.mjs` 量的是「人机在本档出手次数
+ * 之内猜中」，而在真实对局里，人机的可用次数还受**玩家的猜测节奏 × 人机的落子间隔**挤压。
  * 玩家猜得快 → 人机的窗口被压缩 → 实际命中率低于标称值。
  * ⚠️ 这不是 bug，是把「你的猜测预算怎么花」变成了真实决策：猜得急 = 可能浪费次数，
  *    猜得慢 = 给人机更多机会。所以定标表里那三个数是**上限**，玩家打得越快、人机越吃亏。
@@ -108,7 +113,7 @@ interface RoundState {
    *
    * 🔴 2026-10-17 加。浏览器会把后台标签页的 setInterval 节流到 >=1000ms（>5min 时 1 次/60s），
    * 而回合计时用 Date.now() 照走 —— 结果是**玩家不在场时人机继续落子**：hard 约 49s、
-   * easy 约 70s 就能打满 8 次/猜中，3 秒后自动开下一局，整场 0:3 输掉**并已落库**
+   * easy 约 52s 就能打满本档 6 次/猜中，3 秒后自动开下一局，整场 0:3 输掉**并已落库**
    * （saveBotStats 不阻塞）。玩家回来看到的是结算卡或残局，观感就是「人机卡住/步时不对/
    * 水平没变却输了」。
    *
@@ -171,7 +176,7 @@ export default function BotPage() {
   const [tier, setTier] = useState<BotTier>('easy');
 
   // 渲染用的镜像 —— 权威状态全在下面两个 ref 里（tick 驱动的逻辑读 ref，不读 state，
-  // 否则每一帧都会拿到创建闭包时的那份快照，人机会用 8 次第一步的候选集）
+  // 否则每一帧都会拿到创建闭包时的那份快照，人机会整档都用开局那份候选集）
   const [botName, setBotName] = useState('');
   const [myGuesses, setMyGuesses] = useState<GuessResult[]>([]);
   const [botGuesses, setBotGuesses] = useState<GuessResult[]>([]);
@@ -181,6 +186,15 @@ export default function BotPage() {
   const [botWins, setBotWins] = useState(0);
   const [timeLeft, setTimeLeft] = useState(Math.ceil(BOT_ROUND_TIME / 1000));
   const [botOut, setBotOut] = useState(false);
+  /**
+   * 本局人机**出手次数上限**（`BOT_TIER_MAX_GUESSES[档]`），在 `newRound` 时落到 state。
+   *
+   * 为什么不直接在渲染里读 `matchRef.current.tier`：**ref 不能在渲染期读** ——
+   * eslint 的 `react-hooks/refs` 会直接报 "Cannot access refs during render"，
+   * 而且它确实有实际风险（ref 变了不触发重渲染，文案会停在上一档的次数）。
+   * tick / botMove 里读 ref 是合法的（那是回调，不在渲染期）。
+   */
+  const [botMaxGuesses, setBotMaxGuesses] = useState(BOT_MAX_GUESSES);
   const [roundWin, setRoundWin] = useState<RoundWin | null>(null);
   const [matchEnd, setMatchEnd] = useState<{ won: boolean } | null>(null);
   const [showSurrenderConfirm, setShowSurrenderConfirm] = useState(false);
@@ -273,7 +287,9 @@ export default function BotPage() {
     // 收窄候选集：吃的是上面那行反馈，与玩家在自己棋盘上看到的逐字相同
     r.brain = botLearn(r.brain, guess, result.comparisons);
 
-    if (r.botGuesses.length >= BOT_MAX_GUESSES) {
+    // 人机自己的次数预算（每档不同，见 BOT_TIER_MAX_GUESSES）；
+    // 玩家的 8 次是另一条独立口径（BOT_MAX_GUESSES），两者别混用。
+    if (r.botGuesses.length >= BOT_TIER_MAX_GUESSES[m.tier]) {
       // 人机次数用尽。本局**不因此结束** —— 玩家可能还剩次数，仍可自己猜中取胜。
       // 但人机这边的出口已经关死了（它再也赢不了），所以清掉「思考中」的提示。
       setBotOut(true);
@@ -300,7 +316,7 @@ export default function BotPage() {
    * ⚠️ 到点判定必须排在 `botMove` **之前**，且判定成立时直接 return。
    *    反过来写时，超时那一拍里 `botMove` 会先跑完 —— 而 `botMove` 内部的 `finishRound`
    *    只挡 `r.ended`（幂等闸），它并不知道「已经超时」，于是人机在时间到之后仍能补一猜
-   *    并照常计分结算。表现是「偶尔比 8 次多一猜」，只在 100ms 的那一拍里现形。
+   *    并照常计分结算。表现是「偶尔比本档次多一猜」，只在 100ms 的那一拍里现形。
    */
   const tick = useCallback(() => {
     const r = roundRef.current;
@@ -315,7 +331,7 @@ export default function BotPage() {
     setTimeLeft(prev => (prev === sec ? prev : sec));
 
     if (remainMs <= 0) { finishRound(null); return; }
-    if (r.botGuesses.length < BOT_MAX_GUESSES && now >= r.nextBotAt) botMove(r);
+    if (r.botGuesses.length < BOT_TIER_MAX_GUESSES[matchRef.current.tier] && now >= r.nextBotAt) botMove(r);
   }, [botMove, finishRound]);
 
   useEffect(() => {
@@ -360,8 +376,8 @@ export default function BotPage() {
     if (Date.now() - newRoundAtRef.current < 500) return;
     newRoundAtRef.current = Date.now();
     const m = matchRef.current;
-    // 谜底从**全量池**里抽（BOT_POOL_DIFFICULTY = 'hard' = 全部 429 人）：
-    // 人机的定标就是拿这个池子测的，池子一变那套 40/60/78.5% 立即作废。
+    // 谜底从**全量池**里抽（BOT_POOL_DIFFICULTY = 'hard' = 全部 432 人）：
+    // 人机的定标就是拿这个池子测的，池子一变那套 48.9/71.8/99.9% 立即作废。
     // recentIds 传人机的名字 + 本场已用过的谜底 → 既防连庄，也保证人机的名字
     // 不会是谜底（否则对面板上会同时出现「人机名」与「答案」，一眼穿帮）。
     const drawn = pickTarget(roster, BOT_POOL_DIFFICULTY, [
@@ -389,6 +405,8 @@ export default function BotPage() {
     setGuessedIds(new Set());
     setTimeLeft(Math.ceil(BOT_ROUND_TIME / 1000));
     setBotOut(false);
+    // 本档的出手次数落到 state（不能靠渲染期读 ref，见 botMaxGuesses 的注释）
+    setBotMaxGuesses(BOT_TIER_MAX_GUESSES[m.tier]);
     setRoundWin(null);
     // 🔴 必须清掉投降确认框。它不是「只属于某一局」的 UI —— 框开着的时候计时器照走、
     //    人机照猜，所以**局会自己结束**（超时 / 人机猜中），3 秒后本函数又开了新局，
@@ -475,8 +493,9 @@ export default function BotPage() {
 
     if (isWin(r.target, c)) { finishRound('me'); return; }
     // 用满次数仍未猜中 → 本局平局。⚠️ 这一条**不是**「双方都用满」：
-    // 玩家的 8 次就是人机的窗口（见文件头），所以玩家一出局，本局立即结算，
-    // 不让玩家干等人机把剩下的次数猜完。
+    // 玩家的 8 次就是本局的窗口（见文件头），所以玩家一出局，本局立即结算，
+    // 不让玩家干等人机把剩下的次数猜完。人机那侧另有自己的 `BOT_TIER_MAX_GUESSES`，
+    // 它用完只意味着「再也赢不了」，**不**结束本局。
     if (r.myGuesses.length >= BOT_MAX_GUESSES) finishRound(null);
   }, [finishRound]);
 
@@ -559,7 +578,9 @@ export default function BotPage() {
               )}
             </div>
             <div className="sec-note text-center mb-3" data-testid="bot-status">
-              {botOut ? t('bot.botOut') : t('bot.thinking', { name: botName })}
+              {botOut
+                ? t('bot.botOut', { count: botMaxGuesses })
+                : t('bot.thinking', { name: botName })}
             </div>
             <div className="flex flex-wrap gap-3">
               <div className="flex-1 basis-[48%] min-w-[260px]">

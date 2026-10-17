@@ -146,6 +146,12 @@ const TIER_DELAY_MS: Record<BotTier, number> = {
 };
 
 /**
+ * ⚠️ 2026-10-17 起 `TIER_JITTER_MS` 的 medium/hard 已从 1200 收到 600。
+ * 上面那条硬约束的余量随之变大（不再是 3.6s / 14.0s / 25.2s 的旧值），
+ * `tests/bot-engine-test.mjs` 的 c 段按新值重新断言。
+ */
+
+/**
  * 延迟抖动幅度（±，ms）。**没有它，每档的节奏会像节拍器** ——
  * 每 10 秒准点落子，一眼就能看出对面是程序。抖动必须是**有界且非负**的：
  * 下限不能小于 0，否则一次大抖动会让延迟变成负数（`botDelayMs` 另有一层钳制兜底）。
@@ -154,8 +160,11 @@ const TIER_DELAY_MS: Record<BotTier, number> = {
  */
 const TIER_JITTER_MS: Record<BotTier, number> = {
   easy: 700,
-  medium: 1_200,
-  hard: 1_200,
+  // 2026-10-17：medium/hard 原为 1200，占 base 的 29% / 35%，相邻间隔比最高 1.45。
+  // 用户报「步时改变」，实测就是这个摆幅。收到 600 后分别为 7.3% / 8.8%，
+  // 仍保留「不规律」的观感，但不再让人误以为节奏在漂。改这里不影响准确率（只影响耗时）。
+  medium: 600,
+  hard: 600,
 };
 
 /**
@@ -391,6 +400,21 @@ function openingOrder(cache: TierCache, tier: BotTier): readonly Character[] {
  *    `candidates.length === 全量`：后者需要把 roster 传进来，而这个函数**只能吃 brain**
  *    （哨兵第 4 条钉死了形参个数，那正是「不许顺手把答案传进来」的那道门）。
  */
+/**
+ * 预热某档的**开局排序**（`openingOrder`，每档一次 432x432 全量排序，实测约 0.25s）。
+ *
+ * 存在的唯一目的：把这笔一次性开销从**首局首猜的那一拍**挪到**菜单期**。
+ * 不预热时，玩家看到的是「开局后 1.5s 卡一下」（低端机可到 1.2s，还伴随一次 GC）。
+ *
+ * ⚠️ 它**不产生任何语义副作用** —— 只是把惰性缓存 `cache.order` 提前填上，
+ *    与「真实对局里第一次 botPick 触发它」逐字等价（同一张表、同一个函数）。
+ *    也正因如此，它**不该**被做成 `botPick` 的一个参数或变体：
+ *    那两扇门由 `scripts/check-bot-isolation.mjs` 第 4、5 条钉死（botPick 只收 brain）。
+ */
+export function warmUp(tier: BotTier, roster: Character[]): void {
+  openingOrder(tierCache(tier, roster), tier);
+}
+
 export function botPick(brain: BotBrain, rng: () => number = Math.random): Character | null {
   const pool = brain.candidates;
   if (pool.length === 0) return null;

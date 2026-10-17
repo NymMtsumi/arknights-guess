@@ -13,7 +13,7 @@ import { drawArtIndex } from '@/lib/round-art';
 import { saveBotStats } from '@/lib/stats';
 import {
   BOT_FIRST_DELAY_MS, BOT_MAX_GUESSES, BOT_POOL_DIFFICULTY, BOT_ROUND_TIME, BOT_TICK_MS,
-  botDelayMs, botLearn, botPick, createBrain, pickBotIdentity,
+  botDelayMs, botLearn, botPick, createBrain, pickBotIdentity, warmUp,
   type BotBrain, type BotTier,
 } from '@/lib/bot-engine';
 import { ATTR_LABEL_KEYS, PARTY_ATTR_KEYS as ATTR_KEYS } from '@/lib/party-constants';
@@ -103,6 +103,19 @@ interface RoundState {
   /** 人机下一次落子的时间戳（由 tick 驱动，不是 setTimeout —— 见 BOT_TICK_MS 的注释） */
   nextBotAt: number;
   startedAt: number;
+  /**
+   * 页面隐藏的起始时刻（0 = 未暂停）。
+   *
+   * 🔴 2026-10-17 加。浏览器会把后台标签页的 setInterval 节流到 >=1000ms（>5min 时 1 次/60s），
+   * 而回合计时用 Date.now() 照走 —— 结果是**玩家不在场时人机继续落子**：hard 约 49s、
+   * easy 约 70s 就能打满 8 次/猜中，3 秒后自动开下一局，整场 0:3 输掉**并已落库**
+   * （saveBotStats 不阻塞）。玩家回来看到的是结算卡或残局，观感就是「人机卡住/步时不对/
+   * 水平没变却输了」。
+   *
+   * 暂停期间 tick 直接返回（计时与人机都冻结），恢复时把 startedAt / nextBotAt
+   * 一并后移相同的时长 —— 这样「切走一小时再回来」只是白白过去一小时的墙钟时间。
+   */
+  pausedAt: number;
   ended: boolean;
 }
 
@@ -173,6 +186,8 @@ export default function BotPage() {
   const [showSurrenderConfirm, setShowSurrenderConfirm] = useState(false);
 
   const roundRef = useRef<RoundState | null>(null);
+  /** 上一次 newRound 的时刻 —— 防「结算卡点击」与「3s 定时器」同拍双触发（见 newRound） */
+  const newRoundAtRef = useRef(0);
   const matchRef = useRef<MatchState>({
     tier: 'easy', botIdentity: null, myWins: 0, botWins: 0, myTotalGuesses: 0,
     pastTargets: [], saved: false,
@@ -266,7 +281,12 @@ export default function BotPage() {
     }
     // ⚠️ 这里**保持** botDelayMs（档位的思考节奏），不要跟 newRound 那行「顺手统一」成
     //    BOT_FIRST_DELAY_MS —— 需求③只要求**第一猜**快，之后本来就该有思考感。
-    r.nextBotAt = Date.now() + botDelayMs(m.tier);
+    // 量化校正（2026-10-17）：以「上一次**期望**落子时刻」为基准推进，而不是 Date.now()。
+    // 旧写法每步都被 tick 量化（前台 <=100ms、后台 <=900ms）单边累加，观感是「越走越慢」。
+    // 用累加后，落子时刻的抖动只取决于 botDelayMs，与 tick 相位无关。
+    const delay = botDelayMs(m.tier);
+    r.nextBotAt += delay;
+    if (r.nextBotAt < Date.now()) r.nextBotAt = Date.now() + delay; // 兜底：暂停后重置/时钟异常
   }, [finishRound]);
 
   // ───────────────────────── 玩家的 tick ─────────────────────────
@@ -285,6 +305,8 @@ export default function BotPage() {
   const tick = useCallback(() => {
     const r = roundRef.current;
     if (!r || r.ended) return;
+    // 页面隐藏期间整局冻结：计时与人机都不推进（见 RoundState.pausedAt）
+    if (r.pausedAt > 0) return;
     const now = Date.now();
 
     const remainMs = BOT_ROUND_TIME - (now - r.startedAt);
@@ -302,9 +324,41 @@ export default function BotPage() {
     return () => clearInterval(id);
   }, [stage, tick]);
 
+  /**
+   * 页面隐藏 → 冻结本局；恢复 → 把两把时钟一起后移。
+   *
+   * 🔴 这是本页唯一一处「与浏览器节流正面交锋」的地方。没有它时：切走标签页后 tick 被
+   * 压到 >=1000ms（>5min 时 1 次/60s），但 startedAt/nextBotAt 仍按墙钟走 —— 玩家不在场，
+   * 人机照样落子、自动打完 3 局、整场记负并落库。加上它之后，隐藏期间的墙钟时间被
+   * 「退还」给本局，两端都不再偷跑。
+   *
+   * ⚠️ 只处理 playing 阶段：结算卡（roundEnd）不冻结是**有意的** —— 那一局已经结束，
+   * 让 3 秒倒计时在后台跑完、回来直接看到下一局，比「回来发现卡在结算卡」更符合预期。
+   */
+  useEffect(() => {
+    const onVisibility = () => {
+      const r = roundRef.current;
+      if (!r || r.ended) return;
+      if (document.hidden) {
+        if (r.pausedAt === 0) r.pausedAt = Date.now();
+      } else if (r.pausedAt > 0) {
+        const delta = Date.now() - r.pausedAt;
+        r.startedAt += delta;
+        r.nextBotAt += delta;
+        r.pausedAt = 0;
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, []);
+
   // ───────────────────────── 开局 / 开新局 ─────────────────────────
 
   const newRound = useCallback(() => {
+    // 防双触发（2026-10-17）：结算卡的 onClick 与 ROUND_END_MS 的 setTimeout **没有互斥**，
+    // 同拍命中时 newRound 会跑两次 —— 新局谜底被换、人机已落子清零，观感是「突然从头开始」。
+    if (Date.now() - newRoundAtRef.current < 500) return;
+    newRoundAtRef.current = Date.now();
     const m = matchRef.current;
     // 谜底从**全量池**里抽（BOT_POOL_DIFFICULTY = 'hard' = 全部 429 人）：
     // 人机的定标就是拿这个池子测的，池子一变那套 40/60/78.5% 立即作废。
@@ -326,6 +380,7 @@ export default function BotPage() {
       // 之后每一步回落到 botDelayMs —— 见 botMove 尾部那行，两处**故意不同**。
       nextBotAt: now + BOT_FIRST_DELAY_MS[m.tier],
       startedAt: now,
+      pausedAt: 0,
       ended: false,
     };
     setTarget(drawn);
@@ -346,6 +401,22 @@ export default function BotPage() {
     setShowSurrenderConfirm(false);
     setStage('playing');
   }, []);
+
+  /**
+   * 菜单期预热 `openingOrder`（每档一次 432x432 全量排序，实测 ~0.25s）。
+   *
+   * 不预热的话，这笔开销落在**首局首猜的那一拍**上 —— 玩家看到的是「开局后 1.5 秒卡一下」。
+   * 放到菜单期，卡顿发生在还没有对局的时候，且只在第一次进页 / 换档时付一次。
+   */
+  useEffect(() => {
+    if (stage !== 'menu') return;
+    const id = setTimeout(() => {
+      // ⚠️ 走引擎的 warmUp 而不是在这里调 botPick —— check-bot-isolation.mjs 第 5 条
+      //    要求 botPick 的实参恰好是 1 个 *.brain（那扇门是「顺手把答案传进来」）。
+      try { warmUp(tier, roster); } catch { /* 预热失败不影响对局 */ }
+    }, 50);
+    return () => clearTimeout(id);
+  }, [stage, tier]);
 
   const startMatch = useCallback(() => {
     const identity = pickBotIdentity(roster);

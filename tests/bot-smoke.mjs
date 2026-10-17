@@ -86,7 +86,7 @@ const SHORT_TIMEOUT = 1_000;
  * 把结算卡上的「答案：{{name}} · {{score}}」切成谜底名与比分。
  *
  * 🔴 分隔符必须是**带空格的** ` · `（`multi.answerWithScore` 的中英两份模板都是这样）。
- *    干员名里本身就有**裸 `·`**（全表 429 人里有 2 个：`凯尔希·思衡托`、`维娜·维多利亚`），
+ *    干员名里本身就有**裸 `·`**（全表 432 人里有 3 个：`凯尔希·思衡托`、`维娜·维多利亚`、`德·托莱多`），
  *    所以早先那句 `replace(/\s*·.*$/, "")`（空白可有可无）会把名字拦腰截断成「凯尔希」/「维娜」，
  *    于是 f3「谜底是干员表里的真名」变成一条**约每 215 局假红一次**的断言。
  *    收敛成一处，就不会有人再写回错的那版。
@@ -267,7 +267,7 @@ async function main() {
         // 人机落子前，玩家棋盘**应当不存在**（GuessTable 在零猜测时 return null）
         sawEmptyPlayerBoard = (await P.locator('table.game-table').count()) === 0;
         const firstGuessT0 = Date.now();
-        // 等第一子，或等来一个「人机第一猜就中」的结算 —— 后者概率约 1/429，但不能让它变成假红
+        // 等第一子，或等来一个「人机第一猜就中」的结算 —— 后者概率约 1/432，但不能让它变成假红
         await waitFor(async () => (await P.locator('[data-testid="bot-opp-row"]').count()) >= 1
           || (await stageOf()) !== 'playing', { desc: `第 ${round} 局人机落第一子` });
         const firstGuessMs = Date.now() - firstGuessT0;

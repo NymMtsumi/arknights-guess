@@ -190,6 +190,36 @@ export default function GamePage() {
     return () => document.removeEventListener('mousedown', handler);
   }, [enemyDropdown]);
 
+  // ── 每步耗时采样（2026-10-18）─────────────────────────────────────────
+  // 目的：用户要「用真实数据反推玩家的步速 P」。这里只记**时刻**，不记任何内容：
+  //   · `roundStartAtRef`：本局进入 playing 的那一刻（= 给玩家的思考起点）
+  //   · `guessTimesRef` ：每次落子的时刻（与 guesses 顺序一一对应）
+  // 存档时换算成 `{ id, t, r }`（t = 相对本局开始的毫秒），见 stats.ts 的 GuessLogEntry。
+  // ⚠️ 用 ref 而不是 state：它只写不读渲染，写 state 会让每猜一次多一次无意义重渲染。
+  const roundStartAtRef = useRef(0);
+  const guessTimesRef = useRef<number[]>([]);
+  const prevTimesLenRef = useRef(0);
+  const prevStatusForTimer = useRef(status);
+
+  useEffect(() => {
+    // 新一局开始（playing 且上一拍不是 playing）→ 重置计时起点与采样
+    if (status === 'playing' && prevStatusForTimer.current !== 'playing') {
+      roundStartAtRef.current = Date.now();
+      guessTimesRef.current = [];
+      prevTimesLenRef.current = 0;
+    }
+    prevStatusForTimer.current = status;
+  }, [status]);
+
+  useEffect(() => {
+    const n = guesses.length;
+    if (n > prevTimesLenRef.current && roundStartAtRef.current > 0) {
+      const now = Date.now();
+      for (let i = prevTimesLenRef.current; i < n; i++) guessTimesRef.current.push(now);
+    }
+    prevTimesLenRef.current = n;
+  }, [guesses.length]);
+
   // Save game stats (operator mode only — enemy mode is not saved)
   const prevStatus = useRef(status);
   const savedRef = useRef(false);
@@ -199,13 +229,21 @@ export default function GamePage() {
       // 因此也不进战绩聚合与排行榜。savedRef 仍要置位，避免同一次结束被重复处理。
       if (!savedRef.current && !isEnemy) {
         if (opStore.attributes === null) {
-          // 猜测序列（干员 id，按点击先后）随存档一起上报 —— 见 stats.ts saveGameToServer 的注释。
+          // 猜测序列 + 每步耗时随存档一起上报 —— 见 stats.ts saveGameToServer / GuessLogEntry 的注释。
           // ⚠️ 这里只可能是干员模式（外层已 `!isEnemy`），但 `guesses` 的静态类型是
           //    「敌方 | 干员」的联合，所以按可选字段取 id；取不到就跳过（不会误把敌人 id 存进去）。
-          const guessIds = (guesses as { character?: { id: string } }[])
+          const ids = (guesses as { character?: { id: string } }[])
             .map((g) => g.character?.id)
             .filter((id): id is string => typeof id === 'string' && id.length > 0);
-          saveGameStats(status === 'won', guesses.length, difficulty, (target as { name?: string })?.name || '', 'single', guessIds);
+          const t0 = roundStartAtRef.current;
+          const times = guessTimesRef.current;
+          const guessLog = ids.map((id, i) => {
+            // 单人模式只有一个"小局"，r 恒为 0；t 若是 0（老局/计时没起来）就记 0，服务端会钳制
+            const at = times[i] ?? 0;
+            const t = t0 > 0 && at > 0 ? Math.max(0, at - t0) : 0;
+            return { id, t, r: 0 };
+          });
+          saveGameStats(status === 'won', guesses.length, difficulty, (target as { name?: string })?.name || '', 'single', guessLog);
         }
         savedRef.current = true;
       }

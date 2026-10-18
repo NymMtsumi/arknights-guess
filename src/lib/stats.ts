@@ -336,14 +336,28 @@ function saveHistory(record: HistoryRecord) {
 }
 
 /**
+ * 一步猜测的采样记录（2026-10-18 加时间维度）。
+ *
+ * - `id`：干员 id（服务端用干员表白名单校验）
+ * - `t` ：**该步相对本小局开始**的毫秒数（不是相对上一步）——
+ *         这样既能算「玩家每步给多久」（相邻差），也能算「开局到首猜的思考时间」（t 本身）。
+ *         每小局从 0 重新开始，所以 `r` 必须一起存，否则跨小局拼不出时间轴。
+ * - `r` ：小局序号（0 起；单人/每日恒为 0，人机 BO5 是 0/1/2…）
+ *
+ * ⚠️ 为什么不用「相对上一步的间隔」：间隔在小局边界会混入「玩家休息了多久」
+ *    （局间现在是玩家手动开始，可能是几分钟），那会把节奏统计带偏。
+ */
+export interface GuessLogEntry { id: string; t: number; r: number }
+
+/**
  * @param ts 与本地历史记录共用的同一个时间戳（毫秒）。省略时自取当前时间。
  *   本地副本和本请求代表同一局，时间戳必须是同一个值 —— 各读一次时钟会让
  *   两端差出几毫秒，mergeHistories 就无法把它们认成同一条（见 dedupKey 注释）。
- * @param guessIds 本局的**猜测序列**（干员 id，按点击先后）。可省略 ——
- *   2026-10-17 起才采集，服务端 `/api/save-game` 会做白名单校验后写进 `games.guess_log`。
+ * @param guessLog 本局的**猜测序列 + 每步耗时**（见 `GuessLogEntry`）。可省略 ——
+ *   服务端 `/api/save-game` 会做白名单校验后写进 `games.guess_log`；
  *   省略时该列保持 NULL（=「这局没采到序列」，训练时要显式排除）。
  */
-export async function saveGameToServer(won: boolean, guessCount: number, difficulty: string, targetName: string, ts?: number, guessIds?: string[]): Promise<void> {
+export async function saveGameToServer(won: boolean, guessCount: number, difficulty: string, targetName: string, ts?: number, guessLog?: GuessLogEntry[]): Promise<void> {
   if (typeof window === 'undefined') return;
 
   try {
@@ -361,7 +375,7 @@ export async function saveGameToServer(won: boolean, guessCount: number, difficu
         mode: 'single',
         timestamp: new Date(ts ?? Date.now()).toISOString(),
         // 空数组也发（语义上「这局没记到序列」）；服务端会把空数组当成 NULL
-        guesses: Array.isArray(guessIds) ? guessIds : [],
+        guesses: Array.isArray(guessLog) ? guessLog : [],
       }),
     });
 
@@ -377,7 +391,7 @@ export async function saveGameToServer(won: boolean, guessCount: number, difficu
  * Concurrent writes from multiple tabs can produce a read-modify-write race on localStorage stats/history.
  * In practice this is low-risk because users rarely play in multiple tabs simultaneously.
  */
-export function saveGameStats(won: boolean, guessCount: number, difficulty: string, targetName: string, mode: 'single' | 'daily' | 'multi' = 'single', guessIds?: string[]) {
+export function saveGameStats(won: boolean, guessCount: number, difficulty: string, targetName: string, mode: 'single' | 'daily' | 'multi' = 'single', guessLog?: GuessLogEntry[]) {
   const stats = loadStats();
   stats.totalGames++;
   if (won) {
@@ -406,7 +420,7 @@ export function saveGameStats(won: boolean, guessCount: number, difficulty: stri
   // 仅登录用户同步到服务器（游客纯本地存储）
   // 每日模式单独提交，不在此处重复写入
   if (mode !== 'daily' && getToken()) {
-    saveGameToServer(won, guessCount, difficulty, targetName, now, guessIds).catch(() => {});
+    saveGameToServer(won, guessCount, difficulty, targetName, now, guessLog).catch(() => {});
   }
 }
 
@@ -555,12 +569,12 @@ export function saveTurtleStats(
  *
  * @param guessCount 本场**全部小局**玩家猜测次数之和（不是平均值）——
  *   场次恒为 bestOf，所以总量在玩家之间可比。
- * @param guessIds 本场**玩家**的猜测序列（干员 id，按时间先后跨小局拼接）。
+ * @param guessLog 本场**玩家**的猜测序列 + 每步耗时（见 GuessLogEntry）。
  *   与人机自己的猜测无关 —— 我们要采的是「人类怎么选点」，不是人机怎么选点。
  *   服务端只做白名单校验后落 `games.guess_log`，不进任何榜单。
  */
 export function saveBotStats(
-  won: boolean, guessCount: number, difficulty: string, targetName: string, guessIds?: string[],
+  won: boolean, guessCount: number, difficulty: string, targetName: string, guessLog?: GuessLogEntry[],
 ): void {
   if (typeof window === 'undefined') return;
   if (!getToken()) return;
@@ -574,7 +588,7 @@ export function saveBotStats(
       targetName,
       mode: 'bot',
       timestamp: new Date().toISOString(),
-      guesses: Array.isArray(guessIds) ? guessIds : [],
+      guesses: Array.isArray(guessLog) ? guessLog : [],
     }),
   }).catch((err) => { console.warn('[Stats] Failed to save bot game to server:', err); });
 }

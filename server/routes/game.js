@@ -31,30 +31,56 @@ function charIndex() {
   return CHAR_INDEX;
 }
 
-/** 把客户端上报的 guesses 洗成「合法干员 id 的 JSON 数组」，无可留内容时返回 null */
+/**
+ * 把客户端上报的 guesses 洗成「合法条目」的 JSON 数组，无可留内容时返回 null。
+ *
+ * 2026-10-18 起条目带时间：`{ id, t, r }`
+ *   · id：干员 id（白名单校验，不在表里的丢弃）
+ *   · t ：该步相对**本小局开始**的毫秒（0 ~ 10 分钟，越界钳制而不是丢弃 ——
+ *         丢弃会让后续步数错位，钳制只是把异常值压到边界）
+ *   · r ：小局序号（0 ~ 20，单人/每日恒 0）
+ * 仍然接受**纯字符串**条目（第一版客户端的形式）：向后兼容，避免老标签页被拒。
+ * 去重**不做**：重复猜测本身是有意义的信号（旧版 easy 有 24.7% 的局重复猜同一个人）。
+ */
 function sanitizeGuessLog(raw) {
   if (!Array.isArray(raw) || raw.length === 0) return null;
   const idx = charIndex();
   const out = [];
+  const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, Math.round(Number.isFinite(n) ? n : lo)));
   for (const x of raw.slice(0, MAX_GUESS_LOG)) {
-    if (typeof x !== 'string') continue;
-    const id = x.trim();
-    if (!id || id.length > 64) continue;
-    if (idx.ids.size > 0 && !idx.ids.has(id)) continue;
-    out.push(id);
+    if (typeof x === 'string') {
+      const id = x.trim();
+      if (!id || id.length > 64) continue;
+      if (idx.ids.size > 0 && !idx.ids.has(id)) continue;
+      out.push(id);
+      continue;
+    }
+    if (!x || typeof x !== 'object') continue;
+    const rawId = typeof x.id === 'string' ? x.id.trim() : '';
+    if (!rawId || rawId.length > 64) continue;
+    if (idx.ids.size > 0 && !idx.ids.has(rawId)) continue;
+    out.push({ id: rawId, t: clamp(x.t, 0, 600_000), r: clamp(x.r, 0, 20) });
   }
   return out.length ? JSON.stringify(out) : null;
 }
 
-/** 每日挑战的会话里存的是**名字**，落库统一转成 id（与其它模式同口径） */
-function guessLogFromNames(names) {
+/**
+ * 每日挑战的会话里存的是**名字**（+ 与服务端时钟对齐的每步时刻），落库统一转成 id。
+ * 2026-10-18 起同时带 `t`（相对会话开始）与 `r`（每日只有一局，恒 0）——
+ * 每日是**服务端权威**模式，所以这里的耗时比客户端自报更可信，是校准「玩家步速 P」的首选样本。
+ */
+function guessLogFromNames(names, times) {
   if (!Array.isArray(names) || names.length === 0) return null;
   const idx = charIndex();
   const out = [];
-  for (const n of names.slice(0, MAX_GUESS_LOG)) {
+  for (let i = 0; i < names.length && out.length < MAX_GUESS_LOG; i++) {
+    const n = names[i];
     if (typeof n !== 'string') continue;
     const id = idx.byName.get(n);
-    if (id) out.push(id);
+    if (!id) continue;
+    const rawT = Array.isArray(times) ? times[i] : 0;
+    const t = Math.max(0, Math.min(600_000, Math.round(Number.isFinite(rawT) ? rawT : 0)));
+    out.push({ id, t, r: 0 });
   }
   return out.length ? JSON.stringify(out) : null;
 }
@@ -614,6 +640,10 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
       session = {
         target: fullTarget,
         guesses: [],        // 已猜角色名列表（去重 + 计数用，形状保持不变）
+        // 与 guesses 并行的**每步时刻**（相对 startedAt 的毫秒），2026-10-18 加。
+        // 单独一个数组而不是把 guesses 改成对象数组：上面多处的 includes/push/length
+        // 与放弃分支的 guess_count 都依赖 guesses 是字符串数组。
+        guessTimes: [],
         // 与 guesses 并行：多存一份带 comparisons 的完整记录，
         // 专门给「刷新后用 /api/daily/status 重建棋盘」用。
         // 不直接把 guesses 改成对象数组 —— 上面 479/485/493 行的 includes/push/length
@@ -642,7 +672,7 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
         if (existing) return { conflict: true };
         db.prepare(
           'INSERT INTO games (player_key, user_id, won, guess_count, difficulty, target_name, timestamp, mode, daily_date, guess_log) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-        ).run(player_key, userId || null, 0, session.guesses.length, 'hard', targetName, now.toISOString(), 'daily', dailyDate, guessLogFromNames(session.guesses));
+        ).run(player_key, userId || null, 0, session.guesses.length, 'hard', targetName, now.toISOString(), 'daily', dailyDate, guessLogFromNames(session.guesses, session.guessTimes));
         return { conflict: false };
       })();
       dailySessions.delete(sessionKey);
@@ -678,6 +708,9 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
     // （否则前台猜一次就能从响应里读到「与谜底是否同画师」，等于绕过服务端权威）
     const comparisons = compareGuess(session.target, guessed, { includeArtist: false });
     session.guesses.push(guessed.name);
+    // 与服务端时钟对齐的每步时刻（相对会话开始）—— 每日是服务端权威，耗时比客户端自报可信
+    if (!Array.isArray(session.guessTimes)) session.guessTimes = [];
+    session.guessTimes.push(Date.now() - (session.startedAt || Date.now()));
     // 并行记录完整的一条（名字 + 逐属性对比），供刷新后重建棋盘
     if (!Array.isArray(session.history)) session.history = [];
     session.history.push({ name: guessed.name, comparisons });
@@ -700,7 +733,7 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
         if (existing) return { conflict: true };
         db.prepare(
           'INSERT INTO games (player_key, user_id, won, guess_count, difficulty, target_name, timestamp, mode, daily_date, guess_log) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-        ).run(player_key, userId || null, saveWon, guessCount, 'hard', targetName, now.toISOString(), 'daily', dailyDate, guessLogFromNames(session.guesses));
+        ).run(player_key, userId || null, saveWon, guessCount, 'hard', targetName, now.toISOString(), 'daily', dailyDate, guessLogFromNames(session.guesses, session.guessTimes));
         return { conflict: false };
       })();
 

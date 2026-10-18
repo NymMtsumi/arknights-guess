@@ -59,9 +59,25 @@ async function main() {
     const stored = row && row.guess_log ? JSON.parse(row.guess_log) : null;
     check('a2.每日的 guess_log 非空（服务端自己记的序列）', Array.isArray(stored) && stored.length > 0,
       `落库=${row && row.guess_log}`);
-    check('a3.序列里存的是干员 id（不是名字）', Array.isArray(stored) && stored.every((x) => typeof x === 'string' && roster.some((c) => c.id === x)),
-      `样例=${stored && stored.slice(0, 3).join(',')}`);
-    check('a4.序列长度与 guess_count 一致', row && Array.isArray(stored) && stored.length === row.guess_count,
+
+    // 2026-10-18 起每日也带时间：{ id, t, r }，t 由**服务端时钟**记录（每日是服务端权威模式）
+    const idsOk = Array.isArray(stored) && stored.every((x) => x && typeof x === 'object'
+      && typeof x.id === 'string' && roster.some((c) => c.id === x.id));
+    check('a3.条目是 {id,t,r}，且 id 是真干员（不是名字）', idsOk,
+      `样例=${JSON.stringify(stored && stored.slice(0, 2))}`);
+
+    const tOk = Array.isArray(stored) && stored.every((x) => Number.isInteger(x.t) && x.t >= 0 && x.t <= 600_000);
+    check('a4.每步都带合法的 t（0..600000 ms）', tOk,
+      `t 序列=${JSON.stringify(stored && stored.map((x) => x.t))}`);
+
+    const monotonic = Array.isArray(stored) && stored.every((x, i) => i === 0 || x.t >= stored[i - 1].t);
+    check('a5.t 单调不减（相对会话开始累加，不是间隔）', monotonic,
+      `t 序列=${JSON.stringify(stored && stored.map((x) => x.t))}`);
+
+    check('a6.每日只有一局，r 恒为 0', Array.isArray(stored) && stored.every((x) => x.r === 0),
+      `r=${JSON.stringify(stored && stored.map((x) => x.r))}`);
+
+    check('a7.序列长度与 guess_count 一致', row && Array.isArray(stored) && stored.length === row.guess_count,
       `guess_count=${row && row.guess_count} 序列长度=${stored && stored.length}`);
     return 0;
   } finally {

@@ -22,7 +22,7 @@
 //          反事实：把本页的 `hideRarity` 改回 `hideRarity={false}` → d1 立刻红。
 //   c6  人机的**第一猜**在 4s 内落子 —— 需求③「首猜不思考、像真人一样随手点一个」的探针。
 //       反事实：把 newRound 里那行 `BOT_FIRST_DELAY_MS[m.tier]` 改回 `botDelayMs(m.tier)`
-//       （现在三档都是 4.0s）→ c6 立刻红。⚠️ 只测第一局：之后的每一步本来就该走慢节奏。
+//       （easy/medium 4.0s、hard 3.5s；噩梦的首猜不走计时器）→ c6 立刻红。⚠️ 只测第一局：之后的每一步本来就该走慢节奏。
 //   e1/e2  每局揭晓的谜底**不是人机的名字**，且各局谜底互不相同 —— 对应 `newRound` 里
 //       「把人机名与本场已用过的谜底一起排除出池子」那段。抽签口径正确时这两条**恒真**
 //       （不是概率断言），只在有人删掉排除时才有机会响。
@@ -62,13 +62,19 @@ import {
 } from './helpers.mjs';
 import { loadTsModule } from './_ts-load.mjs';
 
-/** 页面上三个档位按钮的 testid 后缀 */
-const TIERS = ['easy', 'medium', 'hard'];
+/**
+ * 页面上四个档位按钮的 testid 后缀。
+ * 2026-10-18 起第 4 档 = `nightmare`（噩梦人机）；前三个仍是 easy/medium/hard。
+ */
+const TIERS = ['easy', 'medium', 'hard', 'nightmare'];
 /**
  * 用困难档跑全程。
- * ⚠️ 这里**不再**因为「哪档落子快」而选它 —— 需求③之后三档的第一猜都是 ~1.5s
+ * ⚠️ 这里**不再**因为「哪档落子快」而选它 —— 需求③之后 easy/medium/hard 的第一猜都是 ~1.5s
  *    （`BOT_FIRST_DELAY_MS`，与档位无关），选困难纯粹是沿用历史、没有速度理由。
  *    后续步骤（在第 2 步之后）仍按各档自己的 `botDelayMs` 走，冒烟只等**第一**子。
+ * 🔴 全程**不用** nightmare：它的首猜是「玩家落下第一猜后才落子」
+ *    （`BOT_FIRST_MOVE_ON_PLAYER_GUESS.nightmare = true`），会打乱 c6/c1 的等待；
+ *    a4b 只验证它能被选中，然后立刻切回 hard。
  */
 const TIER = 'hard';
 /**
@@ -206,11 +212,26 @@ async function main() {
     check('a2.点入口进入 /bot', P.url().endsWith('/bot'), P.url());
 
     await waitFor(async () => (await P.locator('[data-testid^="bot-tier-"]').count()) === TIERS.length,
-      { desc: '三档难度按钮' });
+      { desc: '四档难度按钮' });
     const defaultTier = await P.locator('[data-testid="bot-tier-easy"]').getAttribute('class');
     check('a3.开局默认低档：easy 按钮高亮',
       /(^|\s)on(\s|$)/.test(defaultTier || ''),
       `class="${defaultTier}"`);
+
+    // 2026-10-18：第 4 档「噩梦人机」上线 —— 菜单恰好 4 个按钮，顺序固定，
+    // 且第 4 个的文案必须来自 i18n 的 `bot.tierNightmare`（**从 zh-CN.json 读，不写死中文**，
+    // 否则改文案时这条会跟着一起漂，等于没验）。
+    const tierIds = await P.locator('[data-testid^="bot-tier-"]')
+      .evaluateAll((els) => els.map((e) => e.getAttribute('data-testid')));
+    const tierTexts = await P.locator('[data-testid^="bot-tier-"]')
+      .evaluateAll((els) => els.map((e) => (e.textContent || '').trim()));
+    const tierLabelKey = (t) => `bot.tier${t[0].toUpperCase()}${t.slice(1)}`;
+    const wantTierTexts = TIERS.map((t) => zh[tierLabelKey(t)]);
+    check('a3b.菜单恰好 4 个档位按钮（easy/medium/hard/nightmare，顺序固定），第 4 个文案 = bot.tierNightmare',
+      tierIds.join('|') === TIERS.map((t) => `bot-tier-${t}`).join('|')
+        && tierTexts.join('|') === wantTierTexts.join('|')
+        && tierTexts[3] === zh['bot.tierNightmare'],
+      `实际 id=[${tierIds.join(',')}] 文案=[${tierTexts.join(',')}]；期望 [${wantTierTexts.join(',')}]`);
 
     // 换挡必须真的换掉「谁被选中」—— 只换 state 不换高亮 = 玩家看着 A 打的是 B。
     // ⚠️ 这里原本还比对了「档位说明文案」那半句，需求④把那段文案整段删了，
@@ -221,6 +242,20 @@ async function main() {
     check(`a4.点「${zh[`bot.tier${TIER[0].toUpperCase()}${TIER.slice(1)}`]}」后：它高亮、easy 熄灭`,
       /(^|\s)on(\s|$)/.test(hardClass || '') && /(^|\s)off(\s|$)/.test(easyClassNow || ''),
       `hard="${hardClass}" easy="${easyClassNow}"`);
+
+    // 第 4 档按钮必须真的可选中（点它 → 它 on、hard 灭），然后**切回 hard**：
+    // 后续全程仍用 hard 跑 —— 噩梦是「玩家不落第一猜，人机就不动」，那会打乱 c6/c1 的等待。
+    // 复原后再断言一次 hard 亮着，防止「噩梦被选中后切不回去」让后面每条断言都错得莫名其妙。
+    await P.locator('[data-testid="bot-tier-nightmare"]').click({ timeout: WAIT_TIMEOUT });
+    const nmClass = await P.locator('[data-testid="bot-tier-nightmare"]').getAttribute('class');
+    const hardAfterNm = await P.locator('[data-testid="bot-tier-hard"]').getAttribute('class');
+    await P.locator(`[data-testid="bot-tier-${TIER}"]`).click({ timeout: WAIT_TIMEOUT });
+    const hardRestored = await P.locator(`[data-testid="bot-tier-${TIER}"]`).getAttribute('class');
+    check(`a4b.点「${zh['bot.tierNightmare']}」后它高亮、hard 熄灭；再点回 hard 复原（本场仍用 hard 跑）`,
+      /(^|\s)on(\s|$)/.test(nmClass || '')
+        && /(^|\s)off(\s|$)/.test(hardAfterNm || '')
+        && /(^|\s)on(\s|$)/.test(hardRestored || ''),
+      `nightmare="${nmClass}" hard(点击噩梦后)="${hardAfterNm}" hard(复原)="${hardRestored}"`);
 
     // ══════════════ b. 开局 ══════════════
     console.log('\n[b] 开局');
@@ -272,9 +307,10 @@ async function main() {
           || (await stageOf()) !== 'playing', { desc: `第 ${round} 局人机落第一子` });
         const firstGuessMs = Date.now() - firstGuessT0;
         // 🔴 需求③的行为探针：人机的**第一猜**要快（~1.5s，`BOT_FIRST_DELAY_MS`），
-        //    不是它平时的思考节奏（2026-10-17 晚起三档统一 4.0s）。
-        //    上限取 4s：正常 ~1.6s（含 stage 轮询与 tick 的 100ms 粒度），
-        //    「谁把这行改回 `botDelayMs(m.tier)`」时这档至少 4.0s → 稳稳变红。
+        //    不是它平时的思考节奏（2026-10-18 起：easy/medium 4.0s、hard 3.5s±0.6s、噩梦 5.0s）。
+        //    本场跑 hard：把 newRound 那行改回 `botDelayMs(m.tier)` 时期望 ≥3.5s，
+        //    多数运行会踩过本条的 4.0s 上限（踩线余量不大，但这是既有口径，别为了它动阈值）。
+        //    上限取 4s：正常 ~1.6s（含 stage 轮询与 tick 的 100ms 粒度）。
         //    ⚠️ 只测**第一局**（`boardChecked` 那道门）—— 之后的每一猜本来就该走慢节奏。
         check(`c6.人机第一猜在 4s 内落子（实测 ${(firstGuessMs / 1000).toFixed(1)}s；需求③：首猜不思考）`,
           firstGuessMs < 4000,
@@ -469,7 +505,7 @@ async function main() {
 
     await P.locator('[data-testid="bot-exit"]').click({ timeout: WAIT_TIMEOUT });
     await waitFor(async () => (await stageOf()) === 'menu', { desc: '退出回到开局面板' });
-    check('f5.退出后回到开局面板（三档按钮重现）',
+    check('f5.退出后回到开局面板（四档按钮重现）',
       (await P.locator('[data-testid^="bot-tier-"]').count()) === TIERS.length);
 
     // ══════════════ g. 英文不露原始键名 ══════════════
@@ -487,11 +523,11 @@ async function main() {
       rawKeys.length === 0,
       rawKeys.length ? `露出 ${rawKeys.length} 个：${[...new Set(rawKeys)].slice(0, 6).join(', ')}` : '0 个');
     // g2 原本钉的是「英文下档位说明换成了英文那份」——说明文案已按需求④删除，
-    // 改钉**留下来的那部分**：三个档位按钮必须是英文档位名，而不是键名或中文。
+    // 改钉**留下来的那部分**：四个档位按钮必须是英文档位名，而不是键名或中文。
     const enTierNames = await P.locator('[data-testid^="bot-tier-"]')
       .evaluateAll((els) => els.map((e) => (e.textContent || '').trim()));
-    const wantEnTiers = ['bot.tierEasy', 'bot.tierMedium', 'bot.tierHard'].map((k) => en[k]);
-    check('g2.英文下三个档位按钮显示英文档位名（档位名保留，说明文案已删）',
+    const wantEnTiers = TIERS.map((t) => en[tierLabelKey(t)]);
+    check('g2.英文下四个档位按钮显示英文档位名（档位名保留，说明文案已删）',
       enTierNames.join('|') === wantEnTiers.join('|'),
       `实际 [${enTierNames.join(',')}]；期望 [${wantEnTiers.join(',')}]`);
 

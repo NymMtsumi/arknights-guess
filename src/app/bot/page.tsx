@@ -12,7 +12,8 @@ import { isWin, makeGuess, pickTarget } from '@/lib/game-engine';
 import { drawArtIndex } from '@/lib/round-art';
 import { saveBotStats, type GuessLogEntry } from '@/lib/stats';
 import {
-  BOT_FIRST_DELAY_MS, BOT_MAX_GUESSES, BOT_POOL_DIFFICULTY, BOT_ROUND_TIME, BOT_TICK_MS,
+  BOT_FIRST_DELAY_MS, BOT_FIRST_MOVE_ON_PLAYER_GUESS, BOT_MAX_GUESSES, BOT_POOL_DIFFICULTY,
+  BOT_ROUND_TIME, BOT_TICK_MS,
   BOT_TIER_MAX_GUESSES,
   botDelayMs, botLearn, botPick, createBrain, pickBotIdentity, warmUp,
   type BotBrain, type BotTier,
@@ -87,7 +88,15 @@ const TIER_LABEL_KEY: Record<BotTier, string> = {
   easy: 'bot.tierEasy',
   medium: 'bot.tierMedium',
   hard: 'bot.tierHard',
+  nightmare: 'bot.tierNightmare',
 };
+
+/**
+ * 档位按钮的**展示顺序**。顺序 = 由弱到强，噩梦在最右（它是最强档）。
+ * ⚠️ 用这个数组而不是 `Object.keys(BOT_TIERS)`：后者的顺序取决于字面量书写顺序，
+ *    这里显式列出，UI 顺序不会因为引擎里调换两行而改变。
+ */
+const TIER_ORDER: readonly BotTier[] = ['easy', 'medium', 'hard', 'nightmare'];
 
 /**
  * 档位的**说明文案**（「低级人机：只看种族/阵营/性别…」）已按需求④整段删除 ——
@@ -316,8 +325,14 @@ export default function BotPage() {
     // 旧写法每步都被 tick 量化（前台 <=100ms、后台 <=900ms）单边累加，观感是「越走越慢」。
     // 用累加后，落子时刻的抖动只取决于 botDelayMs，与 tick 相位无关。
     const delay = botDelayMs(m.tier);
-    r.nextBotAt += delay;
-    if (r.nextBotAt < Date.now()) r.nextBotAt = Date.now() + delay; // 兜底：暂停后重置/时钟异常
+    // 噩梦的首猜是「玩家落子后立刻」触发的，那时 nextBotAt 还是 +Infinity —— 必须接回
+    // now + 步时，否则 `Infinity += delay` 仍是 Infinity，人机从此再也不落子。
+    if (!Number.isFinite(r.nextBotAt)) {
+      r.nextBotAt = Date.now() + delay;
+    } else {
+      r.nextBotAt += delay;
+      if (r.nextBotAt < Date.now()) r.nextBotAt = Date.now() + delay; // 兜底：暂停后重置/时钟异常
+    }
   }, [finishRound]);
 
   // ───────────────────────── 玩家的 tick ─────────────────────────
@@ -421,7 +436,14 @@ export default function BotPage() {
       botGuesses: [],
       // 需求③：**每局的第一猜要快**（像真人一样先随手点一个熟悉的，而不是长考）。
       // 之后每一步回落到 botDelayMs —— 见 botMove 尾部那行，两处**故意不同**。
-      nextBotAt: now + BOT_FIRST_DELAY_MS[m.tier],
+      // 首猜时机分两种（见 BOT_FIRST_MOVE_ON_PLAYER_GUESS）：
+      //   · 常规三档：进入 playing 后 1.5s（需求③：首猜像真人一样随手落子）；
+      //   · 噩梦：**等玩家落下本局第一猜才动** —— 用 +Infinity 表示「没有计时器会触发它」，
+      //     tick 的 `now >= nextBotAt` 因此永远不成立；玩家第一猜落下的那一刻由
+      //     handleGuess 直接调 botMove，落子后 botMove 会把 nextBotAt 接回 now+步时。
+      nextBotAt: BOT_FIRST_MOVE_ON_PLAYER_GUESS[m.tier]
+        ? Number.POSITIVE_INFINITY
+        : now + BOT_FIRST_DELAY_MS[m.tier],
       startedAt: now,
       pausedAt: 0,
       ended: false,
@@ -517,12 +539,26 @@ export default function BotPage() {
     setGuessedIds(new Set(r.myGuesses.map(g => g.character.id)));
 
     if (isWin(r.target, c)) { finishRound('me'); return; }
+
+    // 🔴 噩梦档：玩家的**第一猜**落下后，人机立刻落子（用户要求「第一步在玩家输入完第一条后立刻执行」）。
+    // 条件看的是「本局玩家第 1 猜 && 人机还没动过」，所以：
+    //   · 之后每一猜不会重复触发（botGuesses.length 已 > 0）；
+    //   · 玩家一直不猜 → 人机就一直不动（这正是「等玩家输入」的语义，也顺手防了挂机刷局）；
+    //   · 这一猜如果直接赢了，上面已经 return，人机不该再落子。
+    // botMove 内部若人机猜中会 finishRound('bot') 并置 ended，下面的用满次数分支有幂等闸兜着。
+    if (BOT_FIRST_MOVE_ON_PLAYER_GUESS[matchRef.current.tier]
+      && r.myGuesses.length === 1
+      && r.botGuesses.length === 0
+      && !r.ended) {
+      botMove(r);
+    }
+
     // 用满次数仍未猜中 → 本局平局。⚠️ 这一条**不是**「双方都用满」：
     // 玩家的 8 次就是本局的窗口（见文件头），所以玩家一出局，本局立即结算，
     // 不让玩家干等人机把剩下的次数猜完。人机那侧另有自己的 `BOT_TIER_MAX_GUESSES`，
     // 它用完只意味着「再也赢不了」，**不**结束本局。
     if (r.myGuesses.length >= BOT_MAX_GUESSES) finishRound(null);
-  }, [finishRound]);
+  }, [botMove, finishRound]);
 
   // 放弃本局 = 让出这一小局（人机得 1 分），**当场结算**，赛制继续。整场的退出在结算页。
   //
@@ -560,7 +596,7 @@ export default function BotPage() {
 
             <div className="sec-note mb-2">{t('bot.tierLabel')}</div>
             <div className="flex justify-center gap-2 mb-2 flex-wrap">
-              {(['easy', 'medium', 'hard'] as const).map(k => (
+              {TIER_ORDER.map(k => (
                 <button
                   key={k}
                   data-testid={`bot-tier-${k}`}

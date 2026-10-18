@@ -164,9 +164,10 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
     // turtle = 海龟汤（盲盒变体）。它走「只进专属榜」的口径：
     // 落库供 /api/leaderboard?mode=turtle 聚合，但不进个人战绩（见 routes/user.js 的谓词）。
     // bot = 人机对战。同样只进专属榜、不进个人战绩（用户拍板：「人机对局不计入个人总战绩」）；
-    //       difficulty 列存的是**人机档位**（easy/medium/hard = 低/中/高级人机），
-    //       所以它走下面 :127 的默认分支就够了 —— 那里已经在校验 easy|medium|hard，
-    //       正好是要的口径，不需要为它单开一个分支。
+    //       difficulty 列存的是**人机档位**（easy/medium/hard = 低/中/高级人机，
+    //       nightmare = 噩梦 —— 2026-10-18 新增的第 4 档，只有 bot 模式有）。
+    //       所以它**不能**走下面的默认分支：那里只认经典三档，nightmare 会被 400 掉。
+    //       见下方 `mode === 'bot'` 单开的分支。
     if (!['single', 'multi', 'custom', 'turtle', 'bot'].includes(mode)) {
       return jsonResponse(res, { error: 'mode 必须是 single、multi、custom、turtle 或 bot' }, 400);
     }
@@ -210,6 +211,12 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
       // 自定义房：难度仅影响题库，校验为 easy|medium|hard（同单人）
       if (!['easy', 'medium', 'hard'].includes(difficulty)) {
         return jsonResponse(res, { error: 'difficulty 必须是 easy、medium 或 hard' }, 400);
+      }
+    } else if (mode === 'bot') {
+      // 人机档位：easy/medium/hard = 低/中/高级人机；nightmare = 噩梦（2026-10-18 新增第 4 档）。
+      // ⚠️ 只有 bot 模式放行 nightmare —— 经典/每日/多人/海龟汤仍是三档，错误文案也不变。
+      if (!['easy', 'medium', 'hard', 'nightmare'].includes(difficulty)) {
+        return jsonResponse(res, { error: 'difficulty 必须是 easy、medium、hard 或 nightmare（人机档位）' }, 400);
       }
     } else if (!['easy', 'medium', 'hard'].includes(difficulty)) {
       return jsonResponse(res, { error: 'difficulty 必须是 easy、medium 或 hard' }, 400);
@@ -360,8 +367,9 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
     // `WHERE g.mode = ?`，所以不需要动 schema、不需要新表、不需要新端点。
     // 落在白名单外的 mode（daily、以及任何笔误）一律回落 single —— 保持原行为。
     // bot 同理（用户需求④：「人机对局单独建榜」）。它的难度分组白拿 ——
-    // 下面的 `difficulty` 过滤是 ['easy','medium','hard']，而 bot 的 difficulty 列
-    // 存的就是档位，三档天然各成一榜（见 bot-engine.ts 里 BotTier 的选型注释）。
+    // 下面的 `difficulty` 过滤是 ['easy','medium','hard','nightmare']，而 bot 的 difficulty 列
+    // 存的就是档位，四档天然各成一榜（见 bot-engine.ts 里 BotTier 的选型注释）。
+    // nightmare 只在 bot 模式有意义：其它模式即使传了也查不到数据（该列不会出现这个值）。
     if (!['single', 'multi', 'turtle', 'bot'].includes(mode)) mode = 'single';
 
     // 海龟汤的「平均猜测」（前端 = totalGuesses / totalGames）算的是**提问次数**，
@@ -388,7 +396,7 @@ export function registerGameRoutes({ app, db, verifyToken, checkRateLimit, getCl
     }
 
     let query, params;
-    if (difficulty && ['easy', 'medium', 'hard'].includes(difficulty)) {
+    if (difficulty && ['easy', 'medium', 'hard', 'nightmare'].includes(difficulty)) {
       query = `
         SELECT u.username, u.display_id, u.nickname,
                SUM(g.won) as wins,

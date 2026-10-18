@@ -4,8 +4,10 @@
 // 不需要浏览器、不需要 build：用 tests/_ts-load.mjs 把 .ts 直接加载进 node。
 //
 // 🔴 本文件存在的理由有两条：
-//    ① 证明「低 < 中 < 高」这条难度梯度真的落地了，且**高档真的落在 3.8 次附近**
-//       （用户 2026-10-07 下修的目标，见 b5）—— 它不是「跑一遍看看」，是拿**全部 432 个可能答案**
+//    ① 证明难度梯度真的落地了：easy < medium < hard 的**命中率严格递增**；而 nightmare
+//       的命中率封顶（100%），它比 hard 强只能靠**平均步数更少**（实测 2.65 vs 3.86）来证，
+//       见 b4。同时 hard 仍落在「约 3.8 次」这个用户 2026-10-07 下修的目标附近（见 b5）。
+//       它不是「跑一遍看看」，是拿**全部 432 个可能答案**
 //       穷举、多种子取均值，跑的是**真实调用路径**（createBrain → botPick → compareGuess
 //       → botLearn），不是另写一份仿真；
 //    ② 证明引擎里那张**两两签名缓存**没有说谎（见 g 段）—— 缓存把低档的耗时从 92s
@@ -17,9 +19,11 @@
 //    方案 A 是纯客户端玩法，人机吃到的反馈行由客户端引擎产出（`/bot` 走 `makeGuess`）。
 //    定标必须量**跑在页面上的那一个**引擎，否则量的是另一套判定。
 //    两者确有一处真漂移：`compareTags` 在「双方词条都为空」时客户端判 wrong、服务端判
-//    correct —— 但三档组合里没有 tags，够不到它。`compareYear` 两边写法不同
+//    correct —— easy/medium/hard 不含 tags，够不到它；nightmare 含 tags，但它只跑在
+//    **纯客户端**玩法里：反馈行与候选筛选都由同一个客户端 `compareGuess` 产出，逐字一致，
+//    所以这处「客户端 vs 服务端」的漂移够不到本测试。`compareYear` 两边写法不同
 //    （客户端 `=== 1`、服务端 `<= 1`），不过那是在**已判过相等之后**才走到的一步，
-//    二者等价，不是漂移 —— 高档本轮起包含 releaseYear，特意重新核实过这一点。
+//    二者等价，不是漂移 —— 高档起包含 releaseYear，特意重新核实过这一点。
 //
 // 运行：node tests/bot-engine-test.mjs
 //       SEEDS=20 node tests/bot-engine-test.mjs   # 更紧的置信区间
@@ -36,27 +40,34 @@ const SEEDS = Number(process.env.SEEDS || 6);
  * 定标目标 —— **本文件自己跑出来的实测值**（两轮原始数见下表；`SEEDS=6` 与 `SEEDS=20`
  * 之间的差：hit 最大 0.68pt、meanIdx 最大 0.023）。
  *
- * 🔴 2026-10-17 晚起难度只剩**两把旋钮**：`TIER_ATTRS`（看几列：3/4/6）+
- *    `BOT_TIER_MAX_GUESSES`（给几次：7/8/8）。步时也基本不承担难度：
- *    easy/medium 同为 4.0s，**hard 独自 3.5s**（这只是把 hard 回合胜率补到 95% 的
- *    最低代价，见 c4）；所以命中率/平均猜中次数**只随「列数 × 出手次数」变**，
- *    与步时正交（改步时不会改动下面这些数）。
+ * 🔴 2026-10-17 晚起难度只剩**两把旋钮**：`TIER_ATTRS`（看几列：3/4/6/**9**）+
+ *    `BOT_TIER_MAX_GUESSES`（给几次：7/8/8/8）。步时也基本不承担难度：
+ *    easy/medium 同为 4.0s、**hard 独自 3.5s**（把 hard 回合胜率补到 95% 的最低代价，见 c4）、
+ *    nightmare 5.0s（用户指定；零抖动、首猜由玩家触发，见 c5/c6）。
+ *    所以命中率/平均猜中次数只随「列数 × 出手次数 × 选点策略」变，与步时正交
+ *    （改步时不会改动下面这些数）。
  *    下面的目标取两轮实测的中间值，保证 `SEEDS=6` 与 `SEEDS=20` **都**落在
  *    `TOL_HIT` / `TOL_IDX` 内（不是只对着一轮凑）。
  *
  * 🔴 出手次数是**每档独立**的，所以 b 段的循环与 meanIdx 口径都按**本档的次数**算，
  *    不写死 8：
  *
- *    | 档 | 列 | 出手 | 单局步时 | SEEDS=6 hit / meanIdx | SEEDS=20 hit / meanIdx |
- *    |---|---|---|---|---|---|
- *    | easy | 3 | 7 | 4.0s | 58.6806% / 5.8140 | 59.3634% / 5.8027 |
- *    | medium | 4 | 8 | 4.0s | 89.8534% / 5.2542 | 90.0926% / 5.2316 |
- *    | hard | 6 | 8 | 3.5s | 99.9614% / 3.8561 | 99.9537% / 3.8576 |
+ *    | 档 | 列 | 出手 | 步时 | 策略 | SEEDS=6 hit / meanIdx | SEEDS=20 hit / meanIdx |
+ *    |---|---|---|---|---|---|---|
+ *    | easy | 3 | 7 | 4.0s | random2 | 58.6806% / 5.8140 | 59.3634% / 5.8027 |
+ *    | medium | 4 | 8 | 4.0s | random2 | 89.8534% / 5.2542 | 90.0926% / 5.2316 |
+ *    | hard | 6 | 8 | 3.5s | random2 | 99.9614% / 3.8561 | 99.9537% / 3.8576 |
+ *    | nightmare | 9 | 8 | 5.0s | optimal | 100.0000% / 2.6528 | 100.0000% / 2.6508 |
  *
  *    ⚠️ medium 的 meanIdx（≈5.24）只比 easy（≈5.81）低一点，**别误读成「中档没强多少」**：
  *    命中率 90% 已经把「每局要猜几次」压下来了，但没猜中的那 ~10% 按**本档 8 次**计入均值
  *    （口径见下），easy 则按 7 次计 —— 出手次数不同的两档，meanIdx 不能直接横比。
  *    （medium 的 meanIdx 也明显高于它的中位猜中步数，是同一个原因：均值被没猜中的局抬着。）
+ *
+ *    ⚠️ nightmare 的**命中率封顶**（100%，两轮都满），所以「它比 hard 强」不能靠 hit 看，
+ *    只能靠 meanIdx（2.65 vs 3.86：同样全中，步数少约 1.2 步）—— b4 就是按这个立论的。
+ *    它的列里包含棋盘上隐藏的 `rarity`，以及 hard 没有的 `tags`/`position`（共 9 列），
+ *    并且用 `optimal` 策略（永远取信息增益第一名，不随机）。
  *
  * ⚠️ `meanIdx` 的口径**含没猜中的局**（按**本档的出手次数**计），与 `/api/leaderboard` 的
  *    `总猜测数 / 总场次` 同口径 —— 这正是需求①要拿来比较的那个数。
@@ -65,10 +76,15 @@ const TARGETS = {
   easy: { hit: 59.0, meanIdx: 5.81 },
   medium: { hit: 90.0, meanIdx: 5.24 },
   hard: { hit: 99.96, meanIdx: 3.86 },
+  nightmare: { hit: 100.0, meanIdx: 2.65 },
 };
 
 /**
- * 🔴 需求本身的锚点：最高档人机的平均猜测次数 **≈ 3.8 次**（用户 2026-10-07 拍板下修）。
+ * 🔴 需求本身的锚点：**hard** 档人机的平均猜测次数 **≈ 3.8 次**（用户 2026-10-07 拍板下修）。
+ *
+ * ⚠️ 2026-10-18 起多了第 4 档 nightmare，所以这里特意写死 `hard` 而不是「最高档」：
+ *    这条锚点是当年针对「最强的三档人机」下的，nightmare 是后来另立的第 4 档
+ *    （命中 100%、平均 2.65 次），**不适用** 3.8 这个数。
  *
  * 为什么不「钉住实测值就够了」：`TARGETS.hard.meanIdx` 只是**我们自己的**测量，
  * 谁把 `TOL_IDX` 放宽（或把 TARGETS 改成任何实测值）都能让它静默通过。
@@ -166,7 +182,7 @@ async function main() {
   // 上面那张定标表是**按「每档自己的出手次数」立论**的，所以次数表本身必须先成立 ——
   // 否则 b 段量的是另一个东西（例如某档次数缺失、为 0，或干脆比玩家还能猜）。
   const tierCaps = TIERS.map(t => `${t}=${BOT_TIER_MAX_GUESSES[t]}`);
-  check('a7.三档都有独立的出手次数配置（键与档位清单一致）',
+  check('a7.四档都有独立的出手次数配置（键与档位清单一致）',
     Object.keys(BOT_TIER_MAX_GUESSES).sort().join(',') === TIERS.slice().sort().join(','),
     `引擎档位 [${TIERS.join(',')}] / 次数表 [${Object.keys(BOT_TIER_MAX_GUESSES).join(',')}]`);
 
@@ -183,7 +199,7 @@ async function main() {
     `${tierCaps.join('；')}${badCaps.length ? `；越界档 ${badCaps.join(',')}` : ''}`);
 
   // 两把旋钮必须**同向**：列多的档，出手次数不许少于列少的档。
-  // 否则会出现「hard 只给 4 次、easy 反倒 8 次」这种自相矛盾的难度配置 —— 三档的强弱
+  // 否则会出现「hard 只给 4 次、easy 反倒 8 次」这种自相矛盾的难度配置 —— 各档的强弱
   // 不再归因到同一个方向，而 b 段的绝对目标只按数字对照，单看数字看不出旋钮拧反。
   // 反事实：把 hard 改成 4（easy 仍 6，或把 easy 抬到 8）→ 本条立刻红（已实测）。
   const colCount = (t) => BOT_TIERS[t].attrs.length;
@@ -200,6 +216,18 @@ async function main() {
     inverted.length === 0,
     `${TIERS.map(t => `${t} ${colCount(t)}列×${BOT_TIER_MAX_GUESSES[t]}次`).join('；')}`
     + (inverted.length ? `；反向配置 ${inverted.join(', ')}` : ''));
+
+  // ── 第三把「旋钮」：选点策略（2026-10-18 随 nightmare 落地）──
+  // nightmare 必须是 optimal（永远取信息增益第一名，不做前 2 随机），其余档保持 random2。
+  //
+  // 🔴 为什么只能按**配置**钉、不能靠 b 段的 meanIdx：实测把 nightmare 改回 random2，
+  //    meanIdx 只从 2.65 升到 **2.69**（+0.04），TOL_IDX=0.7 直接吸收 —— b4 与
+  //    b.nightmare 都是绿的。也就是说「策略」是数字上看不见的旋钮，必须有这条结构断言
+  //    才防得住回退（这条反事实已在仓库外副本实测变红）。
+  const expectPolicy = { easy: 'random2', medium: 'random2', hard: 'random2', nightmare: 'optimal' };
+  check('a10.选点策略按档位：nightmare=optimal（永远取增益第一），easy/medium/hard=random2',
+    TIERS.every(t => BOT_TIERS[t].policy === expectPolicy[t]),
+    `${TIERS.map(t => `${t}=${BOT_TIERS[t].policy}`).join('；')}`);
 
   // ══════════════ b. 定标：每档用自己的出手次数 ══════════════
   console.log('\n[b] 难度梯度定标（全部 432 个答案穷举，走真实调用路径）');
@@ -247,28 +275,41 @@ async function main() {
   //    早先这行写的是 `TARGETS.easy.hit < TARGETS.medium.hit < TARGETS.hard.hit`，
   //    三个数都是手写的字面量 —— 量的是常量之间的关系，**永远为真**，
   //    引擎怎么改都不会红。那等于这条「梯度递增」的保证压根不存在。
-  //    改成实测值后它是可证伪的：三档一旦被拧成同一套「列数 + 出手次数」，
+  //    改成实测值后它是可证伪的：档位一旦被拧成同一套「列数 + 出手次数 + 策略」，
   //    实测值就会打平 → 红（b.easy 的绝对目标同时也会红，见下）。
   //
-  //    ⚠️ 与旧版的两处差异：
-  //    ① 三档现在跨**不同的出手次数**（easy 7 次、medium/hard 8 次）—— 比较的是
-  //       「页面实际跑出来的三档」，这正是需求要的；不再隐含「三档都在 8 次预算下」。
-  //    ② 本轮（2026-10-17 晚）唯一直接钉「三档命中率严格递增」的就是这一条 ——
-  //       c4 按新口径只钉「easy/medium 步时相同 + hard 更快且不低于 3.5s」，不管梯度；
-  //       别把它当 c4 的重复删掉。
+  //    🔴 2026-10-18 加第 4 档 nightmare 后的口径变化（这是本段最要紧的一处）：
+  //    命中率只能给 nightmare 提供「不低于 hard」这一半 —— 它 100% 封顶，不可能严格递增。
+  //    「nightmare 比 hard 强」由 **meanIdx 严格更小**来证：同命中下步数更少，
+  //    实测 2.65 vs 3.86（少约 1.2 步）。
+  //    ⚠️ 它能抓住「nightmare 被削弱」的**主要**形态：砍列 → meanIdx 升到 hard 量级
+  //    （反事实：6 列实测 3.81 → b.nightmare 的绝对目标 ±0.7 立刻红；b4 本身在 1 种子下
+  //    仍勉强绿 3.81<3.89，因为 hard 的 random2 更差）。但它**抓不住**「策略改回 random2」：
+  //    9 列下 meanIdx 只升到 2.69（容差 ±0.7 吸收）—— 策略由 a10 按配置钉住。
+  //    ⚠️ 前 3 档仍保持 hit 严格递增（easy→medium 约 31pt、medium→hard 约 10pt）；
+  //    nightmare 的 hit 只要求 >= hard（100% 封顶，没法再升）。
+  //
+  //    ⚠️ 与更早版本的两处差异：
+  //    ① 各档跨**不同的出手次数**（easy 7 次、medium/hard/nightmare 8 次）—— 比较的是
+  //       「页面实际跑出来的各档」，这正是需求要的；不再隐含「都在 8 次预算下」。
+  //    ② b4 是唯一直接钉「梯度」的断言 —— c4 只钉步时（easy/medium 相同、hard 更快、
+  //       nightmare 首猜由玩家触发），不管梯度；别把它当 c4 的重复删掉。
   //       它也是「±6pt 绝对带」之外的独立保险：若有人把 TOL_HIT 放宽（比如 ±25pt），
-  //       六条 b.* 会失去对顺序的约束，而这一行还在管着。
-  //       （当前实测间距：easy→medium 约 31pt、medium→hard 约 10pt；绝对带只在
-  //        TOL_HIT 不变时蕴含 easy<medium 的下界 19pt，medium<hard 靠这一条守着。）
-  check('b4.实测命中率严格递增 低 < 中 < 高（easy 7 次 / medium 8 次 / hard 8 次）',
-    measured.easy.hit < measured.medium.hit && measured.medium.hit < measured.hard.hit,
-    `实测 ${measured.easy.hit.toFixed(1)} / ${measured.medium.hit.toFixed(1)} / ${measured.hard.hit.toFixed(1)}%`);
+  //       八条 b.* 会失去对顺序的约束，而这一行还在管着。
+  check('b4.实测梯度：easy<medium<hard 命中率严格递增；nightmare 命中率封顶后 meanIdx 严格小于 hard',
+    measured.easy.hit < measured.medium.hit
+    && measured.medium.hit < measured.hard.hit
+    && measured.nightmare.hit >= measured.hard.hit
+    && measured.nightmare.meanIdx < measured.hard.meanIdx,
+    `hit ${measured.easy.hit.toFixed(2)} / ${measured.medium.hit.toFixed(2)} / `
+      + `${measured.hard.hit.toFixed(2)} / ${measured.nightmare.hit.toFixed(2)}%；`
+      + `meanIdx hard=${measured.hard.meanIdx.toFixed(2)} nightmare=${measured.nightmare.meanIdx.toFixed(2)}`);
 
   // 🔴 b5 是**需求本身**，不是定标表。上面那几条 b.* 断言的是「实测 ≈ 我们自己写的目标」，
   //    谁把 TARGETS.hard 改成任何实测值、或放宽 TOL_IDX，它们都照样绿。
   //    这一条钉的是用户拍板的那个数，改不动 —— 也正因如此它才是能证伪的。
   //    ⚠️ 它只在 hard 出手 8 次时成立（次数也是旋钮）；「人机次数 ≤ 玩家 8 次」由 a8 钉住。
-  check(`b5.最高档平均猜测次数 ${measured.hard.meanIdx.toFixed(2)} ≈ ${HARD_MEAN_IDX_TARGET}`
+  check(`b5.hard（当年拍板的最高档）平均猜测次数 ${measured.hard.meanIdx.toFixed(2)} ≈ ${HARD_MEAN_IDX_TARGET}`
     + `（容差 ±${HARD_MEAN_IDX_TOL}；hard 出手 ${BOT_TIER_MAX_GUESSES.hard} 次）`,
   Math.abs(measured.hard.meanIdx - HARD_MEAN_IDX_TARGET) <= HARD_MEAN_IDX_TOL,
   `实测 ${measured.hard.meanIdx.toFixed(2)} 次/局；对照 ${LEADERBOARD_TOP_NOTE}`
@@ -304,18 +345,30 @@ async function main() {
     check(`c.${tier} 延迟恒为正且落在 [${lo}, ${hi}] 内`,
       samples.every(d => d > 0 && d >= lo && d <= hi),
       `min=${Math.min(...samples)} max=${Math.max(...samples)}`);
-    // 抖动必须真的在动 —— 否则「每档节奏像节拍器」这个坑会静默复发
-    check(`c.${tier} 抖动生效（2000 次采样出现了多种取值）`, new Set(samples).size > 100);
+    // 抖动必须真的在动 —— 否则「每档节奏像节拍器」这个坑会静默复发。
+    // ⚠️ 例外：nightmare 是**有意零抖动**（用户要求精确 5.0s、不做体验让步，见
+    //    `TIER_JITTER_MS` 的注释）。这时「抖动生效」不成立，改钉「延迟恒定 = 步时」——
+    //    0 抖动本身也要被测试看见：有人把它配成 0 而本意是 600 时，这条红；
+    //    而不是像旧写法那样「抖动一消失就静默通过」。
+    if (cfg.jitterMs === 0) {
+      check(`c.${tier} 零抖动档位（有意为之）延迟恒定 = ${cfg.delayMs}ms`,
+        samples.every(d => d === cfg.delayMs),
+        `2000 次采样 distinct=${new Set(samples).size}，取值 [${[...new Set(samples)].join(', ')}]`);
+    } else {
+      check(`c.${tier} 抖动生效（2000 次采样出现了多种取值）`, new Set(samples).size > 100);
+    }
   }
 
   // 🔴 2026-10-17 晚（第二轮）：步时不再三档相等 —— easy/medium 仍是 4.0s，
   //    **hard 独自 3.5s**。原因：4.0s 统一时 hard 的回合胜率只有 93.2%，用户要求补到 95%；
   //    实测 3.5s → 95.4%，是「刚好够」的最慢值（再快只伤体验。见 `TIER_DELAY_MS` 的注释，
-  //    src/lib/bot-engine.ts）。所以这里**不再是**「三档步时相同」，三条子约束缺一不可：
+  //    src/lib/bot-engine.ts）。所以 easy/medium/hard 这三档的三条子约束缺一不可：
   //      ① easy === medium —— 这两档必须一致，步速不是它们之间的难度旋钮；
   //      ② hard <= easy   —— hard 不许比它们慢，否则 95% 回合胜率就丢了；
   //      ③ hard >= 3500   —— 体验底线，别有人顺手压到 3s 以下（那会明显「像机器」）。
-  //    难度差仍主要来自「看几列 + 给几次」；「三档命中率严格递增」由 b4 覆盖（不重复造断言）。
+  //    ⚠️ nightmare 的步时不归这条管：它是另一套要求（用户指定 5.0s、零抖动、
+  //    首猜由玩家触发），见 c5/c6 与上面那条「零抖动档位」断言。
+  //    难度差仍主要来自「看几列 + 给几次」；梯度由 b4 覆盖（不重复造断言）。
   //    反事实（仓库外副本，见交付报告）：hard=3000 → ③ 红；easy=4000/medium=3800 → ① 红。
   const delayOf = (t) => BOT_TIERS[t].delayMs;
   check(`c4.hard 独自更快 ${((delayOf('easy') - delayOf('hard')) / 1000).toFixed(1)}s`
@@ -328,14 +381,37 @@ async function main() {
 
   // 需求③：人机的**第一猜**要像真人一样立刻落子。它不参与上面那条时间预算
   //（第一猜只会更早落子），所以单独钉两条：必须存在、且必须比常规节奏快。
+  // 🔴 2026-10-18：nightmare 的首猜**不走计时器** —— 玩家落下本局第一猜后它立刻落子
+  //    （用户原话「第一步在玩家输入完第一条后立刻执行，之后遵循步时」）。所以判据按
+  //    `firstMoveOnPlayerGuess` 分叉：玩家触发档 → `BOT_FIRST_DELAY_MS` 必须是 0 的占位值
+  //    且标记为 true；计时器档 → 仍是「正数且短于常规节奏」。
   for (const tier of TIERS) {
     const first = BOT_FIRST_DELAY_MS[tier];
-    check(`c5.${tier} 首猜延迟 ${first}ms 是正数且短于常规节奏 ${BOT_TIERS[tier].delayMs}ms`,
-      Number.isFinite(first) && first > 0 && first < BOT_TIERS[tier].delayMs);
+    if (BOT_TIERS[tier].firstMoveOnPlayerGuess) {
+      check(`c5.${tier} 首猜由玩家第一猜触发（不走计时器），BOT_FIRST_DELAY_MS=${first}ms`,
+        BOT_TIERS[tier].firstMoveOnPlayerGuess === true && first === 0,
+        `firstMoveOnPlayerGuess=true；0 只是类型表占位，页面在 trigger='player-first-guess' 时不读它`);
+    } else {
+      check(`c5.${tier} 首猜延迟 ${first}ms 是正数且短于常规节奏 ${BOT_TIERS[tier].delayMs}ms`,
+        Number.isFinite(first) && first > 0 && first < BOT_TIERS[tier].delayMs);
+    }
   }
-  check('c6.三档的首猜延迟取同一个值（这条是「像不像真人」，不是难度旋钮）',
-    new Set(Object.values(BOT_FIRST_DELAY_MS)).size === 1,
-    `[${Object.values(BOT_FIRST_DELAY_MS).join(', ')}]`);
+  // c6 按「谁触发首猜」分组：走计时器的档位取同一个值 —— 这条是「像不像真人」，
+  // 不是难度旋钮；nightmare 单独归入「玩家触发」组（**唯一**一个，别把别的档误设成 true）。
+  const timerFirstTiers = TIERS.filter(t => !BOT_TIERS[t].firstMoveOnPlayerGuess);
+  const playerFirstTiers = TIERS.filter(t => BOT_TIERS[t].firstMoveOnPlayerGuess);
+  check('c6.走计时器首猜的档位（非玩家触发档）首猜延迟相同（「像不像真人」，不是难度旋钮）',
+    new Set(timerFirstTiers.map(t => BOT_FIRST_DELAY_MS[t])).size === 1,
+    `[${timerFirstTiers.map(t => `${t}=${BOT_FIRST_DELAY_MS[t]}ms`).join('；')}]`);
+  check('c6b.nightmare 是唯一「首猜由玩家触发」的档位（其余档不许被误设）',
+    playerFirstTiers.join(',') === 'nightmare',
+    `玩家触发档 [${playerFirstTiers.join(', ') || '无'}]；计时器档 [${timerFirstTiers.join(', ')}]`);
+
+  // 🔴 c7：噩梦的步时是**用户指定的 5.0s**，不是随便一个"恒定值"。
+  //    没有这条时，把 5000 改成 6000 之类的改动会让 c 段全绿（它的「零抖动恒定」是自指的：
+  //    恒定等于 BOT_TIERS.nightmare.delayMs 本身），时间预算 40.8s→48.8s 也仍在 90s 内。
+  check('c7.nightmare 步时 = 5000ms（用户指定值；改它必须是有意决策）',
+    delayOf('nightmare') === 5_000, `实际 ${delayOf('nightmare')}ms`);
 
   // ══════════════ d. 人机 ID ══════════════
   console.log('\n[d] 人机 ID 抽取');
@@ -446,10 +522,16 @@ async function main() {
         const ranked = pool.length <= 3
           ? null
           : (n === 1 ? freshOpening[tier] : freshRank(pool, attrs));
+        // 🔴 optimal 档（nightmare）**永远返回 ranked[0]**，不做前 2 随机（见 botPick）；
+        //    所以「rng=0.9 → 第 2 名」这条常规假设对它不成立：两次调用都应命中第 1 名。
+        //    终局 ≤3 人时它仍按 rng 取下标（那条路径与 random2 共用）。
+        const optimal = BOT_TIERS[tier].policy === 'optimal';
         const want1 = ranked ? ranked[0] : pool[Math.floor(0.1 * pool.length)];
-        const want2 = ranked ? (ranked[1] ?? ranked[0]) : pool[Math.floor(0.9 * pool.length)];
-        // rng 是确定的：0.1 → 第 1 名，0.9 → 第 2 名；终局点名时就是上面那两个下标
-        // （见 botPick 的实现）。
+        const want2 = ranked
+          ? (optimal ? ranked[0] : (ranked[1] ?? ranked[0]))
+          : pool[Math.floor(0.9 * pool.length)];
+        // rng 是确定的：0.1 → 第 1 名，0.9 → 第 2 名（optimal 档例外，见上）；
+        // 终局点名时就是上面那两个下标（见 botPick 的实现）。
         const got1st = botPick(brain, () => 0.1);
         const got2nd = botPick(brain, () => 0.9);
         if (got1st?.id === want1.id && got2nd?.id === want2.id) same++;

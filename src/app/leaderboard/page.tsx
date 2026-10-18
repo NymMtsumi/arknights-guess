@@ -35,18 +35,21 @@ const DIFFICULTIES = [
 ] as const;
 
 /**
- * 人机榜的三档筛选条。
+ * 人机榜的**四档**筛选条：经典三档 + 噩梦（2026-10-18 新增第 4 档）。
  *
- * 键**故意与 DIFFICULTIES 相同**（easy/medium/hard）—— 服务端 `difficulty` 列存的就是
- * 这三个值，查询口径不变。变的只是**标签**：这三档在经典模式里是「题库难度」，
+ * 键**故意与 DIFFICULTIES 相同的那三档**（easy/medium/hard）—— 服务端 `difficulty` 列存的就是
+ * 这几个值，查询口径不变。变的只是**标签**：这三档在经典模式里是「题库难度」，
  * 在人机模式里却是「人机档位」（同一个 `hard`，在 /bot 页上写的是「高级人机」）。
  * 复用同一批 key 会让榜上写着「困难」而人机页上写着「高级人机」—— 同一个值两套说法。
+ * ⚠️ `nightmare` **只属于人机档位**（不是全局 Difficulty，见 bot-engine.ts 的 BotTier），
+ *    所以它只出现在这条筛选条里，不要加进上面的 DIFFICULTIES。
  */
 const BOT_DIFFICULTIES = [
   { key: '', labelKey: 'leaderboard.difficultyAll' },
   { key: 'easy', labelKey: 'leaderboard.botTierEasy' },
   { key: 'medium', labelKey: 'leaderboard.botTierMedium' },
   { key: 'hard', labelKey: 'leaderboard.botTierHard' },
+  { key: 'nightmare', labelKey: 'leaderboard.botTierNightmare' },
 ] as const;
 
 const MODES = [

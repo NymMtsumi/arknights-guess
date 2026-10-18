@@ -13,12 +13,15 @@
 //      来的数字对不上。
 //   e/f. 这是用户**拍板**的一条规则：「人机对局不计入个人总战绩」，成绩只进专属榜。
 //      它没有任何前端表现 —— 统计页数字偏大是唯一症状，而那个数字平时没人对账。
-//   g. bot 的 difficulty 列存的是**人机档位**（easy/medium/hard），若它流进个人历史，
-//      会被套上「简单/困难」徽标冒充经典对局，而且它的 guess_count 是整场 BO5 的**累计**
-//      次数，与经典单人的「一局几次」不同量纲，混进同一列会让那列失去可比性。
+//   g. bot 的 difficulty 列存的是**人机档位**（easy/medium/hard/nightmare，2026-10-18 加第 4 档），
+//      若它流进个人历史，会被套上「简单/困难」徽标冒充经典对局，而且它的 guess_count 是整场
+//      BO5 的**累计**次数，与经典单人的「一局几次」不同量纲，混进同一列会让那列失去可比性。
 //   h. bot 与 single/turtle 有**两处故意的不对称**（不校验 targetName、允许 guessCount=0）。
 //      它们看着像漏改，其实每一条都有理由（见 server/routes/game.js:171 的注释）。
 //      这里把它们钉住：将来「顺手统一」会红，而红的时候能顺着本文件的注释读回原因。
+//   i. `nightmare` **只属于人机档位**（`BotTier = Difficulty | 'nightmare'`，见 bot-engine.ts）。
+//      经典/每日/多人/海龟汤仍只有三档：`mode='single' + difficulty='nightmare'` 必须 400，
+//      否则「噩梦」会被当成经典难度混进单人榜（它根本没有对应题库）。
 //
 // 已接入 scripts/smoke-all.sh（构建前那一组，第 6 步）。单独跑：
 //   NODE_OPTIONS="--require ./tests/_dns-preload.cjs" node tests/bot-leaderboard-test.mjs
@@ -27,10 +30,12 @@
 // 全部断言都做过**反事实对照**（改坏一处 → 恰好它自己变红），记录在案：
 //   cf1 两条 `NOT IN` 谓词漏掉 bot → e1/e2/e3 红（e4 仍绿 —— 它只钉 byMode 的键集合）
 //   cf2 byMode 初始化里塞一个 `bot: 0` → 仅 e4 红
-//   cf3 排行榜白名单去掉 bot → c1 红（明细指出 totalGuesses=2 = 经典那局）+ d1/d2/d3 红
+//   cf3 排行榜白名单去掉 bot → c1 红（明细指出 totalGuesses=2 = 经典那局）+ d1–d5 红
 //   cf4 targetName 守卫并进 bot → 仅 b2 红（400 目标干员不存在）
 //   cf5 「赢不可能 0 猜」守卫并进 bot → 仅 b3 红（400 获胜时 guessCount 至少为 1）
-//   cf6 /api/history 的排除列表去掉 bot → 仅 f1 红（count=4 modes=[single,bot,bot,bot]）
+//   cf6 /api/history 的排除列表去掉 bot → 仅 f1 红（count=5 modes=[single,bot,bot,bot,bot]）
+//   cf7 难度白名单漏掉 nightmare（只留三档）→ d4/d5 红（nightmare 筛选回落成全部 4 局）
+//   cf8 single 的难度守卫放行 nightmare → b6 红（本应 400 却 200）
 
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -91,11 +96,13 @@ async function main() {
     if (!jwt) return 1;
 
     // ══════════════ b. 提交人机对局 ══════════════
-    console.log('\n[b] 提交人机对局（三档各一局）+ 经典单人一局作对照');
-    // 三局的 guessCount 刻意给成 12 / 9 / 0 三个互不相同的值，且分属三档，
+    console.log('\n[b] 提交人机对局（四档各一局）+ 经典单人一局作对照');
+    // 四局的 guessCount 刻意给成 12 / 9 / 0 / 15 四个互不相同的值，且分属四档，
     // 这样 d 段能用难度筛选把「档位分组」与「计数器口径」分别断言出来。
     // guessCount 对 bot 的含义是**整场 BO5 的累计次数**（前端 saveBotStats 传的就是
-    // myTotalGuesses），不是某一小局的次数 —— 所以 12 这个量级是正常的。
+    // myTotalGuesses），不是某一小局的次数 —— 所以 12 / 15 这个量级是正常的。
+    // ⚠️ 第 4 档 nightmare 是 2026-10-18 新增的：服务端为它单开了一个 `mode === 'bot'`
+    //    难度分支（game.js），其它模式仍只认三档 —— b6 钉住这条边界。
     const saveHard = await api('/api/save-game', {
       method: 'POST', token: jwt, ip: nextIp(),
       body: {
@@ -139,7 +146,21 @@ async function main() {
     check('b3.获胜且 guessCount=0 被接受 —— bot 故意不并进「赢不可能 0 猜」那条守卫',
       saveZero.status === 200, `status=${saveZero.status} body=${JSON.stringify(saveZero.data)}`);
 
-    // b4. 反证对照。上面三条若把 bot 误当成 single 也全是 200，所以必须有一局真的
+    // b4. 第 4 档。**服务端必须放行** `mode='bot' + difficulty='nightmare'`：
+    //     这是 2026-10-18 新增档位，若仍走「easy|medium|hard」那三条默认分支会被 400，
+    //     前端就再也存不了噩梦战绩。同时它也是 d4/d5「四档各成一榜」的数据来源。
+    const saveNightmare = await api('/api/save-game', {
+      method: 'POST', token: jwt, ip: nextIp(),
+      body: {
+        won: true, guessCount: 15, difficulty: 'nightmare',
+        targetName: hardAnswer, mode: 'bot',
+        timestamp: new Date().toISOString(),
+      },
+    });
+    check('b4.mode=bot + difficulty=nightmare 被接受（第 4 档没有掉进三档守卫）',
+      saveNightmare.status === 200, `status=${saveNightmare.status} body=${JSON.stringify(saveNightmare.data)}`);
+
+    // b5. 反证对照。上面四条若把 bot 误当成 single 也全是 200，所以必须有一局真的
     //     single 进同一个库，才能证明 d 段「bot 没被回落成 single」不是空断言。
     const saveSingle = await api('/api/save-game', {
       method: 'POST', token: jwt, ip: nextIp(),
@@ -149,19 +170,34 @@ async function main() {
         timestamp: new Date().toISOString(),
       },
     });
-    check('b4.对照组：mode=single 一局也入库（totalGuesses=2，与 bot 的 12/9/0 必然不同）',
+    check('b5.对照组：mode=single 一局也入库（totalGuesses=2，与 bot 的 12/9/0/15 必然不同）',
       saveSingle.status === 200, `status=${saveSingle.status}`);
+
+    // b6. nightmare 只属于**人机档位**（BotTier = Difficulty | 'nightmare'）。
+    //     经典单人必须保持三档：`mode='single' + difficulty='nightmare'` 要 400。
+    //     放行的后果是「噩梦」顶着一张经典难度徽标混进单人榜/统计，而它根本没有题库。
+    const badSingleNightmare = await api('/api/save-game', {
+      method: 'POST', token: jwt, ip: nextIp(),
+      body: {
+        won: false, guessCount: 3, difficulty: 'nightmare',
+        targetName: singleAnswer, mode: 'single',
+        timestamp: new Date().toISOString(),
+      },
+    });
+    check('b6.mode=single + difficulty=nightmare 被 400 拒绝（噩梦只属于人机档位）',
+      badSingleNightmare.status === 400,
+      `status=${badSingleNightmare.status} body=${JSON.stringify(badSingleNightmare.data)}`);
 
     // ══════════════ c. 白名单与回落 ══════════════
     console.log('\n[c] 排行榜白名单：bot 自成一张榜，且不回落成 single');
     // ⚠️ 必须连 totalGuesses 一起断言。只断言 totalGames/wins 是**不够的**：
     //    mode=bot 若被白名单漏掉而静默回落成 single，这个 tab 会显示经典那一局，
     //    而 totalGames=1 / wins=1 照样能对上 —— 断言全绿、榜却是错的。
-    //    totalGuesses（bot 合计 21 vs 经典 2）才是能把两张榜区分开的字段。
+    //    totalGuesses（bot 合计 12+9+0+15=36 vs 经典 2）才是能把两张榜区分开的字段。
     const lbBot = await api('/api/leaderboard?mode=bot&limit=50', { ip: nextIp() });
     const bRow = (lbBot.data?.leaderboard || [])[0];
-    check('c1.?mode=bot 命中的是那三局人机（totalGames=3, wins=2, totalGuesses=12+9+0=21）',
-      lbBot.status === 200 && !!bRow && bRow.totalGames === 3 && bRow.wins === 2 && bRow.totalGuesses === 21,
+    check('c1.?mode=bot 命中的是那四局人机（totalGames=4, wins=3, totalGuesses=12+9+0+15=36）',
+      lbBot.status === 200 && !!bRow && bRow.totalGames === 4 && bRow.wins === 3 && bRow.totalGuesses === 36,
       `status=${lbBot.status} totalGames=${bRow?.totalGames} wins=${bRow?.wins} totalGuesses=${bRow?.totalGuesses}`);
     // ⚠️ detail 是**恒打印**的（check 成功也打），所以只放中性测量值，别写「（若…说明…）」
     //    这种诊断口吻 —— 绿的时候它看着像一条报错，会让人以为刚出了事。
@@ -174,17 +210,20 @@ async function main() {
       `status=${lbSingle.status} row=${JSON.stringify(sRow)}`);
 
     // ══════════════ d. 难度筛选 = 人机档位筛选 ══════════════
-    // bot 的 `difficulty` 列存的就是**档位**（BotTier = Difficulty，见 bot-engine.ts 的选型
-    // 注释），而服务端的难度过滤是 `['easy','medium','hard']` —— 于是「三档各一张小榜」
-    // 是白拿的。这一段把「白拿」这件事验证成事实：三档各自的局数与次数**各不相同**，
-    // 若过滤没生效（忽略参数），三档会返回同一批数据（都是 3 局 21 次）。
-    console.log('\n[d] 三档各自成榜（难度筛选真的在过滤）');
+    // bot 的 `difficulty` 列存的就是**档位**（BotTier = Difficulty | 'nightmare'，见
+    // bot-engine.ts 的选型注释），而服务端的难度过滤是
+    // `['easy','medium','hard','nightmare']` —— 于是「四档各一张小榜」是白拿的。
+    // 这一段把「白拿」验证成事实：四档各自的局数与次数**各不相同**；若过滤没生效
+    // （忽略参数 / 白名单漏掉 nightmare），该档会返回同一批数据（4 局 36 次）。
+    console.log('\n[d] 四档各自成榜（难度筛选真的在过滤）');
     const lbEasy = await api('/api/leaderboard?mode=bot&difficulty=easy&limit=50', { ip: nextIp() });
     const lbMedium = await api('/api/leaderboard?mode=bot&difficulty=medium&limit=50', { ip: nextIp() });
     const lbHard = await api('/api/leaderboard?mode=bot&difficulty=hard&limit=50', { ip: nextIp() });
+    const lbNightmare = await api('/api/leaderboard?mode=bot&difficulty=nightmare&limit=50', { ip: nextIp() });
     const eRow = (lbEasy.data?.leaderboard || [])[0];
     const mRow = (lbMedium.data?.leaderboard || [])[0];
     const hRow = (lbHard.data?.leaderboard || [])[0];
+    const nRow = (lbNightmare.data?.leaderboard || [])[0];
     check('d1.easy 档 = 那一局 1:0 负（totalGuesses=9）',
       !!eRow && eRow.totalGames === 1 && eRow.totalGuesses === 9 && eRow.wins === 0,
       `row=${JSON.stringify(eRow)}`);
@@ -195,6 +234,22 @@ async function main() {
     check('d3.hard 档 = 那一局 12 次猜测取胜',
       !!hRow && hRow.totalGames === 1 && hRow.totalGuesses === 12 && hRow.wins === 1,
       `row=${JSON.stringify(hRow)}`);
+    check('d4.nightmare 档 = 那一局 15 次猜测取胜（第 4 档单独成榜，没串到前三档）',
+      !!nRow && nRow.totalGames === 1 && nRow.totalGuesses === 15 && nRow.wins === 1,
+      `totalGames=${nRow?.totalGames} wins=${nRow?.wins} totalGuesses=${nRow?.totalGuesses}`);
+
+    // d5. 四档交叉对照：每个难度筛选**只命中自己那一局**，且四档数值两两不同。
+    //     这条同时拦住两种静默错法：①nightmare 没进服务端难度白名单 → 查询忽略筛选，
+    //     该档返回全部 4 局 36 次（totalGames≠1）；②两档串榜 → 两档的数值相等。
+    const tierBoard = { easy: eRow, medium: mRow, hard: hRow, nightmare: nRow };
+    const wantBoard = { easy: 9, medium: 0, hard: 12, nightmare: 15 };
+    const boardOk = Object.entries(wantBoard).every(([tier, guessSum]) => {
+      const row = tierBoard[tier];
+      return !!row && row.totalGames === 1 && row.totalGuesses === guessSum;
+    }) && new Set(Object.values(tierBoard).map((r) => r?.totalGuesses)).size === 4;
+    check('d5.四档互不串联：每档筛选只命中自己那一局（(totalGames,totalGuesses) = (1,9)/(1,0)/(1,12)/(1,15)）',
+      boardOk,
+      Object.entries(tierBoard).map(([tier, r]) => `${tier}=(${r?.totalGames},${r?.totalGuesses})`).join(' '));
 
     // ══════════════ e. 不进个人战绩聚合（用户拍板）══════════════
     console.log('\n[e] /api/me：人机不进战绩聚合');
@@ -202,7 +257,7 @@ async function main() {
     const st = me.data?.stats || {};
     const byMode = st.byMode || {};
     const detailSum = Object.values(byMode).reduce((a, b) => a + b, 0);
-    check('e1.totalGames=1（只有经典那局；三局人机没被算进去）',
+    check('e1.totalGames=1（只有经典那局；四局人机没被算进去）',
       st.totalGames === 1,
       `totalGames=${st.totalGames} wins=${st.wins} bestScore=${st.bestScore}`);
     check('e2.bestScore=2（经典那局的 2 次；若 bot 的 0 次混进来 MIN 会变 0）',
@@ -240,12 +295,12 @@ async function main() {
     check('g1.游客提交被接受（与经典单人一致：游客能玩）',
       guest.status === 200, `status=${guest.status}`);
     // 排行榜是 INNER JOIN users，游客行 user_id 为 NULL → 不出现。
-    // 这一条同时反向证明了 c1 的「3 局」不是巧合。
+    // 这一条同时反向证明了 c1 的「4 局」不是巧合。
     await sleep(200);
     const lbAfter = await api('/api/leaderboard?mode=bot&limit=50', { ip: nextIp() });
     const afterRows = lbAfter.data?.leaderboard || [];
     check('g2.游客那局不上榜（INNER JOIN users 挡住了 user_id=NULL）',
-      afterRows.length === 1 && afterRows[0].totalGames === 3,
+      afterRows.length === 1 && afterRows[0].totalGames === 4,
       `榜上 ${afterRows.length} 人，totalGames=${afterRows[0]?.totalGames}`);
   } finally {
     await killBackend(backend);

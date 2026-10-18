@@ -128,12 +128,13 @@ async function main() {
     await page.locator('[role="tab"]', { hasText: '人机对战' }).click();
     await page.locator('.leaderboard-difficulty-bar').waitFor({ state: 'visible', timeout: WAIT_TIMEOUT });
     const tierBtns = page.locator('.leaderboard-difficulty-bar button');
-    await waitFor(async () => (await tierBtns.count()) === 4, { desc: '人机榜 4 档筛选' });
+    // 2026-10-18：人机档位从 3 档变 4 档（新增噩梦），筛选条 = 全部 + 4 档 = 5 个按钮
+    await waitFor(async () => (await tierBtns.count()) === 5, { desc: '人机榜 5 档筛选（全部 + 四档）' });
     const tierTexts = (await tierBtns.allTextContents()).map((s) => s.trim());
     // ⚠️ detail 恒打印（成功也打），只放中性测量值。「掉回 DIFFICULTIES」的判别式是
     //    文案里没有「人机」二字 —— 那是失败形态，写在 detail 里会让绿的行看着像报错。
-    check('s3.人机榜筛选条是人机档位文案（切模式重置回「全部」）',
-      tierTexts.join('/') === '全部/简单人机/普通人机/困难人机',
+    check('s3.人机榜筛选条是人机档位文案（全部 + 四档，切模式重置回「全部」）',
+      tierTexts.join('/') === '全部/简单人机/普通人机/困难人机/噩梦人机',
       `实际=${tierTexts.join('/')}`);
     await page.locator('.leaderboard-empty').waitFor({ state: 'visible', timeout: WAIT_TIMEOUT });
     const botErr = await page.locator('text=加载失败').count();

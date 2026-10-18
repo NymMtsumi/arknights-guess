@@ -44,16 +44,20 @@ import { compareGuess } from './game-engine';
  * | 低 | race + faction + gender（3 列） | 7 | 59.4% | 5.80 |
  * | 中 | + class（4 列，**不含 subclass**） | 8 | 90.1% | 5.23 |
  * | 高 | + subclass + releaseYear（6 列） | 8 | 100.0% | 3.86 |
+ * | **噩梦** | **全部 9 列（含隐藏的 rarity）** | 8 | **100.0%** | **2.65** |
  *
  * ⚠️ 中档从 5 列砍到 4 列是**故意的**：5 列 + 8 次 = 96.5%，命中率太高，
  *    配 4.0s 步时打出来的是「above hard」而不是中档。
- *    嵌套关系 easy ⊂ medium ⊂ hard 仍然成立，三档的强弱仍可归因到同一个方向。
+ *    嵌套关系 easy ⊂ medium ⊂ hard ⊂ nightmare 仍然成立
+ *    （噩梦是超集 + 最优策略，所以「更强」是结构性的，不靠调参）。
  *
  * ⚠️ 「平均猜中次数」的口径**含没猜中的那些局**（它们按**本档的出手次数**计）—— 所以低档的
  *    5.80 不是「猜中时平均要 5.8 次」，而是「把所有局摊平」。这与排行榜上
  *    那个（`总猜测数 / 总场次`，见 `leaderboard/page.tsx`）**是同一个口径**，
  *    也正是需求①要拿来比较的数。
- *    ⚠️ 因此**跨档的 meanIdx 不能直接比**：easy 没猜中按 7 次计、medium/hard 按 8 次计。
+ *    ⚠️ 因此**跨档的 meanIdx 不能直接比**：easy 没猜中按 7 次计、其余按 8 次计。
+ *    噩梦与 hard 同为 100% 命中、同按 8 次计，所以 **2.65 vs 3.86 是可比的** ——
+ *    这正是「噩梦比困难强」的量化证据。
  *
  * 🔴 **高档的目标是「平均约 3.8 次」**，2026-10-07 由用户拍板下修 —— 上一版**超调**了：
  *    它注意到全部 8 列、实测 2.98 次，比原定目标还强出一大截，人机其实是碾压级的。
@@ -91,8 +95,24 @@ import { compareGuess } from './game-engine';
  *
  * ⚠️ 别把这里的 difficulty 读成「题库难度」：人机模式的题库**恒定是全量**
  *    （见 BOT_POOL_DIFFICULTY），这个字段纯粹是**人机强度**。
+ *
+ * ## 🔴 2026-10-18：新增第 4 档「噩梦人机」`nightmare`
+ *
+ * 用户要求「在困难之上添加、不覆盖」，且明确**不考虑玩家体验**：
+ *   · 用**全部 9 条词条**（含棋盘上隐藏的星级 —— 这正是「不考虑体验」的那一条，
+ *     它看得见玩家看不见的信号）；
+ *   · **完全最优策略**：永远取信息增益最大的那个（不做 hard 那种「前 2 名随机」），
+ *     终局候选 ≤3 时直接点名；
+ *   · 步时 **5.0s、零抖动**（确定性）；**首猜不由计时器触发**，而是「玩家落下第一猜后立刻落子」；
+ *   · 8 次出手（与玩家同额 —— 测试钉住「人机不许比玩家猜得多」）。
+ *
+ * ⚠️ 为什么 `BotTier` 是 `Difficulty | 'nightmare'` 而不是把 `nightmare` 塞进 `Difficulty`：
+ *    `Difficulty` 是**题库难度**的全局类型，被单人/多人/每日/排行榜的池子与文案消费；
+ *    往里加一档会逼所有 `switch (difficulty)` 去处理一个它们根本不认识的档位。
+ *    这里只在**人机**这一条线上扩展，代价是服务端存 `games.difficulty='nightmare'` 时要
+ *    在 bot 分支单独放行（见 `server/routes/game.js` 的难度校验）。
  */
-export type BotTier = Difficulty;
+export type BotTier = Difficulty | 'nightmare';
 
 /** 标准房的棋盘列数 —— 人机只在这 9 条里「注意到」几条（不含自建房的画师） */
 type AttrKey = Exclude<keyof GuessComparisons, 'artist'>;
@@ -101,15 +121,19 @@ type AttrKey = Exclude<keyof GuessComparisons, 'artist'>;
  * 每档「注意到」的词条。**改这里就是改难度**，改完必须重跑定标测试
  * （`tests/bot-engine-test.mjs` 会在准确率偏离目标 ±6pt 时直接失败）。
  *
- * 三个集合**严格嵌套**（低 ⊂ 中 ⊂ 高）：「高档会的东西是低档的超集」。
- * 这样三档的强弱关系可归因到一个方向（注意到几列），而不是「低档擅长 A、高档擅长 B」
+ * 四个集合**严格嵌套**（低 ⊂ 中 ⊂ 高 ⊂ 噩梦）：「高档会的东西是低档的超集」。
+ * 这样各档的强弱关系可归因到一个方向（注意到几列），而不是「低档擅长 A、高档擅长 B」
  * 那种互相不可比的口径 —— 后者在调参时无法预测改动的效果。
  *
- * ⚠️ **不含 rarity**：人机页的棋盘已把星级列删掉（用户需求②），
- *    人机内部也不许读它 —— 「玩家看不见的信号，人机也不许用」。
+ * ⚠️ **easy/medium/hard 一律不含 rarity**：人机页的棋盘已把星级列删掉（用户需求②），
+ *    这三档内部也不许读它 —— 「玩家看不见的信号，人机也不许用」。
  *    星级是单条最强的信号：实测把它加回现高档（6 列 → 7 列）能从 3.86 掉到 3.35 次。
  *    所以这里删掉它同时也是**难度下修**，不是因为它在棋盘上没地方放。
  *    （标准房的棋盘本来也没有星级列 —— 它是榜上可见、棋盘上不可见的那种信号。）
+ *
+ * 🔴 **噩梦是唯一的例外，而且是故意的**：用户明确要求它「不考虑玩家体验 + 使用全部词条」，
+ *    所以它包含 rarity（玩家看不见）、tags、position。别照着上面那条不变量去"修"它 ——
+ *    那条不放宽「玩家看不见的信号」，而噩梦的定位就是「不跟玩家讲公平」。
  */
 const TIER_ATTRS: Record<BotTier, readonly AttrKey[]> = {
   easy: ['race', 'faction', 'gender'],
@@ -120,6 +144,12 @@ const TIER_ATTRS: Record<BotTier, readonly AttrKey[]> = {
   //   嵌套关系仍是**严格**的：easy ⊂ medium ⊂ hard 不变。
   medium: ['race', 'faction', 'gender', 'class'],
   hard: ['class', 'subclass', 'race', 'faction', 'gender', 'releaseYear'],
+  // 🔴 噩梦：**全部 9 条**。这里故意包含 `rarity` —— 它不在 /bot 棋盘上
+  //    （棋盘删掉了星级列），也就是说噩梦人机看得见玩家看不见的信号。
+  //    这正是用户「不考虑玩家体验」那条要求的落地方式。别再照着
+  //    「玩家看不见的信号人机也不许用」去"修"它 —— 那条不变量的适用范围是 easy/medium/hard。
+  //    也不含 `artist`：标准房棋盘根本没有画师列，猜的东西不在表里没有意义。
+  nightmare: ['class', 'subclass', 'faction', 'rarity', 'race', 'gender', 'releaseYear', 'tags', 'position'],
 };
 
 /**
@@ -152,6 +182,9 @@ export const BOT_TIER_MAX_GUESSES: Record<BotTier, number> = {
   easy: 7,
   medium: 8,
   hard: 8,
+  // 噩梦与玩家同额（8 次）。不给更多：多给也提不上去（它 ~3 步就解完），
+  // 而「人机不许比玩家猜得多」是一条被测试钉住的口径（bot-engine-test 的 a8）。
+  nightmare: 8,
 };
 
 /**
@@ -215,6 +248,9 @@ const TIER_DELAY_MS: Record<BotTier, number> = {
   //    `tests/bot-engine-test.mjs` 的 c4 已改成「easy=medium，且 hard 不比它们慢、
   //    也不低于 3.5s 的体验底线」——这条边界别放宽。
   hard: 3_500,
+  // 🔴 噩梦：用户指定 **步时 5.0s**，且「不做玩家体验让步」——所以零抖动、精确 5s。
+  //    ⚠️ 首猜**不走这个值**：噩梦的首猜由「玩家落下第一猜」触发（见 BOT_FIRST_MOVE_ON_PLAYER_GUESS）。
+  nightmare: 5_000,
 };
 
 /**
@@ -237,6 +273,8 @@ const TIER_JITTER_MS: Record<BotTier, number> = {
   // 仍保留「不规律」的观感，但不再让人误以为节奏在漂。改这里不影响准确率（只影响耗时）。
   medium: 600,
   hard: 600,
+  // 噩梦零抖动：用户要求「步时 5s」且明确不考虑体验 —— 精确 5s 比「像人」更重要。
+  nightmare: 0,
 };
 
 /**
@@ -257,6 +295,41 @@ export const BOT_FIRST_DELAY_MS: Record<BotTier, number> = {
   easy: 1_500,
   medium: 1_500,
   hard: 1_500,
+  // 噩梦**不用这个值**：它的首猜由「玩家落下第一猜」触发（见 BOT_FIRST_MOVE_ON_PLAYER_GUESS）。
+  // 这里填 0 是为了让类型表完整；页面在 trigger==='player-first-guess' 时不会读它。
+  nightmare: 0,
+};
+
+/**
+ * 哪些档位的**首猜不用计时器**，而是「玩家落下本局第一猜后立刻落子」。
+ *
+ * 用户对噩梦的要求原话：「第一步执行的时间在玩家输入完第一条后立刻执行，之后遵循步时」。
+ * 所以噩梦是 true：玩家不猜，它就一直不动（这也天然防了「玩家挂机、人机自己打完」）。
+ * 其余三档仍是 1.5s 计时（需求③：首猜像真人一样随手落子）。
+ *
+ * ⚠️ 页面必须同时改 tick 与 botMove 两条路径才能真生效：tick 不能用 `nextBotAt` 卡住它，
+ *    botMove 之后要把 `nextBotAt` 从 Infinity 接回「now + 步时」（见 page.tsx 的注释）。
+ */
+export const BOT_FIRST_MOVE_ON_PLAYER_GUESS: Record<BotTier, boolean> = {
+  easy: false,
+  medium: false,
+  hard: false,
+  nightmare: true,
+};
+
+/**
+ * 选点策略。
+ *   · `'random2'`：信息增益前 2 名里随机取一个（三档现役策略，为了开局多样性）；
+ *   · `'optimal'` ：**永远取增益最大的那一个**、终局候选 ≤3 时直接点名 ——
+ *                   这是用户对噩梦要求的「完全遵循最优策略」，不做任何随机让步。
+ *
+ * ⚠️ 这里只影响**选点**，不影响准确率上限（候选集筛选口径三档/四档完全相同）。
+ */
+export const BOT_TIER_POLICY: Record<BotTier, 'random2' | 'optimal'> = {
+  easy: 'random2',
+  medium: 'random2',
+  hard: 'random2',
+  nightmare: 'optimal',
 };
 
 /**
@@ -273,17 +346,32 @@ export const BOT_FIRST_DELAY_MS: Record<BotTier, number> = {
 export const BOT_TICK_MS = 100;
 
 /**
- * 三档的完整配置（只读导出）。
+ * 四档的完整配置（只读导出）。
  *
  * 存在意义是让**测试**能断言上面那条硬约束，而不必把 10000/700 这些魔法数字
  * 抄进测试文件 —— 抄一份就会漂一份，而漂了之后测试仍然"通过"，只是不再检查任何东西。
  */
-export const BOT_TIERS: Record<BotTier, { attrs: readonly AttrKey[]; delayMs: number; jitterMs: number }> =
-  Object.freeze({
-    easy: { attrs: TIER_ATTRS.easy, delayMs: TIER_DELAY_MS.easy, jitterMs: TIER_JITTER_MS.easy },
-    medium: { attrs: TIER_ATTRS.medium, delayMs: TIER_DELAY_MS.medium, jitterMs: TIER_JITTER_MS.medium },
-    hard: { attrs: TIER_ATTRS.hard, delayMs: TIER_DELAY_MS.hard, jitterMs: TIER_JITTER_MS.hard },
-  });
+export const BOT_TIERS: Record<
+  BotTier,
+  { attrs: readonly AttrKey[]; delayMs: number; jitterMs: number; policy: 'random2' | 'optimal'; firstMoveOnPlayerGuess: boolean }
+> = Object.freeze({
+  easy: {
+    attrs: TIER_ATTRS.easy, delayMs: TIER_DELAY_MS.easy, jitterMs: TIER_JITTER_MS.easy,
+    policy: BOT_TIER_POLICY.easy, firstMoveOnPlayerGuess: BOT_FIRST_MOVE_ON_PLAYER_GUESS.easy,
+  },
+  medium: {
+    attrs: TIER_ATTRS.medium, delayMs: TIER_DELAY_MS.medium, jitterMs: TIER_JITTER_MS.medium,
+    policy: BOT_TIER_POLICY.medium, firstMoveOnPlayerGuess: BOT_FIRST_MOVE_ON_PLAYER_GUESS.medium,
+  },
+  hard: {
+    attrs: TIER_ATTRS.hard, delayMs: TIER_DELAY_MS.hard, jitterMs: TIER_JITTER_MS.hard,
+    policy: BOT_TIER_POLICY.hard, firstMoveOnPlayerGuess: BOT_FIRST_MOVE_ON_PLAYER_GUESS.hard,
+  },
+  nightmare: {
+    attrs: TIER_ATTRS.nightmare, delayMs: TIER_DELAY_MS.nightmare, jitterMs: TIER_JITTER_MS.nightmare,
+    policy: BOT_TIER_POLICY.nightmare, firstMoveOnPlayerGuess: BOT_FIRST_MOVE_ON_PLAYER_GUESS.nightmare,
+  },
+});
 
 /** 猜测次数上限。**锁定，不可由玩家配置** —— 它是上面那套定标的锚点（见文件头） */
 export const BOT_MAX_GUESSES = 8;
@@ -291,7 +379,7 @@ export const BOT_MAX_GUESSES = 8;
 /**
  * 单局时长（ms）。取多人房 `ROUND_TIME_PRESETS` 里的一档（90 秒）——
  * **不是**多人的默认时长（`server/constants.js` 的 `ROUND_TIME` 是 120 秒）。
- * 三档的最坏用时都得装得下（硬约束见文件头）。
+ * 四档的最坏用时都得装得下（硬约束见文件头；噩梦最坏 40.8s，余量最大）。
  */
 export const BOT_ROUND_TIME = 90_000;
 
@@ -512,6 +600,10 @@ export function botPick(brain: BotBrain, rng: () => number = Math.random): Chara
   const ranked = brain.guessed.length === 0
     ? openingOrder(cache, brain.tier)
     : rankBySplit(cache, brain.tier, usable);
+
+  // 噩梦：完全最优 —— 永远取增益最大的那个，不做「前 2 名随机」。
+  // （用户原话「完全遵循最优策略」；随机化是给人类档位制造开局多样性的，这里不要。）
+  if (BOT_TIER_POLICY[brain.tier] === 'optimal') return ranked[0];
 
   return (rng() < 0.5 ? ranked[0] : (ranked[1] ?? ranked[0]));
 }

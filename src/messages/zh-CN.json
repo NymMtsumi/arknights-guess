@@ -384,6 +384,7 @@
   "admin.dashboard.colMode": "模式",
   "admin.dashboard.guessCount": "{{count}}次",
   "admin.dashboard.modeMulti": "多人",
+  "admin.dashboard.modeMedium": "普通",
   "admin.dashboard.modeHard": "困难",
   "admin.dashboard.modeEasy": "简单",
   "admin.dashboard.systemInfo": "系统信息",

@@ -241,9 +241,14 @@ export async function waitForBackend(port = BACKEND_PORT) {
 }
 
 export async function cleanupDb(dbPath) {
-  await rm(dbPath, { force: true }).catch(() => {});
-  await rm(`${dbPath}-wal`, { force: true }).catch(() => {});
-  await rm(`${dbPath}-shm`, { force: true }).catch(() => {});
+  // Windows 上 better-sqlite3 关连接与释放文件句柄有延迟：单次 rm 偶尔 EBUSY/EPERM，
+  // 于是临时库留在 %TEMP%（本会话实测漏过若干组），既占空间也可能被后续 run 误用。
+  // 对三个文件各重试最多 10 次（50ms 间隔）；仍失败就放弃（与旧行为一致，不让清理影响断言）。
+  for (const file of [dbPath, `${dbPath}-wal`, `${dbPath}-shm`]) {
+    for (let attempt = 0; attempt < 10; attempt++) {
+      try { await rm(file, { force: true }); break; } catch { await new Promise((r) => setTimeout(r, 50)); }
+    }
+  }
 }
 
 // 预检：前端必须已 build（且 NEXT_PUBLIC_WS_URL 指向本后端）

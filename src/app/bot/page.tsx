@@ -355,12 +355,19 @@ export default function BotPage() {
     if (r.pausedAt > 0) return;
     const now = Date.now();
 
-    const remainMs = BOT_ROUND_TIME - (now - r.startedAt);
+    // 🔴 2026-10-18：噩梦档在**玩家落下第一猜之前不跑计时器**。
+    //    只让「首猜等玩家」而不冻结时钟的话，玩家可以硬挂到 85 秒再落第一猜 ——
+    //    噩梦只剩 1~2 步，必输局被拖成平局（审查时发现的「90 秒偷鸡」）。
+    //    这里把等待期视为「本局还没开始」：计时显示满格、不判超时、人机也不动。
+    //    玩家第一猜落下时 handleGuess 会把 startedAt 重置为那一刻，时钟从那时起跑。
+    //    ⚠️ 只对 firstMoveOnPlayerGuess 的档位生效；三档常规人机的行为逐字不变。
+    const waitingFirstGuess = BOT_FIRST_MOVE_ON_PLAYER_GUESS[matchRef.current.tier] && r.myGuesses.length === 0;
+    const remainMs = waitingFirstGuess ? BOT_ROUND_TIME : BOT_ROUND_TIME - (now - r.startedAt);
     const sec = Math.max(0, Math.ceil(remainMs / 1000));
     // 只在显示值变化时 setState：tick 是 100ms，不加这层闸就是每秒十次重渲染
     setTimeLeft(prev => (prev === sec ? prev : sec));
 
-    if (remainMs <= 0) { finishRound(null); return; }
+    if (!waitingFirstGuess && remainMs <= 0) { finishRound(null); return; }
     if (r.botGuesses.length < BOT_TIER_MAX_GUESSES[matchRef.current.tier] && now >= r.nextBotAt) botMove(r);
   }, [botMove, finishRound]);
 
@@ -486,6 +493,12 @@ export default function BotPage() {
   }, [stage, tier]);
 
   const startMatch = useCallback(() => {
+    // 🔴 2026-10-18：开局前再预热一次，**保证**首猜不是冷的。
+    //    菜单里的预热走 50ms 定时器；玩家若在 50ms 内就点「开始」（或选了档立刻开局），
+    //    那次预热会被 effect 的 cleanup 取消 —— 而噩梦的首猜是「玩家一落子就立刻执行」，
+    //    冷缓存会让那一拍在主线程算 ~300ms（仍 <3s，但没必要）。
+    //    warmUp 是幂等的：缓存已在时 `openingOrder` 直接返回，开销 ~0。
+    try { warmUp(tier, roster); } catch { /* 预热失败不影响对局 */ }
     const identity = pickBotIdentity(roster);
     matchRef.current = {
       tier, botIdentity: identity, myWins: 0, botWins: 0, myTotalGuesses: 0,
@@ -523,12 +536,19 @@ export default function BotPage() {
   const handleGuess = useCallback((c: Character) => {
     const r = roundRef.current;
     if (!r || r.ended) return;
+    // 🔴 2026-10-18：噩梦档在玩家第一猜之前**不跑时钟**（见 tick 里的 waitingFirstGuess），
+    //    所以这里也要跳过超时判定，并且把 startedAt 重置为「玩家真正开始玩」的那一刻。
+    //    否则：玩家挂到 85 秒再猜 → 一落子就触发超时判定、本局直接判平。
+    const waitingFirstGuess = BOT_FIRST_MOVE_ON_PLAYER_GUESS[matchRef.current.tier] && r.myGuesses.length === 0;
     // ⚠️ 到点后的那一猜不能算。tick 是 100ms 轮询，玩家在最后一拍里点下去时
     //    「时间到」还没被 tick 看到，这一猜会连同 isWin 一起结算 —— 表现是
     //    「计时器显示 0 秒了却还能猜中翻盘」。这里按 startedAt 自己判一次，不依赖 tick。
-    if (Date.now() - r.startedAt >= BOT_ROUND_TIME) { finishRound(null); return; }
+    if (!waitingFirstGuess && Date.now() - r.startedAt >= BOT_ROUND_TIME) { finishRound(null); return; }
     if (r.myGuesses.length >= BOT_MAX_GUESSES) return;
     if (r.myGuesses.some(g => g.character.id === c.id)) return;   // 兜底（GameSearch 已禁用重复项）
+
+    // 等待期结束：本局时钟从**这一猜**开始走（显示从满格开始倒数）
+    if (waitingFirstGuess) r.startedAt = Date.now();
 
     const result = makeGuess(r.target, c);
     r.myGuesses = [...r.myGuesses, result];

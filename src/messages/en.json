@@ -384,6 +384,7 @@
   "admin.dashboard.colMode": "Mode",
   "admin.dashboard.guessCount": "{{count}} guesses",
   "admin.dashboard.modeMulti": "Multiplayer",
+  "admin.dashboard.modeMedium": "Normal",
   "admin.dashboard.modeHard": "Hard",
   "admin.dashboard.modeEasy": "Easy",
   "admin.dashboard.systemInfo": "System",

@@ -578,6 +578,14 @@ function openingOrder(cache: TierCache, tier: BotTier): readonly Character[] {
  *    那两扇门由 `scripts/check-bot-isolation.mjs` 第 4、5 条钉死（botPick 只收 brain）。
  */
 export function warmUp(tier: BotTier, roster: Character[]): void {
+  // 🔴 2026-10-18：**只保留最后一次预热的档位**。
+  //    审查时实测：四档全部预热后常驻堆 90–105MB（单档 ≈45MB，主因是 432² 条两两签名），
+  //    低端手机切过四个档位就会被压到 GC 抖动甚至 OOM。这里在预热时清掉别的档位 ——
+  //    预热只发生在**菜单选档**或**开局前**，绝不会打断进行中的对局，所以是安全的。
+  //    对局内 `tierCache` 仍按需惰性重建（只是把一次性开销从"切档时"挪回"首猜那拍"）。
+  for (const key of [...TIER_CACHES.keys()]) {
+    if (key !== tier) TIER_CACHES.delete(key);
+  }
   openingOrder(tierCache(tier, roster), tier);
 }
 
@@ -592,7 +600,12 @@ export function botPick(brain: BotBrain, rng: () => number = Math.random): Chara
   const usable = fresh.length > 0 ? fresh : pool;
 
   // 终局点名：候选够小就别再算增益了
-  if (usable.length <= 3) return usable[Math.floor(rng() * usable.length)];
+  // · 常规三档：在 ≤3 个候选里**随机点名**（开局多样性；均匀先验下每个都可能，期望相同）
+  // · 噩梦：**确定性地取第一个**（用户要求「完全遵循最优策略」——随机点名虽然期望相同，
+  //   但它让"同一局面两次调用给出不同猜法"，与"最优"的语义不符，也让回放无法复现）
+  if (usable.length <= 3) {
+    return BOT_TIER_POLICY[brain.tier] === 'optimal' ? usable[0] : usable[Math.floor(rng() * usable.length)];
+  }
 
   // ⚠️ 用 `brain.roster`（建脑时那张表）而不是 `pool` 去找缓存 —— pool 每一步都是新数组，
   //    拿它当键会让两两签名缓存每步重建一次，等于白缓存。

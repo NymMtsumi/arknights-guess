@@ -517,19 +517,22 @@ async function main() {
           if (!firstBad) firstBad = `目标 ${target.name} 第 ${n} 猜：可用池为空`;
           break;
         }
-        // ≤3 人：终局点名，直接按 rng 取下标 floor(rng×len)，不排信息增益；
+        // ≤3 人：终局点名，不排信息增益。
+        //   · random2 档：按 rng 取下标 floor(rng×len)；
+        //   · optimal 档（nightmare）：**确定性取第 0 个**（2026-10-18 起，见 botPick 的注释）。
         // 否则第一猜用开局排序（全量池只算一次），之后按当前可用池现算。
         const ranked = pool.length <= 3
           ? null
           : (n === 1 ? freshOpening[tier] : freshRank(pool, attrs));
         // 🔴 optimal 档（nightmare）**永远返回 ranked[0]**，不做前 2 随机（见 botPick）；
         //    所以「rng=0.9 → 第 2 名」这条常规假设对它不成立：两次调用都应命中第 1 名。
-        //    终局 ≤3 人时它仍按 rng 取下标（那条路径与 random2 共用）。
+        //    终局 ≤3 人时它也是确定性的（取 pool[0]）。
         const optimal = BOT_TIERS[tier].policy === 'optimal';
-        const want1 = ranked ? ranked[0] : pool[Math.floor(0.1 * pool.length)];
+        const endgamePick = (r) => (optimal ? pool[0] : pool[Math.floor(r * pool.length)]);
+        const want1 = ranked ? ranked[0] : endgamePick(0.1);
         const want2 = ranked
           ? (optimal ? ranked[0] : (ranked[1] ?? ranked[0]))
-          : pool[Math.floor(0.9 * pool.length)];
+          : endgamePick(0.9);
         // rng 是确定的：0.1 → 第 1 名，0.9 → 第 2 名（optimal 档例外，见上）；
         // 终局点名时就是上面那两个下标（见 botPick 的实现）。
         const got1st = botPick(brain, () => 0.1);

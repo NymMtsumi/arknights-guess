@@ -74,6 +74,10 @@ export default function AdminDashboard() {
     if (mode === 'multi') return t('admin.dashboard.modeMulti');
     if (difficulty === 'hard') return t('admin.dashboard.modeHard');
     if (difficulty === 'easy') return t('admin.dashboard.modeEasy');
+    // 🔴 2026-10-18：人机第 4 档 nightmare 的 `difficulty` 就是字符串 'nightmare'，
+    //    不接这一条的话，管理端「最近对局」会原样渲染成英文 token `nightmare`。
+    //    （`medium` 也走下面的兜底、一直显示 'medium' —— 那是既有形态，不在本次范围。）
+    if (difficulty === 'nightmare') return t('bot.tierNightmare');
     return difficulty || '—';
   };
 

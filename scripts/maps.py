@@ -62,6 +62,10 @@ SUBPROFESSION_MAP = {
     "geek":             {"zh": "怪杰", "en": "Geek"},
     "alchemist":        {"zh": "炼金师", "en": "Alchemist"},
     "skywalker":        {"zh": "巡空者", "en": "Skywalker"},
+    # 2026-11-01 上游新增（行铃 Herdbells，4★ 特种）：PRTS 的「分支=调度者」。
+    # 缺这条时 convert_subprofession 会原样返回 id `dispatcher`（中英都是），
+    # auto-update 的 --dry-run 会打 WARNING 但**照样入库** —— 是数据质量问题，不是硬门槛。
+    "dispatcher":       {"zh": "调度者", "en": "Dispatcher"},
     "slower":           {"zh": "减速者", "en": "Decel Binder"},
     "summoner":         {"zh": "召唤师", "en": "Summoner"},
     "bard":             {"zh": "吟游者", "en": "Bard"},

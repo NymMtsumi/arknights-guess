@@ -1,13 +1,19 @@
 name: 干员数据自动同步
 
-# 每天 15:15 (UTC+8) = 07:15 UTC 检测一次上游 Kengxxiao/ArknightsGameData；
+# 每天 15:15 与 03:15 (UTC+8) = 07:15 / 19:15 UTC 各检测一次上游 Kengxxiao/ArknightsGameData；
 # 有新增可获取干员则自动追加到 server/characters.json + src/data/characters.json 并推 main。
 # 推送用 secrets.ACTIONS_PAT（与本人 push 等价）→ 自动触发 deploy.yml（后端 VPS）+ Cloudflare Pages（前端）。
 # 数据是 append-only 追加，不重排已有行（保证每日挑战 seed 索引稳定）。
-
+#
+# 🔴 2026-11-01：从「每天一次」改成「每天两次」。原因不是脚本坏了，是 **GitHub 的 schedule 会推迟**：
+#    实测 07:15 UTC 的 cron 连续一周都在 13:12~14:20 UTC 才真正触发（推迟约 6 小时），
+#    期间如果上游恰好更新，站点就要多等一天。加一个 19:15 UTC 的窗口把最大等待砍半；
+#    无变更时脚本 10 秒短路退出，多跑一次几乎零成本（公开仓库 Actions 免费）。
+#    注意：GitHub 也可能整个跳过某次 schedule —— 两次是冗余，不是保证。
 on:
   schedule:
-    - cron: '15 7 * * *'   # 15:15 UTC+8
+    - cron: '15 7 * * *'    # 15:15 UTC+8
+    - cron: '15 19 * * *'   # 次日 03:15 UTC+8
   workflow_dispatch: {}    # 手动触发: Actions → 干员数据自动同步 → Run workflow
 
 permissions:

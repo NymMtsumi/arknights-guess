@@ -423,7 +423,7 @@ export default function BotPage() {
     // 的新局，第二次调用看到「还活着」立刻返回 —— 与时间无关，不会误伤任何合法点击。
     if (roundRef.current && !roundRef.current.ended) return;
     const m = matchRef.current;
-    // 谜底从**全量池**里抽（BOT_POOL_DIFFICULTY = 'hard' = 全部 432 人）：
+    // 谜底从**全量池**里抽（BOT_POOL_DIFFICULTY = 'hard' = 全部干员（当前 438））：
     // 人机的定标就是拿这个池子测的，池子一变那套 48.3/72.3/99.9% 立即作废。
     // recentIds 传人机的名字 + 本场已用过的谜底 → 既防连庄，也保证人机的名字
     // 不会是谜底（否则对面板上会同时出现「人机名」与「答案」，一眼穿帮）。

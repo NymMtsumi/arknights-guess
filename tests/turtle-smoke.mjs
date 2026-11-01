@@ -45,9 +45,10 @@ import {
 
 /** easy 难度池 = 热门 ∪ 六星（src/lib/game-engine.ts:20）—— 取值域的唯一来源 */
 const EASY_RARITIES = [4, 5, 6];
-const EASY_GENDERS = 2;
 const FULL_RARITIES = 6; // 用来在失败信息里点明「你接的是全量池」
-// ⚠️ 子职业**没有**对应的常数：它的个数随 roster 增长（见文件头），写死会随数据漂移。
+// ⚠️ 性别取值域**没有**常数：它随 roster 漂（2026-11-01 因 6★「国度」带「未公开」从 2 涨到 3）。
+//    a4 用 main() 里按 easy 池规则从 characters.json 现算的 easyGenders 作期望值。
+// ⚠️ 子职业**也没有**对应的常数：它的个数随 roster 增长（见文件头），写死会随数据漂移。
 //    a5 用 main() 里从 characters.json 现算的 easySubclasses.length 作期望值。
 
 async function main() {
@@ -57,11 +58,13 @@ async function main() {
 
   const chars = JSON.parse(readFileSync(join(ROOT, 'src', 'data', 'characters.json'), 'utf8'));
   // 大字集（子职业）的筛选用例要一个**一定在 easy 池里**的取值
-  const easySubclasses = [...new Set(
-    chars.filter(c => c.popularity === 'hot' || c.rarity >= 6).map(c => c.subclass),
-  )];
+  const easyPool = chars.filter(c => c.popularity === 'hot' || c.rarity >= 6);
+  const easySubclasses = [...new Set(easyPool.map(c => c.subclass))];
+  // a4 的期望值同样**现算**（理由见文件头 a4 注释）：性别取值域会随数据漂移。
+  const easyGenders = [...new Set(easyPool.map(c => c.gender))];
   // a5 的期望值（现算，不写死）＋失败信息里用来点明「你接的是全量池」的参照值
   const allSubclasses = new Set(chars.map(c => c.subclass));
+  const allGenders = [...new Set(chars.map(c => c.gender))];
   const DB_PATH = makeDbPath('turtle');
   const backend = startBackend({ dbPath: DB_PATH });
   let staticServer = null;
@@ -155,9 +158,13 @@ async function main() {
       `4★ 的 chip 文本="${fourStarLabel}"，期望 "${'★'.repeat(4)}${'☆'.repeat(2)}"`);
 
     const genders = await chipValues(P, 'gender');
-    check(`a4.性别取值域 = ${EASY_GENDERS} 种（easy 池只有男女；全量池是 5）`,
-      genders.length === EASY_GENDERS,
-      `实际 ${genders.length} 种 [${genders.join(',')}]`);
+    // 期望值现算（easyGenders），并**顺带断言它严格小于全量池** —— 否则「接错成全量池」
+    // 这条就失去判别力（那正是写死 2 时想守的东西，只是当时用了一个会漂的常数）。
+    const wantGender = [...easyGenders].sort();
+    check(`a4.性别取值域 = easy 池的 ${wantGender.length} 种（全量池是 ${allGenders.length}；改错池子这里红）`,
+      [...genders].sort().join(',') === wantGender.join(',')
+        && wantGender.length < allGenders.length,
+      `实际 ${genders.length} 种 [${genders.join(',')}]，期望 [${wantGender.join(',')}]，全量 [${allGenders.join(',')}]`);
 
     // 子职业是**大字集** → 走筛选框，候选被截断到 12，所以取值域大小看那行末尾的计数
     const subclassCount = P.locator('[data-testid="turtle-count-subclass"]');
